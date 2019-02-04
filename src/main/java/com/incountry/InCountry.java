@@ -1,24 +1,21 @@
-package com.locodatum;
+package com.incountry;
 
 import java.util.ArrayList;
 
-import com.locodatum.api.ApiClient;
-import com.locodatum.api.Configuration;
-import com.locodatum.api.DefaultApi;
-import com.locodatum.api.auth.ApiKeyAuth;
-import com.locodatum.model.Empty;
-import com.locodatum.model.IDList;
-import com.locodatum.model.LocoList;
-import com.locodatum.model.LocoModel;
+import com.incountry.api.ApiClient;
+import com.incountry.api.Configuration;
+import com.incountry.api.DefaultApi;
+import com.incountry.api.auth.ApiKeyAuth;
+import com.incountry.model.Data;
 
-public class LocoDatumAPI 
+public class InCountry 
 {
 	DefaultApi apiInstance;
-	LocoCrypto crypto;
+	InCrypto crypto;
     
-    public LocoDatumAPI(String apikey, String secret) throws Exception 
+    public InCountry(String apikey, String secret) throws Exception 
     {
-	    	crypto = new LocoCrypto(secret);
+	    	crypto = new InCrypto(secret);
 	        initSdk(apikey);
     }
     
@@ -39,13 +36,13 @@ public class LocoDatumAPI
 		if (key3 != null) key3 = crypto.hash(key3);
 		if (key4 != null) key4 = crypto.hash(key4);
 		if (key5 != null) key5 = crypto.hash(key5);
-		Empty result = apiInstance.locoputGet(country, rowid, blob, key1, key2, key3, key4, key5);
+		Data result = apiInstance.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
 	}
 	
 	public String get(String country, String rowid) throws Exception
 	{
 		rowid = crypto.encrypt(rowid);
-		LocoModel loco = apiInstance.locogetGet(country, rowid);
+		Data loco = apiInstance.readPost(country, rowid);
 		String blob = crypto.decrypt(loco.getBlob());
 		return blob;
 	}
@@ -53,7 +50,7 @@ public class LocoDatumAPI
 	public void delete(String country, String rowid) throws Exception
 	{
 		rowid = crypto.encrypt(rowid);
-		Empty result = apiInstance.locodeleteGet(country, rowid);
+		Data result = apiInstance.deletePost(country, rowid);
 	}
 	
 	public LocoList lookup(String country, String key1, String key2, String key3, String key4, String key5) throws Exception
@@ -112,7 +109,7 @@ public class LocoDatumAPI
 
 		try
 		{
-			LocoDatumAPI api = new LocoDatumAPI(APIKEY, CRYPTOSEED);
+			InCountry api = new InCountry(APIKEY, CRYPTOSEED);
 			api.put("US", "row0001", "blobbymcblobface", "foo", "bar", null, null, null);
 			api.put("US", "row0002", "I am the very model of a modern major general", null, "foo", "bar", null, null);
 			api.put("US", "row0003", "We hold these truths to be self-evident", "bar", "foo", null, null, null);

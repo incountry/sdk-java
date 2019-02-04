@@ -1,4 +1,4 @@
-package com.locodatum;
+package com.incountry;
 
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -8,18 +8,18 @@ import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-public class LocoCrypto 
+public class InCrypto 
 {
 	private String SECRET;
 	
-	public LocoCrypto(String secret) 
+	public InCrypto(String secret) 
 	{
 		SECRET = secret;
 	}
 
 	public static void main(String[] args) throws Exception 
 	{
-		LocoCrypto crypto = new LocoCrypto("supersecret");
+		InCrypto crypto = new InCrypto("supersecret");
 		
 //		System.out.println(crypto.decrypt("d7ea667a3fea3d53cd40ec1154c929f2fa3941a723a3bf377c8223eb538a049a342cbc591347ad63e1cb4b1656a81293dad09dee41e6df500dd97f38bdce2525"));
 		
