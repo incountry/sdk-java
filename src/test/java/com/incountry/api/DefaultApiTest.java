@@ -39,8 +39,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void deletePostTest() throws ApiException {
-        Data response = api.deletePost();
+    public void deletePostTest(String country, String rowid) throws ApiException {
+        Data response = api.deletePost(country, rowid);
 
         // TODO: test validations
     }
@@ -53,8 +53,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void keylookupPostTest() throws ApiException {
-        Data response = api.keylookupPost();
+    public void keylookupPostTest(String country, String key2, String key3, String key4, String key5, String key1) throws ApiException {
+        Data response = api.keylookupPost(country, key2, key3, key4, key5, key1);
 
         // TODO: test validations
     }
@@ -67,8 +67,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void lookupPostTest() throws ApiException {
-        Data response = api.lookupPost();
+    public void lookupPostTest(String country, String key2, String key3, String key4, String key5, String key1) throws ApiException {
+        Data response = api.lookupPost(country, key2, key3, key4, key5, key1);
 
         // TODO: test validations
     }
@@ -81,8 +81,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void readPostTest() throws ApiException {
-        Data response = api.readPost();
+    public void readPostTest(String country, String rowid) throws ApiException {
+        Data response = api.readPost(country, rowid);
 
         // TODO: test validations
     }
@@ -95,8 +95,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void writePostTest() throws ApiException {
-        Data response = api.writePost();
+    public void writePostTest(String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws ApiException {
+        Data response = api.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
 
         // TODO: test validations
     }
