@@ -2,9 +2,11 @@ package com.incountry;
 
 import java.util.ArrayList;
 
+import com.google.gson.internal.LinkedTreeMap;
 import com.incountry.api.ApiClient;
 import com.incountry.api.Configuration;
 import com.incountry.api.DefaultApi;
+import com.incountry.api.JSON;
 import com.incountry.api.auth.ApiKeyAuth;
 import com.incountry.model.Data;
 
@@ -12,11 +14,13 @@ public class InCountry
 {
 	DefaultApi apiInstance;
 	InCrypto crypto;
+	JSON json;
     
     public InCountry(String apikey, String secret) throws Exception 
     {
 	    	crypto = new InCrypto(secret);
 	        initSdk(apikey);
+	        json = new JSON();
     }
     
 	private void initSdk(String apikey) 
@@ -27,7 +31,7 @@ public class InCountry
 		apiInstance = new DefaultApi();
 	}
 	
-	public void put(String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws Exception 
+	public void write(String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws Exception 
 	{ 
 		rowid = crypto.encrypt(rowid);
 		blob = crypto.encrypt(blob);
@@ -39,7 +43,7 @@ public class InCountry
 		Data result = apiInstance.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
 	}
 	
-	public String get(String country, String rowid) throws Exception
+	public String read(String country, String rowid) throws Exception
 	{
 		rowid = crypto.encrypt(rowid);
 		Data loco = apiInstance.readPost(country, rowid);
@@ -53,7 +57,7 @@ public class InCountry
 		Data result = apiInstance.deletePost(country, rowid);
 	}
 	
-	public LocoList lookup(String country, String key1, String key2, String key3, String key4, String key5) throws Exception
+	public ArrayList<Data> lookup(String country, String key1, String key2, String key3, String key4, String key5) throws Exception
 	{
 		String o1 = key1;
 		String o2 = key2;
@@ -67,18 +71,22 @@ public class InCountry
 		if (key4 != null) key4 = crypto.hash(key4);
 		if (key5 != null) key5 = crypto.hash(key5);
 
-		LocoList result = apiInstance.locoscanGet(country, key1, key2, key3, key4, key5);
-		int i = result.size();
+		Data d = apiInstance.lookupPost(country, key2, key3, key4, key5, key1);
+		ArrayList<LinkedTreeMap<String, String>> list = json.deserialize(d.getBlob(), ArrayList.class);
+		int i = list.size();
+		ArrayList<Data> result = new ArrayList<>();
 		while (i-->0) 
 		{
-			LocoModel loco = result.get(i);
-			loco.setRowid(crypto.decrypt(loco.getRowid()));
-			loco.setBlob(crypto.decrypt(loco.getBlob()));
-			loco.setKey1(o1);
-			loco.setKey2(o2);
-			loco.setKey3(o3);
-			loco.setKey4(o4);
-			loco.setKey5(o5);
+			LinkedTreeMap<String, String> row = list.get(i);
+			Data data = new Data();
+			result.add(data);
+			data.setRowid(crypto.decrypt(row.get("rowid")));
+			data.setBlob(crypto.decrypt(row.get("blob")));
+			data.setKey1(o1);
+			data.setKey2(o2);
+			data.setKey3(o3);
+			data.setKey4(o4);
+			data.setKey5(o5);
 		}
 		return result;
 	}
@@ -92,28 +100,29 @@ public class InCountry
 		if (key5 != null) key5 = crypto.hash(key5);
 
 		ArrayList<String> result = new ArrayList<>();
-		IDList ll = apiInstance.locokeyscanGet(country, key1, key2, key3, key4, key5);
-		int i = ll.size();
+		Data d = apiInstance.keylookupPost(country, key2, key3, key4, key5, key1);
+		ArrayList<String> list = json.deserialize(d.getBlob(), ArrayList.class);
+		int i = list.size();
 		while (i-->0) 
 		{
-			String loco = ll.get(i);
-			result.add(loco);
+			String loco = list.get(i);
+			result.add(crypto.decrypt(loco));
 		}
 		return result;
 	}
     
 	public static void main(String[] args) 
 	{
-		String APIKEY = "1PS2lhygQEmVdcD2g6CWaOgTZxChmPJaE6HFUmVc";
-		String CRYPTOSEED = "supersecret";
+		String APIKEY = args[0];
+		String CRYPTOSEED = args[1];
 
 		try
 		{
 			InCountry api = new InCountry(APIKEY, CRYPTOSEED);
-			api.put("US", "row0001", "blobbymcblobface", "foo", "bar", null, null, null);
-			api.put("US", "row0002", "I am the very model of a modern major general", null, "foo", "bar", null, null);
-			api.put("US", "row0003", "We hold these truths to be self-evident", "bar", "foo", null, null, null);
-			System.out.println(api.get("US", "row0001"));
+			api.write("US", "row0001", "blobbymcblobface", "foo", "bar", null, null, null);
+			api.write("US", "row0002", "I am the very model of a modern major general", null, "foo", "bar", null, null);
+			api.write("US", "row0003", "We hold these truths to be self-evident", "bar", "foo", null, null, null);
+			System.out.println(api.read("US", "row0001"));
 			System.out.println(api.lookup("US", null, "foo", null, null, null));
 			System.out.println(api.keyLookup("US", "foo", null, null, null, null));
 			api.delete("US", "row0001");
