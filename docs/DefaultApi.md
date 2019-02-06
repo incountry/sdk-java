@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 <a name="deletePost"></a>
 # **deletePost**
-> Data deletePost()
+> Data deletePost(country, rowid)
 
 
 
@@ -34,8 +34,10 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String country = "country_example"; // String | 
+String rowid = "rowid_example"; // String | 
 try {
-    Data result = apiInstance.deletePost();
+    Data result = apiInstance.deletePost(country, rowid);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#deletePost");
@@ -44,7 +46,11 @@ try {
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **country** | [**String**](.md)|  |
+ **rowid** | [**String**](.md)|  |
 
 ### Return type
 
@@ -61,7 +67,7 @@ This endpoint does not need any parameter.
 
 <a name="keylookupPost"></a>
 # **keylookupPost**
-> Data keylookupPost()
+> Data keylookupPost(country, key2, key3, key4, key5, key1)
 
 
 
@@ -83,8 +89,14 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String country = "country_example"; // String | 
+String key2 = "key2_example"; // String | 
+String key3 = "key3_example"; // String | 
+String key4 = "key4_example"; // String | 
+String key5 = "key5_example"; // String | 
+String key1 = "key1_example"; // String | 
 try {
-    Data result = apiInstance.keylookupPost();
+    Data result = apiInstance.keylookupPost(country, key2, key3, key4, key5, key1);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#keylookupPost");
@@ -93,7 +105,15 @@ try {
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **country** | [**String**](.md)|  |
+ **key2** | [**String**](.md)|  | [optional]
+ **key3** | [**String**](.md)|  | [optional]
+ **key4** | [**String**](.md)|  | [optional]
+ **key5** | [**String**](.md)|  | [optional]
+ **key1** | [**String**](.md)|  | [optional]
 
 ### Return type
 
@@ -110,7 +130,7 @@ This endpoint does not need any parameter.
 
 <a name="lookupPost"></a>
 # **lookupPost**
-> Data lookupPost()
+> Data lookupPost(country, key2, key3, key4, key5, key1)
 
 
 
@@ -132,8 +152,14 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String country = "country_example"; // String | 
+String key2 = "key2_example"; // String | 
+String key3 = "key3_example"; // String | 
+String key4 = "key4_example"; // String | 
+String key5 = "key5_example"; // String | 
+String key1 = "key1_example"; // String | 
 try {
-    Data result = apiInstance.lookupPost();
+    Data result = apiInstance.lookupPost(country, key2, key3, key4, key5, key1);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#lookupPost");
@@ -142,7 +168,15 @@ try {
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **country** | [**String**](.md)|  |
+ **key2** | [**String**](.md)|  | [optional]
+ **key3** | [**String**](.md)|  | [optional]
+ **key4** | [**String**](.md)|  | [optional]
+ **key5** | [**String**](.md)|  | [optional]
+ **key1** | [**String**](.md)|  | [optional]
 
 ### Return type
 
@@ -159,7 +193,7 @@ This endpoint does not need any parameter.
 
 <a name="readPost"></a>
 # **readPost**
-> Data readPost()
+> Data readPost(country, rowid)
 
 
 
@@ -181,8 +215,10 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String country = "country_example"; // String | 
+String rowid = "rowid_example"; // String | 
 try {
-    Data result = apiInstance.readPost();
+    Data result = apiInstance.readPost(country, rowid);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#readPost");
@@ -191,7 +227,11 @@ try {
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **country** | [**String**](.md)|  |
+ **rowid** | [**String**](.md)|  |
 
 ### Return type
 
@@ -208,7 +248,7 @@ This endpoint does not need any parameter.
 
 <a name="writePost"></a>
 # **writePost**
-> Data writePost()
+> Data writePost(country, rowid, blob, key1, key2, key3, key4, key5)
 
 
 
@@ -230,8 +270,16 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String country = "country_example"; // String | 
+String rowid = "rowid_example"; // String | 
+String blob = "blob_example"; // String | 
+String key1 = "key1_example"; // String | 
+String key2 = "key2_example"; // String | 
+String key3 = "key3_example"; // String | 
+String key4 = "key4_example"; // String | 
+String key5 = "key5_example"; // String | 
 try {
-    Data result = apiInstance.writePost();
+    Data result = apiInstance.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#writePost");
@@ -240,7 +288,17 @@ try {
 ```
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **country** | [**String**](.md)|  |
+ **rowid** | [**String**](.md)|  |
+ **blob** | [**String**](.md)|  |
+ **key1** | [**String**](.md)|  | [optional]
+ **key2** | [**String**](.md)|  | [optional]
+ **key3** | [**String**](.md)|  | [optional]
+ **key4** | [**String**](.md)|  | [optional]
+ **key5** | [**String**](.md)|  | [optional]
 
 ### Return type
 

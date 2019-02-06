@@ -25,7 +25,7 @@ import java.io.IOException;
  * Data
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2019-02-06T12:08:15.253-05:00[America/Detroit]")public class Data {
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2019-02-06T13:22:42.091-05:00[America/Detroit]")public class Data {
 
   @SerializedName("custid")
   private String custid = null;
