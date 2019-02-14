@@ -54,7 +54,7 @@ Then manually install the following JARs:
 
 ## Getting Started
 
-You will need an InCountry API Key and a unique seed for client-side encryption. Log in to https://portal.incountry.com to look up or reset your API key. The cryptography seed can be any unique value you choose, and will be used to encrypt your data prior to sending it to InCountry for storage. <b>Do not lose the cryptography seed" as InCountry <b>CANNOT</b> decrypt your data. Please follow the [installation](#installation) instruction and execute the following Java code:
+You will need an InCountry API Key and a unique seed for client-side encryption. Log in to https://portal.incountry.com to look up or reset your API key. The cryptography seed can be any unique value you choose, and will be used to encrypt your data prior to sending it to InCountry for storage. <b>Do not lose the cryptography seed</b> as InCountry <b>CANNOT</b> decrypt your data. Please follow the [installation](#installation) instruction and execute the following Java code:
 
 ```java
 import com.incountry.InCountry;
