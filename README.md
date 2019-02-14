@@ -54,37 +54,36 @@ Then manually install the following JARs:
 
 ## Getting Started
 
-Please follow the [installation](#installation) instruction and execute the following Java code:
+You will need an InCountry API Key and a unique seed for client-side encryption. Log in to https://portal.incountry.com to look up or reset your API key. The cryptography seed can be any unique value you choose, and will be used to encrypt your data prior to sending it to InCountry for storage. <b>Do not lose the cryptography seed" as InCountry <b>CANNOT</b> decrypt your data. Please follow the [installation](#installation) instruction and execute the following Java code:
 
 ```java
-import com.incountry.api.*;
-import com.incountry.api.auth.*;
-import com.incountry.model.*;
-import com.incountry.api.DefaultApi;
+import com.incountry.InCountry;
 
-import java.io.File;
-import java.util.*;
+public class Main 
+{
+	public static void main(String[] args) 
+	{
+		// Log in to https://portal.incountry.com to look up or reset your API key
+		String APIKEY = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+		
+		// Choose a unique seed value for client-side encryption 
+		String CRYPTOSEED = "supersecret";
 
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-
-        // Configure API key authorization: api_key
-        ApiKeyAuth api_key = (ApiKeyAuth) defaultClient.getAuthentication("api_key");
-        api_key.setApiKey("YOUR API KEY");
-        // Uncomment the following line to set a prefix for the API key, e.g. "Token" (defaults to null)
-        //api_key.setApiKeyPrefix("Token");
-
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            Data result = apiInstance.deletePost();
-            System.out.println(result);
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#deletePost");
-            e.printStackTrace();
-        }
-    }
+		try
+		{
+			InCountry api = new InCountry(APIKEY, CRYPTOSEED);
+			api.write("US", "row0001", "blobbymcblobface", "foo", "bar", null, null, null);
+			api.write("US", "row0002", "I am the very model of a modern major general", null, "foo", "bar", null, null);
+			api.write("US", "row0003", "We hold these truths to be self-evident", "bar", "foo", null, null, null);
+			System.out.println(api.read("US", "row0001"));
+			System.out.println(api.lookup("US", null, "foo", null, null, null));
+			System.out.println(api.keyLookup("US", "foo", null, null, null, null));
+			api.delete("US", "row0001");
+			api.delete("US", "row0002");
+			api.delete("US", "row0003");
+		}
+		catch (Exception x) { x.printStackTrace(); }
+	}
 }
 ```
 
