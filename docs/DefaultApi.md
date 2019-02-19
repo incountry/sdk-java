@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 <a name="deletePost"></a>
 # **deletePost**
-> Data deletePost(country, rowid)
+> Data deletePost(config, country, rowid)
 
 
 
@@ -34,10 +34,11 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String config = "config_example"; // String | 
 String country = "country_example"; // String | 
 String rowid = "rowid_example"; // String | 
 try {
-    Data result = apiInstance.deletePost(country, rowid);
+    Data result = apiInstance.deletePost(config, country, rowid);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#deletePost");
@@ -49,6 +50,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **config** | [**String**](.md)|  |
  **country** | [**String**](.md)|  |
  **rowid** | [**String**](.md)|  |
 
@@ -67,7 +69,7 @@ Name | Type | Description  | Notes
 
 <a name="keylookupPost"></a>
 # **keylookupPost**
-> Data keylookupPost(country, key2, key3, key4, key5, key1)
+> Data keylookupPost(config, country, key1, key2, key3, key4, key5)
 
 
 
@@ -89,14 +91,15 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String config = "config_example"; // String | 
 String country = "country_example"; // String | 
+String key1 = "key1_example"; // String | 
 String key2 = "key2_example"; // String | 
 String key3 = "key3_example"; // String | 
 String key4 = "key4_example"; // String | 
 String key5 = "key5_example"; // String | 
-String key1 = "key1_example"; // String | 
 try {
-    Data result = apiInstance.keylookupPost(country, key2, key3, key4, key5, key1);
+    Data result = apiInstance.keylookupPost(config, country, key1, key2, key3, key4, key5);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#keylookupPost");
@@ -108,12 +111,13 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **config** | [**String**](.md)|  |
  **country** | [**String**](.md)|  |
+ **key1** | [**String**](.md)|  | [optional]
  **key2** | [**String**](.md)|  | [optional]
  **key3** | [**String**](.md)|  | [optional]
  **key4** | [**String**](.md)|  | [optional]
  **key5** | [**String**](.md)|  | [optional]
- **key1** | [**String**](.md)|  | [optional]
 
 ### Return type
 
@@ -130,7 +134,7 @@ Name | Type | Description  | Notes
 
 <a name="lookupPost"></a>
 # **lookupPost**
-> Data lookupPost(country, key2, key3, key4, key5, key1)
+> Data lookupPost(config, country, key1, key2, key3, key4, key5)
 
 
 
@@ -152,14 +156,15 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String config = "config_example"; // String | 
 String country = "country_example"; // String | 
+String key1 = "key1_example"; // String | 
 String key2 = "key2_example"; // String | 
 String key3 = "key3_example"; // String | 
 String key4 = "key4_example"; // String | 
 String key5 = "key5_example"; // String | 
-String key1 = "key1_example"; // String | 
 try {
-    Data result = apiInstance.lookupPost(country, key2, key3, key4, key5, key1);
+    Data result = apiInstance.lookupPost(config, country, key1, key2, key3, key4, key5);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#lookupPost");
@@ -171,12 +176,13 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **config** | [**String**](.md)|  |
  **country** | [**String**](.md)|  |
+ **key1** | [**String**](.md)|  | [optional]
  **key2** | [**String**](.md)|  | [optional]
  **key3** | [**String**](.md)|  | [optional]
  **key4** | [**String**](.md)|  | [optional]
  **key5** | [**String**](.md)|  | [optional]
- **key1** | [**String**](.md)|  | [optional]
 
 ### Return type
 
@@ -193,7 +199,7 @@ Name | Type | Description  | Notes
 
 <a name="readPost"></a>
 # **readPost**
-> Data readPost(country, rowid)
+> Data readPost(config, country, rowid)
 
 
 
@@ -215,10 +221,11 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String config = "config_example"; // String | 
 String country = "country_example"; // String | 
 String rowid = "rowid_example"; // String | 
 try {
-    Data result = apiInstance.readPost(country, rowid);
+    Data result = apiInstance.readPost(config, country, rowid);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#readPost");
@@ -230,6 +237,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **config** | [**String**](.md)|  |
  **country** | [**String**](.md)|  |
  **rowid** | [**String**](.md)|  |
 
@@ -248,7 +256,7 @@ Name | Type | Description  | Notes
 
 <a name="writePost"></a>
 # **writePost**
-> Data writePost(country, rowid, blob, key1, key2, key3, key4, key5)
+> Data writePost(config, country, rowid, blob, key1, key2, key3, key4, key5)
 
 
 
@@ -270,6 +278,7 @@ api_key.setApiKey("YOUR API KEY");
 //api_key.setApiKeyPrefix("Token");
 
 DefaultApi apiInstance = new DefaultApi();
+String config = "config_example"; // String | 
 String country = "country_example"; // String | 
 String rowid = "rowid_example"; // String | 
 String blob = "blob_example"; // String | 
@@ -279,7 +288,7 @@ String key3 = "key3_example"; // String |
 String key4 = "key4_example"; // String | 
 String key5 = "key5_example"; // String | 
 try {
-    Data result = apiInstance.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
+    Data result = apiInstance.writePost(config, country, rowid, blob, key1, key2, key3, key4, key5);
     System.out.println(result);
 } catch (ApiException e) {
     System.err.println("Exception when calling DefaultApi#writePost");
@@ -291,6 +300,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **config** | [**String**](.md)|  |
  **country** | [**String**](.md)|  |
  **rowid** | [**String**](.md)|  |
  **blob** | [**String**](.md)|  |

@@ -39,8 +39,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void deletePostTest(String country, String rowid) throws ApiException {
-        Data response = api.deletePost(country, rowid);
+    public void deletePostTest(String config, String country, String rowid) throws ApiException {
+        Data response = api.deletePost(config, country, rowid);
 
         // TODO: test validations
     }
@@ -53,8 +53,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void keylookupPostTest(String country, String key2, String key3, String key4, String key5, String key1) throws ApiException {
-        Data response = api.keylookupPost(country, key2, key3, key4, key5, key1);
+    public void keylookupPostTest(String config, String country, String key2, String key3, String key4, String key5, String key1) throws ApiException {
+        Data response = api.keylookupPost(config, country, key2, key3, key4, key5, key1);
 
         // TODO: test validations
     }
@@ -67,8 +67,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void lookupPostTest(String country, String key2, String key3, String key4, String key5, String key1) throws ApiException {
-        Data response = api.lookupPost(country, key2, key3, key4, key5, key1);
+    public void lookupPostTest(String config, String country, String key2, String key3, String key4, String key5, String key1) throws ApiException {
+        Data response = api.lookupPost(config, country, key2, key3, key4, key5, key1);
 
         // TODO: test validations
     }
@@ -81,8 +81,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void readPostTest(String country, String rowid) throws ApiException {
-        Data response = api.readPost(country, rowid);
+    public void readPostTest(String config, String country, String rowid) throws ApiException {
+        Data response = api.readPost(config, country, rowid);
 
         // TODO: test validations
     }
@@ -95,8 +95,8 @@ public class DefaultApiTest {
      *          if the Api call fails
      */
     @Test
-    public void writePostTest(String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws ApiException {
-        Data response = api.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
+    public void writePostTest(String config, String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws ApiException {
+        Data response = api.writePost(config, country, rowid, blob, key1, key2, key3, key4, key5);
 
         // TODO: test validations
     }

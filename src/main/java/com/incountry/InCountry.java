@@ -12,15 +12,20 @@ import com.incountry.model.Data;
 
 public class InCountry 
 {
+	private static final int VERSION = 1;
+	
+	private String CONFIG;
+	
 	DefaultApi apiInstance;
 	InCrypto crypto;
 	JSON json;
-    
-    public InCountry(String apikey, String secret) throws Exception 
+	    
+    public InCountry(String apikey, String secret, String account_country) throws Exception 
     {
-	    	crypto = new InCrypto(secret);
-	        initSdk(apikey);
-	        json = new JSON();
+    	CONFIG = "{\"version\": "+VERSION+", \"country\": \""+account_country+"\"}";
+    	crypto = new InCrypto(secret);
+        initSdk(apikey);
+        json = new JSON();
     }
     
 	private void initSdk(String apikey) 
@@ -40,13 +45,13 @@ public class InCountry
 		if (key3 != null) key3 = crypto.hash(key3);
 		if (key4 != null) key4 = crypto.hash(key4);
 		if (key5 != null) key5 = crypto.hash(key5);
-		Data result = apiInstance.writePost(country, rowid, blob, key1, key2, key3, key4, key5);
+		Data result = apiInstance.writePost(CONFIG, country, rowid, blob, key1, key2, key3, key4, key5);
 	}
 	
 	public String read(String country, String rowid) throws Exception
 	{
 		rowid = crypto.encrypt(rowid);
-		Data loco = apiInstance.readPost(country, rowid);
+		Data loco = apiInstance.readPost(CONFIG, country, rowid);
 		String blob = crypto.decrypt(loco.getBlob());
 		return blob;
 	}
@@ -54,7 +59,7 @@ public class InCountry
 	public void delete(String country, String rowid) throws Exception
 	{
 		rowid = crypto.encrypt(rowid);
-		Data result = apiInstance.deletePost(country, rowid);
+		Data result = apiInstance.deletePost(CONFIG, country, rowid);
 	}
 	
 	public ArrayList<Data> lookup(String country, String key1, String key2, String key3, String key4, String key5) throws Exception
@@ -71,7 +76,7 @@ public class InCountry
 		if (key4 != null) key4 = crypto.hash(key4);
 		if (key5 != null) key5 = crypto.hash(key5);
 
-		Data d = apiInstance.lookupPost(country, key2, key3, key4, key5, key1);
+		Data d = apiInstance.lookupPost(CONFIG, country, key1, key2, key3, key4, key5);
 		ArrayList<LinkedTreeMap<String, String>> list = json.deserialize(d.getBlob(), ArrayList.class);
 		int i = list.size();
 		ArrayList<Data> result = new ArrayList<>();
@@ -100,7 +105,7 @@ public class InCountry
 		if (key5 != null) key5 = crypto.hash(key5);
 
 		ArrayList<String> result = new ArrayList<>();
-		Data d = apiInstance.keylookupPost(country, key2, key3, key4, key5, key1);
+		Data d = apiInstance.keylookupPost(CONFIG, country, key1, key2, key3, key4, key5);
 		ArrayList<String> list = json.deserialize(d.getBlob(), ArrayList.class);
 		int i = list.size();
 		while (i-->0) 
@@ -118,7 +123,7 @@ public class InCountry
 
 		try
 		{
-			InCountry api = new InCountry(APIKEY, CRYPTOSEED);
+			InCountry api = new InCountry(APIKEY, CRYPTOSEED, "**");
 			api.write("US", "row0001", "blobbymcblobface", "foo", "bar", null, null, null);
 			api.write("US", "row0002", "I am the very model of a modern major general", null, "foo", "bar", null, null);
 			api.write("US", "row0003", "We hold these truths to be self-evident", "bar", "foo", null, null, null);
