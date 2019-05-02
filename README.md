@@ -68,10 +68,13 @@ public class Main
 		
 		// Choose a unique seed value for client-side encryption 
 		String CRYPTOSEED = "supersecret";
+		
+		// Specify which country your account is in
+		String ACCOUNT_COUNTRY = "US";
 
 		try
 		{
-			InCountry api = new InCountry(APIKEY, CRYPTOSEED);
+			InCountry api = new InCountry(APIKEY, CRYPTOSEED, ACCOUNT_COUNTRY);
 			api.write("US", "row0001", "blobbymcblobface", "foo", "bar", null, null, null);
 			api.write("US", "row0002", "I am the very model of a modern major general", null, "foo", "bar", null, null);
 			api.write("US", "row0003", "We hold these truths to be self-evident", "bar", "foo", null, null, null);
