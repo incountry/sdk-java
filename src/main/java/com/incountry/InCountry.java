@@ -1,6 +1,7 @@
 package com.incountry;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import com.google.gson.internal.LinkedTreeMap;
 import com.incountry.api.ApiClient;
@@ -36,8 +37,9 @@ public class InCountry
 		apiInstance = new DefaultApi();
 	}
 	
-	public void write(String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws Exception 
-	{ 
+	public String write(String country, String rowid, String blob, String key1, String key2, String key3, String key4, String key5) throws Exception
+	{
+		if (rowid == null || rowid.equals("")) rowid = UUID.randomUUID().toString();
 		rowid = crypto.encrypt(rowid);
 		blob = crypto.encrypt(blob);
 		if (key1 != null) key1 = crypto.hash(key1);
@@ -46,6 +48,7 @@ public class InCountry
 		if (key4 != null) key4 = crypto.hash(key4);
 		if (key5 != null) key5 = crypto.hash(key5);
 		Data result = apiInstance.writePost(CONFIG, country, rowid, blob, key1, key2, key3, key4, key5);
+		return crypto.decrypt(result.getRowid());
 	}
 	
 	public String read(String country, String rowid) throws Exception
