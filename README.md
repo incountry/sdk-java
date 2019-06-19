@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Building the API client library requires [Maven](https://maven.apache.org/) to be installed with JDK 8.
+Building the API client library requires [Maven](https://maven.apache.org/) to be installed and JDK 8.
 
 ## Installation
 
