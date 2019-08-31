@@ -55,12 +55,13 @@ Setup your environment:
 
 and now use the SDK:
 
-    > import com.incountry.Storage;
+    import com.incountry.Storage;
+    import com.incountry.Data;
 
-    > Storage global_client = Storage()
-    > # FIXME - replace snippet
-    > global_client.write(country='jp', key='key1', body="Store this data in Japan")
+    ...
 
-	> r = global_client.read(country='jp', key='key1')
-	> print(r)
-	{'body': 'Store this data in Japan', 'key': 'key1', 'key2': None, 'key3': None, 'profile_key': None, 'range_key': None, 'version': 1, 'environment_id': 645}
+    Storage store = new Storage();
+    store.write("US", "some_row_key", "Some data", null, null, null, null);
+    Data d = store.read("US", "some_row_key");
+    System.out.println(d);
+    store.delete("US", "some_row_key");
