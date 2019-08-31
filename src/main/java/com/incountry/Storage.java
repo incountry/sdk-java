@@ -39,23 +39,23 @@ public class Storage {
         }
     }
 
-    private String mZoneID = null;
+    private String mEnvID = null;
     private String mAPIKey = null;
     private String mEndpoint = null;
     private HashMap<String, POP> mPoplist;
     private Crypto mCrypto;
 
     public Storage() throws Exception {
-        this(System.getenv("INC_ZONE_ID"),
+        this(System.getenv("INC_ENVIRONMENT_ID"),
                 System.getenv("INC_API_KEY"),
                 System.getenv("INC_ENDPOINT"),
                 System.getenv("INC_SECRET_KEY") != null,
                 System.getenv("INC_SECRET_KEY"));
     }
 
-    public Storage(String zone_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
-        mZoneID = zone_id;
-        if (mZoneID == null) throw new IllegalArgumentException("Please pass zone_id param or set INC_ZONE_ID env var");
+    public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
+        mEnvID = environment_id;
+        if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
         mAPIKey = api_key;
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
@@ -78,7 +78,7 @@ public class Storage {
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
         con.setRequestProperty("Authorization", "Bearer "+mAPIKey);
-        con.setRequestProperty("x-zone-id", mZoneID);
+        con.setRequestProperty("x-env-id", mEnvID);
         con.setRequestProperty("Content-Type", "application/json");
         if (body != null){
             con.setDoOutput(true);
