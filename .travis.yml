@@ -1,0 +1,17 @@
+addons:
+  sonarcloud:
+    organization: "incountry"
+
+language:
+  java
+
+jdk:
+  - openjdk8
+
+sudo: false
+
+notifications:
+  email: false
+
+script:
+  - gradle sonarqube
