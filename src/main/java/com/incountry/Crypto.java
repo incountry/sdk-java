@@ -3,7 +3,6 @@ package com.incountry;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
@@ -22,8 +21,6 @@ public class Crypto
     public static void main(String[] args) throws Exception
     {
         Crypto crypto = new Crypto("supersecret");
-
-//		System.out.println(crypto.decrypt("d7ea667a3fea3d53cd40ec1154c929f2fa3941a723a3bf377c8223eb538a049a342cbc591347ad63e1cb4b1656a81293dad09dee41e6df500dd97f38bdce2525"));
 
         String original = "I am the very model of a modern major general";
         System.out.println(original);

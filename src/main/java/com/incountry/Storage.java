@@ -115,7 +115,6 @@ public class Storage {
             JsonNode country = countries.get(i);
             if (country.get("direct").asBoolean()){
                 String cc = country.get("id").asText().toLowerCase();
-                // FIXME: Have countries API return the full endpoint
                 POP pop = new POP("https://"+cc+".api.incountry.io", country.get("name").asText());
                 mPoplist.put(cc, pop);
             }
@@ -123,7 +122,6 @@ public class Storage {
     }
 
     private String getEndpoint(String country, String path){
-        // TODO: Make countries set cover ALL countries, indicating mini or med POP
         if (path.charAt(0) != '/') path = "/"+path;
         if (mPoplist.containsKey(country))
             return mPoplist.get(country).host+path;
@@ -177,24 +175,21 @@ public class Storage {
         return content;
     }
 
-    public static void main(String[] args){
-        try {
-            Storage store = new Storage();
-            long then = System.currentTimeMillis();
-            store.write("US", "some_row_key", "Some data", null, null, null, null);
-            long now = System.currentTimeMillis();
-            System.out.println(now - then);
-            then = now;
-            Data d = store.read("US", "some_row_key");
-            System.out.println(d);
-            now = System.currentTimeMillis();
-            System.out.println(now - then);
-            then = now;
-            store.delete("US", "some_row_key");
-            now = System.currentTimeMillis();
-            System.out.println(now - then);
-        }
-        catch (Exception x) { x.printStackTrace(); }
+    public static void main(String[] args) throws Exception{
+        Storage store = new Storage();
+        long then = System.currentTimeMillis();
+        store.write("US", "some_row_key", "Some data", null, null, null, null);
+        long now = System.currentTimeMillis();
+        System.out.println(now - then);
+        then = now;
+        Data d = store.read("US", "some_row_key");
+        System.out.println(d);
+        now = System.currentTimeMillis();
+        System.out.println(now - then);
+        then = now;
+        store.delete("US", "some_row_key");
+        now = System.currentTimeMillis();
+        System.out.println(now - then);
     }
 
 }

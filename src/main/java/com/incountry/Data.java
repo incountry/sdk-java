@@ -1,7 +1,5 @@
 package com.incountry;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -110,8 +108,7 @@ public class Data {
         ObjectMapper mapper = new ObjectMapper();
         try { return mapper.writeValueAsString(this); }
         catch (Exception x) {
-            x.printStackTrace();
-            return null;
+            return "ERROR: "+x.toString();
         }
     }
 }
