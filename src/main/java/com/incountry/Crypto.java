@@ -23,6 +23,7 @@ public class Crypto
     private final int IV_LENGTH = 12;
     private final int KEY_LENGTH = 32;
     private final int SALT_LENGTH = 64;
+    private final int PBKDF2_ITERATIONS_COUNT = 10000;
 
     public Crypto(String secret)
     {
@@ -65,7 +66,7 @@ public class Crypto
     {
         byte[] clean = plainText.getBytes();
         byte[] salt = getSalt();
-        byte[] strong = generateStrongPasswordHash(SECRET, salt, 100000, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(SECRET, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecureRandom randomSecureRandom = new SecureRandom();
         byte[] iv = new byte[IV_LENGTH];
@@ -97,7 +98,7 @@ public class Crypto
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] strong = generateStrongPasswordHash(SECRET, salt, 100000, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(SECRET, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
