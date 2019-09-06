@@ -3,6 +3,11 @@
 This is the java SDK for the InCountry storage network. Sign up for a free account at
 https://incountry.com, then note down your Environment ID and API key.
 
+Important notes
+---------------
+We've changed the encryption algorithm since version `0.3.0` so it is not compatible with earlier versions.
+
+
 ## Installation
 
 To install the API client library to your local Maven repository, simply execute:
