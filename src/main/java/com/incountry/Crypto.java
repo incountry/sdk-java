@@ -1,17 +1,28 @@
 package com.incountry;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto
 {
     private String SECRET;
+    private final int AUTH_TAG_LENGTH = 16;
+    private final int IV_LENGTH = 12;
+    private final int KEY_LENGTH = 32;
+    private final int SALT_LENGTH = 64;
 
     public Crypto(String secret)
     {
@@ -20,7 +31,7 @@ public class Crypto
 
     public static void main(String[] args) throws Exception
     {
-        Crypto crypto = new Crypto("supersecret");
+        Crypto crypto = new Crypto("123");
 
         String original = "I am the very model of a modern major general";
         System.out.println(original);
@@ -28,11 +39,13 @@ public class Crypto
         String enc = crypto.encrypt(original);
         System.out.println(enc);
 
+
         String output = crypto.decrypt(enc);
         System.out.println(output);
 
         String hash = crypto.hash(output);
         System.out.println(hash);
+
     }
 
     public String hash(String output) throws GeneralSecurityException, IOException
@@ -47,59 +60,54 @@ public class Crypto
         return toHex(sha256_HMAC.doFinal(output.getBytes("UTF-8")));
     }
 
-    public String decrypt(String enc) throws GeneralSecurityException, IOException
-    {
-        return decrypt(fromHex(enc), SECRET);
-    }
 
-    public String encrypt(String original) throws GeneralSecurityException, IOException
+    public String encrypt(String plainText) throws GeneralSecurityException, IOException
     {
-        return toHex(encrypt(original, SECRET));
-    }
-
-    public static byte[] encrypt(String plainText, String key) throws GeneralSecurityException, IOException {
         byte[] clean = plainText.getBytes();
-        int keySize = 16;
+        byte[] salt = getSalt();
+        byte[] strong = generateStrongPasswordHash(SECRET, salt, 100000, KEY_LENGTH);
 
-        // Hashing key.
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        digest.update(key.getBytes("UTF-8"));
-        byte[] longkey = digest.digest();
-        byte[] keyBytes = new byte[keySize];
-        System.arraycopy(longkey, 0, keyBytes, 0, keySize);
-        byte[] ivBytes = new byte[keySize];
-        System.arraycopy(longkey, keySize, ivBytes, 0, keySize);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
+        SecureRandom randomSecureRandom = new SecureRandom();
+        byte[] iv = new byte[IV_LENGTH];
+        randomSecureRandom.nextBytes(iv);
 
-        // Encrypt.
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(strong, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
         byte[] encrypted = cipher.doFinal(clean);
-        return encrypted;
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+        outputStream.write(salt);
+        outputStream.write(iv);
+        outputStream.write(encrypted);
+
+        byte[] res = outputStream.toByteArray( );
+
+        return toHex(res);
     }
 
-    public static String decrypt(byte[] encryptedBytes, String key) throws GeneralSecurityException, IOException {
-        int keySize = 16;
 
-        // Hash key.
-        byte[] keyBytes = new byte[keySize];
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(key.getBytes("UTF-8"));
-        byte[] longkey = md.digest();
-        System.arraycopy(longkey, 0, keyBytes, 0, keySize);
-        byte[] ivBytes = new byte[keySize];
-        System.arraycopy(longkey, keySize, ivBytes, 0, keySize);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
+    public String decrypt(String cipherText) throws GeneralSecurityException
+    {
+        byte[] parts = fromHex(cipherText);
+        byte[] salt = Arrays.copyOfRange(parts, 0, 64);
+        byte[] iv = Arrays.copyOfRange(parts, 64, 76);
+        byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-        // Decrypt.
-        Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
-        byte[] decrypted = cipherDecrypt.doFinal(encryptedBytes);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        byte[] strong = generateStrongPasswordHash(SECRET, salt, 100000, KEY_LENGTH);
 
-        return new String(decrypted);
+        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
+
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+        byte[] decryptedText = cipher.doFinal(encrypted);
+
+        return new String(decryptedText);
     }
+
 
     public static String toHex(byte[] ba)
     {
@@ -127,4 +135,21 @@ public class Crypto
         }
         return ba;
     }
+
+    private static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws NoSuchAlgorithmException, InvalidKeySpecException
+    {
+        char[] chars = password.toCharArray();
+        PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
+        SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+        return skf.generateSecret(spec).getEncoded();
+    }
+
+    private byte[] getSalt() throws NoSuchAlgorithmException
+    {
+        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+        byte[] salt = new byte[SALT_LENGTH];
+        sr.nextBytes(salt);
+        return salt;
+    }
+
 }
