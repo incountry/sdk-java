@@ -19,11 +19,11 @@ import javax.crypto.spec.SecretKeySpec;
 public class Crypto
 {
     private String SECRET;
-    private final int AUTH_TAG_LENGTH = 16;
-    private final int IV_LENGTH = 12;
-    private final int KEY_LENGTH = 32;
-    private final int SALT_LENGTH = 64;
-    private final int PBKDF2_ITERATIONS_COUNT = 10000;
+    private final static int authTagLength = 16;
+    private final static int ivLength = 12;
+    private final static int keyLength = 32;
+    private final static int saltLength = 64;
+    private final static int pbkdf2IterationsCount = 10000;
 
     public Crypto(String secret)
     {
@@ -66,14 +66,14 @@ public class Crypto
     {
         byte[] clean = plainText.getBytes();
         byte[] salt = getSalt();
-        byte[] strong = generateStrongPasswordHash(SECRET, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(SECRET, salt, pbkdf2IterationsCount, keyLength);
 
         SecureRandom randomSecureRandom = new SecureRandom();
-        byte[] iv = new byte[IV_LENGTH];
+        byte[] iv = new byte[ivLength];
         randomSecureRandom.nextBytes(iv);
 
         SecretKeySpec secretKeySpec = new SecretKeySpec(strong, "AES");
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(authTagLength * 8, iv);
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
@@ -98,7 +98,7 @@ public class Crypto
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] strong = generateStrongPasswordHash(SECRET, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(SECRET, salt, pbkdf2IterationsCount, keyLength);
 
         SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -148,7 +148,7 @@ public class Crypto
     private byte[] getSalt() throws NoSuchAlgorithmException
     {
         SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-        byte[] salt = new byte[SALT_LENGTH];
+        byte[] salt = new byte[saltLength];
         sr.nextBytes(salt);
         return salt;
     }
