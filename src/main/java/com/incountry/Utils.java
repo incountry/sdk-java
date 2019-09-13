@@ -1,6 +1,10 @@
 package com.incountry;
 
 public class Utils {
+    private Utils() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static String bytesToHex(byte[] bytesArray) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytesArray) {

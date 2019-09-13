@@ -14,7 +14,7 @@ import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
 import static com.incountry.Utils.*;
 
 public class Crypto implements ICrypto {
-    private String SECRET;
+    private String secret;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
@@ -22,13 +22,13 @@ public class Crypto implements ICrypto {
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
 
     public Crypto(String secret) {
-        SECRET = secret;
+        this.secret = secret;
     }
 
     public String encrypt(String plainText) throws GeneralSecurityException, IOException {
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
-        byte[] strong = generateStrongPasswordHash(SECRET, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecureRandom randomSecureRandom = new SecureRandom();
         byte[] iv = new byte[IV_LENGTH];
@@ -59,7 +59,7 @@ public class Crypto implements ICrypto {
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] strong = generateStrongPasswordHash(SECRET, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
