@@ -1,11 +1,11 @@
 package com.incountry;
 
-import org.junit.jupiter.api.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.*;
 
 public class CryptoTest {
     @Test
