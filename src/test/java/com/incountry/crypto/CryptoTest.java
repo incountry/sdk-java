@@ -1,11 +1,12 @@
-package com.incountry;
+package com.incountry.crypto;
 
-import org.junit.*;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class CryptoTest {
     @Test
