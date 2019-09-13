@@ -81,7 +81,3 @@ if (project.hasProperty('signing.keyId')) {
 nexusStaging {
     packageGroup = project.getGroup()
 }
-
-test {
-    useJUnitPlatform()
-}
