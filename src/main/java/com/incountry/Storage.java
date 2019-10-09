@@ -54,8 +54,8 @@ public class Storage {
                 System.getenv("INC_SECRET_KEY"));
     }
 
-    public Storage(String environment_id, String api_key, String secret_key) throws StorageServerException, IOException {
-        this(environment_id, api_key, System.getenv("INC_ENDPOINT"), secret_key != null, secret_key);
+    public Storage(String environmentID, String apiKey, String secretKey) throws StorageServerException, IOException {
+        this(environmentID, apiKey, System.getenv("INC_ENDPOINT"), secretKey != null, secretKey);
     }
 
     public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
@@ -181,17 +181,18 @@ public class Storage {
     }
 
     public static void main(String[] args) throws Exception{
-        String environment_id = "bd0c665d-ce0b-4f2d-b1dc-7500c9402919";
-        String api_key = "key.smnklp.b3167b35c4e24f21939ccdc58f1812f2";
-        String secret_key = "SUPERSECRET";
+        String environmentID = "bd0c665d-ce0b-4f2d-b1dc-7500c9402919";
+        String apiKey = "key.smnklp.b3167b35c4e24f21939ccdc58f1812f2";
+        String secretKey = "SUPERSECRET";
 
         String country = "US";
+        String rowKey = "some_row_key";
 
-        Storage store = new Storage(environment_id, api_key, secret_key);
-        store.write(country, "some_row_key", "Some data", null, null, null, null);
-        Data d = store.read(country, "some_row_key");
+        Storage store = new Storage(environmentID, apiKey, secretKey);
+        store.write(country, rowKey, "Some data", null, null, null, null);
+        Data d = store.read(country, rowKey);
         System.out.println(d);
-        store.delete(country, "some_row_key");
+        store.delete(country, rowKey);
     }
 
 }
