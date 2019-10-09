@@ -27,7 +27,7 @@ Add this dependency to your project's POM:
 <dependency>
     <groupId>com.incountry</groupId>
     <artifactId>incountry-java-client</artifactId>
-    <version>0.2.5</version>
+    <version>0.2.6</version>
     <scope>compile</scope>
 </dependency>
 ```
