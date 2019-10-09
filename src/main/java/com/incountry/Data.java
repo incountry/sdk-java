@@ -113,7 +113,7 @@ public class Data {
     public String toString() {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            ArrayList<String> al = new ArrayList<String>();
+            ArrayList<String> al = new ArrayList();
             if (profile_key == null) al.add("profile_key");
             if (range_key == null) al.add("range_key");
             if (key2 == null) al.add("key2");
@@ -122,8 +122,7 @@ public class Data {
             Object[] oa = al.toArray();
             String[] sa = Arrays.copyOf(oa, oa.length, String[].class);
             filters.addFilter("nullFilter", SimpleBeanPropertyFilter.serializeAllExcept(sa));
-            String s = mapper.writer(filters).writeValueAsString(this);
-            return s;
+            return mapper.writer(filters).writeValueAsString(this);
         }
         catch (Exception x) {
             return "ERROR: "+x.toString();
