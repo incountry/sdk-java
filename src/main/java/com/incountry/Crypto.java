@@ -18,23 +18,6 @@ public class Crypto
         SECRET = secret;
     }
 
-    public static void main(String[] args) throws Exception
-    {
-        Crypto crypto = new Crypto("supersecret");
-
-        String original = "I am the very model of a modern major general";
-        System.out.println(original);
-
-        String enc = crypto.encrypt(original);
-        System.out.println(enc);
-
-        String output = crypto.decrypt(enc);
-        System.out.println(output);
-
-        String hash = crypto.hash(output);
-        System.out.println(hash);
-    }
-
     public String hash(String output) throws GeneralSecurityException, IOException
     {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
