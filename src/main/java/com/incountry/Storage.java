@@ -180,19 +180,4 @@ public class Storage {
         return content;
     }
 
-    public static void main(String[] args) throws Exception{
-        String environmentID = "bd0c665d-ce0b-4f2d-b1dc-7500c9402919";
-        String apiKey = "key.smnklp.b3167b35c4e24f21939ccdc58f1812f2";
-        String secretKey = "SUPERSECRET";
-
-        String country = "US";
-        String rowKey = "some_row_key";
-
-        Storage store = new Storage(environmentID, apiKey, secretKey);
-        store.write(country, rowKey, "Some data", null, null, null, null);
-        Data d = store.read(country, rowKey);
-        System.out.println(d);
-        store.delete(country, rowKey);
-    }
-
 }

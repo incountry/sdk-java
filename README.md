@@ -64,3 +64,9 @@ and now use the SDK:
     Data d = store.read(country, "some_row_key");
     System.out.println(d);
     store.delete(country, "some_row_key");
+
+Instead of passing parameters, you can configure the client in your environment:
+
+    export INC_ENVIRONMENT_ID=<environment id>
+    export INC_API_KEY=<api key>
+    export INC_SECRET_KEY=<secret key>
