@@ -46,13 +46,6 @@ At first generate the JAR by executing:
 
     mvn package
 
-Setup your environment:
-
-    export INC_ENDPOINT=<api endpoint>
-    export INC_ENVIRONMENT_ID=<environment id>
-    export INC_API_KEY=<api key>
-   	export INC_SECRET_KEY=<generate uuid>
-
 and now use the SDK:
 
     import com.incountry.Storage;
@@ -60,8 +53,14 @@ and now use the SDK:
 
     ...
 
-    Storage store = new Storage();
-    store.write("US", "some_row_key", "Some data", null, null, null, null);
-    Data d = store.read("US", "some_row_key");
+    String environment_id = "bd0c665d-ce0b-4f2d-b1dc-7500c9402919";
+    String api_key = "key.smnklp.b3167b35c4e24f21939ccdc58f1812f2";
+    String secret_key = "SUPERSECRET";
+
+    String country = "US";
+
+    Storage store = new Storage(environment_id, api_key, secret_key);
+    store.write(country, "some_row_key", "Some data", null, null, null, null);
+    Data d = store.read(country, "some_row_key");
     System.out.println(d);
-    store.delete("US", "some_row_key");
+    store.delete(country, "some_row_key");

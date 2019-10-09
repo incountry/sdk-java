@@ -10,7 +10,8 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
 public class Storage {
-    private String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
+    private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
+    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
 
     class StorageException extends Exception {
         StorageException(String s){
@@ -53,6 +54,10 @@ public class Storage {
                 System.getenv("INC_SECRET_KEY"));
     }
 
+    public Storage(String environment_id, String api_key, String secret_key) throws StorageServerException, IOException {
+        this(environment_id, api_key, System.getenv("INC_ENDPOINT"), secret_key != null, secret_key);
+    }
+
     public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
         mEnvID = environment_id;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
@@ -61,7 +66,7 @@ public class Storage {
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
 
         mEndpoint = endpoint;
-        if (mEndpoint == null) throw new IllegalArgumentException("Please pass endpoint param or set INC_ENDPOINT env var");
+        if (mEndpoint == null) mEndpoint = DEFAULT_ENDPOINT;
 
         mPoplist = new HashMap<String, POP>();
         load_country_endpoints();
@@ -176,20 +181,17 @@ public class Storage {
     }
 
     public static void main(String[] args) throws Exception{
-        Storage store = new Storage();
-        long then = System.currentTimeMillis();
-        store.write("US", "some_row_key", "Some data", null, null, null, null);
-        long now = System.currentTimeMillis();
-        System.out.println(now - then);
-        then = now;
-        Data d = store.read("US", "some_row_key");
+        String environment_id = "bd0c665d-ce0b-4f2d-b1dc-7500c9402919";
+        String api_key = "key.smnklp.b3167b35c4e24f21939ccdc58f1812f2";
+        String secret_key = "SUPERSECRET";
+
+        String country = "US";
+
+        Storage store = new Storage(environment_id, api_key, secret_key);
+        store.write(country, "some_row_key", "Some data", null, null, null, null);
+        Data d = store.read(country, "some_row_key");
         System.out.println(d);
-        now = System.currentTimeMillis();
-        System.out.println(now - then);
-        then = now;
-        store.delete("US", "some_row_key");
-        now = System.currentTimeMillis();
-        System.out.println(now - then);
+        store.delete(country, "some_row_key");
     }
 
 }
