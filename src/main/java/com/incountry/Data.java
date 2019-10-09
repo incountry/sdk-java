@@ -1,10 +1,16 @@
 package com.incountry;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
+@JsonFilter("nullFilter")
 public class Data {
     String country;
     String key;
@@ -106,7 +112,19 @@ public class Data {
     @Override
     public String toString() {
         ObjectMapper mapper = new ObjectMapper();
-        try { return mapper.writeValueAsString(this); }
+        try {
+            ArrayList<String> al = new ArrayList<String>();
+            if (profile_key == null) al.add("profile_key");
+            if (range_key == null) al.add("range_key");
+            if (key2 == null) al.add("key2");
+            if (key3 == null) al.add("key3");
+            SimpleFilterProvider filters = new SimpleFilterProvider();
+            Object[] oa = al.toArray();
+            String[] sa = Arrays.copyOf(oa, oa.length, String[].class);
+            filters.addFilter("nullFilter", SimpleBeanPropertyFilter.serializeAllExcept(sa));
+            String s = mapper.writer(filters).writeValueAsString(this);
+            return s;
+        }
         catch (Exception x) {
             return "ERROR: "+x.toString();
         }
