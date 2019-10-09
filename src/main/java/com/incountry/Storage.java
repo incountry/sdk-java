@@ -55,7 +55,7 @@ public class Storage {
     }
 
     public Storage(String environmentID, String apiKey, String secretKey) throws StorageServerException, IOException {
-        this(environmentID, apiKey, System.getenv("INC_ENDPOINT"), secretKey != null, secretKey);
+        this(environmentID, apiKey, null, secretKey != null, secretKey);
     }
 
     public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
