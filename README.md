@@ -38,4 +38,17 @@ store.write(country, "some_row_key", "Some data", null, null, null, null);
 ```
 3. Reads
 Read method has the following signature:
-
+```
+Data read(String country, String key)
+```
+Parameters `country` and `key` are mandatory. For example:
+```
+import com.incountry.Data;
+...
+Data d = store.read("US", "some_row_key");
+```
+4. Deletes
+The record can be deleted using the following syntax:
+```
+store.delete("US", "some_row_key");
+```
