@@ -114,6 +114,8 @@ public class Data {
         ObjectMapper mapper = new ObjectMapper();
         try {
             ArrayList<String> al = new ArrayList();
+            if (body == null) al.add("body");
+            if (country == null) al.add("country");
             if (profile_key == null) al.add("profile_key");
             if (range_key == null) al.add("range_key");
             if (key2 == null) al.add("key2");
