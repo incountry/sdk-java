@@ -131,7 +131,7 @@ public class Storage {
     }
 
     private String getEndpoint(String country, String path){
-    	if (!mIsDefaultEndpoint)
+    	if (Boolean.FALSE.equals(mIsDefaultEndpoint))
             return mEndpoint+path;
         if (path.charAt(0) != '/') path = "/"+path;
         if (mPoplist.containsKey(country))
