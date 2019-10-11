@@ -43,6 +43,7 @@ public class Storage {
     private String mEnvID = null;
     private String mAPIKey = null;
     private String mEndpoint = null;
+    private Boolean mIsDefaultEndpoint = false;
     private HashMap<String, POP> mPoplist;
     private Crypto mCrypto;
 
@@ -66,7 +67,10 @@ public class Storage {
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
 
         mEndpoint = endpoint;
-        if (mEndpoint == null) mEndpoint = DEFAULT_ENDPOINT;
+        if (mEndpoint == null) {
+        	mEndpoint = DEFAULT_ENDPOINT;
+        	mIsDefaultEndpoint = true;
+        }
 
         mPoplist = new HashMap<String, POP>();
         load_country_endpoints();
@@ -127,6 +131,8 @@ public class Storage {
     }
 
     private String getEndpoint(String country, String path){
+    	if (!mIsDefaultEndpoint)
+            return mEndpoint+path;
         if (path.charAt(0) != '/') path = "/"+path;
         if (mPoplist.containsKey(country))
             return mPoplist.get(country).host+path;
