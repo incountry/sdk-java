@@ -9,14 +9,27 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 public class CryptoTest {
+
     @Test
     public void testEncryption() throws GeneralSecurityException, IOException {
         Crypto crypto = new Crypto("supersecret");
-        String plainText = "some plain text";
-        String encrypted = crypto.encrypt(plainText);
-        String decrypted = crypto.decrypt(encrypted);
-        assertEquals(decrypted, plainText);
-        assertNotEquals(encrypted, plainText);
+
+        String[] plainTexts = {"",
+                "Howdy", // <-- English
+                "Привет медвед", // <-- Russian
+                "مرحبا", // <-- Arabic
+                "हाय", // <-- Hindi
+                "안녕", // <-- Korean
+                "こんにちは", // Japanese
+                "你好", // <- Chinese
+        };
+
+        for (String plainText: plainTexts) {
+            String encrypted = crypto.encrypt(plainText);
+            String decrypted = crypto.decrypt(encrypted);
+            assertEquals(decrypted, plainText);
+            assertNotEquals(encrypted, plainText);
+        }
     }
 
     @Test
