@@ -2,10 +2,12 @@ package com.incountry.crypto;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -20,6 +22,7 @@ public class Crypto implements ICrypto {
     private static final int KEY_LENGTH = 32;
     private static final int SALT_LENGTH = 64;
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
+    private static final String VERSION = "1";
 
     public Crypto(String secret) {
         this.secret = secret;
@@ -48,11 +51,20 @@ public class Crypto implements ICrypto {
 
         byte[] res = outputStream.toByteArray();
 
-        return bytesToHex(res);
+        return VERSION + ":" + bytesToHex(res);
+    }
+
+    public String decrypt(String cipherText) throws GeneralSecurityException, IOException {
+
+        String[] parts = cipherText.split(":");
+        if (parts.length != 2){
+            return decryptV0(cipherText);
+        }
+        return decryptV1(parts[1]);
     }
 
 
-    public String decrypt(String cipherText) throws GeneralSecurityException {
+    private String decryptV1(String cipherText) throws GeneralSecurityException {
         byte[] parts = hexToBytes(cipherText);
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
@@ -68,5 +80,29 @@ public class Crypto implements ICrypto {
         byte[] decryptedText = cipher.doFinal(encrypted);
 
         return new String(decryptedText);
+    }
+
+
+    private String decryptV0(String cipherText) throws GeneralSecurityException, IOException {
+        int keySize = 16;
+
+        byte[] encryptedBytes  = hexToBytes(cipherText);
+        // Hash key.
+        byte[] keyBytes = new byte[keySize];
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        md.update(secret.getBytes("UTF-8"));
+        byte[] longKey = md.digest();
+        System.arraycopy(longKey, 0, keyBytes, 0, keySize);
+        byte[] ivBytes = new byte[keySize];
+        System.arraycopy(longKey, keySize, ivBytes, 0, keySize);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
+
+        // Decrypt.
+        Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+        byte[] decrypted = cipherDecrypt.doFinal(encryptedBytes);
+
+        return new String(decrypted);
     }
 }
