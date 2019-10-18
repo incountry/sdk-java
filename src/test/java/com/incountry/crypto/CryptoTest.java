@@ -18,4 +18,13 @@ public class CryptoTest {
         assertEquals(decrypted, plainText);
         assertNotEquals(encrypted, plainText);
     }
+
+    @Test
+    public void testLegacyDecryption() throws GeneralSecurityException, IOException {
+        Crypto crypto = new Crypto("password");
+        String encrypted = "7765618db31daf5366a6fc3520010327";
+        String decrypted = crypto.decrypt(encrypted);
+        assertEquals(decrypted, "InCountry");
+    }
+
 }
