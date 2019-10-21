@@ -55,7 +55,7 @@ public class Crypto implements ICrypto {
         return VERSION + ":" + bytesToHex(res);
     }
 
-    public String decrypt(String cipherText) throws GeneralSecurityException, IOException {
+    public String decrypt(String cipherText) throws GeneralSecurityException {
 
         String[] parts = cipherText.split(":");
         if (parts.length != 2){
@@ -84,7 +84,7 @@ public class Crypto implements ICrypto {
     }
 
 
-    private String decryptV0(String cipherText) throws GeneralSecurityException, IOException {
+    private String decryptV0(String cipherText) throws GeneralSecurityException {
         int keySize = 16;
 
         byte[] encryptedBytes  = hexToBytes(cipherText);
