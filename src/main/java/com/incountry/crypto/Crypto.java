@@ -6,6 +6,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -90,7 +91,7 @@ public class Crypto implements ICrypto {
         // Hash key.
         byte[] keyBytes = new byte[keySize];
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(secret.getBytes("UTF-8"));
+        md.update(secret.getBytes(StandardCharsets.UTF_8));
         byte[] longKey = md.digest();
         System.arraycopy(longKey, 0, keyBytes, 0, keySize);
         byte[] ivBytes = new byte[keySize];
