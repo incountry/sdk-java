@@ -11,7 +11,8 @@ import java.security.GeneralSecurityException;
 import java.util.HashMap;
 
 public class Storage {
-    private String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
+    private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
+    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
 
     class StorageException extends Exception {
         StorageException(String s){
@@ -54,6 +55,10 @@ public class Storage {
                 System.getenv("INC_SECRET_KEY"));
     }
 
+    public Storage(String environmentID, String apiKey, String secretKey) throws StorageServerException, IOException {
+        this(environmentID, apiKey, null, secretKey != null, secretKey);
+    }
+
     public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
         mEnvID = environment_id;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
@@ -62,7 +67,7 @@ public class Storage {
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
 
         mEndpoint = endpoint;
-        if (mEndpoint == null) throw new IllegalArgumentException("Please pass endpoint param or set INC_ENDPOINT env var");
+        if (mEndpoint == null) mEndpoint = DEFAULT_ENDPOINT;
 
         mPoplist = new HashMap<String, POP>();
         load_country_endpoints();
@@ -174,23 +179,6 @@ public class Storage {
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
         String content = http(url, "DELETE", null, false);
         return content;
-    }
-
-    public static void main(String[] args) throws Exception{
-        Storage store = new Storage();
-        long then = System.currentTimeMillis();
-        store.write("US", "some_row_key", "Some data", null, null, null, null);
-        long now = System.currentTimeMillis();
-        System.out.println(now - then);
-        then = now;
-        Data d = store.read("US", "some_row_key");
-        System.out.println(d);
-        now = System.currentTimeMillis();
-        System.out.println(now - then);
-        then = now;
-        store.delete("US", "some_row_key");
-        now = System.currentTimeMillis();
-        System.out.println(now - then);
     }
 
 }
