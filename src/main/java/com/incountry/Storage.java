@@ -99,7 +99,13 @@ public class Storage {
         }
         //System.out.println(con);
         int status = con.getResponseCode();
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        BufferedReader in = null;
+        if (status < 400) {
+            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        }
+        else {
+            in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+        }
         String inputLine;
         StringBuffer content = new StringBuffer();
         while ((inputLine = in.readLine()) != null) {
