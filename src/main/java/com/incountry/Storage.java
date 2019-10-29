@@ -45,8 +45,8 @@ public class Storage {
     private String mAPIKey = null;
     private String mEndpoint = null;
     private Boolean mIsDefaultEndpoint = false;
+    private Crypto mCrypto = null;
     private HashMap<String, POP> mPoplist;
-    private Crypto mCrypto;
 
     public Storage() throws Exception {
         this(System.getenv("INC_ENVIRONMENT_ID"),
@@ -60,7 +60,7 @@ public class Storage {
         this(environmentID, apiKey, null, secretKey != null, secretKey);
     }
 
-    public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secret_key) throws StorageServerException, IOException {
+    public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secretKey) throws StorageServerException, IOException {
         mEnvID = environment_id;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
@@ -76,13 +76,13 @@ public class Storage {
         mPoplist = new HashMap<String, POP>();
         load_country_endpoints();
 
-        if (encrypt)
-            mCrypto = new Crypto(secret_key);
-        else
-            mCrypto = null;
+        if (encrypt) {
+            mCrypto = new Crypto(secretKey, environment_id);
+        }
+
     }
 
-    private String http(String endpoint, String method, String body, boolean allownone) throws StorageServerException, IOException{
+    private String http(String endpoint, String method, String body, boolean allowNone) throws StorageServerException, IOException{
         URL url = new URL(endpoint);
         //System.out.println(url);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -114,7 +114,7 @@ public class Storage {
         in.close();
         //System.out.println(content);
 
-        if (allownone && status == 404) return null;
+        if (allowNone && status == 404) return null;
         if (status >= 400)
             throw new StorageServerException(status + " " + endpoint + " - " + content);
 
@@ -154,40 +154,27 @@ public class Storage {
     public void write(String country, String key, String body, String profile_key, String range_key, String key2, String key3) throws StorageException, GeneralSecurityException, IOException{
         country = country.toLowerCase();
         checkParameters(country, key);
-        if (mCrypto != null){
-            key = mCrypto.encrypt(key);
-            if (profile_key != null) profile_key = mCrypto.encrypt(profile_key);
-            if (key2 != null) key2 = mCrypto.encrypt(key2);
-            if (key3 != null) key3 = mCrypto.encrypt(key3);
-            if (body != null) body = mCrypto.encrypt(body);
-        }
         Data data = new Data(country, key, body, profile_key, range_key, key2, key3);
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        String content = http(url, "POST", data.toString(), false);
+        String content = http(url, "POST", data.toString(mCrypto), false);
     }
 
     public Data read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
         country = country.toLowerCase();
         checkParameters(country, key);
-        if (mCrypto != null) key = mCrypto.encrypt(key);
+        if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
         String content = http(url, "GET", null, true);
         if (content == null) return null;
-        Data d = Data.fromString(content);
-        if (mCrypto != null) {
-            d.key = mCrypto.decrypt(key);
-            if (d.profile_key != null) d.profile_key = mCrypto.decrypt(d.profile_key);
-            if (d.key2 != null) d.key2 = mCrypto.decrypt(d.key2);
-            if (d.key3 != null) d.key3 = mCrypto.decrypt(d.key3);
-            if (d.body != null) d.body = mCrypto.decrypt(d.body);
-        }
+        Data d = Data.fromString(content,  mCrypto);
+        d.setCountry(country);
         return d;
     }
 
     public String delete(String country, String key) throws StorageException, IOException, GeneralSecurityException {
         country = country.toLowerCase();
         checkParameters(country, key);
-        if (mCrypto != null) key = mCrypto.encrypt(key);
+        if (mCrypto != null) key = mCrypto.createKeyHash(key);;
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
         String content = http(url, "DELETE", null, false);
         return content;

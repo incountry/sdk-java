@@ -3,12 +3,11 @@ package com.incountry;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.incountry.crypto.Crypto;
+import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.security.GeneralSecurityException;
 
 @JsonFilter("nullFilter")
 public class Data {
@@ -40,7 +39,12 @@ public class Data {
         return null;
     }
 
-    public static Data fromString(String s) throws IOException {
+    public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+        if (mCrypto == null) return fromUnencryptedString(s);
+        return fromEncryptedString(s, mCrypto);
+    }
+
+    private static Data fromUnencryptedString(String s) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
         String country = extractKey(o, "country");
@@ -52,6 +56,41 @@ public class Data {
         String key3 = extractKey(o, "key3");
         return new Data(country, key, body, profile_key, range_key, key2, key3);
     }
+
+    private static Data fromEncryptedString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode o = mapper.readTree(s);
+        String country = extractKey(o, "country");
+        String key = extractKey(o, "key");
+        String body = extractKey(o, "body");
+        String profile_key = extractKey(o, "profile_key");
+        String range_key = extractKey(o, "range_key");
+        String key2 = extractKey(o, "key2");
+        String key3 = extractKey(o, "key3");
+
+        String[] parts = body.split(":");
+
+        if (body != null) body = mCrypto.decrypt(body);
+
+        if (parts.length != 2){
+            key = mCrypto.decrypt(key);
+            if (profile_key != null) profile_key = mCrypto.decrypt(profile_key);
+            if (key2 != null) key2 = mCrypto.decrypt(key2);
+            if (key3 != null) key3 = mCrypto.decrypt(key3);
+        } else if (body != null) {
+            JsonNode bodyObj = mapper.readTree(body);
+            body = extractKey(bodyObj, "payload");
+            String meta = extractKey(bodyObj, "meta");
+            JsonNode metaObj = mapper.readTree(meta);
+            key = extractKey(metaObj, "key");
+            if (profile_key != null) profile_key = extractKey(metaObj, "profile_key");
+            if (key2 != null) key2 = extractKey(metaObj, "key2");
+            if (key3 != null) key3 = extractKey(metaObj, "key3");
+        }
+
+        return new Data(country, key, body, profile_key, range_key, key2, key3);
+    }
+
 
     public String getCountry() {
         return country;
@@ -109,25 +148,37 @@ public class Data {
         this.key3 = key3;
     }
 
-    @Override
-    public String toString() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            ArrayList<String> al = new ArrayList();
-            if (body == null) al.add("body");
-            if (country == null) al.add("country");
-            if (profile_key == null) al.add("profile_key");
-            if (range_key == null) al.add("range_key");
-            if (key2 == null) al.add("key2");
-            if (key3 == null) al.add("key3");
-            SimpleFilterProvider filters = new SimpleFilterProvider();
-            Object[] oa = al.toArray();
-            String[] sa = Arrays.copyOf(oa, oa.length, String[].class);
-            filters.addFilter("nullFilter", SimpleBeanPropertyFilter.serializeAllExcept(sa));
-            return mapper.writer(filters).writeValueAsString(this);
+    public String toString(Crypto mCrypto) throws GeneralSecurityException, IOException {
+        if (mCrypto == null) {
+            return new JSONObject()
+                .put("key", key)
+                .put("key2", key2)
+                .put("key3", key3)
+                .put("profile_key", profile_key)
+                .put("range_key", range_key)
+                .put("body", body).toString();
         }
-        catch (Exception x) {
-            return "ERROR: "+x.toString();
-        }
+
+        String bodyJson = new JSONObject()
+            .put("payload", body)
+            .put("meta", new JSONObject()
+                .put("key", key)
+                .put("key2", key2)
+                .put("key3", key3)
+                .put("profile_key", profile_key)
+                .put("range_key", range_key).toString()
+            ).toString();
+
+        String encryptedBodyJson = mCrypto.encrypt(bodyJson);
+
+        String result = new JSONObject()
+            .put("key", mCrypto.createKeyHash(key))
+            .put("key2", mCrypto.createKeyHash(key2))
+            .put("key3", mCrypto.createKeyHash(key3))
+            .put("profile_key", mCrypto.createKeyHash(profile_key))
+            .put("range_key", range_key)
+            .put("body", encryptedBodyJson).toString();
+
+        return result;
     }
 }
