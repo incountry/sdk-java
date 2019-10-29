@@ -29,6 +29,19 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 archivesBaseName = rootProject.name
 
+sourceSets {
+    integration {
+        resources.srcDir "$projectDir/src/integration/resources"
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
+}
+
+configurations {
+    integrationImplementation.extendsFrom testImplementation
+    integrationRuntime.extendsFrom testRuntime
+}
+
 sonarqube {
     properties {
         property "sonar.projectKey", "incountry_sdk-java"
@@ -51,6 +64,7 @@ dependencies {
     compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
     compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile group: 'org.json', name: 'json', version: "${jsonVersion}"
 }
 
 jar {
@@ -69,6 +83,11 @@ task javadocJar(type: Jar) {
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource
+}
+
+task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.integration.output.classesDirs
+    classpath = sourceSets.integration.runtimeClasspath
 }
 
 artifacts {
