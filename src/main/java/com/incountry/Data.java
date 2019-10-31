@@ -3,15 +3,25 @@ package com.incountry;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.incountry.crypto.Crypto;
+import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.security.GeneralSecurityException;
+
 
 @JsonFilter("nullFilter")
 public class Data {
+    private static final String P_COUNTRY = "country";
+    private static final String P_BODY = "body";
+    private static final String P_KEY = "key";
+    private static final String P_KEY_2 = "key2";
+    private static final String P_KEY_3 = "key3";
+    private static final String P_PROFILE_KEY = "profile_key";
+    private static final String P_RANGE_KEY = "range_key";
+    private static final String P_PAYLOAD = "payload";
+    private static final String P_META = "meta";
+
     String country;
     String key;
     String body;
@@ -20,12 +30,12 @@ public class Data {
     String key2;
     String key3;
 
-    public Data(String country, String key, String body, String profile_key, String range_key, String key2, String key3) {
+    public Data(String country, String key, String body, String profileKey, String rangeKey, String key2, String key3) {
         this.country = country;
         this.key = key;
         this.body = body;
-        this.profile_key = profile_key;
-        this.range_key = range_key;
+        this.profile_key = profileKey;
+        this.range_key = rangeKey;
         this.key2 = key2;
         this.key3 = key3;
     }
@@ -40,17 +50,39 @@ public class Data {
         return null;
     }
 
-    public static Data fromString(String s) throws IOException {
+    public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
-        String country = extractKey(o, "country");
-        String key = extractKey(o, "key");
-        String body = extractKey(o, "body");
-        String profile_key = extractKey(o, "profile_key");
-        String range_key = extractKey(o, "range_key");
-        String key2 = extractKey(o, "key2");
-        String key3 = extractKey(o, "key3");
-        return new Data(country, key, body, profile_key, range_key, key2, key3);
+        String country = extractKey(o, P_COUNTRY);
+        String key = extractKey(o, P_KEY);
+        String body = extractKey(o, P_BODY);
+        String profileKey = extractKey(o, P_PROFILE_KEY);
+        String rangeKey = extractKey(o, P_RANGE_KEY);
+        String key2 = extractKey(o, P_KEY_2);
+        String key3 = extractKey(o, P_KEY_3);
+
+        if (body != null && mCrypto != null){
+            String[] parts = body.split(":");
+
+            body = mCrypto.decrypt(body);
+
+            if (parts.length != 2){
+                key = mCrypto.decrypt(key);
+                profileKey = mCrypto.decrypt(profileKey);
+                key2 = mCrypto.decrypt(key2);
+                key3 = mCrypto.decrypt(key3);
+            } else {
+                JsonNode bodyObj = mapper.readTree(body);
+                body = extractKey(bodyObj, P_PAYLOAD);
+                String meta = extractKey(bodyObj, P_META);
+                JsonNode metaObj = mapper.readTree(meta);
+                key = extractKey(metaObj, P_KEY);
+                profileKey = extractKey(metaObj, P_PROFILE_KEY);
+                key2 = extractKey(metaObj, P_KEY_2);
+                key3 = extractKey(metaObj, P_KEY_3);
+            }
+        }
+        return new Data(country, key, body, profileKey, rangeKey, key2, key3);
     }
 
     public String getCountry() {
@@ -109,25 +141,35 @@ public class Data {
         this.key3 = key3;
     }
 
-    @Override
-    public String toString() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            ArrayList<String> al = new ArrayList();
-            if (body == null) al.add("body");
-            if (country == null) al.add("country");
-            if (profile_key == null) al.add("profile_key");
-            if (range_key == null) al.add("range_key");
-            if (key2 == null) al.add("key2");
-            if (key3 == null) al.add("key3");
-            SimpleFilterProvider filters = new SimpleFilterProvider();
-            Object[] oa = al.toArray();
-            String[] sa = Arrays.copyOf(oa, oa.length, String[].class);
-            filters.addFilter("nullFilter", SimpleBeanPropertyFilter.serializeAllExcept(sa));
-            return mapper.writer(filters).writeValueAsString(this);
+    public String toString(Crypto mCrypto) throws GeneralSecurityException, IOException {
+        if (mCrypto == null) {
+            return new JSONObject()
+                .put(P_KEY, key)
+                .put(P_KEY_2, key2)
+                .put(P_KEY_3, key3)
+                .put(P_PROFILE_KEY, profile_key)
+                .put(P_RANGE_KEY, range_key)
+                .put(P_BODY, body).toString();
         }
-        catch (Exception x) {
-            return "ERROR: "+x.toString();
-        }
+
+        String bodyJson = new JSONObject()
+            .put(P_PAYLOAD, body)
+            .put(P_META, new JSONObject()
+                .put(P_KEY, key)
+                .put(P_KEY_2, key2)
+                .put(P_KEY_3, key3)
+                .put(P_PROFILE_KEY, profile_key)
+                .put(P_RANGE_KEY, range_key).toString()
+            ).toString();
+
+        String encryptedBodyJson = mCrypto.encrypt(bodyJson);
+
+        return new JSONObject()
+            .put(P_KEY, mCrypto.createKeyHash(key))
+            .put(P_KEY_2, mCrypto.createKeyHash(key2))
+            .put(P_KEY_3, mCrypto.createKeyHash(key3))
+            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profile_key))
+            .put(P_RANGE_KEY, range_key)
+            .put(P_BODY, encryptedBodyJson).toString();
     }
 }

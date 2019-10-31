@@ -18,6 +18,7 @@ import static com.incountry.Utils.*;
 
 public class Crypto implements ICrypto {
     private String secret;
+    private String envId;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
@@ -27,6 +28,11 @@ public class Crypto implements ICrypto {
 
     public Crypto(String secret) {
         this.secret = secret;
+    }
+
+    public Crypto(String secret, String envId) {
+        this.secret = secret;
+        this.envId = envId;
     }
 
     public String encrypt(String plainText) throws GeneralSecurityException, IOException {
@@ -55,7 +61,18 @@ public class Crypto implements ICrypto {
         return VERSION + ":" + bytesToHex(res);
     }
 
+    private static String createHash(String stringToHash) {
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
+    }
+
+    public String createKeyHash(String key) {
+        if (key == null) return null;
+        String stringToHash = key + ":" + envId;
+        return createHash(stringToHash);
+    }
+
     public String decrypt(String cipherText) throws GeneralSecurityException {
+        if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
         if (parts.length != 2){
