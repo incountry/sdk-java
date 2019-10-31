@@ -9,8 +9,19 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+
 @JsonFilter("nullFilter")
 public class Data {
+    private static final String P_COUNTRY = "country";
+    private static final String P_BODY = "body";
+    private static final String P_KEY = "key";
+    private static final String P_KEY_2 = "key2";
+    private static final String P_KEY_3 = "key3";
+    private static final String P_PROFILE_KEY = "profile_key";
+    private static final String P_RANGE_KEY = "range_key";
+    private static final String P_PAYLOAD = "payload";
+    private static final String P_META = "meta";
+
     String country;
     String key;
     String body;
@@ -47,26 +58,26 @@ public class Data {
     private static Data fromUnencryptedString(String s) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
-        String country = extractKey(o, "country");
-        String key = extractKey(o, "key");
-        String body = extractKey(o, "body");
-        String profile_key = extractKey(o, "profile_key");
-        String range_key = extractKey(o, "range_key");
-        String key2 = extractKey(o, "key2");
-        String key3 = extractKey(o, "key3");
+        String country = extractKey(o, P_COUNTRY);
+        String key = extractKey(o, P_KEY);
+        String body = extractKey(o, P_BODY);
+        String profile_key = extractKey(o, P_PROFILE_KEY);
+        String range_key = extractKey(o, P_RANGE_KEY);
+        String key2 = extractKey(o, P_KEY_2);
+        String key3 = extractKey(o, P_KEY_3);
         return new Data(country, key, body, profile_key, range_key, key2, key3);
     }
 
     private static Data fromEncryptedString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
-        String country = extractKey(o, "country");
-        String key = extractKey(o, "key");
-        String body = extractKey(o, "body");
-        String profile_key = extractKey(o, "profile_key");
-        String range_key = extractKey(o, "range_key");
-        String key2 = extractKey(o, "key2");
-        String key3 = extractKey(o, "key3");
+        String country = extractKey(o, P_COUNTRY);
+        String key = extractKey(o, P_KEY);
+        String body = extractKey(o, P_BODY);
+        String profile_key = extractKey(o, P_PROFILE_KEY);
+        String range_key = extractKey(o, P_RANGE_KEY);
+        String key2 = extractKey(o, P_KEY_2);
+        String key3 = extractKey(o, P_KEY_3);
 
         if (body != null){
             body = mCrypto.decrypt(body);
@@ -79,13 +90,13 @@ public class Data {
                 if (key3 != null) key3 = mCrypto.decrypt(key3);
             } else {
                 JsonNode bodyObj = mapper.readTree(body);
-                body = extractKey(bodyObj, "payload");
-                String meta = extractKey(bodyObj, "meta");
+                body = extractKey(bodyObj, P_PAYLOAD);
+                String meta = extractKey(bodyObj, P_META);
                 JsonNode metaObj = mapper.readTree(meta);
-                key = extractKey(metaObj, "key");
-                if (profile_key != null) profile_key = extractKey(metaObj, "profile_key");
-                if (key2 != null) key2 = extractKey(metaObj, "key2");
-                if (key3 != null) key3 = extractKey(metaObj, "key3");
+                key = extractKey(metaObj, P_KEY);
+                if (profile_key != null) profile_key = extractKey(metaObj, P_PROFILE_KEY);
+                if (key2 != null) key2 = extractKey(metaObj, P_KEY_2);
+                if (key3 != null) key3 = extractKey(metaObj, P_KEY_3);
             }
         }
 
@@ -152,33 +163,33 @@ public class Data {
     public String toString(Crypto mCrypto) throws GeneralSecurityException, IOException {
         if (mCrypto == null) {
             return new JSONObject()
-                .put("key", key)
-                .put("key2", key2)
-                .put("key3", key3)
-                .put("profile_key", profile_key)
-                .put("range_key", range_key)
-                .put("body", body).toString();
+                .put(P_KEY, key)
+                .put(P_KEY_2, key2)
+                .put(P_KEY_3, key3)
+                .put(P_PROFILE_KEY, profile_key)
+                .put(P_RANGE_KEY, range_key)
+                .put(P_BODY, body).toString();
         }
 
         String bodyJson = new JSONObject()
-            .put("payload", body)
-            .put("meta", new JSONObject()
-                .put("key", key)
-                .put("key2", key2)
-                .put("key3", key3)
-                .put("profile_key", profile_key)
-                .put("range_key", range_key).toString()
+            .put(P_PAYLOAD, body)
+            .put(P_META, new JSONObject()
+                .put(P_KEY, key)
+                .put(P_KEY_2, key2)
+                .put(P_KEY_3, key3)
+                .put(P_PROFILE_KEY, profile_key)
+                .put(P_RANGE_KEY, range_key).toString()
             ).toString();
 
         String encryptedBodyJson = mCrypto.encrypt(bodyJson);
 
         String result = new JSONObject()
-            .put("key", mCrypto.createKeyHash(key))
-            .put("key2", mCrypto.createKeyHash(key2))
-            .put("key3", mCrypto.createKeyHash(key3))
-            .put("profile_key", mCrypto.createKeyHash(profile_key))
-            .put("range_key", range_key)
-            .put("body", encryptedBodyJson).toString();
+            .put(P_KEY, mCrypto.createKeyHash(key))
+            .put(P_KEY_2, mCrypto.createKeyHash(key2))
+            .put(P_KEY_3, mCrypto.createKeyHash(key3))
+            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profile_key))
+            .put(P_RANGE_KEY, range_key)
+            .put(P_BODY, encryptedBodyJson).toString();
 
         return result;
     }
