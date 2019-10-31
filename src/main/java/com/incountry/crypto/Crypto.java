@@ -72,6 +72,7 @@ public class Crypto implements ICrypto {
     }
 
     public String decrypt(String cipherText) throws GeneralSecurityException {
+        if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
         if (parts.length != 2){

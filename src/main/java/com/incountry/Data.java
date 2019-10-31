@@ -85,18 +85,18 @@ public class Data {
 
             if (parts.length != 2){
                 key = mCrypto.decrypt(key);
-                if (profile_key != null) profile_key = mCrypto.decrypt(profile_key);
-                if (key2 != null) key2 = mCrypto.decrypt(key2);
-                if (key3 != null) key3 = mCrypto.decrypt(key3);
+                profile_key = mCrypto.decrypt(profile_key);
+                key2 = mCrypto.decrypt(key2);
+                key3 = mCrypto.decrypt(key3);
             } else {
                 JsonNode bodyObj = mapper.readTree(body);
                 body = extractKey(bodyObj, P_PAYLOAD);
                 String meta = extractKey(bodyObj, P_META);
                 JsonNode metaObj = mapper.readTree(meta);
                 key = extractKey(metaObj, P_KEY);
-                if (profile_key != null) profile_key = extractKey(metaObj, P_PROFILE_KEY);
-                if (key2 != null) key2 = extractKey(metaObj, P_KEY_2);
-                if (key3 != null) key3 = extractKey(metaObj, P_KEY_3);
+                profile_key = extractKey(metaObj, P_PROFILE_KEY);
+                key2 = extractKey(metaObj, P_KEY_2);
+                key3 = extractKey(metaObj, P_KEY_3);
             }
         }
 
