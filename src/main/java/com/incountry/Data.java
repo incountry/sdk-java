@@ -30,12 +30,12 @@ public class Data {
     String key2;
     String key3;
 
-    public Data(String country, String key, String body, String profile_key, String range_key, String key2, String key3) {
+    public Data(String country, String key, String body, String profile_key, String rangeKey, String key2, String key3) {
         this.country = country;
         this.key = key;
         this.body = body;
         this.profile_key = profile_key;
-        this.range_key = range_key;
+        this.range_key = rangeKey;
         this.key2 = key2;
         this.key3 = key3;
     }
@@ -51,35 +51,17 @@ public class Data {
     }
 
     public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
-        if (mCrypto == null) return fromUnencryptedString(s);
-        return fromEncryptedString(s, mCrypto);
-    }
-
-    private static Data fromUnencryptedString(String s) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
         String country = extractKey(o, P_COUNTRY);
         String key = extractKey(o, P_KEY);
         String body = extractKey(o, P_BODY);
         String profile_key = extractKey(o, P_PROFILE_KEY);
-        String range_key = extractKey(o, P_RANGE_KEY);
-        String key2 = extractKey(o, P_KEY_2);
-        String key3 = extractKey(o, P_KEY_3);
-        return new Data(country, key, body, profile_key, range_key, key2, key3);
-    }
-
-    private static Data fromEncryptedString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode o = mapper.readTree(s);
-        String country = extractKey(o, P_COUNTRY);
-        String key = extractKey(o, P_KEY);
-        String body = extractKey(o, P_BODY);
-        String profile_key = extractKey(o, P_PROFILE_KEY);
-        String range_key = extractKey(o, P_RANGE_KEY);
+        String rangeKey = extractKey(o, P_RANGE_KEY);
         String key2 = extractKey(o, P_KEY_2);
         String key3 = extractKey(o, P_KEY_3);
 
-        if (body != null){
+        if (body != null && mCrypto != null){
             body = mCrypto.decrypt(body);
             String[] parts = body.split(":");
 
@@ -99,10 +81,8 @@ public class Data {
                 key3 = extractKey(metaObj, P_KEY_3);
             }
         }
-
-        return new Data(country, key, body, profile_key, range_key, key2, key3);
+        return new Data(country, key, body, profile_key, rangeKey, key2, key3);
     }
-
 
     public String getCountry() {
         return country;
