@@ -68,24 +68,25 @@ public class Data {
         String key2 = extractKey(o, "key2");
         String key3 = extractKey(o, "key3");
 
-        String[] parts = body.split(":");
+        if (body != null){
+            body = mCrypto.decrypt(body);
+            String[] parts = body.split(":");
 
-        if (body != null) body = mCrypto.decrypt(body);
-
-        if (parts.length != 2){
-            key = mCrypto.decrypt(key);
-            if (profile_key != null) profile_key = mCrypto.decrypt(profile_key);
-            if (key2 != null) key2 = mCrypto.decrypt(key2);
-            if (key3 != null) key3 = mCrypto.decrypt(key3);
-        } else if (body != null) {
-            JsonNode bodyObj = mapper.readTree(body);
-            body = extractKey(bodyObj, "payload");
-            String meta = extractKey(bodyObj, "meta");
-            JsonNode metaObj = mapper.readTree(meta);
-            key = extractKey(metaObj, "key");
-            if (profile_key != null) profile_key = extractKey(metaObj, "profile_key");
-            if (key2 != null) key2 = extractKey(metaObj, "key2");
-            if (key3 != null) key3 = extractKey(metaObj, "key3");
+            if (parts.length != 2){
+                key = mCrypto.decrypt(key);
+                if (profile_key != null) profile_key = mCrypto.decrypt(profile_key);
+                if (key2 != null) key2 = mCrypto.decrypt(key2);
+                if (key3 != null) key3 = mCrypto.decrypt(key3);
+            } else {
+                JsonNode bodyObj = mapper.readTree(body);
+                body = extractKey(bodyObj, "payload");
+                String meta = extractKey(bodyObj, "meta");
+                JsonNode metaObj = mapper.readTree(meta);
+                key = extractKey(metaObj, "key");
+                if (profile_key != null) profile_key = extractKey(metaObj, "profile_key");
+                if (key2 != null) key2 = extractKey(metaObj, "key2");
+                if (key3 != null) key3 = extractKey(metaObj, "key3");
+            }
         }
 
         return new Data(country, key, body, profile_key, range_key, key2, key3);
