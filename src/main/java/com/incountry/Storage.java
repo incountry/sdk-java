@@ -60,11 +60,11 @@ public class Storage {
         this(environmentID, apiKey, null, secretKey != null, secretKey);
     }
 
-    public Storage(String environment_id, String api_key, String endpoint, boolean encrypt, String secretKey) throws StorageServerException, IOException {
-        mEnvID = environment_id;
+    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, String secretKey) throws StorageServerException, IOException {
+        mEnvID = environmentID;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
-        mAPIKey = api_key;
+        mAPIKey = apiKey;
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
 
         mEndpoint = endpoint;
@@ -77,7 +77,7 @@ public class Storage {
         load_country_endpoints();
 
         if (encrypt) {
-            mCrypto = new Crypto(secretKey, environment_id);
+            mCrypto = new Crypto(secretKey, environmentID);
         }
 
     }
@@ -156,7 +156,7 @@ public class Storage {
         checkParameters(country, key);
         Data data = new Data(country, key, body, profile_key, range_key, key2, key3);
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        String content = http(url, "POST", data.toString(mCrypto), false);
+        http(url, "POST", data.toString(mCrypto), false);
     }
 
     public Data read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
@@ -171,13 +171,12 @@ public class Storage {
         return d;
     }
 
-    public String delete(String country, String key) throws StorageException, IOException, GeneralSecurityException {
+    public String delete(String country, String key) throws StorageException, IOException {
         country = country.toLowerCase();
         checkParameters(country, key);
-        if (mCrypto != null) key = mCrypto.createKeyHash(key);;
+        if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
-        String content = http(url, "DELETE", null, false);
-        return content;
+        return http(url, "DELETE", null, false);
     }
 
 }
