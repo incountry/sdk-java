@@ -68,6 +68,23 @@ public class Crypto implements ICrypto {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
+    private String decryptParts(byte[] parts) throws GeneralSecurityException  {
+        byte[] salt = Arrays.copyOfRange(parts, 0, 64);
+        byte[] iv = Arrays.copyOfRange(parts, 64, 76);
+        byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
+
+        Cipher cipher = Cipher.getInstance(CIPHER_INSTANCE);
+        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+
+        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
+
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+        byte[] decryptedText = cipher.doFinal(encrypted);
+
+        return new String(decryptedText);
+    }
+
     public String createKeyHash(String key) {
         if (key == null) return null;
         String stringToHash = key + ":" + envId;
@@ -91,38 +108,12 @@ public class Crypto implements ICrypto {
 
     private String decryptV2(String cipherText) throws GeneralSecurityException {
         byte[] parts = Base64.getDecoder().decode(cipherText);
-        byte[] salt = Arrays.copyOfRange(parts, 0, 64);
-        byte[] iv = Arrays.copyOfRange(parts, 64, 76);
-        byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
-
-        Cipher cipher = Cipher.getInstance(CIPHER_INSTANCE);
-        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
-
-        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
-
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
-        byte[] decryptedText = cipher.doFinal(encrypted);
-
-        return new String(decryptedText);
+        return this.decryptParts(parts);
     }
 
     private String decryptV1(String cipherText) throws GeneralSecurityException {
         byte[] parts = hexToBytes(cipherText);
-        byte[] salt = Arrays.copyOfRange(parts, 0, 64);
-        byte[] iv = Arrays.copyOfRange(parts, 64, 76);
-        byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
-
-        Cipher cipher = Cipher.getInstance(CIPHER_INSTANCE);
-        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
-
-        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
-
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
-        byte[] decryptedText = cipher.doFinal(encrypted);
-
-        return new String(decryptedText);
+        return this.decryptParts(parts);
     }
 
 
