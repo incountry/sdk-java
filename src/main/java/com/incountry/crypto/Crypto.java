@@ -11,6 +11,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
 import static com.incountry.crypto.CryptoUtils.generateSalt;
 import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
@@ -24,7 +25,8 @@ public class Crypto implements ICrypto {
     private static final int KEY_LENGTH = 32;
     private static final int SALT_LENGTH = 64;
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
-    private static final String VERSION = "1";
+    private static final String VERSION = "2";
+    private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
     public Crypto(String secret) {
         this.secret = secret;
@@ -47,7 +49,7 @@ public class Crypto implements ICrypto {
         SecretKeySpec secretKeySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
 
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
         byte[] encrypted = cipher.doFinal(clean);
 
@@ -57,12 +59,30 @@ public class Crypto implements ICrypto {
         outputStream.write(encrypted);
 
         byte[] res = outputStream.toByteArray();
+        byte[] encoded = Base64.getEncoder().encode(res);
 
-        return VERSION + ":" + bytesToHex(res);
+        return VERSION + ":" + new String(encoded);
     }
 
     private static String createHash(String stringToHash) {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
+    }
+
+    private String decryptUnpacked(byte[] parts) throws GeneralSecurityException  {
+        byte[] salt = Arrays.copyOfRange(parts, 0, 64);
+        byte[] iv = Arrays.copyOfRange(parts, 64, 76);
+        byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
+
+        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+
+        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
+
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+        byte[] decryptedText = cipher.doFinal(encrypted);
+
+        return new String(decryptedText);
     }
 
     public String createKeyHash(String key) {
@@ -75,29 +95,25 @@ public class Crypto implements ICrypto {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
-        if (parts.length != 2){
-            return decryptV0(cipherText);
+
+        switch (parts[0]) {
+            case "1":
+                return decryptV1(parts[1]);
+            case "2":
+                return decryptV2(parts[1]);
+            default:
+                return decryptV0(cipherText);
         }
-        return decryptV1(parts[1]);
     }
 
+    private String decryptV2(String cipherText) throws GeneralSecurityException {
+        byte[] parts = Base64.getDecoder().decode(cipherText);
+        return this.decryptUnpacked(parts);
+    }
 
     private String decryptV1(String cipherText) throws GeneralSecurityException {
         byte[] parts = hexToBytes(cipherText);
-        byte[] salt = Arrays.copyOfRange(parts, 0, 64);
-        byte[] iv = Arrays.copyOfRange(parts, 64, 76);
-        byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
-
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
-
-        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
-
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
-        byte[] decryptedText = cipher.doFinal(encrypted);
-
-        return new String(decryptedText);
+        return this.decryptUnpacked(parts);
     }
 
 

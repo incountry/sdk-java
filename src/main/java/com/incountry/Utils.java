@@ -5,14 +5,6 @@ public class Utils {
         throw new IllegalStateException("Utility class");
     }
 
-    public static String bytesToHex(byte[] bytesArray) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytesArray) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
     public static byte[] hexToBytes(String hex)
     {
         int n = hex.length();

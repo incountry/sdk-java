@@ -48,4 +48,11 @@ public class CryptoTest {
         assertEquals("InCountry", decrypted);
     }
 
+    @Test
+    public void testV2Decryption() throws GeneralSecurityException, IOException {
+        Crypto crypto = new Crypto("password");
+        String encrypted = "2:MyAeMDU3wnlWiqooUM4aStpDvW7JKU0oKBQN4WI0Wyl2vSuSmTIu8TY7Z9ljYeaLfg8ti3mhIJhbLSBNu/AmvMPBZsl6CmSC1KcbZ4kATJQtmZolidyXUGBlXC52xvAnFFGnk2s=";
+        String decrypted = crypto.decrypt(encrypted);
+        assertEquals("InCountry", decrypted);
+    }
 }
