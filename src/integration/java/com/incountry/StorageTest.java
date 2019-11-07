@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -43,7 +44,7 @@ public class StorageTest {
 
     @Test
     public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, Storage.StorageException, IOException {
-        FindFilter filter = new FindFilter(null, null, null, new FilterStringParam(key2), null);
+        FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
         FindOptions options = new FindOptions(100, 0);
         BatchData d = store.find(country, filter, options);
         assertEquals(1, d.getCount());
