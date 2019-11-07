@@ -3,6 +3,7 @@ package com.incountry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incountry.crypto.Crypto;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -177,6 +178,21 @@ public class Storage {
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
         return http(url, "DELETE", null, false);
+    }
+
+    public BatchData find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+        if (country == null) throw new StorageClientException("Missing country");
+        country = country.toLowerCase();
+        String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
+        String postData = new JSONObject()
+            .put("filter", filter.toJSONObject(mCrypto))
+            .put("options", options.toJSONObject())
+            .toString();
+
+        String content = http(url, "POST", postData, false);
+
+        if (content == null) return null;
+        return BatchData.fromString(content, mCrypto);
     }
 
 }
