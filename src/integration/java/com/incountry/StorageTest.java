@@ -41,6 +41,17 @@ public class StorageTest {
     }
 
     @Test
+    public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, Storage.StorageException, IOException {
+        FindFilter filter = new FindFilter(null, null, null, new FilterStringParam(key2), null);
+        FindOptions options = new FindOptions(100, 0);
+        BatchData d = store.find(country, filter, options);
+        assertEquals(1, d.getCount());
+        assertEquals(1, d.getRecords().length);
+        assertEquals(recordKey, d.getRecords()[0].getKey());
+    }
+
+
+    @Test
     public void testDelete() throws GeneralSecurityException, IOException, Storage.StorageException {
         String response = store.delete(country, recordKey);
         assertNotEquals(null, response);
