@@ -152,10 +152,10 @@ public class Storage {
         if (key == null) throw new StorageClientException("Missing key");
     }
 
-    public void write(String country, String key, String body, String profile_key, String range_key, String key2, String key3) throws StorageException, GeneralSecurityException, IOException{
+    public void write(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) throws StorageException, GeneralSecurityException, IOException{
         country = country.toLowerCase();
         checkParameters(country, key);
-        Data data = new Data(country, key, body, profile_key, range_key, key2, key3);
+        Data data = new Data(country, key, body, profileKey, rangeKey, key2, key3);
         String url = getEndpoint(country, "/v2/storage/records/"+country);
         http(url, "POST", data.toString(mCrypto), false);
     }

@@ -26,11 +26,11 @@ public class Data {
     String key;
     String body;
     String profile_key;
-    String range_key;
+    Integer range_key;
     String key2;
     String key3;
 
-    public Data(String country, String key, String body, String profileKey, String rangeKey, String key2, String key3) {
+    public Data(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
         this.country = country;
         this.key = key;
         this.body = body;
@@ -50,6 +50,16 @@ public class Data {
         return null;
     }
 
+    private static Integer extractIntegerKey(JsonNode o, String k){
+        if (o.has(k)){
+            JsonNode v = o.get(k);
+            if (!v.isNull()){
+                return v.asInt();
+            }
+        }
+        return null;
+    }
+
     public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
@@ -57,7 +67,7 @@ public class Data {
         String key = extractKey(o, P_KEY);
         String body = extractKey(o, P_BODY);
         String profileKey = extractKey(o, P_PROFILE_KEY);
-        String rangeKey = extractKey(o, P_RANGE_KEY);
+        Integer rangeKey = extractIntegerKey(o, P_RANGE_KEY);
         String key2 = extractKey(o, P_KEY_2);
         String key3 = extractKey(o, P_KEY_3);
 
@@ -117,11 +127,11 @@ public class Data {
         this.profile_key = profile_key;
     }
 
-    public String getRange_key() {
+    public Integer getRange_key() {
         return range_key;
     }
 
-    public void setRange_key(String range_key) {
+    public void setRange_key(Integer range_key) {
         this.range_key = range_key;
     }
 

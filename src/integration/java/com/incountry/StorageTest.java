@@ -17,6 +17,7 @@ public class StorageTest {
     private String profileKey = "profileKey";
     private String key2 = "key2";
     private String key3 = "key3";
+    private Integer rangeKey = 1;
     private String recordBody = "{\"name\":\"last\"}";
 
 
@@ -27,7 +28,7 @@ public class StorageTest {
 
     @Test
     public void testWrite() throws GeneralSecurityException, IOException, Storage.StorageException {
-        store.write(country, recordKey, recordBody, profileKey, null, key2, key3);
+        store.write(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
     }
 
     @Test
