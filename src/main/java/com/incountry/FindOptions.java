@@ -13,7 +13,7 @@ public class FindOptions {
         }
     }
 
-    public FindOptions() throws Exception {
+    public FindOptions() throws FindOptionsException {
         this(MAX_LIMIT, 0);
     }
 

@@ -36,7 +36,7 @@ public class StorageTest {
         Data d = store.read(country, recordKey);
         assertEquals(recordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
-        assertEquals(profileKey, d.getProfile_key());
+        assertEquals(profileKey, d.getProfileKey());
         assertEquals(key2, d.getKey2());
         assertEquals(key3, d.getKey3());
     }

@@ -25,8 +25,8 @@ public class Data {
     String country;
     String key;
     String body;
-    String profile_key;
-    Integer range_key;
+    String profileKey;
+    Integer rangeKey;
     String key2;
     String key3;
 
@@ -34,8 +34,8 @@ public class Data {
         this.country = country;
         this.key = key;
         this.body = body;
-        this.profile_key = profileKey;
-        this.range_key = rangeKey;
+        this.profileKey = profileKey;
+        this.rangeKey = rangeKey;
         this.key2 = key2;
         this.key3 = key3;
     }
@@ -119,20 +119,20 @@ public class Data {
         this.body = body;
     }
 
-    public String getProfile_key() {
-        return profile_key;
+    public String getProfileKey() {
+        return profileKey;
     }
 
-    public void setProfile_key(String profile_key) {
-        this.profile_key = profile_key;
+    public void setProfileKey(String profileKey) {
+        this.profileKey = profileKey;
     }
 
-    public Integer getRange_key() {
-        return range_key;
+    public Integer getRangeKey() {
+        return rangeKey;
     }
 
-    public void setRange_key(Integer range_key) {
-        this.range_key = range_key;
+    public void setRangeKey(Integer rangeKey) {
+        this.rangeKey = rangeKey;
     }
 
     public String getKey2() {
@@ -157,8 +157,8 @@ public class Data {
                 .put(P_KEY, key)
                 .put(P_KEY_2, key2)
                 .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profile_key)
-                .put(P_RANGE_KEY, range_key)
+                .put(P_PROFILE_KEY, profileKey)
+                .put(P_RANGE_KEY, rangeKey)
                 .put(P_BODY, body).toString();
         }
 
@@ -168,8 +168,8 @@ public class Data {
                 .put(P_KEY, key)
                 .put(P_KEY_2, key2)
                 .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profile_key)
-                .put(P_RANGE_KEY, range_key).toString()
+                .put(P_PROFILE_KEY, profileKey)
+                .put(P_RANGE_KEY, rangeKey).toString()
             ).toString();
 
         String encryptedBodyJson = mCrypto.encrypt(bodyJson);
@@ -178,8 +178,8 @@ public class Data {
             .put(P_KEY, mCrypto.createKeyHash(key))
             .put(P_KEY_2, mCrypto.createKeyHash(key2))
             .put(P_KEY_3, mCrypto.createKeyHash(key3))
-            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profile_key))
-            .put(P_RANGE_KEY, range_key)
+            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey))
+            .put(P_RANGE_KEY, rangeKey)
             .put(P_BODY, encryptedBodyJson).toString();
     }
 }
