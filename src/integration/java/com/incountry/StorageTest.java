@@ -1,5 +1,7 @@
 package com.incountry;
 
+import com.incountry.exceptions.StorageException;
+import com.incountry.key_accessor.SecretKeyAccessor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,16 +25,17 @@ public class StorageTest {
 
     @Before
     public void beforeTestMethod() throws Exception {
-        this.store = new Storage();
+        SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor(System.getenv("INC_SECRET_KEY"));
+        this.store = new Storage(secretKeyAccessor);
     }
 
     @Test
-    public void testWrite() throws GeneralSecurityException, IOException, Storage.StorageException {
+    public void testWrite() throws GeneralSecurityException, IOException, StorageException {
         store.write(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
     }
 
     @Test
-    public void testRead() throws GeneralSecurityException, IOException, Storage.StorageException {
+    public void testRead() throws GeneralSecurityException, IOException, StorageException {
         Data d = store.read(country, recordKey);
         assertEquals(recordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
@@ -42,7 +45,7 @@ public class StorageTest {
     }
 
     @Test
-    public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, Storage.StorageException, IOException {
+    public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
         FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
         FindOptions options = new FindOptions(100, 0);
         BatchData d = store.find(country, filter, options);
@@ -53,7 +56,7 @@ public class StorageTest {
 
 
     @Test
-    public void testDelete() throws GeneralSecurityException, IOException, Storage.StorageException {
+    public void testDelete() throws GeneralSecurityException, IOException, StorageException {
         String response = store.delete(country, recordKey);
         assertNotEquals(null, response);
         // Cannot read deleted record
