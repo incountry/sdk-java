@@ -17,6 +17,7 @@ public class StorageTest {
     private String profileKey = "profileKey";
     private String key2 = "key2";
     private String key3 = "key3";
+    private Integer rangeKey = 1;
     private String recordBody = "{\"name\":\"last\"}";
 
 
@@ -27,7 +28,7 @@ public class StorageTest {
 
     @Test
     public void testWrite() throws GeneralSecurityException, IOException, Storage.StorageException {
-        store.write(country, recordKey, recordBody, profileKey, null, key2, key3);
+        store.write(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
     }
 
     @Test
@@ -35,10 +36,21 @@ public class StorageTest {
         Data d = store.read(country, recordKey);
         assertEquals(recordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
-        assertEquals(profileKey, d.getProfile_key());
+        assertEquals(profileKey, d.getProfileKey());
         assertEquals(key2, d.getKey2());
         assertEquals(key3, d.getKey3());
     }
+
+    @Test
+    public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, Storage.StorageException, IOException {
+        FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
+        FindOptions options = new FindOptions(100, 0);
+        BatchData d = store.find(country, filter, options);
+        assertEquals(1, d.getCount());
+        assertEquals(1, d.getRecords().length);
+        assertEquals(recordKey, d.getRecords()[0].getKey());
+    }
+
 
     @Test
     public void testDelete() throws GeneralSecurityException, IOException, Storage.StorageException {

@@ -25,17 +25,17 @@ public class Data {
     String country;
     String key;
     String body;
-    String profile_key;
-    String range_key;
+    String profileKey;
+    Integer rangeKey;
     String key2;
     String key3;
 
-    public Data(String country, String key, String body, String profileKey, String rangeKey, String key2, String key3) {
+    public Data(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
         this.country = country;
         this.key = key;
         this.body = body;
-        this.profile_key = profileKey;
-        this.range_key = rangeKey;
+        this.profileKey = profileKey;
+        this.rangeKey = rangeKey;
         this.key2 = key2;
         this.key3 = key3;
     }
@@ -50,6 +50,16 @@ public class Data {
         return null;
     }
 
+    private static Integer extractIntegerKey(JsonNode o, String k){
+        if (o.has(k)){
+            JsonNode v = o.get(k);
+            if (!v.isNull()){
+                return v.asInt();
+            }
+        }
+        return null;
+    }
+
     public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
@@ -57,7 +67,7 @@ public class Data {
         String key = extractKey(o, P_KEY);
         String body = extractKey(o, P_BODY);
         String profileKey = extractKey(o, P_PROFILE_KEY);
-        String rangeKey = extractKey(o, P_RANGE_KEY);
+        Integer rangeKey = extractIntegerKey(o, P_RANGE_KEY);
         String key2 = extractKey(o, P_KEY_2);
         String key3 = extractKey(o, P_KEY_3);
 
@@ -109,20 +119,20 @@ public class Data {
         this.body = body;
     }
 
-    public String getProfile_key() {
-        return profile_key;
+    public String getProfileKey() {
+        return profileKey;
     }
 
-    public void setProfile_key(String profile_key) {
-        this.profile_key = profile_key;
+    public void setProfileKey(String profileKey) {
+        this.profileKey = profileKey;
     }
 
-    public String getRange_key() {
-        return range_key;
+    public Integer getRangeKey() {
+        return rangeKey;
     }
 
-    public void setRange_key(String range_key) {
-        this.range_key = range_key;
+    public void setRangeKey(Integer rangeKey) {
+        this.rangeKey = rangeKey;
     }
 
     public String getKey2() {
@@ -147,8 +157,8 @@ public class Data {
                 .put(P_KEY, key)
                 .put(P_KEY_2, key2)
                 .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profile_key)
-                .put(P_RANGE_KEY, range_key)
+                .put(P_PROFILE_KEY, profileKey)
+                .put(P_RANGE_KEY, rangeKey)
                 .put(P_BODY, body).toString();
         }
 
@@ -158,8 +168,8 @@ public class Data {
                 .put(P_KEY, key)
                 .put(P_KEY_2, key2)
                 .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profile_key)
-                .put(P_RANGE_KEY, range_key).toString()
+                .put(P_PROFILE_KEY, profileKey)
+                .put(P_RANGE_KEY, rangeKey).toString()
             ).toString();
 
         String encryptedBodyJson = mCrypto.encrypt(bodyJson);
@@ -168,8 +178,8 @@ public class Data {
             .put(P_KEY, mCrypto.createKeyHash(key))
             .put(P_KEY_2, mCrypto.createKeyHash(key2))
             .put(P_KEY_3, mCrypto.createKeyHash(key3))
-            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profile_key))
-            .put(P_RANGE_KEY, range_key)
+            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey))
+            .put(P_RANGE_KEY, rangeKey)
             .put(P_BODY, encryptedBodyJson).toString();
     }
 }
