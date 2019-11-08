@@ -11,8 +11,6 @@ import com.incountry.exceptions.StorageServerException;
 import com.incountry.http.HttpAgent;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 

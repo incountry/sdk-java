@@ -1,6 +1,5 @@
 package com.incountry.http;
 
-import com.incountry.Storage;
 import com.incountry.exceptions.StorageServerException;
 
 import java.io.BufferedReader;
@@ -22,7 +21,6 @@ public class HttpAgent implements IHttpAgent {
     @Override
     public String request(String endpoint, String method, String body, boolean allowNone) throws IOException, StorageServerException {
         URL url = new URL(endpoint);
-        //System.out.println(url);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
         con.setRequestProperty("Authorization", "Bearer "+apiKey);
@@ -35,7 +33,6 @@ public class HttpAgent implements IHttpAgent {
             os.flush();
             os.close();
         }
-        //System.out.println(con);
         int status = con.getResponseCode();
         BufferedReader in = null;
         if (status < 400) {
@@ -45,12 +42,11 @@ public class HttpAgent implements IHttpAgent {
             in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
         }
         String inputLine;
-        StringBuffer content = new StringBuffer();
+        StringBuilder content = new StringBuilder();
         while ((inputLine = in.readLine()) != null) {
             content.append(inputLine);
         }
         in.close();
-        //System.out.println(content);
 
         if (allowNone && status == 404) return null;
         if (status >= 400)
