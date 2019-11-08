@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incountry.crypto.Crypto;
 import com.incountry.exceptions.StorageClientException;
+import com.incountry.http.IHttpAgent;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
@@ -34,7 +35,7 @@ public class Storage {
     private Boolean mIsDefaultEndpoint = false;
     private Crypto mCrypto = null;
     private HashMap<String, POP> mPoplist;
-    private HttpAgent httpAgent = null;
+    private IHttpAgent httpAgent = null;
 
     public Storage() throws Exception {
         this(System.getenv("INC_ENVIRONMENT_ID"),
@@ -130,7 +131,7 @@ public class Storage {
         return httpAgent.request(url, "DELETE", null, false);
     }
 
-    public void setHttpAgent(HttpAgent agent) {
+    public void setHttpAgent(IHttpAgent agent) {
         httpAgent = agent;
     }
     public BatchData find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
