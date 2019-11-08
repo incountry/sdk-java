@@ -62,53 +62,14 @@ public class Storage {
         }
 
         mPoplist = new HashMap<String, POP>();
+        httpAgent = new HttpAgent(apiKey, environmentID);
+
         load_country_endpoints();
 
         if (encrypt) {
             mCrypto = new Crypto(secretKey, environmentID);
         }
 
-        httpAgent = new HttpAgent(apiKey, environmentID);
-
-    }
-
-    private String http(String endpoint, String method, String body, boolean allowNone) throws StorageServerException, IOException{
-        URL url = new URL(endpoint);
-        //System.out.println(url);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod(method);
-        con.setRequestProperty("Authorization", "Bearer "+mAPIKey);
-        con.setRequestProperty("x-env-id", mEnvID);
-        con.setRequestProperty("Content-Type", "application/json");
-        if (body != null){
-            con.setDoOutput(true);
-            OutputStream os = con.getOutputStream();
-            os.write(body.getBytes());
-            os.flush();
-            os.close();
-        }
-        //System.out.println(con);
-        int status = con.getResponseCode();
-        BufferedReader in = null;
-        if (status < 400) {
-            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        }
-        else {
-            in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
-        }
-        String inputLine;
-        StringBuffer content = new StringBuffer();
-        while ((inputLine = in.readLine()) != null) {
-            content.append(inputLine);
-        }
-        in.close();
-        //System.out.println(content);
-
-        if (allowNone && status == 404) return null;
-        if (status >= 400)
-            throw new StorageServerException(status + " " + endpoint + " - " + content);
-
-        return content.toString();
     }
 
     private void load_country_endpoints() throws StorageServerException, IOException {
@@ -181,7 +142,7 @@ public class Storage {
             .put("options", options.toJSONObject())
             .toString();
 
-        String content = http(url, "POST", postData, false);
+        String content = httpAgent.request(url, "POST", postData, false);
 
         if (content == null) return null;
         return BatchData.fromString(content, mCrypto);
