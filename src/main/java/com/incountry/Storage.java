@@ -126,12 +126,8 @@ public class Storage {
         d.setCountry(country);
         return d;
     }
-
-    private <T> T mergeKeys(T a, T b){
-        return a != null ? a : b;
-    }
     
-    public Data updateOne(String country, FindFilter filter, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
+    public Data updateOne(String country, FindFilter filter, Data record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
     	FindOptions options = new FindOptions(1, 0);
     	BatchData existingRecords = find(country, filter, options);
 
@@ -144,14 +140,8 @@ public class Storage {
     	
     	Data foundRecord = existingRecords.getRecords()[0];
 
-    	String mergedKey = mergeKeys(key, foundRecord.key);
-    	String mergedBody = mergeKeys(body, foundRecord.body);
-    	String mergedProfileKey = mergeKeys(profileKey, foundRecord.profileKey);
-    	Integer mergedRangeKey = mergeKeys(rangeKey, foundRecord.rangeKey);
-    	String mergedKey2 = mergeKeys(key2, foundRecord.key2);
-    	String mergedKey3 = mergeKeys(key3, foundRecord.key3);
+    	Data updatedRecord = Data.merge(foundRecord, record);
 
-    	Data updatedRecord = new Data(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     	write(country, updatedRecord.key, updatedRecord.body, updatedRecord.profileKey, updatedRecord.rangeKey, updatedRecord.key2, updatedRecord.key3);
     	
     	return updatedRecord;

@@ -70,11 +70,14 @@ public class StorageTest {
         FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
-        Data d = store.updateOne(country, filter, null, newBody, null, null, newKey2, null);
+        Data current = store.read(country, recordKey);
+        current.setBody(newBody);
+        current.setKey2(newKey2);
+        Data d = store.updateOne(country, filter, current);
         Data updated = store.read(country, recordKey);
-        assertEquals(recordKey, d.getKey());
-        assertEquals(newBody, d.getBody());
-        assertEquals(newKey2, d.getKey2());
+        assertEquals(recordKey, updated.getKey());
+        assertEquals(newBody, updated.getBody());
+        assertEquals(newKey2, updated.getKey2());
     }
 
     @Test

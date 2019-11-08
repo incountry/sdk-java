@@ -60,6 +60,22 @@ public class Data {
         return null;
     }
 
+    private static <T> T mergeKeys(T a, T b){
+        return b != null ? b : a;
+    }
+
+    public static Data merge(Data base, Data merged){
+        String country = mergeKeys(base.getCountry(), merged.getCountry());
+        String mergedKey = mergeKeys(base.getKey(), merged.getKey());
+        String mergedBody = mergeKeys(base.getBody(), merged.getBody());
+        String mergedProfileKey = mergeKeys(base.getProfileKey(), merged.getProfileKey());
+        Integer mergedRangeKey = mergeKeys(base.getRangeKey(), merged.getRangeKey());
+        String mergedKey2 = mergeKeys(base.getKey2(), merged.getKey2());
+        String mergedKey3 = mergeKeys(base.getKey3(), merged.getKey3());
+
+        return new Data(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
+    }
+
     public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
