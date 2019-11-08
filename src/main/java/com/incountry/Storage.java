@@ -36,11 +36,11 @@ public class Storage {
     private HashMap<String, POP> mPoplist;
     private IHttpAgent httpAgent = null;
 
-    public Storage() throws Exception {
+    public Storage() throws StorageServerException, IOException {
         this(null);
     }
 
-    public Storage(ISecretKeyAccessor secretKeyAccessor) throws Exception {
+    public Storage(ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         this(System.getenv("INC_ENVIRONMENT_ID"),
                 System.getenv("INC_API_KEY"),
                 System.getenv("INC_ENDPOINT"),
