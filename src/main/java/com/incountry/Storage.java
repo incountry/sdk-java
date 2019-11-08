@@ -107,28 +107,28 @@ public class Storage {
         if (key == null) throw new StorageClientException("Missing key");
     }
 
-    public void write(Data record) throws StorageException, GeneralSecurityException, IOException{
+    public void write(Record record) throws StorageException, GeneralSecurityException, IOException{
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
         httpAgent.request(url, "POST", record.toString(mCrypto), false);
     }
 
-    public Data read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
+    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
         country = country.toLowerCase();
         checkParameters(country, key);
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
         String content = httpAgent.request(url, "GET", null, true);
         if (content == null) return null;
-        Data d = Data.fromString(content,  mCrypto);
+        Record d = Record.fromString(content,  mCrypto);
         d.setCountry(country);
         return d;
     }
     
-    public Data updateOne(String country, FindFilter filter, Data record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
+    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
     	FindOptions options = new FindOptions(1, 0);
-    	BatchData existingRecords = find(country, filter, options);
+    	BatchRecord existingRecords = find(country, filter, options);
 
     	if (existingRecords.getTotal() > 1) {
     		throw new StorageServerException("Multiple records found");
@@ -137,9 +137,9 @@ public class Storage {
     		throw new StorageServerException("Record not found");
     	}
     	
-    	Data foundRecord = existingRecords.getRecords()[0];
+    	Record foundRecord = existingRecords.getRecords()[0];
 
-    	Data updatedRecord = Data.merge(foundRecord, record);
+    	Record updatedRecord = Record.merge(foundRecord, record);
 
     	write(updatedRecord);
     	
@@ -157,7 +157,7 @@ public class Storage {
     public void setHttpAgent(IHttpAgent agent) {
         httpAgent = agent;
     }
-    public BatchData find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
@@ -169,13 +169,13 @@ public class Storage {
         String content = httpAgent.request(url, "POST", postData, false);
 
         if (content == null) return null;
-        return BatchData.fromString(content, mCrypto);
+        return BatchRecord.fromString(content, mCrypto);
     }
     
-    public Data findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
-    	BatchData findResults = find(country, filter, options);
+    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    	BatchRecord findResults = find(country, filter, options);
 
-    	Data[] records = findResults.getRecords();
+    	Record[] records = findResults.getRecords();
 
     	if (records.length == 0) {
     		return null;
