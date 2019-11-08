@@ -11,7 +11,7 @@ import java.security.GeneralSecurityException;
 
 
 @JsonFilter("nullFilter")
-public class Data {
+public class Record {
     private static final String P_COUNTRY = "country";
     private static final String P_BODY = "body";
     private static final String P_KEY = "key";
@@ -30,7 +30,15 @@ public class Data {
     String key2;
     String key3;
 
-    public Data(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
+    public Record(){}
+
+    public Record(String country, String key, String body){
+        this.country = country;
+        this.key = key;
+        this.body = body;
+    }
+
+    public Record(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
         this.country = country;
         this.key = key;
         this.body = body;
@@ -60,7 +68,23 @@ public class Data {
         return null;
     }
 
-    public static Data fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    private static <T> T mergeKeys(T a, T b){
+        return b != null ? b : a;
+    }
+
+    public static Record merge(Record base, Record merged){
+        String country = mergeKeys(base.getCountry(), merged.getCountry());
+        String mergedKey = mergeKeys(base.getKey(), merged.getKey());
+        String mergedBody = mergeKeys(base.getBody(), merged.getBody());
+        String mergedProfileKey = mergeKeys(base.getProfileKey(), merged.getProfileKey());
+        Integer mergedRangeKey = mergeKeys(base.getRangeKey(), merged.getRangeKey());
+        String mergedKey2 = mergeKeys(base.getKey2(), merged.getKey2());
+        String mergedKey3 = mergeKeys(base.getKey3(), merged.getKey3());
+
+        return new Record(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
+    }
+
+    public static Record fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
         String country = extractKey(o, P_COUNTRY);
@@ -92,7 +116,7 @@ public class Data {
                 key3 = extractKey(metaObj, P_KEY_3);
             }
         }
-        return new Data(country, key, body, profileKey, rangeKey, key2, key3);
+        return new Record(country, key, body, profileKey, rangeKey, key2, key3);
     }
 
     public String getCountry() {

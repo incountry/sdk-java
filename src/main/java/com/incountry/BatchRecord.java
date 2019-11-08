@@ -8,14 +8,14 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 
-public class BatchData {
+public class BatchRecord {
     int count;
     int limit;
     int offset;
     int total;
-    Data[] records;
+    Record[] records;
 
-    public BatchData(Data[] records, int count, int limit, int offset, int total) {
+    public BatchRecord(Record[] records, int count, int limit, int offset, int total) {
         this.count = count;
         this.limit = limit;
         this.offset = offset;
@@ -23,7 +23,7 @@ public class BatchData {
         this.records = records;
     }
 
-    public static BatchData fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static BatchRecord fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
         JSONObject obj = new JSONObject(s);
         JSONObject meta = obj.getJSONObject("meta");
         int count = meta.getInt("count");
@@ -31,19 +31,19 @@ public class BatchData {
         int offset = meta.getInt("offset");
         int total = meta.getInt("total");
 
-        Data[] records = new Data[count];
-        if (count == 0) return new BatchData(records, count, limit, offset, total);
+        Record[] records = new Record[count];
+        if (count == 0) return new BatchRecord(records, count, limit, offset, total);
 
         JSONArray data = obj.getJSONArray("data");
         for (int i = 0; i < data.length(); i++)
         {
-            records[i] = Data.fromString(data.getJSONObject(i).toString(), mCrypto);
+            records[i] = Record.fromString(data.getJSONObject(i).toString(), mCrypto);
         }
 
-        return new BatchData(records, count, limit, offset, total);
+        return new BatchRecord(records, count, limit, offset, total);
     }
 
-    public Data[] getRecords() {
+    public Record[] getRecords() {
         return records;
     }
 
