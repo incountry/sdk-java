@@ -126,21 +126,32 @@ public class Storage {
         d.setCountry(country);
         return d;
     }
+
+    private <T> T mergeKeys(T a, T b){
+        return a != null ? a : b;
+    }
     
     public Data updateOne(String country, FindFilter filter, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
     	FindOptions options = new FindOptions(1, 0);
     	BatchData existingRecords = find(country, filter, options);
-    	
+
     	if (existingRecords.getTotal() > 1) {
-    		throw new StorageException("Multiple records found");
+    		throw new StorageServerException("Multiple records found");
     	}
     	if (existingRecords.getTotal() <= 0) {
-    		throw new StorageException("Record not found");
+    		throw new StorageServerException("Record not found");
     	}
     	
     	Data foundRecord = existingRecords.getRecords()[0];
-    	
-    	Data updatedRecord = new Data(country, key != null ? key : foundRecord.key, body != null ? body : foundRecord.body, profileKey != null ? profileKey : foundRecord.profileKey, rangeKey != null ? rangeKey : foundRecord.rangeKey, key2 != null ? key2 : foundRecord.key2, key3 != null ? key3 : foundRecord.key3);
+
+    	String mergedKey = mergeKeys(key, foundRecord.key);
+    	String mergedBody = mergeKeys(body, foundRecord.body);
+    	String mergedProfileKey = mergeKeys(profileKey, foundRecord.profileKey);
+    	Integer mergedRangeKey = mergeKeys(rangeKey, foundRecord.rangeKey);
+    	String mergedKey2 = mergeKeys(key2, foundRecord.key2);
+    	String mergedKey3 = mergeKeys(key3, foundRecord.key3);
+
+    	Data updatedRecord = new Data(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     	write(country, updatedRecord.key, updatedRecord.body, updatedRecord.profileKey, updatedRecord.rangeKey, updatedRecord.key2, updatedRecord.key3);
     	
     	return updatedRecord;
@@ -174,9 +185,9 @@ public class Storage {
     
     public Data findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
     	BatchData findResults = find(country, filter, options);
-    	
+
     	Data[] records = findResults.getRecords();
-    	
+
     	if (records.length == 0) {
     		return null;
     	}
