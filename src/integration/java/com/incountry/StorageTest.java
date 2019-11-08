@@ -1,6 +1,7 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
+import com.incountry.key_accessor.SecretKeyAccessor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +25,8 @@ public class StorageTest {
 
     @Before
     public void beforeTestMethod() throws Exception {
-        this.store = new Storage();
+        SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor(System.getenv("INC_SECRET_KEY"));
+        this.store = new Storage(secretKeyAccessor);
     }
 
     @Test

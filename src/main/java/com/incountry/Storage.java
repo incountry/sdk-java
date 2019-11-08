@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.incountry.crypto.Crypto;
 import com.incountry.exceptions.StorageClientException;
 import com.incountry.http.IHttpAgent;
+import com.incountry.key_accessor.ISecretKeyAccessor;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
@@ -36,18 +37,22 @@ public class Storage {
     private IHttpAgent httpAgent = null;
 
     public Storage() throws Exception {
+        this(null);
+    }
+
+    public Storage(ISecretKeyAccessor secretKeyAccessor) throws Exception {
         this(System.getenv("INC_ENVIRONMENT_ID"),
                 System.getenv("INC_API_KEY"),
                 System.getenv("INC_ENDPOINT"),
-                System.getenv("INC_SECRET_KEY") != null,
-                System.getenv("INC_SECRET_KEY"));
+                secretKeyAccessor != null,
+                secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, String secretKey) throws StorageServerException, IOException {
-        this(environmentID, apiKey, null, secretKey != null, secretKey);
+    public Storage(String environmentID, String apiKey, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+        this(environmentID, apiKey, null, secretKeyAccessor != null, secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, String secretKey) throws StorageServerException, IOException {
+    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         mEnvID = environmentID;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
@@ -66,7 +71,7 @@ public class Storage {
         load_country_endpoints();
 
         if (encrypt) {
-            mCrypto = new Crypto(secretKey, environmentID);
+            mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
         }
 
     }
