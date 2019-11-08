@@ -30,6 +30,14 @@ public class Data {
     String key2;
     String key3;
 
+    public Data(){}
+
+    public Data(String country, String key, String body){
+        this.country = country;
+        this.key = key;
+        this.body = body;
+    }
+
     public Data(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
         this.country = country;
         this.key = key;

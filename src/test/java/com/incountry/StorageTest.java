@@ -63,7 +63,8 @@ public class StorageTest {
         public void testWrite() throws GeneralSecurityException, StorageException, IOException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
-            storage.write(country, key, body, profileKey, rangeKey, key2, key3);
+            Data record = new Data(country, key, body, profileKey, rangeKey, key2, key3);
+            storage.write(record);
 
             String encrypted = agent.getCallBody();
             String keyHash = crypto.createKeyHash(key);

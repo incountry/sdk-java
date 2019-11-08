@@ -33,7 +33,8 @@ public class StorageTest {
 
     @Test
     public void test1Write() throws GeneralSecurityException, IOException, StorageException {
-        store.write(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+        Data record = new Data(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+        store.write(record);
     }
 
     @Test

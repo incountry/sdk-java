@@ -107,12 +107,11 @@ public class Storage {
         if (key == null) throw new StorageClientException("Missing key");
     }
 
-    public void write(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) throws StorageException, GeneralSecurityException, IOException{
-        country = country.toLowerCase();
-        checkParameters(country, key);
-        Data data = new Data(country, key, body, profileKey, rangeKey, key2, key3);
+    public void write(Data record) throws StorageException, GeneralSecurityException, IOException{
+        String country = record.getCountry().toLowerCase();
+        checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        httpAgent.request(url, "POST", data.toString(mCrypto), false);
+        httpAgent.request(url, "POST", record.toString(mCrypto), false);
     }
 
     public Data read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
@@ -142,7 +141,7 @@ public class Storage {
 
     	Data updatedRecord = Data.merge(foundRecord, record);
 
-    	write(country, updatedRecord.key, updatedRecord.body, updatedRecord.profileKey, updatedRecord.rangeKey, updatedRecord.key2, updatedRecord.key3);
+    	write(updatedRecord);
     	
     	return updatedRecord;
     }
