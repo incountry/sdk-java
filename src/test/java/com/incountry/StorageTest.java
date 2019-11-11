@@ -77,6 +77,20 @@ public class StorageTest {
             assertEquals(keyHash, key);
             assertEquals(body, actualBody);
         }
+
+        @Test
+        public void testRead() throws GeneralSecurityException, IOException, StorageException {
+            Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+            FakeHttpAgent agent = new FakeHttpAgent(record.toString(crypto));
+            storage.setHttpAgent(agent);
+            Record fetched = storage.read(country, key);
+            assertEquals(key, fetched.getKey());
+            assertEquals(body, fetched.getBody());
+            assertEquals(profileKey, fetched.getProfileKey());
+            assertEquals(key2, fetched.getKey2());
+            assertEquals(key3, fetched.getKey3());
+            assertEquals(rangeKey, fetched.getRangeKey());
+        }
     }
 
     public static class StorageSingleTests {
