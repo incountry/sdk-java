@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
@@ -90,6 +91,21 @@ public class StorageTest {
             assertEquals(key2, fetched.getKey2());
             assertEquals(key3, fetched.getKey3());
             assertEquals(rangeKey, fetched.getRangeKey());
+        }
+
+
+        @Test
+        public void testDelete() throws GeneralSecurityException, StorageException, IOException {
+            FakeHttpAgent agent = new FakeHttpAgent("");
+            storage.setHttpAgent(agent);
+            storage.delete(country, key);
+
+            String keyHash = crypto.createKeyHash(key);
+            String expectedPath = "/v2/storage/records/"+ country + "/" + keyHash;
+
+            String callPath = new URL(agent.getCallEndpoint()).getPath();
+
+            assertEquals(expectedPath, callPath);
         }
     }
 
