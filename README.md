@@ -1,6 +1,3 @@
-
-
-
 InCountry Storage SDK
 ============
 
@@ -54,20 +51,23 @@ SimpleSecretKeyAccessor accessor = new SimpleSecretKeyAccessor("myStrongPassword
 
 ### Writing data to Storage
 
-Use `writeAsync` method in order to create a record.
+Use `write` method in order to create a record.
 ```
-const writeResponse = await storage.writeAsync({
-	country: 'string',      // Required country code of where to store the data
-	key: 'string',          // Required record key
-	body: 'string',         // Optional payload
-	profile_key: 'string',  // Optional
-	range_key: integer,     // Optional
-	key2: 'string',         // Optional
-	key3: 'string'          // Optional
- });
+public void write(Record record) throws StorageException, GeneralSecurityException, IOException
+```
+Here is how you initialize a record object:
+```
+public Record(
+  String country,           // Required country code of where to store the data
+  String key,               // Required record key
+  String body,              // Optional payload
+  String profileKey,        // Optional
+  Integer rangeKey,         // Optional
+  String key2,              // Optional
+  String key3               // Optional
+)
+```
 
-// Use writeReponse.status for status code.
-```
 #### Encryption
 InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
 Here is how data is transformed and stored in InCountry database:
@@ -83,122 +83,107 @@ Here is how data is transformed and stored in InCountry database:
 ```
 ### Reading stored data
 
-Stored record can be read by `key` using `readAsync` method. It accepts an object with two fields: `country` and `key`
+Stored record can be read by `key` using `read` method.
 ```
-const readResponse = await storage.readAsync({
-	country: 'string',      // Required country code
-	key: 'string'           // Required record key
-});
+public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException
+```
+`country` is a country code of the record
+`key` is a record key
 
-// Use readResponse.status for status code, and readResponse.data for payload received.
+This method returns Record object. It contains the following properties: `country`, `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
+
+These properties can be accessed using getters, for example:
 ```
-Note that `readAsync` returns a `Promise` which is always fulfilled. Use `status` property in order check if operation was successful or not.
+String key2 = record.getKey2();
+String body = record.getBody();
+```
 
 ### Find records
 
 It is possible to search by random keys using `find` method.
 ```
-const records = await storage.find(country, filter, options)
+public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException
 ```
-Parameters:
-`country` - country code,
-`filter` - a filter object (see below),
+Parameters:  
+`country` - country code,  
+`filter` - a filter object (see below),  
 `options` - an object containing search options.
+
+`FindFilter` has the following constructor:
+```
+public FindFilter(FilterStringParam key, FilterStringParam profileKey, FilterRangeParam rangeKey, FilterStringParam key2, FilterStringParam key3)
+```
+And for `FindOptions`:
+```
+public FindOptions(int limit, int offset) throws FindOptionsException
+```
+
+There are two different types of filter params: `FilterStringParam` and `FilterRangeParam`.
+`FilterStringParam` is used for all the keys except `rangeKey`:
+```
+public FilterStringParam(String[] value);
+```
+or
+```
+public FilterStringParam(String value);
+```
 
 Here is the example of how `find` method can be used:
 ```
-const records = await storage.find('us', {
-	key2: 'kitty',
-	key3: ['mew', 'purr'],
-}, {
-	limit: 10,
-	offset: 10
-}
-```
-This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`. The `options` parameter defines the number of records to return and the starting index. It can be used to implement pagination. Note: SDK returns 100 records at most.
+FindFilter filter = new FindFilter(
+    null,
+    null,
+    null, 
+    new FilterStringParam("kitty"),
+    new FilterStringParam(new String[]{"mew", "pur"})
+);
 
-The return object looks like the following:
+FindOptions options = new FindOptions(10, 10);
+
+BatchRecord records = storage.find("us", filter, options);
+```
+This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.  
+Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
+
+
+`Find` returns BatchRecord object which contains an array of `Record` and some metadata:
+```
+    int count;
+    int limit;
+    int offset;
+    int total;
+    Record[] records;
+```
+These fields can be accessed using getters, for example:
+```
+int limit = records.getTotal();
+```
+
+`FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.  
+For example you can request all the records with `rangeKey` less than 1000:
 ```
 {
-	data: [/* kitties */],
-	meta: {
-		limit: 10,
-		offset: 10,
-		total: 124 // total records matching filter, ignoring limit
-	}
+    FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
 }
 ```
-You can use the following types for filter fields.
-Single value:
+or if you want just to check equality:
 ```
 {
-	key2: 'kitty'
+    FilterRangeParam rangeParam = new FilterRangeParam(1000);
 }
 ```
-One of the values:
-```
-{
-	key3: ['mew', 'purr']
-}
-```
-`range_key` is a numeric field so you can use range filter requests, for example:
-```
-{
-	range_key: { $lt: 1000 } // search for records with range_key <1000
-}
-```
-Available request options for `range_key`: `$lt`, `$lte`, `$gt`, `$gte`.
-You can search by any keys: `key`, `key2`, `key3`, `profile_key`, `range_key`.
+Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
 ### Find one record matching filter
 
 If you need to find the first record matching filter, you can use the `findOne` method.
-```
-const record = await storage.findOne(country, filter)
-```
-If record not found, it will return `null`.
-
-### Batch read
-
-**Warning**. This method is deprecated. It is recommended to use `find` instead.
-
-It is possible to get a number of records by `key` at once.
-```
-// Currently only GET batches are supported
-const batchResponse = await storage.batchAsync({
- "GET": [ // Array of strings mapping to keys ]})
-
-// Use batchResponse.status for status code, and batchResponse.data for payload received.
-```
+It works the same way as `find` but returns the first record or `null` if no matching records.
 
 ### Delete records
-Use `deleteAsync` method in order to delete a record from InCountry storage. It is only possible using `key` field.
+Use `delete` method in order to delete a record from InCountry storage. It is only possible using `key` field.
 ```
-const deleteResponse = await storage.deleteAsync({
-	country: 'string',      // Required country code
-	key: 'string'           // Required record key
-});
-
-// Use deleteResponse.status for status code.
+public void delete(String country, String key) throws StorageException, IOException
 ```
-### Logging
-You can specify a custom logger at any time as following:
-```
-const logger = {
- write: (level, message) => { console.log(`[${level}] ${message}`) }
-}
-
-storage.setLogger(logger);
-```
-Logger must be an object implementing method `write`, which has following signature:
-```
-write(level, message)
-```
-* `level` (string) - message level: DEBUG, INFO, etc.
-* `message` (string) - log message
-
-Testing Locally
------
-
-1. In terminal run `npm test` for unit tests
-2. In terminal run `npm run integrations` to run integration tests
+Here  
+`country` - country code of the record,
+`key` - the record's key

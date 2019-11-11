@@ -146,12 +146,12 @@ public class Storage {
     	return updatedRecord;
     }
 
-    public String delete(String country, String key) throws StorageException, IOException {
+    public void delete(String country, String key) throws StorageException, IOException {
         country = country.toLowerCase();
         checkParameters(country, key);
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
-        return httpAgent.request(url, "DELETE", null, false);
+        httpAgent.request(url, "DELETE", null, false);
     }
 
     public void setHttpAgent(IHttpAgent agent) {

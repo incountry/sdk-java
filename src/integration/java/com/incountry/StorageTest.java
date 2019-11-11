@@ -83,8 +83,7 @@ public class StorageTest {
 
     @Test
     public void test6Delete() throws GeneralSecurityException, IOException, StorageException {
-        String response = store.delete(country, recordKey);
-        assertNotEquals(null, response);
+        store.delete(country, recordKey);
         // Cannot read deleted record
         Record d = store.read(country, recordKey);
         assertEquals(null, d);
