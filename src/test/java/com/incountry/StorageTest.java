@@ -3,11 +3,9 @@ package com.incountry;
 import com.incountry.crypto.Crypto;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.HttpAgent;
-import com.incountry.http.IHttpAgent;
+import com.incountry.key_accessor.SecretKeyAccessor;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -18,7 +16,6 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 @RunWith(Enclosed.class)
 public class StorageTest {
@@ -57,7 +54,8 @@ public class StorageTest {
 
         @Before
         public void initializeStorage() throws IOException, StorageServerException {
-            storage = new Storage("envId", "apiKey", "password");
+            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
+            storage = new Storage("envId", "apiKey", secretKeyAccessor);
             crypto = new Crypto("password", "envId");
         }
 
@@ -65,7 +63,8 @@ public class StorageTest {
         public void testWrite() throws GeneralSecurityException, StorageException, IOException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
-            storage.write(country, key, body, profileKey, rangeKey, key2, key3);
+            Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+            storage.write(record);
 
             String encrypted = agent.getCallBody();
             String keyHash = crypto.createKeyHash(key);

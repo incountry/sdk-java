@@ -2,9 +2,11 @@ package com.incountry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.incountry.FindOptions.FindOptionsException;
 import com.incountry.crypto.Crypto;
 import com.incountry.exceptions.StorageClientException;
 import com.incountry.http.IHttpAgent;
+import com.incountry.key_accessor.ISecretKeyAccessor;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
@@ -35,19 +37,23 @@ public class Storage {
     private HashMap<String, POP> mPoplist;
     private IHttpAgent httpAgent = null;
 
-    public Storage() throws Exception {
+    public Storage() throws StorageServerException, IOException {
+        this(null);
+    }
+
+    public Storage(ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         this(System.getenv("INC_ENVIRONMENT_ID"),
                 System.getenv("INC_API_KEY"),
                 System.getenv("INC_ENDPOINT"),
-                System.getenv("INC_SECRET_KEY") != null,
-                System.getenv("INC_SECRET_KEY"));
+                secretKeyAccessor != null,
+                secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, String secretKey) throws StorageServerException, IOException {
-        this(environmentID, apiKey, null, secretKey != null, secretKey);
+    public Storage(String environmentID, String apiKey, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+        this(environmentID, apiKey, null, secretKeyAccessor != null, secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, String secretKey) throws StorageServerException, IOException {
+    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         mEnvID = environmentID;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
@@ -66,7 +72,7 @@ public class Storage {
         load_country_endpoints();
 
         if (encrypt) {
-            mCrypto = new Crypto(secretKey, environmentID);
+            mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
         }
 
     }
@@ -101,24 +107,43 @@ public class Storage {
         if (key == null) throw new StorageClientException("Missing key");
     }
 
-    public void write(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) throws StorageException, GeneralSecurityException, IOException{
-        country = country.toLowerCase();
-        checkParameters(country, key);
-        Data data = new Data(country, key, body, profileKey, rangeKey, key2, key3);
+    public void write(Record record) throws StorageException, GeneralSecurityException, IOException{
+        String country = record.getCountry().toLowerCase();
+        checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        httpAgent.request(url, "POST", data.toString(mCrypto), false);
+        httpAgent.request(url, "POST", record.toString(mCrypto), false);
     }
 
-    public Data read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
+    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
         country = country.toLowerCase();
         checkParameters(country, key);
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
         String content = httpAgent.request(url, "GET", null, true);
         if (content == null) return null;
-        Data d = Data.fromString(content,  mCrypto);
+        Record d = Record.fromString(content,  mCrypto);
         d.setCountry(country);
         return d;
+    }
+    
+    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
+    	FindOptions options = new FindOptions(1, 0);
+    	BatchRecord existingRecords = find(country, filter, options);
+
+    	if (existingRecords.getTotal() > 1) {
+    		throw new StorageServerException("Multiple records found");
+    	}
+    	if (existingRecords.getTotal() <= 0) {
+    		throw new StorageServerException("Record not found");
+    	}
+    	
+    	Record foundRecord = existingRecords.getRecords()[0];
+
+    	Record updatedRecord = Record.merge(foundRecord, record);
+
+    	write(updatedRecord);
+    	
+    	return updatedRecord;
     }
 
     public String delete(String country, String key) throws StorageException, IOException {
@@ -132,7 +157,7 @@ public class Storage {
     public void setHttpAgent(IHttpAgent agent) {
         httpAgent = agent;
     }
-    public BatchData find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
@@ -144,7 +169,19 @@ public class Storage {
         String content = httpAgent.request(url, "POST", postData, false);
 
         if (content == null) return null;
-        return BatchData.fromString(content, mCrypto);
+        return BatchRecord.fromString(content, mCrypto);
+    }
+    
+    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    	BatchRecord findResults = find(country, filter, options);
+
+    	Record[] records = findResults.getRecords();
+
+    	if (records.length == 0) {
+    		return null;
+    	}
+    	
+    	return records[0];
     }
 
 }
