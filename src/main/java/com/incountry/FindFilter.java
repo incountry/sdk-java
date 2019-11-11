@@ -16,12 +16,34 @@ public class FindFilter {
     FilterStringParam key3Param;
     FilterRangeParam rangeKeyParam;
 
+    public FindFilter(){}
+
     public FindFilter(FilterStringParam key, FilterStringParam profileKey, FilterRangeParam rangeKey, FilterStringParam key2, FilterStringParam key3) {
         this.keyParam = key;
         this.profileKeyParam = profileKey;
         this.key2Param = key2;
         this.key3Param = key3;
         this.rangeKeyParam = rangeKey;
+    }
+
+    public void setKeyParam(FilterStringParam param){
+        this.keyParam = param;
+    }
+
+    public void setKey2Param(FilterStringParam param){
+        this.key2Param = param;
+    }
+
+    public void setKey3Param(FilterStringParam param){
+        this.key3Param = param;
+    }
+
+    public void setProfileKeyParam(FilterStringParam param){
+        this.profileKeyParam = param;
+    }
+
+    public void setRangeKeyParam(FilterRangeParam param){
+        this.rangeKeyParam = param;
     }
 
 
