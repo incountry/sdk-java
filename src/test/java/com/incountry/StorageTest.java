@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
@@ -77,15 +78,78 @@ public class StorageTest {
             assertEquals(keyHash, key);
             assertEquals(body, actualBody);
         }
+
+        @Test
+        public void testRead() throws GeneralSecurityException, IOException, StorageException {
+            Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+            FakeHttpAgent agent = new FakeHttpAgent(record.toString(crypto));
+            storage.setHttpAgent(agent);
+            Record fetched = storage.read(country, key);
+            assertEquals(key, fetched.getKey());
+            assertEquals(body, fetched.getBody());
+            assertEquals(profileKey, fetched.getProfileKey());
+            assertEquals(key2, fetched.getKey2());
+            assertEquals(key3, fetched.getKey3());
+            assertEquals(rangeKey, fetched.getRangeKey());
+        }
+
+
+        @Test
+        public void testDelete() throws GeneralSecurityException, StorageException, IOException {
+            FakeHttpAgent agent = new FakeHttpAgent("");
+            storage.setHttpAgent(agent);
+            storage.delete(country, key);
+
+            String keyHash = crypto.createKeyHash(key);
+            String expectedPath = "/v2/storage/records/"+ country + "/" + keyHash;
+
+            String callPath = new URL(agent.getCallEndpoint()).getPath();
+
+            assertEquals(expectedPath, callPath);
+        }
     }
 
     public static class StorageSingleTests {
+        Storage storage;
+        Crypto crypto;
+
+        private Storage store;
+        private String country = "US";
+        private String recordKey = "some_key";
+        private String profileKey = "profileKey";
+        private String key2 = "key2";
+        private String key3 = "key3";
+        private Integer rangeKey = 1;
+        private String recordBody = "{\"name\":\"last\"}";
+
+        @Before
+        public void initializeStorage() throws IOException, StorageServerException {
+            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
+            storage = new Storage("envId", "apiKey", secretKeyAccessor);
+            crypto = new Crypto("password", "envId");
+        }
 
         @Test
-        public void testH1() {
-            // U can use country, key and body here
-            String hello = "world";
-            assertEquals("world", hello);
+        public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+            FindOptions options = new FindOptions(1,0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+
+            Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encrypted = rec.toString(crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            storage.setHttpAgent(agent);
+
+            BatchRecord d = storage.find(country, filter, options);
+
+            String callBody = agent.getCallBody();
+            assertEquals("{\"filter\":{\"profile_key\":[\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
+
+            assertEquals(1, d.getCount());
+            assertEquals(1, d.getRecords().length);
+            assertEquals(recordKey, d.getRecords()[0].getKey());
+            assertEquals(recordBody, d.getRecords()[0].getBody());
         }
     }
 }
