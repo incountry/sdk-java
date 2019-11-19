@@ -1,4 +1,6 @@
-package com.incountry.key_accessor;
+package com.incountry.key_accessor.Impl;
+
+import com.incountry.key_accessor.ISecretKeyAccessor;
 
 public class SecretKeyAccessor implements ISecretKeyAccessor {
     private String secret;

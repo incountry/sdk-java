@@ -1,9 +1,9 @@
 package com.incountry;
 
-import com.incountry.crypto.Crypto;
+import com.incountry.crypto.Impl.Crypto;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.key_accessor.SecretKeyAccessor;
+import com.incountry.key_accessor.Impl.SecretKeyAccessor;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;

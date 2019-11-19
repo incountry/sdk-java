@@ -1,16 +1,17 @@
 package com.incountry;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.incountry.FindOptions.FindOptionsException;
-import com.incountry.crypto.Crypto;
+import com.incountry.crypto.Impl.Crypto;
 import com.incountry.exceptions.StorageClientException;
 import com.incountry.http.IHttpAgent;
 import com.incountry.key_accessor.ISecretKeyAccessor;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.HttpAgent;
+import com.incountry.http.Impl.HttpAgent;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -79,18 +80,17 @@ public class Storage {
 
     private void load_country_endpoints() throws StorageServerException, IOException {
         String content = httpAgent.request(PORTALBACKEND_URI+"/countries", "GET", null, false);
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode actualObj = mapper.readTree(content);
-        JsonNode countries = actualObj.get("countries");
-        int i = countries.size();
-        while (i-->0) {
-            JsonNode country = countries.get(i);
-            if (country.get("direct").asBoolean()){
-                String cc = country.get("id").asText().toLowerCase();
-                POP pop = new POP("https://"+cc+".api.incountry.io", country.get("name").asText());
+
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
+        JsonObject contentJson = gson.fromJson(content, JsonObject.class);
+        contentJson.getAsJsonArray("countries").forEach(item -> {
+            if(((JsonObject) item).get("direct").getAsBoolean()) {
+                String cc = ((JsonObject) item).get("id").getAsString().toLowerCase();
+                POP pop = new POP("https://"+cc+".api.incountry.io", ((JsonObject) item).get("name").getAsString());
                 mPoplist.put(cc, pop);
             }
-        }
+        });
     }
 
     private String getEndpoint(String country, String path){
@@ -114,16 +114,31 @@ public class Storage {
         httpAgent.request(url, "POST", record.toString(mCrypto), false);
     }
 
-    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
+    private String createUrl(String country, String recordKey) throws StorageException {
         country = country.toLowerCase();
-        checkParameters(country, key);
-        if (mCrypto != null) key = mCrypto.createKeyHash(key);
-        String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
+        checkParameters(country, recordKey);
+        if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
+        String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + recordKey);
+        return url;
+    }
+
+    /**
+     *
+     * @param country country identifier
+     * @param recordKey record unique identifier
+     * @return record object
+     * @throws StorageException
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    public Record read(String country, String recordKey) throws StorageException, IOException, GeneralSecurityException {
+        String url = createUrl(country, recordKey);
         String content = httpAgent.request(url, "GET", null, true);
         if (content == null) return null;
-        Record d = Record.fromString(content,  mCrypto);
-        d.setCountry(country);
-        return d;
+        Record record = Record.fromString(content,  mCrypto);
+        record.setCountry(country);
+
+        return record;
     }
     
     public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
@@ -146,21 +161,27 @@ public class Storage {
     	return updatedRecord;
     }
 
-    public void delete(String country, String key) throws StorageException, IOException {
-        country = country.toLowerCase();
-        checkParameters(country, key);
-        if (mCrypto != null) key = mCrypto.createKeyHash(key);
-        String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
+    /**
+     *
+     * @param country country identifier
+     * @param recordKey record unique identifier
+     * @throws StorageException
+     * @throws IOException
+     */
+    public void delete(String country, String recordKey) throws StorageException, IOException {
+        String url = createUrl(country, recordKey);
         httpAgent.request(url, "DELETE", null, false);
     }
 
     public void setHttpAgent(IHttpAgent agent) {
         httpAgent = agent;
     }
+
     public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
+
         String postData = new JSONObject()
             .put("filter", filter.toJSONObject(mCrypto))
             .put("options", options.toJSONObject())

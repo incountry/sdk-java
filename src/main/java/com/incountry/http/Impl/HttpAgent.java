@@ -1,6 +1,7 @@
-package com.incountry.http;
+package com.incountry.http.Impl;
 
 import com.incountry.exceptions.StorageServerException;
+import com.incountry.http.IHttpAgent;
 
 import java.io.BufferedReader;
 import java.io.IOException;

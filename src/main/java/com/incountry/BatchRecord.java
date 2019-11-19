@@ -1,13 +1,15 @@
 package com.incountry;
 
-import com.incountry.crypto.Crypto;
-import org.json.JSONObject;
-import org.json.JSONArray;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.incountry.crypto.Impl.Crypto;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-
+@Getter
 public class BatchRecord {
     int count;
     int limit;
@@ -23,44 +25,27 @@ public class BatchRecord {
         this.records = records;
     }
 
-    public static BatchRecord fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
-        JSONObject obj = new JSONObject(s);
-        JSONObject meta = obj.getJSONObject("meta");
-        int count = meta.getInt("count");
-        int limit = meta.getInt("limit");
-        int offset = meta.getInt("offset");
-        int total = meta.getInt("total");
+    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws IOException, GeneralSecurityException {
 
+        JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
+
+        JsonObject meta1 = (JsonObject) responseObject.get("meta");
+        int count = meta1.get("count").getAsInt();
+        int limit = meta1.get("limit").getAsInt();
+        int offset = meta1.get("offset").getAsInt();
+        int total = meta1.get("total").getAsInt();
+
+        // TODO change on ArrayList
         Record[] records = new Record[count];
         if (count == 0) return new BatchRecord(records, count, limit, offset, total);
 
-        JSONArray data = obj.getJSONArray("data");
-        for (int i = 0; i < data.length(); i++)
+        JsonArray data = responseObject.getAsJsonArray("data");
+        // TODO change on foreach
+        for (int i = 0; i < data.size(); i++)
         {
-            records[i] = Record.fromString(data.getJSONObject(i).toString(), mCrypto);
+            records[i] = Record.fromString(data.get(i).toString(), mCrypto);
         }
 
         return new BatchRecord(records, count, limit, offset, total);
     }
-
-    public Record[] getRecords() {
-        return records;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public int getOffset() {
-        return offset;
-    }
-
-    public int getTotal() {
-        return total;
-    }
-
 }

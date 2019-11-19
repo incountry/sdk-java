@@ -1,4 +1,6 @@
-package com.incountry.crypto;
+package com.incountry.crypto.Impl;
+
+import com.incountry.crypto.ICrypto;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
