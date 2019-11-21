@@ -118,8 +118,7 @@ public class Storage {
         country = country.toLowerCase();
         checkParameters(country, recordKey);
         if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
-        String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + recordKey);
-        return url;
+        return getEndpoint(country, "/v2/storage/records/" + country + "/" + recordKey);
     }
 
     /**
