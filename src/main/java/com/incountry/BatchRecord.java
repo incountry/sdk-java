@@ -3,10 +3,9 @@ package com.incountry;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.incountry.crypto.Impl.Crypto;
+import com.incountry.crypto.impl.Crypto;
 import lombok.Getter;
 
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 @Getter
@@ -35,12 +34,10 @@ public class BatchRecord {
         int offset = meta1.get("offset").getAsInt();
         int total = meta1.get("total").getAsInt();
 
-        // TODO change on ArrayList
         Record[] records = new Record[count];
         if (count == 0) return new BatchRecord(records, count, limit, offset, total);
 
         JsonArray data = responseObject.getAsJsonArray("data");
-        // TODO change on foreach
         for (int i = 0; i < data.size(); i++)
         {
             records[i] = Record.fromString(data.get(i).toString(), mCrypto);

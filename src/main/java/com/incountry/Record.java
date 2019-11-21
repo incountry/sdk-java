@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
-import com.incountry.crypto.Impl.Crypto;
+import com.incountry.crypto.impl.Crypto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -120,8 +120,6 @@ public class Record {
         Integer rangeKey = getPropertyFromJson(jsonObject, P_RANGE_KEY) != null ? Integer.parseInt(getPropertyFromJson(jsonObject, P_RANGE_KEY)) : null;
         String key2 = getPropertyFromJson(jsonObject, P_KEY_2);
         String key3 = getPropertyFromJson(jsonObject, P_KEY_3);
-
-        String s = jsonString;
 
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");

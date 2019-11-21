@@ -1,4 +1,4 @@
-package com.incountry.http.Impl;
+package com.incountry.http.impl;
 
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.http.IHttpAgent;

@@ -1,4 +1,4 @@
-package com.incountry.key_accessor.Impl;
+package com.incountry.key_accessor.impl;
 
 import com.incountry.key_accessor.ISecretKeyAccessor;
 

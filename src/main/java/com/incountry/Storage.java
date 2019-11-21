@@ -4,14 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.FindOptions.FindOptionsException;
-import com.incountry.crypto.Impl.Crypto;
+import com.incountry.crypto.impl.Crypto;
 import com.incountry.exceptions.StorageClientException;
 import com.incountry.http.IHttpAgent;
 import com.incountry.key_accessor.ISecretKeyAccessor;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.Impl.HttpAgent;
+import com.incountry.http.impl.HttpAgent;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
