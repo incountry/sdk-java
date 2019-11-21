@@ -70,7 +70,7 @@ public class Crypto implements ICrypto {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private String decryptUnpacked(byte[] parts) throws GeneralSecurityException  {
+    private String decryptUnpacked(byte[] parts) throws GeneralSecurityException {
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);

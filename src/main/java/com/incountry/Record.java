@@ -109,10 +109,9 @@ public class Record {
      * @param jsonString json string
      * @param mCrypto cryprto object
      * @return record objects with data from json
-     * @throws IOException
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if decryption failed
      */
-    public static Record fromString(String jsonString, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static Record fromString(String jsonString, Crypto mCrypto) throws GeneralSecurityException {
         JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
 
         String key = getPropertyFromJson(jsonObject, P_KEY);

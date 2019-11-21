@@ -25,7 +25,7 @@ public class BatchRecord {
         this.records = records;
     }
 
-    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws GeneralSecurityException {
 
         JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
 

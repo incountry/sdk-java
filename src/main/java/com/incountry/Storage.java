@@ -127,11 +127,11 @@ public class Storage {
      * @param country country identifier
      * @param recordKey record unique identifier
      * @return record object
-     * @throws StorageException
-     * @throws IOException
-     * @throws GeneralSecurityException
+     * @throws StorageException if country or recordKey is null
+     * @throws IOException if server connection failed
+     * @throws GeneralSecurityException if decryption failed
      */
-    public Record read(String country, String recordKey) throws StorageException, IOException, GeneralSecurityException {
+    public Record read(String country, String recordKey) throws StorageException, IOException, GeneralSecurityException{
         String url = createUrl(country, recordKey);
         String content = httpAgent.request(url, "GET", null, true);
         if (content == null) return null;
@@ -165,8 +165,8 @@ public class Storage {
      *
      * @param country country identifier
      * @param recordKey record unique identifier
-     * @throws StorageException
-     * @throws IOException
+     * @throws StorageException if country or recordKey is null
+     * @throws IOException if server connection failed
      */
     public void delete(String country, String recordKey) throws StorageException, IOException {
         String url = createUrl(country, recordKey);
