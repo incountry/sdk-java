@@ -70,7 +70,7 @@ public class Storage {
         mPoplist = new HashMap<String, POP>();
         httpAgent = new HttpAgent(apiKey, environmentID);
 
-        load_country_endpoints();
+        loadCountrEndpoints();
 
         if (encrypt) {
             mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
@@ -78,17 +78,22 @@ public class Storage {
 
     }
 
-    private void load_country_endpoints() throws StorageServerException, IOException {
-        String content = httpAgent.request(PORTALBACKEND_URI+"/countries", "GET", null, false);
+    /**
+     * Load endpoint fron server
+     * @throws StorageServerException if server return one of client error responses
+     * @throws IOException if server connection failed
+     */
+    private void loadCountrEndpoints() throws StorageServerException, IOException {
+        String content = httpAgent.request(PORTALBACKEND_URI + "/countries", "GET", null, false);
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         JsonObject contentJson = gson.fromJson(content, JsonObject.class);
         contentJson.getAsJsonArray("countries").forEach(item -> {
             if(((JsonObject) item).get("direct").getAsBoolean()) {
-                String cc = ((JsonObject) item).get("id").getAsString().toLowerCase();
-                POP pop = new POP("https://"+cc+".api.incountry.io", ((JsonObject) item).get("name").getAsString());
-                mPoplist.put(cc, pop);
+                String countryCode  = ((JsonObject) item).get("id").getAsString().toLowerCase();
+                POP pop = new POP("https://" + countryCode + ".api.incountry.io", ((JsonObject) item).get("name").getAsString());
+                mPoplist.put(countryCode, pop);
             }
         });
     }
@@ -122,7 +127,7 @@ public class Storage {
     }
 
     /**
-     *
+     * Read data from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
      * @return record object

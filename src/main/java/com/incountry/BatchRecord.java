@@ -28,11 +28,11 @@ public class BatchRecord {
 
         JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
 
-        JsonObject meta1 = (JsonObject) responseObject.get("meta");
-        int count = meta1.get("count").getAsInt();
-        int limit = meta1.get("limit").getAsInt();
-        int offset = meta1.get("offset").getAsInt();
-        int total = meta1.get("total").getAsInt();
+        JsonObject meta = (JsonObject) responseObject.get("meta");
+        int count = meta.get("count").getAsInt();
+        int limit = meta.get("limit").getAsInt();
+        int offset = meta.get("offset").getAsInt();
+        int total = meta.get("total").getAsInt();
 
         Record[] records = new Record[count];
         if (count == 0) return new BatchRecord(records, count, limit, offset, total);
