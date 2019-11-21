@@ -1,7 +1,9 @@
 package com.incountry;
 
-import com.incountry.crypto.Crypto;
+import com.incountry.crypto.impl.Crypto;
+import lombok.Setter;
 import org.json.JSONObject;
+
 
 public class FindFilter {
     private static final String P_KEY = "key";
@@ -10,10 +12,19 @@ public class FindFilter {
     private static final String P_PROFILE_KEY = "profile_key";
     private static final String P_RANGE_KEY = "range_key";
 
+    @Setter
     FilterStringParam keyParam;
+
+    @Setter
     FilterStringParam profileKeyParam;
+
+    @Setter
     FilterStringParam key2Param;
+
+    @Setter
     FilterStringParam key3Param;
+
+    @Setter
     FilterRangeParam rangeKeyParam;
 
     public FindFilter(){}
@@ -25,27 +36,6 @@ public class FindFilter {
         this.key3Param = key3;
         this.rangeKeyParam = rangeKey;
     }
-
-    public void setKeyParam(FilterStringParam param){
-        this.keyParam = param;
-    }
-
-    public void setKey2Param(FilterStringParam param){
-        this.key2Param = param;
-    }
-
-    public void setKey3Param(FilterStringParam param){
-        this.key3Param = param;
-    }
-
-    public void setProfileKeyParam(FilterStringParam param){
-        this.profileKeyParam = param;
-    }
-
-    public void setRangeKeyParam(FilterRangeParam param){
-        this.rangeKeyParam = param;
-    }
-
 
     public JSONObject toJSONObject(Crypto mCrypto) {
         JSONObject json = new JSONObject()

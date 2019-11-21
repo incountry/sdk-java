@@ -1,13 +1,21 @@
 package com.incountry;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.json.JSONObject;
 
 public class FindOptions {
     private static final int MAX_LIMIT = 100;
+
+    @Getter
+    @Setter
     int limit;
+
+    @Getter
+    @Setter
     int offset;
 
-    class FindOptionsException extends Exception {
+    public class FindOptionsException extends Exception {
         FindOptionsException(String s){
             super(s);
         }
@@ -20,22 +28,6 @@ public class FindOptions {
     public FindOptions(int limit, int offset) throws FindOptionsException {
         if (limit> MAX_LIMIT) throw new FindOptionsException(String.format("Max limit is %l. Use offset to populate more", MAX_LIMIT));
         this.limit = limit;
-        this.offset = offset;
-    }
-
-    public int getLimit() {
-        return limit;
-    }
-
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
-
-    public int getOffset() {
-        return offset;
-    }
-
-    public void setOffset(int offset) {
         this.offset = offset;
     }
 
