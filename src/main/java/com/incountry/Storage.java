@@ -7,7 +7,7 @@ import com.incountry.FindOptions.FindOptionsException;
 import com.incountry.crypto.impl.Crypto;
 import com.incountry.exceptions.StorageClientException;
 import com.incountry.http.IHttpAgent;
-import com.incountry.key_accessor.ISecretKeyAccessor;
+import com.incountry.keyaccessor.SecretKeyAccessor;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
@@ -42,7 +42,7 @@ public class Storage {
         this(null);
     }
 
-    public Storage(ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+    public Storage(SecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         this(System.getenv("INC_ENVIRONMENT_ID"),
                 System.getenv("INC_API_KEY"),
                 System.getenv("INC_ENDPOINT"),
@@ -50,11 +50,11 @@ public class Storage {
                 secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+    public Storage(String environmentID, String apiKey, SecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         this(environmentID, apiKey, null, secretKeyAccessor != null, secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
         mEnvID = environmentID;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
@@ -70,7 +70,7 @@ public class Storage {
         mPoplist = new HashMap<String, POP>();
         httpAgent = new HttpAgent(apiKey, environmentID);
 
-        loadCountrEndpoints();
+        loadCountryEndpoints();
 
         if (encrypt) {
             mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
@@ -79,11 +79,11 @@ public class Storage {
     }
 
     /**
-     * Load endpoint fron server
+     * Load endpoint from server
      * @throws StorageServerException if server return one of client error responses
      * @throws IOException if server connection failed
      */
-    private void loadCountrEndpoints() throws StorageServerException, IOException {
+    private void loadCountryEndpoints() throws StorageServerException, IOException {
         String content = httpAgent.request(PORTALBACKEND_URI + "/countries", "GET", null, false);
 
         GsonBuilder builder = new GsonBuilder();

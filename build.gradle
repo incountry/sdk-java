@@ -18,14 +18,16 @@ plugins {
 
 apply plugin: 'maven'
 apply plugin: 'java'
-apply plugin: 'groovy'
+//apply plugin: 'groovy'
 apply plugin: 'signing'
 
 group group
 version version
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+//sourceCompatibility = JavaVersion.VERSION_1_8
+//targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 archivesBaseName = rootProject.name
 
@@ -34,6 +36,11 @@ sourceSets {
         resources.srcDir "$projectDir/src/integration/resources"
         compileClasspath += main.output + test.output
         runtimeClasspath += main.output + test.output
+    }
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
     }
 }
 
@@ -65,9 +72,9 @@ dependencies {
     compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
-    compileOnly 'org.projectlombok:lombok:1.18.10'
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    implementation "com.google.code.gson:gson:${gsonVersion}"
 }
 
 jar {
