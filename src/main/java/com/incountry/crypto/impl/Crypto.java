@@ -1,6 +1,7 @@
 package com.incountry.crypto.impl;
 
 import com.incountry.crypto.ICrypto;
+import com.incountry.keyaccessor.key.SecretKey;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -15,12 +16,15 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 
+import com.incountry.keyaccessor.key.SecretKeysData;
+import org.javatuples.Pair;
+
 import static com.incountry.crypto.CryptoUtils.generateSalt;
 import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
 import static com.incountry.Utils.*;
 
 public class Crypto implements ICrypto {
-    private String secret;
+    private SecretKeysData secretKeysData;
     private String envId;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
@@ -30,19 +34,20 @@ public class Crypto implements ICrypto {
     private static final String VERSION = "2";
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
-    public Crypto(String secret) {
-        this.secret = secret;
+    public Crypto(SecretKeysData secret) {
+        this.secretKeysData = secret;
     }
 
-    public Crypto(String secret, String envId) {
-        this.secret = secret;
+    public Crypto(SecretKeysData secret, String envId) {
+        this.secretKeysData = secret;
         this.envId = envId;
     }
 
-    public String encrypt(String plainText) throws GeneralSecurityException, IOException {
+    public Pair<String, Integer> encrypt(String plainText) throws GeneralSecurityException, IOException {
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
-        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
+        byte[] strong = generateStrongPasswordHash(secretKeyObj.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecureRandom randomSecureRandom = new SecureRandom();
         byte[] iv = new byte[IV_LENGTH];
@@ -63,20 +68,20 @@ public class Crypto implements ICrypto {
         byte[] res = outputStream.toByteArray();
         byte[] encoded = Base64.getEncoder().encode(res);
 
-        return VERSION + ":" + new String(encoded);
+        return new Pair<>(VERSION + ":" + new String(encoded), secretKeyObj.getVersion());
     }
 
     private static String createHash(String stringToHash) {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private String decryptUnpacked(byte[] parts) throws GeneralSecurityException {
+    private String decryptUnpacked(byte[] parts, String decryptKeyVersion) throws GeneralSecurityException {
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strong = generateStrongPasswordHash(getSecret(Integer.parseInt(decryptKeyVersion)).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -87,46 +92,57 @@ public class Crypto implements ICrypto {
         return new String(decryptedText);
     }
 
+    private SecretKey getSecret(Integer version){
+        SecretKey secret = null;
+        for (SecretKey item : secretKeysData.getSecrets()) {
+            if (item.getVersion() == version) {
+                secret=  item;
+                break;
+            }
+        }
+        return secret;
+    }
+
     public String createKeyHash(String key) {
         if (key == null) return null;
         String stringToHash = key + ":" + envId;
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText) throws GeneralSecurityException {
+    public String decrypt(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
 
         switch (parts[0]) {
             case "1":
-                return decryptV1(parts[1]);
+                return decryptV1(parts[1], decryptKeyVersion);
             case "2":
-                return decryptV2(parts[1]);
+                return decryptV2(parts[1], decryptKeyVersion);
             default:
-                return decryptV0(cipherText);
+                return decryptV0(cipherText, decryptKeyVersion);
         }
     }
 
-    private String decryptV2(String cipherText) throws GeneralSecurityException {
+    private String decryptV2(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
         byte[] parts = Base64.getDecoder().decode(cipherText);
-        return this.decryptUnpacked(parts);
+        return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
-    private String decryptV1(String cipherText) throws GeneralSecurityException {
+    private String decryptV1(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
         byte[] parts = hexToBytes(cipherText);
-        return this.decryptUnpacked(parts);
+        return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
 
-    private String decryptV0(String cipherText) throws GeneralSecurityException {
+    private String decryptV0(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
         int keySize = 16;
 
         byte[] encryptedBytes  = hexToBytes(cipherText);
         // Hash key.
         byte[] keyBytes = new byte[keySize];
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(secret.getBytes(StandardCharsets.UTF_8));
+        md.update(getSecret(Integer.parseInt(decryptKeyVersion)).getSecret().getBytes(StandardCharsets.UTF_8));
         byte[] longKey = md.digest();
         System.arraycopy(longKey, 0, keyBytes, 0, keySize);
         byte[] ivBytes = new byte[keySize];

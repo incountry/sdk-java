@@ -1,9 +1,11 @@
 package com.incountry.crypto;
 
+import org.javatuples.Pair;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 public interface ICrypto {
-    String encrypt(String plainText) throws GeneralSecurityException, IOException;
-    String decrypt(String cipherText) throws GeneralSecurityException;
+    Pair<String, Integer> encrypt(String plainText) throws GeneralSecurityException, IOException;
+    String decrypt(String cipherText, String decriptKeyVersion) throws GeneralSecurityException;
 }

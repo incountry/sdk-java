@@ -2,33 +2,40 @@ package com.incountry.keyaccessor.impl;
 
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
-import com.incountry.keyaccessor.model.SecretKeysData;
+import com.incountry.keyaccessor.key.SecretKey;
+import com.incountry.keyaccessor.key.SecretKeysData;
 import com.incountry.keyaccessor.utils.SecretKeyUtils;
+import com.sun.jdi.InvalidTypeException;
+
+import java.util.ArrayList;
 
 public class SecretKeyAccessorImpl implements SecretKeyAccessor {
-    private String secret;
-    private SecretKeysData secretKeys;
-//    private SecretKeyGenerator secret;
+    private SecretKeysData secretKeysData;
 
     public SecretKeyAccessorImpl(String secret) {
-//        this.secret = secret;
+        secretKeysData = new SecretKeysData();
+        SecretKey secretKey = new SecretKey();
+        secretKey.setSecret(secret);
+        secretKey.setVersion(0);
+        secretKeysData.setSecrets(new ArrayList<>() {{
+            add(secretKey);
+        }});
+        secretKeysData.setCurrentVersion(0);
     }
 
-    public SecretKeyAccessorImpl(SecretKeyGenerator secretKeyGenerator) {
-        Object secetKey = secretKeyGenerator.generate();
-        if (secetKey instanceof String) {
-            secretKeys = SecretKeyUtils.convertStringToSecretKeyData((String) secetKey);
+    public SecretKeyAccessorImpl(SecretKeyGenerator secretKeyGenerator) throws InvalidTypeException {
+        Object secretKey = secretKeyGenerator.generate();
+        if (secretKey instanceof String) {
+            secretKeysData = SecretKeyUtils.convertStringToSecretKeyData((String) secretKey);
+        } else if (secretKey instanceof SecretKeysData) {
+            secretKeysData = (SecretKeysData) secretKey;
+        } else {
+            throw new InvalidTypeException("SecretKeyGenerator returns invalid type. Type must be String or SecretKeysData.");
         }
-
     }
-
-//    @Override
-//    public SecretKeyGenerator getKey() {
-//        return null;
-//    }
 
     @Override
-    public String getKey() {
-        return this.secret;
+    public SecretKeysData getKey() {
+        return secretKeysData;
     }
 }

@@ -1,4 +1,4 @@
-package com.incountry.keyaccessor.model;
+package com.incountry.keyaccessor.key;
 
 import lombok.Data;
 

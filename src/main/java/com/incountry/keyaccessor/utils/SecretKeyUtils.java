@@ -1,9 +1,8 @@
 package com.incountry.keyaccessor.utils;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParser;
-import com.incountry.keyaccessor.model.SecretKey;
-import com.incountry.keyaccessor.model.SecretKeysData;
+import com.incountry.keyaccessor.key.SecretKey;
+import com.incountry.keyaccessor.key.SecretKeysData;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,26 +11,29 @@ import java.util.List;
 
 public class SecretKeyUtils {
 
+    /**
+     * Convert string to SecretKeyData object
+     * @param secretKeyString simple string or json
+     * @return SecretKeyData object wich contain secret keys and there versions
+     */
     static public SecretKeysData convertStringToSecretKeyData(String secretKeyString) {
-
 
         if (isJson(secretKeyString)) {
             Gson g = new Gson();
-            SecretKeysData p = g.fromJson(secretKeyString, SecretKeysData.class);
+            SecretKeysData secretKeysData = g.fromJson(secretKeyString, SecretKeysData.class);
+            return secretKeysData;
         }
-//        SecretKey secretKey = new SecretKey();
-//        secretKey.setSecret(secretKeyString);
-//        List<SecretKey> secretKeys = new ArrayList<>();
-//        secretKeys.add(secretKey);
-//        SecretKeysData secretKeysData = new SecretKeysData();
-//        secretKeysData.setSecretKeys(secretKeys);
+        SecretKey secretKey = new SecretKey();
+        secretKey.setSecret(secretKeyString);
+        List<SecretKey> secretKeys = new ArrayList<>();
+        secretKeys.add(secretKey);
+        SecretKeysData secretKeysData = new SecretKeysData();
+        secretKeysData.setSecrets(secretKeys);
 
-//        return secretKeysData;
-        return new SecretKeysData();
+        return secretKeysData;
     }
 
     static public boolean isJson(String string) {
-
         try {
             new JSONObject(string);
             return true;
@@ -39,13 +41,6 @@ public class SecretKeyUtils {
             return false;
         }
 
-
-//        try {
-//            new Gson().fromJson(string, Object.class);
-//            return true;
-//        } catch(com.google.gson.JsonSyntaxException ex) {
-//            return false;
-//        }
     }
 
 
