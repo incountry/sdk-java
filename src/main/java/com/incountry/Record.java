@@ -122,7 +122,7 @@ public class Record {
         Integer rangeKey = getPropertyFromJson(jsonObject, P_RANGE_KEY) != null ? Integer.parseInt(getPropertyFromJson(jsonObject, P_RANGE_KEY)) : null;
         String key2 = getPropertyFromJson(jsonObject, P_KEY_2);
         String key3 = getPropertyFromJson(jsonObject, P_KEY_3);
-        String version = getPropertyFromJson(jsonObject, "version");
+        String version = getPropertyFromJson(jsonObject, VERSION);
 
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");

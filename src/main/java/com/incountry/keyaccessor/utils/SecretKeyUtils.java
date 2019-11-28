@@ -11,6 +11,9 @@ import java.util.List;
 
 public class SecretKeyUtils {
 
+    private SecretKeyUtils() {
+    }
+
     /**
      * Convert string to SecretKeyData object
      * @param secretKeyString simple string or json
