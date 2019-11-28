@@ -7,6 +7,7 @@ import com.incountry.keyaccessor.key.SecretKeysData;
 import com.incountry.keyaccessor.utils.SecretKeyUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SecretKeyAccessorImpl implements SecretKeyAccessor {
     private SecretKeysData secretKeysData;
@@ -16,9 +17,9 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(0);
-        secretKeysData.setSecrets(new ArrayList<SecretKey>() {{
-            add(secretKey);
-        }});
+        List<SecretKey> secrets = new ArrayList<>();
+        secrets.add(secretKey);
+        secretKeysData.setSecrets(secrets);
         secretKeysData.setCurrentVersion(0);
     }
 
