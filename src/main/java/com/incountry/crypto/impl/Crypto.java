@@ -96,10 +96,11 @@ public class Crypto implements ICrypto {
         SecretKey secret = null;
         for (SecretKey item : secretKeysData.getSecrets()) {
             if (item.getVersion() == version) {
-                secret=  item;
+                secret =  item;
                 break;
             }
         }
+        if (secret == null) throw new IllegalArgumentException("SecretKeyGenerator returns data in which there is no current version of the key");
         return secret;
     }
 
