@@ -19,12 +19,11 @@ public class SecretKeyUtils {
      * @param secretKeyString simple string or json
      * @return SecretKeyData object wich contain secret keys and there versions
      */
-    static public SecretKeysData convertStringToSecretKeyData(String secretKeyString) {
+    public static SecretKeysData convertStringToSecretKeyData(String secretKeyString) {
 
         if (isJson(secretKeyString)) {
             Gson g = new Gson();
-            SecretKeysData secretKeysData = g.fromJson(secretKeyString, SecretKeysData.class);
-            return secretKeysData;
+            return g.fromJson(secretKeyString, SecretKeysData.class);
         }
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secretKeyString);
@@ -36,7 +35,7 @@ public class SecretKeyUtils {
         return secretKeysData;
     }
 
-    static public boolean isJson(String string) {
+    public static boolean isJson(String string) {
         try {
             new JSONObject(string);
             return true;
