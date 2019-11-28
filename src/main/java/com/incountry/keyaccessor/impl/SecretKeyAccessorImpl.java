@@ -17,7 +17,7 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(0);
-        secretKeysData.setSecrets(new ArrayList<>() {{
+        secretKeysData.setSecrets(new ArrayList<SecretKey>() {{
             add(secretKey);
         }});
         secretKeysData.setCurrentVersion(0);

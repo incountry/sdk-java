@@ -29,7 +29,7 @@ public class CryptoTest {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(keyVersion);
-        secretKeysData.setSecrets(new ArrayList<>() {{
+        secretKeysData.setSecrets(new ArrayList<SecretKey>() {{
             add(secretKey);
         }});
         secretKeysData.setCurrentVersion(keyVersion);
