@@ -3,7 +3,6 @@ package com.incountry.keyaccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
 import com.incountry.keyaccessor.impl.SecretKeyAccessorImpl;
 import com.incountry.keyaccessor.key.SecretKeysData;
-import com.sun.jdi.InvalidTypeException;
 
 public interface SecretKeyAccessor {
 
@@ -13,7 +12,7 @@ public interface SecretKeyAccessor {
         return new SecretKeyAccessorImpl(secretKeysData);
     }
 
-    static SecretKeyAccessorImpl getAccessor(SecretKeyGenerator secretKeyGenerator) throws InvalidTypeException {
+    static SecretKeyAccessorImpl getAccessor(SecretKeyGenerator secretKeyGenerator) {
         return new SecretKeyAccessorImpl(secretKeyGenerator);
     }
 

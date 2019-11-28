@@ -5,7 +5,6 @@ import com.incountry.keyaccessor.generator.SecretKeyGenerator;
 import com.incountry.keyaccessor.key.SecretKey;
 import com.incountry.keyaccessor.key.SecretKeysData;
 import com.incountry.keyaccessor.utils.SecretKeyUtils;
-import com.sun.jdi.InvalidTypeException;
 
 import java.util.ArrayList;
 
@@ -23,14 +22,14 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
         secretKeysData.setCurrentVersion(0);
     }
 
-    public SecretKeyAccessorImpl(SecretKeyGenerator secretKeyGenerator) throws InvalidTypeException {
+    public SecretKeyAccessorImpl(SecretKeyGenerator secretKeyGenerator) {
         Object secretKey = secretKeyGenerator.generate();
         if (secretKey instanceof String) {
             secretKeysData = SecretKeyUtils.convertStringToSecretKeyData((String) secretKey);
         } else if (secretKey instanceof SecretKeysData) {
             secretKeysData = (SecretKeysData) secretKey;
         } else {
-            throw new InvalidTypeException("SecretKeyGenerator returns invalid type. Type must be String or SecretKeysData.");
+            throw new IllegalArgumentException("SecretKeyGenerator returns invalid type. Type must be String or SecretKeysData.");
         }
     }
 

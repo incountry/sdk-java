@@ -5,7 +5,6 @@ import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
-import com.sun.jdi.InvalidTypeException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +55,7 @@ public class StorageTest {
         }
 
         @Before
-        public void initializeStorage() throws IOException, StorageServerException, InvalidTypeException {
+        public void initializeStorage() throws IOException, StorageServerException {
             SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
                 @Override
                 public String generate() {
@@ -145,7 +144,7 @@ public class StorageTest {
         private String recordBody = "{\"name\":\"last\"}";
 
         @Before
-        public void initializeStorage() throws IOException, StorageServerException, InvalidTypeException {
+        public void initializeStorage() throws IOException, StorageServerException {
             SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
                 @Override
                 public String generate() {
