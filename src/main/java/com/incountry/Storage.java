@@ -15,7 +15,9 @@ import com.incountry.http.impl.HttpAgent;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
@@ -144,7 +146,20 @@ public class Storage {
 
         return record;
     }
-    
+
+    public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException {
+        country = country.toLowerCase();
+        List<String> recordsStrings = new ArrayList<>();
+        for (Record record : records) {
+            checkParameters(country, record.getKey());
+            recordsStrings.add(record.toString(mCrypto));
+        }
+        String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
+        httpAgent.request(url, "POST", new Gson().toJson(recordsStrings), false);
+
+        return true;
+    }
+
     public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
     	FindOptions options = new FindOptions(1, 0);
     	BatchRecord existingRecords = find(country, filter, options);

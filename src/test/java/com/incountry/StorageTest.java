@@ -5,6 +5,7 @@ import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +16,9 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -82,7 +85,7 @@ public class StorageTest {
         }
 
         @Test
-        public void testWrite() throws GeneralSecurityException, StorageException, IOException {
+        public void writeTest() throws GeneralSecurityException, StorageException, IOException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
@@ -101,7 +104,7 @@ public class StorageTest {
         }
 
         @Test
-        public void testRead() throws GeneralSecurityException, IOException, StorageException {
+        public void readTest() throws GeneralSecurityException, IOException, StorageException {
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             FakeHttpAgent agent = new FakeHttpAgent(record.toString(crypto));
             storage.setHttpAgent(agent);
@@ -116,7 +119,7 @@ public class StorageTest {
 
 
         @Test
-        public void testDelete() throws GeneralSecurityException, StorageException, IOException {
+        public void deleteTest() throws GeneralSecurityException, StorageException, IOException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             storage.delete(country, key);
@@ -127,6 +130,32 @@ public class StorageTest {
             String callPath = new URL(agent.getCallEndpoint()).getPath();
 
             assertEquals(expectedPath, callPath);
+        }
+
+        @Test
+        public void batchWriteTest() throws StorageException, GeneralSecurityException, IOException {
+            FakeHttpAgent agent = new FakeHttpAgent("");
+            storage.setHttpAgent(agent);
+            List<Record> records = new ArrayList<>();
+            records.add(new Record(country, key, body, profileKey, rangeKey, key2, key3));
+            storage.batchWrite(country, records);
+
+            String encrypted = agent.getCallBody();
+            String keyHash = crypto.createKeyHash(key);
+            JSONArray responseList = new JSONArray(encrypted);
+            for (Object item : responseList) {
+                System.out.println();
+                JSONObject response = new JSONObject(item.toString());
+                String key = response.getString("key");
+                String encryptedBody = response.getString("body");
+                String actualBodyStr = crypto.decrypt(encryptedBody, "0");
+                JSONObject bodyJsonObj = new JSONObject(actualBodyStr);
+                String actualBody = body != null ? bodyJsonObj.getString("payload") : null;
+                assertEquals(keyHash, key);
+                assertEquals(body, actualBody);
+            }
+
+
         }
     }
 
@@ -162,7 +191,6 @@ public class StorageTest {
             storage = new Storage(
                     "envId",
                     "apiKey",
-//                SecretKeyAccessor.getAccessor("1234")
                     secretKeyAccessor
 
             );
@@ -171,7 +199,7 @@ public class StorageTest {
         }
 
         @Test
-        public void testFind() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        public void findTest() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
             FindOptions options = new FindOptions(1,0);
             FindFilter filter = new FindFilter();
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
