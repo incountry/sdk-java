@@ -1,7 +1,8 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
-import com.incountry.key_accessor.SecretKeyAccessor;
+import com.incountry.keyaccessor.SecretKeyAccessor;
+import com.incountry.keyaccessor.generator.SecretKeyGenerator;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -11,7 +12,6 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class StorageTest {
@@ -27,8 +27,26 @@ public class StorageTest {
 
     @Before
     public void beforeTestMethod() throws Exception {
-        SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor(System.getenv("INC_SECRET_KEY"));
-        this.store = new Storage(secretKeyAccessor);
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+            @Override
+            public String generate() {
+                return "{\n" +
+                        "  \"secrets\": [\n" +
+                        "    {\n" +
+                        "      \"secret\": \"123\",\n" +
+                        "      \"version\": 0\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"currentVersion\": 0\n" +
+                        "}";
+            }
+        });
+        store = new Storage(
+                "envId",
+                "apiKey",
+                secretKeyAccessor
+
+        );
     }
 
     @Test

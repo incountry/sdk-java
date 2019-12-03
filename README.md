@@ -14,7 +14,7 @@ Storage(
   String apiKey, 
   String endpoint, 
   boolean encrypt, 
-  ISecretKeyAccessor secretKeyAccessor
+  ISecretKeyAccessor secretKeyAccessorImpl
 )
 ```
 
@@ -26,7 +26,7 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-`secretKeyAccessor` is used to pass a secret used for encryption.
+`secretKeyAccessorImpl` is used to pass a secret used for encryption.
 
 Note: even though PBKDF2 is used internally to generate a cryptographically strong encryption key, you must make sure that you use strong enough password.
 

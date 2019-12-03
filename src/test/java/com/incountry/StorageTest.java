@@ -3,7 +3,8 @@ package com.incountry;
 import com.incountry.crypto.impl.Crypto;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.key_accessor.impl.SecretKeyAccessor;
+import com.incountry.keyaccessor.SecretKeyAccessor;
+import com.incountry.keyaccessor.generator.SecretKeyGenerator;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,24 +41,59 @@ public class StorageTest {
         public String profileKey;
         @Parameterized.Parameter(6)
         public Integer rangeKey;
+        @Parameterized.Parameter(7)
+        public SecretKeyAccessor secretKeyAccessor;
 
         @Parameterized.Parameters(name = "{index}:withParams({0}, {1}, {2}")
         public static Iterable<Object[]> dataForTest() {
             return Arrays.asList(new Object[][]{
-                {"us", "key1", null, null, null, null, null},
-                {"us", "key1", "body", null, null, null, null},
-                {"us", "key1", "body", "key2", null, null, null},
-                {"us", "key1", "body", "key2", "key3", null, null},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+            });
+        }
+
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
+            return SecretKeyAccessor.getAccessor("password");
+        }
+
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGenerator() {
+            return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+                @Override
+                public String generate() {
+                    return "{\n" +
+                            "  \"secrets\": [\n" +
+                            "    {\n" +
+                            "      \"secret\": \"123\",\n" +
+                            "      \"version\": 0\n" +
+                            "    }\n" +
+                            "  ],\n" +
+                            "  \"currentVersion\": 0\n" +
+                            "}";
+                }
             });
         }
 
         @Before
         public void initializeStorage() throws IOException, StorageServerException {
-            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
-            storage = new Storage("envId", "apiKey", secretKeyAccessor);
-            crypto = new Crypto("password", "envId");
+            storage = new Storage(
+                    "envId",
+                    "apiKey",
+                    secretKeyAccessor
+
+            );
+
+            crypto = new Crypto(secretKeyAccessor.getKey(), "envId");
+
         }
 
         @Test
@@ -72,7 +108,7 @@ public class StorageTest {
             JSONObject response = new JSONObject(encrypted);
             String key = response.getString("key");
             String encryptedBody = response.getString("body");
-            String actualBodyStr = crypto.decrypt(encryptedBody);
+            String actualBodyStr = crypto.decrypt(encryptedBody, "0");
             JSONObject bodyJsonObj = new JSONObject(actualBodyStr);
             String actualBody = body != null ? bodyJsonObj.getString("payload") : null;
             assertEquals(keyHash, key);
@@ -124,9 +160,29 @@ public class StorageTest {
 
         @Before
         public void initializeStorage() throws IOException, StorageServerException {
-            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
-            storage = new Storage("envId", "apiKey", secretKeyAccessor);
-            crypto = new Crypto("password", "envId");
+            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+                @Override
+                public String generate() {
+                    return "{\n" +
+                            "  \"secrets\": [\n" +
+                            "    {\n" +
+                            "      \"secret\": \"123\",\n" +
+                            "      \"version\": 0\n" +
+                            "    }\n" +
+                            "  ],\n" +
+                            "  \"currentVersion\": 0\n" +
+                            "}";
+                }
+            });
+            storage = new Storage(
+                    "envId",
+                    "apiKey",
+//                SecretKeyAccessor.getAccessor("1234")
+                    secretKeyAccessor
+
+            );
+
+            crypto = new Crypto(secretKeyAccessor.getKey(), "envId");
         }
 
         @Test

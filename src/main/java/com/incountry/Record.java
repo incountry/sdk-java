@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName;
 import com.incountry.crypto.impl.Crypto;
 import lombok.Getter;
 import lombok.Setter;
+import org.javatuples.Pair;
 
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class Record {
     private static final String P_RANGE_KEY = "range_key";
     private static final String P_PAYLOAD = "payload";
     private static final String P_META = "meta";
+    private static final String VERSION = "version";
 
     @Getter
     @Setter
@@ -120,17 +122,18 @@ public class Record {
         Integer rangeKey = getPropertyFromJson(jsonObject, P_RANGE_KEY) != null ? Integer.parseInt(getPropertyFromJson(jsonObject, P_RANGE_KEY)) : null;
         String key2 = getPropertyFromJson(jsonObject, P_KEY_2);
         String key3 = getPropertyFromJson(jsonObject, P_KEY_3);
+        String version = getPropertyFromJson(jsonObject, VERSION);
 
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");
 
-            body = mCrypto.decrypt(body);
+            body = mCrypto.decrypt(body, version);
 
             if (parts.length != 2){
-                key = mCrypto.decrypt(key);
-                profileKey = mCrypto.decrypt(profileKey);
-                key2 = mCrypto.decrypt(key2);
-                key3 = mCrypto.decrypt(key3);
+                key = mCrypto.decrypt(key, version);
+                profileKey = mCrypto.decrypt(profileKey, version);
+                key2 = mCrypto.decrypt(key2, version);
+                key3 = mCrypto.decrypt(key3, version);
             } else {
                 JsonObject bodyObj = new Gson().fromJson(body, JsonObject.class);
                 body = getPropertyFromJson(bodyObj, P_PAYLOAD);
@@ -165,8 +168,7 @@ public class Record {
         bodyJson.put(P_META, nodesElement.toString());
         String bodyJsonString = gson.toJson(bodyJson);
 
-
-        String encryptedBodyJson = mCrypto.encrypt(bodyJsonString);
+        Pair<String, Integer> encryptedBodyAndVersion = mCrypto.encrypt(bodyJsonString);
 
         JsonObject recordJson = new JsonObject();
         recordJson.addProperty(P_KEY, mCrypto.createKeyHash(key));
@@ -174,7 +176,8 @@ public class Record {
         recordJson.addProperty(P_KEY_3, mCrypto.createKeyHash(key3));
         recordJson.addProperty(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey));
         recordJson.addProperty(P_RANGE_KEY, rangeKey);
-        recordJson.addProperty(P_BODY, encryptedBodyJson);
+        recordJson.addProperty(P_BODY, encryptedBodyAndVersion.getValue0());
+        recordJson.addProperty(VERSION, encryptedBodyAndVersion.getValue1());
         return recordJson.toString();
     }
 }
