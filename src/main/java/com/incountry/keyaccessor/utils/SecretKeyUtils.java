@@ -11,6 +11,8 @@ import java.util.List;
 
 public class SecretKeyUtils {
 
+    public static final int DEFAULT_VERSION = 0;
+
     private SecretKeyUtils() {
     }
 
@@ -31,6 +33,7 @@ public class SecretKeyUtils {
         secretKeys.add(secretKey);
         SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeys);
+        secretKeysData.setCurrentVersion(DEFAULT_VERSION);
 
         return secretKeysData;
     }
