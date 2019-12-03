@@ -44,22 +44,33 @@ public class StorageTest {
         public String profileKey;
         @Parameterized.Parameter(6)
         public Integer rangeKey;
+        @Parameterized.Parameter(7)
+        public SecretKeyAccessor secretKeyAccessor;
 
         @Parameterized.Parameters(name = "{index}:withParams({0}, {1}, {2}")
         public static Iterable<Object[]> dataForTest() {
             return Arrays.asList(new Object[][]{
-                {"us", "key1", null, null, null, null, null},
-                {"us", "key1", "body", null, null, null, null},
-                {"us", "key1", "body", "key2", null, null, null},
-                {"us", "key1", "body", "key2", "key3", null, null},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithString()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGenerator()},
             });
         }
 
-        @Before
-        public void initializeStorage() throws IOException, StorageServerException {
-            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
+            return SecretKeyAccessor.getAccessor("password");
+        }
+
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGenerator() {
+            return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
                 @Override
                 public String generate() {
                     return "{\n" +
@@ -73,6 +84,10 @@ public class StorageTest {
                             "}";
                 }
             });
+        }
+
+        @Before
+        public void initializeStorage() throws IOException, StorageServerException {
             storage = new Storage(
                     "envId",
                     "apiKey",
