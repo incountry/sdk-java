@@ -144,7 +144,6 @@ public class StorageTest {
             String keyHash = crypto.createKeyHash(key);
             JSONArray responseList = new JSONArray(encrypted);
             for (Object item : responseList) {
-                System.out.println();
                 JSONObject response = new JSONObject(item.toString());
                 String key = response.getString("key");
                 String encryptedBody = response.getString("body");

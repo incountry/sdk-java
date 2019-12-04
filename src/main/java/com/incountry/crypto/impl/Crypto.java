@@ -81,9 +81,9 @@ public class Crypto implements ICrypto {
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        byte[] strong = generateStrongPasswordHash(getSecret(Integer.parseInt(decryptKeyVersion)).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strongPasswordHash = generateStrongPasswordHash(getSecret(Integer.parseInt(decryptKeyVersion)).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
-        SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");
+        SecretKeySpec keySpec = new SecretKeySpec(strongPasswordHash, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
 
         cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
@@ -96,7 +96,7 @@ public class Crypto implements ICrypto {
         SecretKey secret = null;
         for (SecretKey item : secretKeysData.getSecrets()) {
             if (item.getVersion() == version) {
-                secret =  item;
+                secret = item;
                 break;
             }
         }
