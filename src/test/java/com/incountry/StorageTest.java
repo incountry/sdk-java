@@ -111,7 +111,7 @@ public class StorageTest {
             JSONObject response = new JSONObject(encrypted);
             String key = response.getString("key");
             String encryptedBody = response.getString("body");
-            String actualBodyStr = crypto.decrypt(encryptedBody, "0");
+            String actualBodyStr = crypto.decrypt(encryptedBody, 0);
             JSONObject bodyJsonObj = new JSONObject(actualBodyStr);
             String actualBody = body != null ? bodyJsonObj.getString("payload") : null;
             assertEquals(keyHash, key);
@@ -162,7 +162,7 @@ public class StorageTest {
                 JSONObject response = new JSONObject(item.toString());
                 String key = response.getString("key");
                 String encryptedBody = response.getString("body");
-                String actualBodyStr = crypto.decrypt(encryptedBody, "0");
+                String actualBodyStr = crypto.decrypt(encryptedBody, 0);
                 JSONObject bodyJsonObj = new JSONObject(actualBodyStr);
                 String actualBody = body != null ? bodyJsonObj.getString("payload") : null;
                 assertEquals(keyHash, key);

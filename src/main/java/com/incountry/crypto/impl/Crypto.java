@@ -75,13 +75,13 @@ public class Crypto implements ICrypto {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private String decryptUnpacked(byte[] parts, String decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws GeneralSecurityException {
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        byte[] strongPasswordHash = generateStrongPasswordHash(getSecret(Integer.parseInt(decryptKeyVersion)).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strongPasswordHash = generateStrongPasswordHash(getSecret(decryptKeyVersion).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecretKeySpec keySpec = new SecretKeySpec(strongPasswordHash, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -110,7 +110,7 @@ public class Crypto implements ICrypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
+    public String decrypt(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
@@ -125,25 +125,25 @@ public class Crypto implements ICrypto {
         }
     }
 
-    private String decryptV2(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptV2(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
         byte[] parts = Base64.getDecoder().decode(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
-    private String decryptV1(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptV1(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
         byte[] parts = hexToBytes(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
 
-    private String decryptV0(String cipherText, String decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptV0(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
         int keySize = 16;
 
         byte[] encryptedBytes  = hexToBytes(cipherText);
         // Hash key.
         byte[] keyBytes = new byte[keySize];
         MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(getSecret(Integer.parseInt(decryptKeyVersion)).getSecret().getBytes(StandardCharsets.UTF_8));
+        md.update(getSecret(decryptKeyVersion).getSecret().getBytes(StandardCharsets.UTF_8));
         byte[] longKey = md.digest();
         System.arraycopy(longKey, 0, keyBytes, 0, keySize);
         byte[] ivBytes = new byte[keySize];

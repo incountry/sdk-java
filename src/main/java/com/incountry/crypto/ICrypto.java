@@ -7,5 +7,5 @@ import java.security.GeneralSecurityException;
 
 public interface ICrypto {
     Pair<String, Integer> encrypt(String plainText) throws GeneralSecurityException, IOException;
-    String decrypt(String cipherText, String decriptKeyVersion) throws GeneralSecurityException;
+    String decrypt(String cipherText, Integer decriptKeyVersion) throws GeneralSecurityException;
 }
