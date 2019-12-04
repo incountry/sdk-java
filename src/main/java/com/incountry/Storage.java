@@ -135,7 +135,7 @@ public class Storage {
      * @return record object
      * @throws StorageException if country or recordKey is null
      * @throws IOException if server connection failed
-     * @throws GeneralSecurityException if decryption failed
+     * @throws GeneralSecurityException if record decryption failed
      */
     public Record read(String country, String recordKey) throws StorageException, IOException, GeneralSecurityException{
         String url = createUrl(country, recordKey);
@@ -147,6 +147,15 @@ public class Storage {
         return record;
     }
 
+    /**
+     * Write multiple records at once in remote storage
+     * @param country country identifier
+     * @param records record list
+     * @return true if writing was successful
+     * @throws StorageException if country or recordKey is null
+     * @throws GeneralSecurityException if record encryption failed
+     * @throws IOException if server connection failed
+     */
     public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException {
         country = country.toLowerCase();
         List<String> recordsStrings = new ArrayList<>();
@@ -181,7 +190,7 @@ public class Storage {
     }
 
     /**
-     *
+     * Delete record from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
      * @throws StorageException if country or recordKey is null
