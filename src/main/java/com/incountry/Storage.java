@@ -15,7 +15,9 @@ import com.incountry.http.impl.HttpAgent;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
@@ -133,7 +135,7 @@ public class Storage {
      * @return record object
      * @throws StorageException if country or recordKey is null
      * @throws IOException if server connection failed
-     * @throws GeneralSecurityException if decryption failed
+     * @throws GeneralSecurityException if record decryption failed
      */
     public Record read(String country, String recordKey) throws StorageException, IOException, GeneralSecurityException{
         String url = createUrl(country, recordKey);
@@ -144,7 +146,29 @@ public class Storage {
 
         return record;
     }
-    
+
+    /**
+     * Write multiple records at once in remote storage
+     * @param country country identifier
+     * @param records record list
+     * @return true if writing was successful
+     * @throws StorageException if country or recordKey is null
+     * @throws GeneralSecurityException if record encryption failed
+     * @throws IOException if server connection failed
+     */
+    public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException {
+        country = country.toLowerCase();
+        List<String> recordsStrings = new ArrayList<>();
+        for (Record record : records) {
+            checkParameters(country, record.getKey());
+            recordsStrings.add(record.toString(mCrypto));
+        }
+        String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
+        httpAgent.request(url, "POST", new Gson().toJson(recordsStrings), false);
+
+        return true;
+    }
+
     public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
     	FindOptions options = new FindOptions(1, 0);
     	BatchRecord existingRecords = find(country, filter, options);
@@ -166,7 +190,7 @@ public class Storage {
     }
 
     /**
-     *
+     * Delete record from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
      * @throws StorageException if country or recordKey is null
