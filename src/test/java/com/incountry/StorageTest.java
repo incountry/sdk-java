@@ -1,6 +1,7 @@
 package com.incountry;
 
 import com.incountry.crypto.impl.Crypto;
+import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
@@ -213,7 +214,23 @@ public class StorageTest {
         }
 
         @Test
-        public void findTest() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        public void migrateTest() throws StorageException, GeneralSecurityException, IOException, FindOptionsException {
+            Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encrypted = rec.toString(crypto);
+            String content = "{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
+            FakeHttpAgent agent = new FakeHttpAgent(content);
+            storage.setHttpAgent(agent);
+            BatchRecord batchRecord = BatchRecord.fromString(content, crypto);
+
+            int migratedRecords = batchRecord.getCount();
+            int totalLeft =  batchRecord.getTotal() - batchRecord.getCount();
+            MigrateResult migrateResult = storage.migrate("us", 2);
+            assertEquals(migratedRecords, migrateResult.getMigrated());
+            assertEquals(totalLeft, migrateResult.getTotalLeft());
+        }
+
+        @Test
+        public void findTest() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
             FindOptions options = new FindOptions(1,0);
             FindFilter filter = new FindFilter();
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
@@ -230,9 +247,9 @@ public class StorageTest {
             assertEquals("{\"filter\":{\"profile_key\":[\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
 
             assertEquals(1, d.getCount());
-            assertEquals(1, d.getRecords().length);
-            assertEquals(recordKey, d.getRecords()[0].getKey());
-            assertEquals(recordBody, d.getRecords()[0].getBody());
+            assertEquals(1, d.getRecords().size());
+            assertEquals(recordKey, d.getRecords().get(0).getKey());
+            assertEquals(recordBody, d.getRecords().get(0).getBody());
         }
     }
 }

@@ -104,6 +104,10 @@ public class Crypto implements ICrypto {
         return secret;
     }
 
+    public int getCurrentSecretVersion() {
+        return secretKeysData.getCurrentVersion();
+    }
+
     public String createKeyHash(String key) {
         if (key == null) return null;
         String stringToHash = key + ":" + envId;

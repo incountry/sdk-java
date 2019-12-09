@@ -19,7 +19,7 @@ public class SecretKeyUtils {
     /**
      * Convert string to SecretKeyData object
      * @param secretKeyString simple string or json
-     * @return SecretKeyData object wich contain secret keys and there versions
+     * @return SecretKeyData object which contain secret keys and there versions
      */
     public static SecretKeysData convertStringToSecretKeyData(String secretKeyString) {
 

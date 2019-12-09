@@ -1,5 +1,6 @@
 package com.incountry;
 
+import com.incountry.exceptions.FindOptionsException;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
@@ -14,12 +15,6 @@ public class FindOptions {
     @Getter
     @Setter
     int offset;
-
-    public class FindOptionsException extends Exception {
-        FindOptionsException(String s){
-            super(s);
-        }
-    }
 
     public FindOptions() throws FindOptionsException {
         this(MAX_LIMIT, 0);
