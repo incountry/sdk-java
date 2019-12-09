@@ -29,7 +29,7 @@ public class FindFilter {
     FilterRangeParam rangeKeyParam;
 
     @Setter
-    FilterStringParam version;
+    FilterStringParam versionParam;
 
     public FindFilter(){}
 
@@ -45,7 +45,7 @@ public class FindFilter {
         this.key2Param = key2;
         this.key3Param = key3;
         this.rangeKeyParam = rangeKey;
-        this.version = version;
+        this.versionParam = version;
     }
 
     public JSONObject toJSONObject(Crypto mCrypto) {
@@ -54,7 +54,7 @@ public class FindFilter {
                 .put(P_KEY_2, key2Param == null ? null : key2Param.toJSON(mCrypto))
                 .put(P_KEY_3, key3Param == null ? null : key3Param.toJSON(mCrypto))
                 .put(P_PROFILE_KEY, profileKeyParam == null ? null : profileKeyParam.toJSON(mCrypto))
-                .put(VERSION, version == null ? null : version.toJSON(mCrypto));
+                .put(VERSION, versionParam == null ? null : versionParam.toJSON(mCrypto));
         if (rangeKeyParam != null){
             json.put(P_RANGE_KEY,  rangeKeyParam.isConditional() ? rangeKeyParam.conditionJSON() : rangeKeyParam.valueJSON());
         }

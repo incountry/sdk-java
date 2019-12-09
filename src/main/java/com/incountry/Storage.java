@@ -163,13 +163,13 @@ public class Storage {
         }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
-        findFilter.setVersion(new FilterStringParam(secretKeyCurrentVersion.toString()));
+        findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString()));
         BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
 
-        MigrateResult migrateResult = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
+        return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
 
-        return migrateResult;
+//        return migrateResult;
     }
 
     /**
@@ -251,7 +251,7 @@ public class Storage {
 
     	List<Record> records = findResults.getRecords();
 
-    	if (records.size() == 0) {
+    	if (records.isEmpty()) {
     		return null;
     	}
     	
