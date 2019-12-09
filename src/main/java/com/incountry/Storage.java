@@ -168,8 +168,6 @@ public class Storage {
         batchWrite(country, batchRecord.getRecords());
 
         return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
-
-//        return migrateResult;
     }
 
     /**
