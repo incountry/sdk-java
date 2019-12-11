@@ -29,13 +29,13 @@ public class FilterStringParam {
         this.value = new ArrayList<>();
         if (filterValue != null) {
             value.add(filterValue);
-            notCondition = true;
+            notCondition = notConditionValue;
 
         }
     }
 
     private List<String> hashValue(Crypto mCrypto) {
-        return value.stream().map(item -> mCrypto.createKeyHash(item)).collect(Collectors.toList());
+        return value.stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
     }
 
     /**
