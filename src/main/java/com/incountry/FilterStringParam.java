@@ -3,23 +3,48 @@ package com.incountry;
 import com.incountry.crypto.impl.Crypto;
 import org.json.JSONArray;
 
-public class FilterStringParam {
-    String[] value;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-    public FilterStringParam(String[] value) {
+public class FilterStringParam {
+
+    private List<String> value;
+    private boolean notCondition;
+
+    public FilterStringParam(List<String> value) {
         this.value = value;
     }
 
-    public FilterStringParam(String value) {
-        if (value != null) this.value = new String[] {value};
+    public FilterStringParam(String filterValue) {
+        this.value = new ArrayList<>();
+        if (filterValue != null) {
+            value.add(filterValue);
+            notCondition = false;
+
+        }
     }
 
-    private String[] hashValue(Crypto mCrypto){
-        String[] result = new String[value.length];
-        for (int i = 0; i < value.length; i++){
-            result[i] = mCrypto.createKeyHash(value[i]);
+    public FilterStringParam(String filterValue, boolean notConditionValue) {
+        this.value = new ArrayList<>();
+        if (filterValue != null) {
+            value.add(filterValue);
+            notCondition = true;
+
         }
-        return result;
+    }
+
+    private List<String> hashValue(Crypto mCrypto) {
+        return value.stream().map(item -> mCrypto.createKeyHash(item)).collect(Collectors.toList());
+    }
+
+    /**
+     * Add not condition to parameters
+     * @param value list of values to which the not condition should be added
+     * @return list of values with not condition
+     */
+    private List<String> addNotCondition(List<String> value) {
+        return value.stream().map(item -> "$not: " + item).collect(Collectors.toList());
     }
 
     public JSONArray toJSON(){
@@ -28,8 +53,9 @@ public class FilterStringParam {
 
     public JSONArray toJSON(Crypto mCrypto){
         if (value == null) return null;
-        if (mCrypto == null) return new JSONArray(value);
-
-        return new JSONArray(hashValue(mCrypto));
+        if (mCrypto == null) {
+            return notCondition ? new JSONArray(addNotCondition(value)) : new JSONArray(value);
+        }
+        return notCondition ? new JSONArray(addNotCondition(hashValue( mCrypto))) : new JSONArray(hashValue(mCrypto));
     }
 }

@@ -163,7 +163,7 @@ public class Storage {
         }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
-        findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString()));
+        findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
         BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
 
