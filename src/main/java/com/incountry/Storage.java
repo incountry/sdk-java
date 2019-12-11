@@ -159,7 +159,7 @@ public class Storage {
      */
     public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException {
         if (mCrypto == null) {
-            throw new StorageClientException("Migration not supported when encryption is off");
+            throw new StorageClientException("Migration is not supported when encryption is off");
         }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
