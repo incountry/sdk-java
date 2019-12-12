@@ -109,7 +109,7 @@ public class Record {
     /**
      * Create record object from json string
      * @param jsonString json string
-     * @param mCrypto cryprto object
+     * @param mCrypto crypto object
      * @return record objects with data from json
      * @throws GeneralSecurityException if decryption failed
      */

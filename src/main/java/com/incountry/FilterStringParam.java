@@ -1,6 +1,7 @@
 package com.incountry;
 
 import com.incountry.crypto.impl.Crypto;
+import lombok.Getter;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 public class FilterStringParam {
 
     private List<String> value;
+    @Getter
     private boolean notCondition;
 
     public FilterStringParam(List<String> value) {
@@ -38,24 +40,10 @@ public class FilterStringParam {
         return value.stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
     }
 
-    /**
-     * Add not condition to parameters
-     * @param value list of values to which the not condition should be added
-     * @return list of values with not condition
-     */
-    private List<String> addNotCondition(List<String> value) {
-        return value.stream().map(item -> "$not: " + item).collect(Collectors.toList());
-    }
-
-    public JSONArray toJSON(){
-        return toJSON(null);
-    }
-
-    public JSONArray toJSON(Crypto mCrypto){
+    public JSONArray toJSON(Crypto mCrypto) {
         if (value == null) return null;
-        if (mCrypto == null) {
-            return notCondition ? new JSONArray(addNotCondition(value)) : new JSONArray(value);
-        }
-        return notCondition ? new JSONArray(addNotCondition(hashValue( mCrypto))) : new JSONArray(hashValue(mCrypto));
+        if (mCrypto == null) return new JSONArray(value);
+
+        return new JSONArray(hashValue(mCrypto));
     }
 }

@@ -48,13 +48,30 @@ public class FindFilter {
         this.versionParam = version;
     }
 
+    /**
+     * Add 'not' condition to parameter
+     * @param param parameter to which the not condition should be added
+     * @param mCrypto crypto object
+     * @return JSONObject with added 'not' condition
+     */
+    private JSONObject addNotCondition(FilterStringParam param, Crypto mCrypto) {
+        return new JSONObject(String.format("{$not: %s}", param.toJSON(mCrypto).toString()));
+    }
+
+    private JSONObject addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
+        if (param != null) {
+            json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto) : param.toJSON(mCrypto));
+        }
+        return json;
+    }
+
     public JSONObject toJSONObject(Crypto mCrypto) {
-        JSONObject json = new JSONObject()
-                .put(P_KEY, keyParam == null ? null : keyParam.toJSON(mCrypto))
-                .put(P_KEY_2, key2Param == null ? null : key2Param.toJSON(mCrypto))
-                .put(P_KEY_3, key3Param == null ? null : key3Param.toJSON(mCrypto))
-                .put(P_PROFILE_KEY, profileKeyParam == null ? null : profileKeyParam.toJSON(mCrypto))
-                .put(VERSION, versionParam == null ? null : versionParam.toJSON(mCrypto));
+        JSONObject json = new JSONObject();
+        json = addToJson(json, P_KEY, keyParam, mCrypto);
+        json = addToJson(json, P_KEY_2, key2Param, mCrypto);
+        json = addToJson(json, P_KEY_3, key3Param, mCrypto);
+        json = addToJson(json, P_PROFILE_KEY, profileKeyParam, mCrypto);
+        json = addToJson(json, VERSION, versionParam, mCrypto);
         if (rangeKeyParam != null){
             json.put(P_RANGE_KEY,  rangeKeyParam.isConditional() ? rangeKeyParam.conditionJSON() : rangeKeyParam.valueJSON());
         }
