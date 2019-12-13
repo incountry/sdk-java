@@ -26,27 +26,45 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-`secretKeyAccessorImpl` is used to pass a secret used for encryption.
+`SecretKeyAccessor` is used to pass a secret used for encryption.
+
+To get secretKeyAccessor object you must use `secretKeyAccessor` interface `getAccessor` static method.
+
+`getAccessor` method takes as argument string password or object which implements `SecretKeyGenerator` interface.
 
 Note: even though PBKDF2 is used internally to generate a cryptographically strong encryption key, you must make sure that you use strong enough password.
 
-Here are some examples how you can use `SecretKeyAccessor`.
+Using the `SecretKeyGenerator` interface, you can pass a list of keys with their versions.
+
+To do it, the generate method of `SecretKeyGenerator` interface should return json of the form
+
 ```
-public class SimpleSecretKeyAccessor implements ISecretKeyAccessor {
-    private String secret;
-
-    public SecretKeyAccessor(String secret) {
-        this.secret = secret;
+{
+  "secrets": [
+    {
+      "secret": "123",
+      "version": 0
     }
+  ],
+  "currentVersion": 0
+}
+```
 
-    @Override
-    public String getKey() {
-        return this.secret;
-    }
+or a `SecretKeysData` object containing currentVersion and a list of `SecretKey` objects each of which contains a String secret and its version
+
+```
+public class SecretKeysData {
+    private List<SecretKey> secrets;
+    private int currentVersion;
 }
 
-SimpleSecretKeyAccessor accessor = new SimpleSecretKeyAccessor("myStrongPassword");
+public class SecretKey {
+    private String secret;
+    private int version;
+}
 ```
+
+Note: the `generate` method should return either valid json as a string or a `SecretKeysData` object.
 
 
 ### Writing data to Storage
@@ -67,6 +85,31 @@ public Record(
   String key3               // Optional
 )
 ```
+
+Use the `batchWrite` method to write multiple records to the storage at once.
+
+public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
+
+#### Keys migration
+
+Use `migrate` method for batched key-rotation-migration of records
+
+public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException
+
+`limit` is the batch-limit parameter for handling the batch size 
+
+method returns `MigrateResult` object
+
+```
+public class MigrateResult {
+    private int migrated;
+    private int totalLeft;
+}
+```
+
+`migrated` is total records left to migrate
+
+`totalLeft` is total amount of migrated records
 
 #### Encryption
 InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
