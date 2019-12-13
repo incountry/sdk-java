@@ -60,7 +60,11 @@ public class FindFilter {
 
     private JSONObject addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
         if (param != null) {
-            json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto) : param.toJSON(mCrypto));
+            if (paramName.equals(VERSION)) {
+                json.put(paramName, param.isNotCondition() ? addNotCondition(param, null) : param.toJSON(null));
+            } else {
+                json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto) : param.toJSON(mCrypto));
+            }
         }
         return json;
     }
