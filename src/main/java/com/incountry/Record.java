@@ -52,6 +52,9 @@ public class Record {
         if (o.has(k)){
             JsonNode v = o.get(k);
             if (!v.isNull()){
+                if (!v.isTextual()) {
+                    return v.toString();
+                }
                 return v.asText();
             }
         }
