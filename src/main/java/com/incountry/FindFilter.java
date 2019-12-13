@@ -67,11 +67,11 @@ public class FindFilter {
 
     public JSONObject toJSONObject(Crypto mCrypto) {
         JSONObject json = new JSONObject();
-        json = addToJson(json, P_KEY, keyParam, mCrypto);
-        json = addToJson(json, P_KEY_2, key2Param, mCrypto);
-        json = addToJson(json, P_KEY_3, key3Param, mCrypto);
-        json = addToJson(json, P_PROFILE_KEY, profileKeyParam, mCrypto);
-        json = addToJson(json, VERSION, versionParam, mCrypto);
+        addToJson(json, P_KEY, keyParam, mCrypto);
+        addToJson(json, P_KEY_2, key2Param, mCrypto);
+        addToJson(json, P_KEY_3, key3Param, mCrypto);
+        addToJson(json, P_PROFILE_KEY, profileKeyParam, mCrypto);
+        addToJson(json, VERSION, versionParam, mCrypto);
         if (rangeKeyParam != null){
             json.put(P_RANGE_KEY,  rangeKeyParam.isConditional() ? rangeKeyParam.conditionJSON() : rangeKeyParam.valueJSON());
         }
