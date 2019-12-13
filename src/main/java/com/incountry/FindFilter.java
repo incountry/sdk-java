@@ -58,7 +58,7 @@ public class FindFilter {
         return new JSONObject(String.format("{$not: %s}", param.toJSON(mCrypto).toString()));
     }
 
-    private JSONObject addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
+    private void addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
         if (param != null) {
             if (paramName.equals(VERSION)) {
                 json.put(paramName, param.isNotCondition() ? addNotCondition(param, null) : param.toJSON(null));
@@ -66,7 +66,6 @@ public class FindFilter {
                 json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto) : param.toJSON(mCrypto));
             }
         }
-        return json;
     }
 
     public JSONObject toJSONObject(Crypto mCrypto) {
