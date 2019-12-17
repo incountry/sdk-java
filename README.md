@@ -10,10 +10,10 @@ Usage
 To access your data in InCountry using Java SDK, you need to create an instance of `Storage` class.
 ```
 Storage(
-  String environmentID, 
-  String apiKey, 
-  String endpoint, 
-  boolean encrypt, 
+  String environmentID,
+  String apiKey,
+  String endpoint,
+  boolean encrypt,
   ISecretKeyAccessor secretKeyAccessor
 )
 ```
@@ -51,7 +51,7 @@ SimpleSecretKeyAccessor accessor = new SimpleSecretKeyAccessor("myStrongPassword
 
 ### Writing data to Storage
 
-Use `write` method in order to create a record.
+Use `write` method in order to create/overwrite a record for a given `key`.
 ```
 public void write(Record record) throws StorageException, GeneralSecurityException, IOException
 ```
@@ -104,9 +104,9 @@ It is possible to search by random keys using `find` method.
 ```
 public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException
 ```
-Parameters:  
-`country` - country code,  
-`filter` - a filter object (see below),  
+Parameters:
+`country` - country code,
+`filter` - a filter object (see below),
 `options` - an object containing search options.
 
 `FindFilter` has the following constructor:
@@ -133,7 +133,7 @@ Here is the example of how `find` method can be used:
 FindFilter filter = new FindFilter(
     null,
     null,
-    null, 
+    null,
     new FilterStringParam("kitty"),
     new FilterStringParam(new String[]{"mew", "pur"})
 );
@@ -142,8 +142,8 @@ FindOptions options = new FindOptions(10, 10);
 
 BatchRecord records = storage.find("us", filter, options);
 ```
-This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.  
-Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
+This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.
+Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
 
 
 `Find` returns BatchRecord object which contains an array of `Record` and some metadata:
@@ -159,7 +159,7 @@ These fields can be accessed using getters, for example:
 int limit = records.getTotal();
 ```
 
-`FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.  
+`FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.
 For example you can request all the records with `rangeKey` less than 1000:
 ```
 {
@@ -184,6 +184,6 @@ Use `delete` method in order to delete a record from InCountry storage. It is on
 ```
 public void delete(String country, String key) throws StorageException, IOException
 ```
-Here  
+Here
 `country` - country code of the record,
 `key` - the record's key
