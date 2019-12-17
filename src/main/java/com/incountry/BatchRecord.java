@@ -2,11 +2,14 @@ package com.incountry;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.incountry.crypto.impl.Crypto;
 import lombok.Getter;
 
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class BatchRecord {
@@ -14,9 +17,9 @@ public class BatchRecord {
     int limit;
     int offset;
     int total;
-    Record[] records;
+    List<Record> records;
 
-    public BatchRecord(Record[] records, int count, int limit, int offset, int total) {
+    public BatchRecord(List<Record> records, int count, int limit, int offset, int total) {
         this.count = count;
         this.limit = limit;
         this.offset = offset;
@@ -34,13 +37,12 @@ public class BatchRecord {
         int offset = meta.get("offset").getAsInt();
         int total = meta.get("total").getAsInt();
 
-        Record[] records = new Record[count];
+        List<Record>  records = new ArrayList<>();
         if (count == 0) return new BatchRecord(records, count, limit, offset, total);
 
         JsonArray data = responseObject.getAsJsonArray("data");
-        for (int i = 0; i < data.size(); i++)
-        {
-            records[i] = Record.fromString(data.get(i).toString(), mCrypto);
+        for (JsonElement item: data) {
+            records.add(Record.fromString(item.toString(), mCrypto));
         }
 
         return new BatchRecord(records, count, limit, offset, total);

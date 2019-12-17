@@ -1,5 +1,6 @@
 package com.incountry;
 
+import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
@@ -66,18 +67,18 @@ public class StorageTest {
     }
 
     @Test
-    public void test3Find() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
-        FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
+    public void test3Find() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(rangeKey), null);
         FindOptions options = new FindOptions(100, 0);
         BatchRecord d = store.find(country, filter, options);
         assertEquals(1, d.getCount());
-        assertEquals(1, d.getRecords().length);
-        assertEquals(recordKey, d.getRecords()[0].getKey());
+        assertEquals(1, d.getRecords().size());
+        assertEquals(recordKey, d.getRecords().get(0).getKey());
     }
 
     @Test
-    public void test4FindOne() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
-        FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
+    public void test4FindOne() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(rangeKey), null);
         FindOptions options = new FindOptions(100, 0);
         Record d = store.findOne(country, filter, options);
         assertEquals(recordKey, d.getKey());
@@ -85,8 +86,8 @@ public class StorageTest {
     }
 
     @Test
-    public void test5UpdateOne() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
-        FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
+    public void test5UpdateOne() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(rangeKey), null);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
         Record current = store.read(country, recordKey);

@@ -1,32 +1,46 @@
 package com.incountry;
 
 import com.incountry.crypto.impl.Crypto;
+import lombok.Getter;
 import org.json.JSONArray;
 
-public class FilterStringParam {
-    String[] value;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-    public FilterStringParam(String[] value) {
+public class FilterStringParam {
+
+    private List<String> value;
+    @Getter
+    private boolean notCondition;
+
+    public FilterStringParam(List<String> value) {
         this.value = value;
     }
 
-    public FilterStringParam(String value) {
-        if (value != null) this.value = new String[] {value};
-    }
+    public FilterStringParam(String filterValue) {
+        this.value = new ArrayList<>();
+        if (filterValue != null) {
+            value.add(filterValue);
+            notCondition = false;
 
-    private String[] hashValue(Crypto mCrypto){
-        String[] result = new String[value.length];
-        for (int i = 0; i < value.length; i++){
-            result[i] = mCrypto.createKeyHash(value[i]);
         }
-        return result;
     }
 
-    public JSONArray toJSON(){
-        return toJSON(null);
+    public FilterStringParam(String filterValue, boolean notConditionValue) {
+        this.value = new ArrayList<>();
+        if (filterValue != null) {
+            value.add(filterValue);
+            notCondition = notConditionValue;
+
+        }
     }
 
-    public JSONArray toJSON(Crypto mCrypto){
+    private List<String> hashValue(Crypto mCrypto) {
+        return value.stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
+    }
+
+    public JSONArray toJSON(Crypto mCrypto) {
         if (value == null) return null;
         if (mCrypto == null) return new JSONArray(value);
 

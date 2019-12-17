@@ -3,8 +3,8 @@ package com.incountry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.incountry.FindOptions.FindOptionsException;
 import com.incountry.crypto.impl.Crypto;
+import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageClientException;
 import com.incountry.http.IHttpAgent;
 import com.incountry.keyaccessor.SecretKeyAccessor;
@@ -148,6 +148,29 @@ public class Storage {
     }
 
     /**
+     * Make batched key-rotation-migration of records
+     * @param country country identifier
+     * @param limit batch-limit parameter
+     * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
+     * @throws StorageException if country or recordKey is null
+     * @throws FindOptionsException if limit more than 100
+     * @throws GeneralSecurityException if record encryption failed
+     * @throws IOException if server connection failed
+     */
+    public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException {
+        if (mCrypto == null) {
+            throw new StorageClientException("Migration is not supported when encryption is off");
+        }
+        Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
+        FindFilter findFilter = new FindFilter();
+        findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
+        BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
+        batchWrite(country, batchRecord.getRecords());
+
+        return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
+    }
+
+    /**
      * Write multiple records at once in remote storage
      * @param country country identifier
      * @param records record list
@@ -180,7 +203,7 @@ public class Storage {
     		throw new StorageServerException("Record not found");
     	}
     	
-    	Record foundRecord = existingRecords.getRecords()[0];
+    	Record foundRecord = existingRecords.getRecords().get(0);
 
     	Record updatedRecord = Record.merge(foundRecord, record);
 
@@ -224,13 +247,13 @@ public class Storage {
     public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
     	BatchRecord findResults = find(country, filter, options);
 
-    	Record[] records = findResults.getRecords();
+    	List<Record> records = findResults.getRecords();
 
-    	if (records.length == 0) {
+    	if (records.isEmpty()) {
     		return null;
     	}
     	
-    	return records[0];
+    	return records.get(0);
     }
 
 }
