@@ -162,15 +162,11 @@ int limit = records.getTotal();
 `FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.
 For example you can request all the records with `rangeKey` less than 1000:
 ```
-{
-    FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
-}
+FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
 ```
 or if you want just to check equality:
 ```
-{
-    FilterRangeParam rangeParam = new FilterRangeParam(1000);
-}
+FilterRangeParam rangeParam = new FilterRangeParam(1000);
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
