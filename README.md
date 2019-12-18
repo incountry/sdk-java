@@ -3,7 +3,7 @@ InCountry Storage SDK
 
 Important notes
 ---------------
-We've changed the encryption algorithm since version `0.5.0` so it is not compatible with earlier versions.
+We've changed the encryption algorithm since version `1.0.0` so it is not compatible with earlier versions.
 
 Usage
 -----
@@ -73,13 +73,13 @@ InCountry uses client-side encryption for your data. Note that only body is encr
 Here is how data is transformed and stored in InCountry database:
 ```
 {
-	key, 		// hashed
-	body, 		// encrypted
-	profile_key,// hashed
-	range_key, 	// plain
-	key2, 		// hashed
-	key3 		// hashed
- }
+  key,          // hashed
+  body,         // encrypted
+  profile_key,  // hashed
+  range_key,    // plain
+  key2,         // hashed
+  key3          // hashed
+}
 ```
 ### Reading stored data
 
@@ -148,11 +148,11 @@ Note: SDK returns 100 records at most. Use pagination to iterate over all the re
 
 `Find` returns BatchRecord object which contains an array of `Record` and some metadata:
 ```
-    int count;
-    int limit;
-    int offset;
-    int total;
-    Record[] records;
+int count;
+int limit;
+int offset;
+int total;
+Record[] records;
 ```
 These fields can be accessed using getters, for example:
 ```
@@ -162,15 +162,11 @@ int limit = records.getTotal();
 `FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.
 For example you can request all the records with `rangeKey` less than 1000:
 ```
-{
-    FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
-}
+FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
 ```
 or if you want just to check equality:
 ```
-{
-    FilterRangeParam rangeParam = new FilterRangeParam(1000);
-}
+FilterRangeParam rangeParam = new FilterRangeParam(1000);
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
