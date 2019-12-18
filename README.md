@@ -73,12 +73,12 @@ InCountry uses client-side encryption for your data. Note that only body is encr
 Here is how data is transformed and stored in InCountry database:
 ```
 {
-	key,          // hashed
-	body,         // encrypted
-	profile_key,  // hashed
-	range_key,    // plain
-	key2,         // hashed
-	key3          // hashed
+  key,          // hashed
+  body,         // encrypted
+  profile_key,  // hashed
+  range_key,    // plain
+  key2,         // hashed
+  key3          // hashed
 }
 ```
 ### Reading stored data
