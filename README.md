@@ -3,7 +3,7 @@ InCountry Storage SDK
 
 Important notes
 ---------------
-We've changed the encryption algorithm since version `0.5.0` so it is not compatible with earlier versions.
+We've changed the encryption algorithm since version `1.0.0` so it is not compatible with earlier versions.
 
 Usage
 -----
@@ -73,12 +73,12 @@ InCountry uses client-side encryption for your data. Note that only body is encr
 Here is how data is transformed and stored in InCountry database:
 ```
 {
-	key, 		// hashed
-	body, 		// encrypted
-	profile_key,// hashed
-	range_key, 	// plain
-	key2, 		// hashed
-	key3 		// hashed
+	key,            // hashed
+	body,           // encrypted
+	profile_key,    // hashed
+	range_key,      // plain
+	key2,           // hashed
+	key3            // hashed
  }
 ```
 ### Reading stored data
@@ -148,11 +148,11 @@ Note: SDK returns 100 records at most. Use pagination to iterate over all the re
 
 `Find` returns BatchRecord object which contains an array of `Record` and some metadata:
 ```
-    int count;
-    int limit;
-    int offset;
-    int total;
-    Record[] records;
+int count;
+int limit;
+int offset;
+int total;
+Record[] records;
 ```
 These fields can be accessed using getters, for example:
 ```
