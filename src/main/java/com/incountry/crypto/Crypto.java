@@ -11,7 +11,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Base64;
+import javax.xml.bind.DatatypeConverter;
 
 import static com.incountry.crypto.CryptoUtils.generateSalt;
 import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
@@ -59,9 +59,9 @@ public class Crypto implements ICrypto {
         outputStream.write(encrypted);
 
         byte[] res = outputStream.toByteArray();
-        byte[] encoded = Base64.getEncoder().encode(res);
+        String encoded = DatatypeConverter.printBase64Binary(res);
 
-        return VERSION + ":" + new String(encoded);
+        return VERSION + ":" + encoded;
     }
 
     private static String createHash(String stringToHash) {
@@ -107,7 +107,7 @@ public class Crypto implements ICrypto {
     }
 
     private String decryptV2(String cipherText) throws GeneralSecurityException {
-        byte[] parts = Base64.getDecoder().decode(cipherText);
+        byte[] parts =  DatatypeConverter.parseBase64Binary(cipherText);
         return this.decryptUnpacked(parts);
     }
 
