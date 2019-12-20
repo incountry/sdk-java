@@ -55,6 +55,50 @@ repositories {
     mavenCentral()
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: nexusUsername, password: nexusPassword )
+            }
+
+            pom.project {
+                packaging 'jar'
+                name rootProject.name
+                description 'InCountry Java SDK'
+                url 'https://github.com/incountry/sdk-java'
+
+                scm {
+                    url 'https://github.com/incountry/sdk-java'
+                    connection 'scm:https://github.com/incountry/sdk-java.git'
+                    developerConnection 'scm:https://github.com/incountry/sdk-java.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'RommeroInCountry'
+                        name 'Roman Semin'
+                        email 'roman.semin@incountry.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
