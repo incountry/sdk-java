@@ -44,12 +44,12 @@ public class StorageTest {
         @Parameterized.Parameters(name = "{index}:withParams({0}, {1}, {2}")
         public static Iterable<Object[]> dataForTest() {
             return Arrays.asList(new Object[][]{
-                {"us", "key1", null, null, null, null, null},
-                {"us", "key1", "body", null, null, null, null},
-                {"us", "key1", "body", "key2", null, null, null},
-                {"us", "key1", "body", "key2", "key3", null, null},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1},
+                {"ru", "key1", null, null, null, null, null},
+                {"ru", "key1", "body", null, null, null, null},
+                {"ru", "key1", "body", "key2", null, null, null},
+                {"ru", "key1", "body", "key2", "key3", null, null},
+                {"ru", "key1", "body", "key2", "key3", "profileKey", null},
+                {"ru", "key1", "body", "key2", "key3", "profileKey", 1},
             });
         }
 
@@ -114,7 +114,7 @@ public class StorageTest {
         Crypto crypto;
 
         private Storage store;
-        private String country = "US";
+        private String country = "RU";
         private String recordKey = "some_key";
         private String profileKey = "profileKey";
         private String key2 = "key2";
