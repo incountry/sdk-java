@@ -58,6 +58,16 @@ public class Record {
         return null;
     }
 
+    private static JsonNode extractJsonNodeKey(JsonNode o, String k) {
+        if (o.has(k)){
+            JsonNode v = o.get(k);
+            if (!v.isNull()){
+                return v;
+            }
+        }
+        return null;
+    }
+
     private static Integer extractIntegerKey(JsonNode o, String k){
         if (o.has(k)){
             JsonNode v = o.get(k);
@@ -108,8 +118,8 @@ public class Record {
             } else {
                 JsonNode bodyObj = mapper.readTree(body);
                 body = extractKey(bodyObj, P_PAYLOAD);
-                String meta = extractKey(bodyObj, P_META);
-                JsonNode metaObj = mapper.readTree(meta);
+
+                JsonNode metaObj = extractJsonNodeKey(bodyObj, P_META);
                 key = extractKey(metaObj, P_KEY);
                 profileKey = extractKey(metaObj, P_PROFILE_KEY);
                 key2 = extractKey(metaObj, P_KEY_2);
