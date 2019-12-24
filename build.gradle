@@ -14,6 +14,7 @@ plugins {
     id 'io.codearte.nexus-staging' version '0.11.0'
     id "org.sonarqube" version "2.7.1"
     id 'jacoco'
+    id 'com.adarshr.test-logger' version '2.0.0'
 }
 
 apply plugin: 'maven'
@@ -56,7 +57,9 @@ repositories {
 }
 
 dependencies {
-    testCompile "junit:junit:${junitVersion}"
+    testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
@@ -67,6 +70,9 @@ dependencies {
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.1'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
+
+    implementation "io.github.cdimascio:java-dotenv:${dotenv}"
+    implementation 'org.apache.commons:commons-lang3:3.9'
 }
 
 jar {
@@ -88,6 +94,7 @@ task sourcesJar(type: Jar) {
 }
 
 task integrationTest(type: Test) {
+    useJUnitPlatform()
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
 }
@@ -107,6 +114,7 @@ nexusStaging {
 }
 
 tasks.withType(Test) {
+
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,

@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class StorageTest {
