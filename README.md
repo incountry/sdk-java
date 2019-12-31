@@ -111,6 +111,8 @@ public class MigrateResult {
 
 `totalLeft` is total amount of migrated records
 
+For a detailed example of a migration please see `/examples/java/com/incountry/FullMigration`
+
 #### Encryption
 InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
 Here is how data is transformed and stored in InCountry database:
