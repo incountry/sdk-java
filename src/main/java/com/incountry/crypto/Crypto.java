@@ -7,11 +7,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
+import java.security.*;
 import java.util.Arrays;
 import javax.xml.bind.DatatypeConverter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import static com.incountry.crypto.CryptoUtils.generateSalt;
 import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
@@ -29,10 +28,12 @@ public class Crypto implements ICrypto {
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
     public Crypto(String secret) {
+        Security.addProvider(new BouncyCastleProvider());
         this.secret = secret;
     }
 
     public Crypto(String secret, String envId) {
+        Security.addProvider(new BouncyCastleProvider());
         this.secret = secret;
         this.envId = envId;
     }
@@ -49,7 +50,7 @@ public class Crypto implements ICrypto {
         SecretKeySpec secretKeySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
 
-        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM, "BC");
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
         byte[] encrypted = cipher.doFinal(clean);
 
@@ -73,7 +74,7 @@ public class Crypto implements ICrypto {
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM, "BC");
         byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
         SecretKeySpec keySpec = new SecretKeySpec(strong, "AES");

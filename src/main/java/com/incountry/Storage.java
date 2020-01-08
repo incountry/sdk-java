@@ -54,22 +54,22 @@ public class Storage {
     }
 
     public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, ISecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+        System.out.println(System.getProperty("java.version"));
         mEnvID = environmentID;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
         mAPIKey = apiKey;
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
 
+        mPoplist = new HashMap<String, POP>();
+        httpAgent = new HttpAgent(apiKey, environmentID);
+
         mEndpoint = endpoint;
         if (mEndpoint == null) {
         	mEndpoint = DEFAULT_ENDPOINT;
         	mIsDefaultEndpoint = true;
+            load_country_endpoints();
         }
-
-        mPoplist = new HashMap<String, POP>();
-        httpAgent = new HttpAgent(apiKey, environmentID);
-
-        load_country_endpoints();
 
         if (encrypt) {
             mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
@@ -119,6 +119,7 @@ public class Storage {
         checkParameters(country, key);
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/" + key);
+        System.out.println(url);
         String content = httpAgent.request(url, "GET", null, true);
         if (content == null) return null;
         Record d = Record.fromString(content,  mCrypto);

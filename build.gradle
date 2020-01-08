@@ -25,8 +25,34 @@ apply plugin: 'signing'
 group group
 version version
 
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
+if (hasProperty('targetJavaVersion')) {
+
+    java {
+        sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
+    }
+
+    def javaExecutablesPath = new File(javaHome, 'bin')
+    def javaExecutables = [:].withDefault { execName ->
+        def executable = new File(javaExecutablesPath, execName)
+        assert executable.exists(): "There is no ${execName} executable in ${javaExecutablesPath}"
+        executable
+    }
+    tasks.withType(AbstractCompile) {
+        options.with {
+            fork = true
+            forkOptions.javaHome = file(javaHome)
+        }
+    }
+    tasks.withType(Javadoc) {
+        executable = javaExecutables.javadoc
+    }
+    tasks.withType(Test) {
+        executable = javaExecutables.java
+    }
+    tasks.withType(JavaExec) {
+        executable = javaExecutables.java
+    }
+}
 
 archivesBaseName = rootProject.name
 
@@ -70,7 +96,6 @@ dependencies {
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.1'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
-
     implementation "io.github.cdimascio:java-dotenv:${dotenv}"
     implementation 'org.apache.commons:commons-lang3:3.9'
 }
