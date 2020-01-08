@@ -56,7 +56,7 @@ public class StorageTest {
         @Before
         public void initializeStorage() throws IOException, StorageServerException {
             SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
-            storage = new Storage("envId", "apiKey", secretKeyAccessor);
+            storage = new Storage("envId", "apiKey", "http://popapi.io", true, secretKeyAccessor);
             crypto = new Crypto("password", "envId");
         }
 
@@ -125,7 +125,7 @@ public class StorageTest {
         @Before
         public void initializeStorage() throws IOException, StorageServerException {
             SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
-            storage = new Storage("envId", "apiKey", secretKeyAccessor);
+            storage = new Storage("envId", "apiKey", "http://popapi.io", true, secretKeyAccessor);
             crypto = new Crypto("password", "envId");
         }
 
@@ -144,8 +144,7 @@ public class StorageTest {
             BatchRecord d = storage.find(country, filter, options);
 
             String callBody = agent.getCallBody();
-            assertEquals("{\"filter\":{\"profile_key\":[\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
-
+            assertEquals("{\"filter\":{\"profile_key\":[\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"]},\"options\":{\"limit\":1,\"offset\":0}}", callBody);
             assertEquals(1, d.getCount());
             assertEquals(1, d.getRecords().length);
             assertEquals(recordKey, d.getRecords()[0].getKey());

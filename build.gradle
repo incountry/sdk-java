@@ -82,6 +82,50 @@ repositories {
     mavenCentral()
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: nexusUsername, password: nexusPassword )
+            }
+
+            pom.project {
+                packaging 'jar'
+                name rootProject.name
+                description 'InCountry Java SDK'
+                url 'https://github.com/incountry/sdk-java'
+
+                scm {
+                    url 'https://github.com/incountry/sdk-java'
+                    connection 'scm:https://github.com/incountry/sdk-java.git'
+                    developerConnection 'scm:https://github.com/incountry/sdk-java.git'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'https://github.com/incountry/sdk-java/blob/master/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'RommeroInCountry'
+                        name 'Roman Semin'
+                        email 'roman.semin@incountry.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
@@ -98,6 +142,7 @@ dependencies {
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
     implementation "io.github.cdimascio:java-dotenv:${dotenv}"
     implementation 'org.apache.commons:commons-lang3:3.9'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
 }
 
 jar {

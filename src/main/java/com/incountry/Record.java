@@ -52,17 +52,10 @@ public class Record {
         if (o.has(k)){
             JsonNode v = o.get(k);
             if (!v.isNull()){
+                if (!v.isTextual()) {
+                    return v.toString();
+                }
                 return v.asText();
-            }
-        }
-        return null;
-    }
-
-    private static JsonNode extractJsonNodeKey(JsonNode o, String k) {
-        if (o.has(k)){
-            JsonNode v = o.get(k);
-            if (!v.isNull()){
-                return v;
             }
         }
         return null;
@@ -118,8 +111,8 @@ public class Record {
             } else {
                 JsonNode bodyObj = mapper.readTree(body);
                 body = extractKey(bodyObj, P_PAYLOAD);
-
-                JsonNode metaObj = extractJsonNodeKey(bodyObj, P_META);
+                String meta = extractKey(bodyObj, P_META);
+                JsonNode metaObj = mapper.readTree(meta);
                 key = extractKey(metaObj, P_KEY);
                 profileKey = extractKey(metaObj, P_PROFILE_KEY);
                 key2 = extractKey(metaObj, P_KEY_2);
@@ -188,32 +181,32 @@ public class Record {
     public String toString(Crypto mCrypto) throws GeneralSecurityException, IOException {
         if (mCrypto == null) {
             return new JSONObject()
-                .put(P_KEY, key)
-                .put(P_KEY_2, key2)
-                .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profileKey)
-                .put(P_RANGE_KEY, rangeKey)
-                .put(P_BODY, body).toString();
+                    .put(P_KEY, key)
+                    .put(P_KEY_2, key2)
+                    .put(P_KEY_3, key3)
+                    .put(P_PROFILE_KEY, profileKey)
+                    .put(P_RANGE_KEY, rangeKey)
+                    .put(P_BODY, body).toString();
         }
 
         String bodyJson = new JSONObject()
-            .put(P_PAYLOAD, body)
-            .put(P_META, new JSONObject()
-                .put(P_KEY, key)
-                .put(P_KEY_2, key2)
-                .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profileKey)
-                .put(P_RANGE_KEY, rangeKey).toString()
-            ).toString();
+                .put(P_PAYLOAD, body)
+                .put(P_META, new JSONObject()
+                        .put(P_KEY, key)
+                        .put(P_KEY_2, key2)
+                        .put(P_KEY_3, key3)
+                        .put(P_PROFILE_KEY, profileKey)
+                        .put(P_RANGE_KEY, rangeKey).toString()
+                ).toString();
 
         String encryptedBodyJson = mCrypto.encrypt(bodyJson);
 
         return new JSONObject()
-            .put(P_KEY, mCrypto.createKeyHash(key))
-            .put(P_KEY_2, mCrypto.createKeyHash(key2))
-            .put(P_KEY_3, mCrypto.createKeyHash(key3))
-            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey))
-            .put(P_RANGE_KEY, rangeKey)
-            .put(P_BODY, encryptedBodyJson).toString();
+                .put(P_KEY, mCrypto.createKeyHash(key))
+                .put(P_KEY_2, mCrypto.createKeyHash(key2))
+                .put(P_KEY_3, mCrypto.createKeyHash(key3))
+                .put(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey))
+                .put(P_RANGE_KEY, rangeKey)
+                .put(P_BODY, encryptedBodyJson).toString();
     }
 }
