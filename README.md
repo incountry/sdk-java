@@ -16,6 +16,17 @@ For Gradle users plase add this line to your dependencies list
 compile "com.incountry:incountry-java-client:1.0.0a"
 ```
 
+### Java 7 support
+
+In order to properly support modern cryptography standards Java7-support version uses Bouncy Castle Cryptography
+provider (https://www.bouncycastle.org/) along with Java Cryptography Extension (JCE) 
+Unlimited Strength Jurisdiction Policy (https://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html)
+
+Note: You need to install Unlimited Strength Jurisdiction Policy manually. Installation guide is in the README.txt file 
+along with the policy files.
+
+Note: You can change path to Java 7 home in gradle.properties file if needed.
+
 Usage
 -----
 To access your data in InCountry using Java SDK, you need to create an instance of `Storage` class.
