@@ -27,6 +27,15 @@ along with the policy files.
 
 Note: You can change path to Java 7 home in gradle.properties file if needed.
 
+#### JVM arguments
+
+The following JVM arguments need to be set up in order to properly support TLS v1.2 and establish a viable connection 
+to our servers
+
+```
+-Dhttps.protocols=TLSv1.2 -Dhttps.cipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+```
+
 Usage
 -----
 To access your data in InCountry using Java SDK, you need to create an instance of `Storage` class.

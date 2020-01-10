@@ -168,6 +168,8 @@ task integrationTest(type: Test) {
 //    useJUnitPlatform()
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
+    jvmArgs '-Dhttps.protocols=TLSv1.2'
+    jvmArgs '-Dhttps.cipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256'
     testlogger {
         showFullStackTraces true
         showStandardStreams true
