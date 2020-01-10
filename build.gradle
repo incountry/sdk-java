@@ -127,8 +127,9 @@ uploadArchives {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+//    testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
+//    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testCompile "junit:junit:${junitVersion}"
 
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
@@ -141,7 +142,7 @@ dependencies {
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.1'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
     implementation "io.github.cdimascio:java-dotenv:${dotenv}"
-    implementation 'org.apache.commons:commons-lang3:3.9'
+    implementation 'org.apache.commons:commons-lang3:3.2'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
 }
 
@@ -164,9 +165,13 @@ task sourcesJar(type: Jar) {
 }
 
 task integrationTest(type: Test) {
-    useJUnitPlatform()
+//    useJUnitPlatform()
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
+    testlogger {
+        showFullStackTraces true
+        showStandardStreams true
+    }
 }
 
 artifacts {
