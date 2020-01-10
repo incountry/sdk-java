@@ -127,8 +127,6 @@ uploadArchives {
 }
 
 dependencies {
-//    testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
-//    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testCompile "junit:junit:${junitVersion}"
 
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
@@ -144,6 +142,8 @@ dependencies {
     implementation "io.github.cdimascio:java-dotenv:${dotenv}"
     implementation 'org.apache.commons:commons-lang3:3.2'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
+
+    testImplementation("org.unitils:unitils-core:3.4.6")
 }
 
 jar {
@@ -165,7 +165,6 @@ task sourcesJar(type: Jar) {
 }
 
 task integrationTest(type: Test) {
-//    useJUnitPlatform()
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
     jvmArgs '-Dhttps.protocols=TLSv1.2'

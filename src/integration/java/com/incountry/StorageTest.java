@@ -1,10 +1,10 @@
-/*
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
 import com.incountry.key_accessor.SecretKeyAccessor;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -13,6 +13,7 @@ import java.security.GeneralSecurityException;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class StorageTest {
     private Storage store;
@@ -88,4 +89,4 @@ public class StorageTest {
         Record d = store.read(country, recordKey);
         assertEquals(null, d);
     }
-}*/
+}

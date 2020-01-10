@@ -1,28 +1,28 @@
-/*
 package com.incountry;
 
 
 import com.incountry.exceptions.StorageException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import static org.unitils.reflectionassert.ReflectionAssert.assertReflectionEquals;
+import static org.unitils.reflectionassert.ReflectionComparatorMode.IGNORE_DEFAULTS;
 
-@TestMethodOrder(MethodOrderer.Alphanumeric.class)
+@RunWith(Parameterized.class)
 public class FindOneByKeysTest extends BaseTest {
 
     private FindOptions options = new FindOptions(1, 0);
-    private String country = "US";
 
-    @DisplayName("Find one record by key")
-    @ParameterizedTest(name = "Find one record by key" + testNameEnc)
-    @ValueSource(booleans = {false, true})
-    public void findOneByKeyTest(boolean encryption) throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
+    public FindOneByKeysTest() throws FindOptions.FindOptionsException {
+    }
+
+
+    @Test
+    public void findOneByKeyTest() throws GeneralSecurityException, StorageException, IOException {
 
         Record expectedRecord = writeRecord(encryption, country);
 
@@ -30,13 +30,11 @@ public class FindOneByKeysTest extends BaseTest {
         filter.setKeyParam(new FilterStringParam(expectedRecord.getKey()));
 
         Record actualRecord = storage.findOne(country, filter, options);
-//        Assertions.assertAll(validateRecord(expectedRecord, actualRecord));
+        assertReflectionEquals("Find record validation", actualRecord, expectedRecord, IGNORE_DEFAULTS);  //Ignore country field
     }
 
-    @DisplayName("Find one record by key2")
-    @ParameterizedTest(name = "Find one record by key2" + testNameEnc)
-    @ValueSource(booleans = {false, true})
-    public void findOneByKey2Test(boolean encryption) throws GeneralSecurityException, StorageException, IOException {
+    @Test
+    public void findOneByKey2Test() throws GeneralSecurityException, StorageException, IOException {
 
         Record expectedRecord = writeRecord(encryption, country);
 
@@ -44,14 +42,12 @@ public class FindOneByKeysTest extends BaseTest {
         filter.setKey2Param(new FilterStringParam(expectedRecord.getKey2()));
 
         Record actualRecord = storage.findOne(country, filter, options);
-//        Assertions.assertAll(validateRecord(expectedRecord, actualRecord));
+        assertReflectionEquals("Find record validation", actualRecord, expectedRecord, IGNORE_DEFAULTS);  //Ignore country field
     }
 
 
-    @DisplayName("Find one record by key3")
-    @ParameterizedTest(name = "Find one record by key3" + testNameEnc)
-    @ValueSource(booleans = {false, true})
-    public void findOneByKey3Test(boolean encryption) throws GeneralSecurityException, StorageException, IOException {
+    @Test
+    public void findOneByKey3Test() throws GeneralSecurityException, StorageException, IOException {
 
         Record expectedRecord = writeRecord(encryption, country);
 
@@ -59,13 +55,11 @@ public class FindOneByKeysTest extends BaseTest {
         filter.setKey3Param(new FilterStringParam(expectedRecord.getKey3()));
 
         Record actualRecord = storage.findOne(country, filter, options);
-//        Assertions.assertAll(validateRecord(expectedRecord, actualRecord));
+        assertReflectionEquals("Find record validation", actualRecord, expectedRecord, IGNORE_DEFAULTS);  //Ignore country field
     }
 
-    @DisplayName("Find one record by profile key")
-    @ParameterizedTest(name = "Find one record by profile key" + testNameEnc)
-    @ValueSource(booleans = {false, true})
-    public void findOneByProfileKeyTest(boolean encryption) throws GeneralSecurityException, StorageException, IOException {
+    @Test
+    public void findOneByProfileKeyTest() throws GeneralSecurityException, StorageException, IOException {
 
         Record expectedRecord = writeRecord(encryption, country);
 
@@ -73,24 +67,18 @@ public class FindOneByKeysTest extends BaseTest {
         filter.setProfileKeyParam(new FilterStringParam(expectedRecord.getProfileKey()));
 
         Record actualRecord = storage.findOne(country, filter, options);
-//        Assertions.assertAll(validateRecord(expectedRecord, actualRecord));
+        assertReflectionEquals("Find record validation", actualRecord, expectedRecord, IGNORE_DEFAULTS);  //Ignore country field
     }
 
 
-    @DisplayName("Find one record by range key")
-    @ParameterizedTest(name = "Find one record by range key" + testNameEnc)
-    @ValueSource(booleans = {false, true})
-    public void findOneByRangeKeyTest(boolean encryption) throws GeneralSecurityException, StorageException, IOException {
+    @Test
+    public void findOneByRangeKeyTest() throws GeneralSecurityException, StorageException, IOException {
 
         Record expectedRecord = writeRecord(encryption, country);
         FindFilter filter = new FindFilter();
         filter.setRangeKeyParam(new FilterRangeParam(expectedRecord.getRangeKey()));
 
         Record actualRecord = storage.findOne(country, filter, options);
-//        Assertions.assertAll(validateRecord(expectedRecord, actualRecord));
-    }
-
-    private FindOneByKeysTest() throws FindOptions.FindOptionsException {
+        assertReflectionEquals("Find record validation", actualRecord, expectedRecord, IGNORE_DEFAULTS);  //Ignore country field
     }
 }
-*/

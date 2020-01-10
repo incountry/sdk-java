@@ -3,24 +3,40 @@ package com.incountry;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.key_accessor.SecretKeyAccessor;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Random;
+
+import static org.unitils.reflectionassert.ReflectionAssert.assertReflectionEquals;
 
 
 public abstract class BaseTest {
 
     protected Storage storage;
-    protected static final String testNameEnc = " [{index}] [enc={0}]";
+
+    @Parameterized.Parameter(0)
+    public boolean encryption;
+    @Parameterized.Parameter(1)
+    public String country;
+
+    @Parameterized.Parameters(name = "{index}:enc={0},{1}")
+    public static Collection<Object[]> data() {
+        String country = "se";
+        Object[][] data = new Object[][]{{false, country}, {true, country}};
+        return Arrays.asList(data);
+    }
 
     protected Storage createStorage(boolean encryption) throws IOException, StorageServerException {
 
         SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("mySecretKey");
 
         return new Storage(
-                "env-id",
-                "api-key",
+                "env_id",
+                "api_key",
                 "https://se.qa.incountry.io",
                 encryption,
                 secretKeyAccessor
@@ -44,7 +60,7 @@ public abstract class BaseTest {
 
     protected int randomInt() {
         Random randomGenerator = new Random();
-        return randomGenerator.nextInt(500) + 1;
+        return randomGenerator.nextInt(1001234) + 1;
     }
 
     protected Record createSimpleRecord(String country) {
@@ -73,15 +89,8 @@ public abstract class BaseTest {
         storage.write(record);
     }
 
-    public void findRecords(String country, Record expectedRecord, FindFilter filter, FindOptions findOptions)
-            throws StorageException, IOException, GeneralSecurityException {
-        BatchRecord batch = storage.find(country, filter, findOptions);
-        Record[] records = batch.getRecords();
-
-//        Assertions.assertAll("Validate batch fields",
-//                validateBatchFields(findOptions, records.length, batch));
-
-//        Assertions.assertAll("Validate record",
-//                validateRecord(expectedRecord, records[0]));
+    protected void validateRecord(Record expectedRecord) throws GeneralSecurityException, StorageException, IOException {
+        Record actualRecord = storage.read(country, expectedRecord.getKey());
+        assertReflectionEquals("Record validation", expectedRecord, actualRecord);
     }
 }
