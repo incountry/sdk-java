@@ -26,7 +26,10 @@ public abstract class BaseTest {
     @Parameterized.Parameters(name = "{index}:enc={0},{1}")
     public static Collection<Object[]> data() {
         String country = "se";
-        Object[][] data = new Object[][]{{false, country}, {true, country}};
+        Object[][] data = new Object[][]{
+                {false, country},
+                {true, country}
+        };
         return Arrays.asList(data);
     }
 

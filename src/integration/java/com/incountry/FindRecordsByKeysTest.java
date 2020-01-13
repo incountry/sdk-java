@@ -1,6 +1,8 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -17,11 +19,21 @@ import static org.unitils.reflectionassert.ReflectionComparatorMode.IGNORE_DEFAU
 @RunWith(Parameterized.class)
 public class FindRecordsByKeysTest extends BaseTest {
 
+    private Record expectedRecord;
+
+    @Before
+    public void setUp() throws Exception {
+        expectedRecord = writeRecord(encryption, country);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        storage.delete(country, expectedRecord.getKey());
+    }
+
     @Test
     public void findByKeyTest()
             throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setKeyParam(new FilterStringParam(expectedRecord.getKey()));
@@ -34,8 +46,6 @@ public class FindRecordsByKeysTest extends BaseTest {
     public void findByKey2Test()
             throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
 
-        Record expectedRecord = writeRecord(encryption, country);
-
         FindFilter filter = new FindFilter();
         filter.setKey2Param(new FilterStringParam(expectedRecord.getKey2()));
 
@@ -47,8 +57,6 @@ public class FindRecordsByKeysTest extends BaseTest {
     public void findByKey3Test()
             throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
 
-        Record expectedRecord = writeRecord(encryption, country);
-
         FindFilter filter = new FindFilter();
         filter.setKey3Param(new FilterStringParam(expectedRecord.getKey3()));
 
@@ -59,8 +67,6 @@ public class FindRecordsByKeysTest extends BaseTest {
     @Test
     public void findByProfileKeyTest()
             throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setProfileKeyParam(new FilterStringParam(expectedRecord.getProfileKey()));

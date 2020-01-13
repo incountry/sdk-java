@@ -2,6 +2,8 @@ package com.incountry;
 
 
 import com.incountry.exceptions.StorageException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,11 +22,20 @@ public class FindOneByKeysTest extends BaseTest {
     public FindOneByKeysTest() throws FindOptions.FindOptionsException {
     }
 
+    private Record expectedRecord;
+
+    @Before
+    public void setUp() throws Exception {
+        expectedRecord = writeRecord(encryption, country);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        storage.delete(country, expectedRecord.getKey());
+    }
 
     @Test
     public void findOneByKeyTest() throws GeneralSecurityException, StorageException, IOException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setKeyParam(new FilterStringParam(expectedRecord.getKey()));
@@ -35,8 +46,6 @@ public class FindOneByKeysTest extends BaseTest {
 
     @Test
     public void findOneByKey2Test() throws GeneralSecurityException, StorageException, IOException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setKey2Param(new FilterStringParam(expectedRecord.getKey2()));
@@ -49,8 +58,6 @@ public class FindOneByKeysTest extends BaseTest {
     @Test
     public void findOneByKey3Test() throws GeneralSecurityException, StorageException, IOException {
 
-        Record expectedRecord = writeRecord(encryption, country);
-
         FindFilter filter = new FindFilter();
         filter.setKey3Param(new FilterStringParam(expectedRecord.getKey3()));
 
@@ -60,8 +67,6 @@ public class FindOneByKeysTest extends BaseTest {
 
     @Test
     public void findOneByProfileKeyTest() throws GeneralSecurityException, StorageException, IOException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setProfileKeyParam(new FilterStringParam(expectedRecord.getProfileKey()));
@@ -74,7 +79,6 @@ public class FindOneByKeysTest extends BaseTest {
     @Test
     public void findOneByRangeKeyTest() throws GeneralSecurityException, StorageException, IOException {
 
-        Record expectedRecord = writeRecord(encryption, country);
         FindFilter filter = new FindFilter();
         filter.setRangeKeyParam(new FilterRangeParam(expectedRecord.getRangeKey()));
 

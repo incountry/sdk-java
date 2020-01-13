@@ -1,6 +1,7 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,11 +15,23 @@ import static org.unitils.reflectionassert.ReflectionAssert.assertReflectionEqua
 @RunWith(Parameterized.class)
 public class ReadTest extends BaseTest {
 
+    Record expectedRecord = new Record();
+
+    @After
+    public void tearDown() {
+        String key = expectedRecord.getKey();
+        try {
+            storage.delete(country, key);
+        } catch (NullPointerException | StorageException | IOException e){
+            e.printStackTrace();
+        }
+    }
+
     @Test
     public void readFullRecordTest()
             throws GeneralSecurityException, StorageException, IOException {
 
-        Record expectedRecord = createFullRecord(country);
+        expectedRecord = createFullRecord(country);
         writeRecord(encryption, expectedRecord);
 
         Record actualRecord = storage.read(country, expectedRecord.getKey());
@@ -29,7 +42,7 @@ public class ReadTest extends BaseTest {
     public void readReqRecordTest()
             throws GeneralSecurityException, StorageException, IOException {
 
-        Record expectedRecord = createSimpleRecord(country);
+        expectedRecord = createSimpleRecord(country);
         writeRecord(encryption, expectedRecord);
 
         Record actualRecord = storage.read(country, expectedRecord.getKey());
@@ -40,7 +53,10 @@ public class ReadTest extends BaseTest {
     public void readNotExistingRecordTest()
             throws IOException, StorageException, GeneralSecurityException {
         Storage storage = createStorage(encryption);
-        Record record = storage.read(country, "NotExistingRecord123");
+
+        expectedRecord.setKey("NotExistingRecord123");
+
+        Record record = storage.read(country, expectedRecord.getKey());
         Assert.assertNull(record);
     }
 }
