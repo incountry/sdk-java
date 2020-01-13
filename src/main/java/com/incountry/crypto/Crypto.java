@@ -41,6 +41,10 @@ public class Crypto implements ICrypto {
         this.usePtEncryption = false;
     }
 
+    public boolean isPT() {
+        return usePtEncryption;
+    }
+
     public String encrypt(String plainText) throws GeneralSecurityException, IOException {
         if (this.usePtEncryption) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes());
