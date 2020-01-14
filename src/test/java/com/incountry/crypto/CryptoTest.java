@@ -49,6 +49,8 @@ public class CryptoTest {
         for (String plainText: plainTexts) {
             String encrypted = crypto.encrypt(plainText);
             String decrypted = crypto.decrypt(encrypted);
+
+            assertEquals(encrypted.split(":")[0], "pt");
             assertEquals(plainText, decrypted);
             assertNotEquals(plainText, encrypted);
         }
@@ -79,7 +81,7 @@ public class CryptoTest {
     }
 
     @Test
-    public void testNonPTWithoutEnc() throws GeneralSecurityException, IOException {
+    public void testDecNonPTWithoutEnc() throws GeneralSecurityException, IOException {
         Crypto crypto = new Crypto("");
         String data = "MyAeMDU3wnlWiqooUM4aStpDvW7JKU0oKBQN4WI0Wyl2vSuSmTIu8TY7Z9ljYeaLfg8ti3mhIJhbLSBNu/AmvMPBZsl6CmSC1KcbZ4kATJQtmZolidyXUGBlXC52xvAnFFGnk2s=";
         String encrypted = "2:" + data;
