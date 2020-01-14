@@ -1,91 +1,91 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
-import com.incountry.find.FindBaseTest;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.unitils.reflectionassert.ReflectionAssert.assertReflectionEquals;
+import static org.unitils.reflectionassert.ReflectionComparatorMode.IGNORE_DEFAULTS;
 
-@TestMethodOrder(MethodOrderer.Alphanumeric.class)
-public class FindRecordsByKeysTest extends FindBaseTest {
+@RunWith(Parameterized.class)
+public class FindRecordsByKeysTest extends BaseTest {
 
-    private FindOptions defaultFindOptions = new FindOptions(10, 0);
+    private Record expectedRecord;
 
-    @DisplayName("Find records by key")
-    @ParameterizedTest(name = "Find records by key" + testName)
-    @CsvSource({"false, US"})
-    public void findByKeyTest(boolean encryption, String country)
-            throws GeneralSecurityException, StorageException, IOException {
+    @Before
+    public void setUp() throws Exception {
+        expectedRecord = writeRecord(encryption, country);
+    }
 
-        Record expectedRecord = writeRecord(encryption, country);
+    @After
+    public void tearDown() throws Exception {
+        storage.delete(country, expectedRecord.getKey());
+    }
+
+    @Test
+    public void findByKeyTest()
+            throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
 
         FindFilter filter = new FindFilter();
         filter.setKeyParam(new FilterStringParam(expectedRecord.getKey()));
 
-        findRecords(country, expectedRecord, filter, defaultFindOptions);
+        BatchRecord batch = storage.find(country, filter, new FindOptions());
+        validateBatch(batch, expectedRecord);
     }
 
-    @DisplayName("Find records by key2")
-    @ParameterizedTest(name = "Find records by key2" + testName)
-    @CsvSource({"false, US"})
-    public void findByKey2Test(boolean encryption, String country)
-            throws GeneralSecurityException, StorageException, IOException {
-
-        Record expectedRecord = writeRecord(encryption, country);
+    @Test
+    public void findByKey2Test()
+            throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
 
         FindFilter filter = new FindFilter();
         filter.setKey2Param(new FilterStringParam(expectedRecord.getKey2()));
 
-        findRecords(country, expectedRecord, filter, defaultFindOptions);
+        BatchRecord batch = storage.find(country, filter, new FindOptions());
+        validateBatch(batch, expectedRecord);
     }
 
-    @DisplayName("Find records by key3")
-    @ParameterizedTest(name = "Find records by key3" + testName)
-    @CsvSource({"false, US"})
-    public void findByKey3Test(boolean encryption, String country)
+    @Test
+    public void findByKey3Test()
             throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setKey3Param(new FilterStringParam(expectedRecord.getKey3()));
 
-        findRecords(country, expectedRecord, filter, defaultFindOptions);
+        BatchRecord batch = storage.find(country, filter, new FindOptions());
+        validateBatch(batch, expectedRecord);
     }
 
-    @DisplayName("Find records by profile key")
-    @ParameterizedTest(name = "Find records by profile key" + testName)
-    @CsvSource({"false, US"})
-    public void findByProfileKeyTest(boolean encryption, String country)
+    @Test
+    public void findByProfileKeyTest()
             throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
-
-        Record expectedRecord = writeRecord(encryption, country);
 
         FindFilter filter = new FindFilter();
         filter.setProfileKeyParam(new FilterStringParam(expectedRecord.getProfileKey()));
 
-        findRecords(country, expectedRecord, filter, defaultFindOptions);
+        BatchRecord batch = storage.find(country, filter, new FindOptions());
+        validateBatch(batch, expectedRecord);
     }
 
-    private void findRecords(String country, Record expectedRecord, FindFilter filter, FindOptions findOptions)
-            throws StorageException, IOException, GeneralSecurityException {
-        BatchRecord batch = storage.find(country, filter, findOptions);
-        Record[] records = batch.getRecords();
+    private void validateBatch(BatchRecord batch, Record expectedRecord) {
+        List<Record> records = Arrays.asList(batch.getRecords());
 
-        Assertions.assertAll("Validate batch fields",
-                validateBatchFields(findOptions, records.length, batch));
+        assertEquals("Validate records number", 1, records.size());
+        assertEquals("Validate offset value", 0, batch.getOffset());
+        assertEquals("Validate limit value", 100, batch.getLimit());
+        assertEquals("Validate batch count value", records.size(), batch.getCount());
+        assertEquals("Validate batch count value", records.size(), batch.getTotal());
 
-        Assertions.assertAll("Validate record",
-                validateRecord(expectedRecord, records[0]));
+        assertReflectionEquals("Find record validation",
+                records.get(0), expectedRecord, IGNORE_DEFAULTS);  //Ignore country field
     }
 
-    private FindRecordsByKeysTest() throws FindOptions.FindOptionsException {
-    }
 }

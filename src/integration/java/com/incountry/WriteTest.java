@@ -1,46 +1,35 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-
-@TestMethodOrder(MethodOrderer.Alphanumeric.class)
+@RunWith(Parameterized.class)
 public class WriteTest extends BaseTest {
 
-    @DisplayName("Write record with all field")
-    @ParameterizedTest(name = "Write record with all field" + testName)
-    @CsvSource({"false, US"})
-    public void writeFullRecordTest(boolean encryption, String country)
-            throws GeneralSecurityException, StorageException, IOException {
+    Record record;
 
-        Record record = createFullRecord(country);
-        writeRecord(encryption, record);
+    @After
+    public void tearDown() throws Exception {
+        storage.delete(country, record.getKey());
     }
 
-    @DisplayName("Write record with required field")
-    @ParameterizedTest(name = "Write record with required field" + testName)
-    @CsvSource({"false, US"})
-    public void writeReqRecordTest(boolean encryption, String country)
-            throws GeneralSecurityException, StorageException, IOException {
-
-        Record record = createSimpleRecord(country);
+    @Test
+    public void writeFullRecordTest() throws GeneralSecurityException, StorageException, IOException {
+        record = createFullRecord(country);
         writeRecord(encryption, record);
+        validateRecord(record);
     }
 
-    @DisplayName("Write record with empty body")
-    @ParameterizedTest(name = "Write record with empty body [{index}] => encryption={0}")
-    @CsvSource({"false, US"})
-    public void readRecordEmptyBodyTest(boolean encryption, String country)
-            throws GeneralSecurityException, StorageException, IOException {
-
-        Record record = createSimpleRecord(country, null);
+    @Test
+    public void writeReqRecordTest() throws GeneralSecurityException, StorageException, IOException {
+        record = createSimpleRecord(country);
         writeRecord(encryption, record);
+        validateRecord(record);
     }
 }

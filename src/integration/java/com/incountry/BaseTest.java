@@ -3,108 +3,44 @@ package com.incountry;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.key_accessor.SecretKeyAccessor;
-import io.github.cdimascio.dotenv.Dotenv;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.function.Executable;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.unitils.reflectionassert.ReflectionAssert.assertReflectionEquals;
 
 
 public abstract class BaseTest {
 
     protected Storage storage;
 
-    @NotNull
-    protected Executable[] validateRecord(final Record expectedRecord, final Record actualRecord) {
-        return new Executable[]{
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedRecord.key, actualRecord.key, "Validate key value");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedRecord.body, actualRecord.body, "Validate body value");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedRecord.key2, actualRecord.key2, "Validate key2");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedRecord.key3, actualRecord.key3, "Validate key3");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedRecord.profileKey, actualRecord.profileKey, "Validate profile_key");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedRecord.rangeKey, actualRecord.rangeKey, "Validate range_key");
-                    }
-                },
-//                () -> assertEquals(expectedRecord.country, actualRecord.country, "Validate country value")
-        };
-    }
+    @Parameterized.Parameter(0)
+    public boolean encryption;
+    @Parameterized.Parameter(1)
+    public String country;
 
-    @NotNull
-    protected Executable[] validateBatchFields(final FindOptions findOptions, final int expectedCount, final BatchRecord actualBatch) {
-        return new Executable[]{
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedCount, actualBatch.getTotal(), "Validate total count");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(expectedCount, actualBatch.getCount(), "Validate count");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(findOptions.getLimit(), actualBatch.getLimit(), "Validate limit");
-                    }
-                },
-                new Executable() {
-                    @Override
-                    public void execute() throws Throwable {
-                        assertEquals(findOptions.getOffset(), actualBatch.getOffset(), "Validate offset");
-                    }
-                },
+    @Parameterized.Parameters(name = "{index}:enc={0},{1}")
+    public static Collection<Object[]> data() {
+        String country = "se";
+        Object[][] data = new Object[][]{
+                {false, country},
+                {true, country}
         };
+        return Arrays.asList(data);
     }
-
-    protected static final String testName = " [{index}] ==> encryption={0}, country={1}";
-    protected static final String testNameEnc = " [{index}] ==> encryption={0}";
 
     protected Storage createStorage(boolean encryption) throws IOException, StorageServerException {
 
-        Dotenv dotenv = Dotenv.load();
-
-        SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor(dotenv.get("INC_SECRET_KEY"));
+        SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("mySecretKey");
 
         return new Storage(
-                dotenv.get("INC_ENVIRONMENT_ID"),
-                dotenv.get("INC_API_KEY"),
-                dotenv.get("INC_URL"),
+                "env_id",
+                "api_key",
+                "https://se.qa.incountry.io",
                 encryption,
                 secretKeyAccessor
         );
@@ -116,13 +52,18 @@ public abstract class BaseTest {
 
     protected Record createFullRecord(String country, String body) {
         return new Record(country,
-                "key_" + RandomStringUtils.randomAlphabetic(5),
+                "key_" + randomInt(),
                 body,
-                "profileKey_" + RandomStringUtils.randomAlphabetic(5),
-                RandomUtils.nextInt(1, 99),
-                "key2_" + RandomStringUtils.randomAlphabetic(5),
-                "key3_" + RandomStringUtils.randomAlphabetic(5)
+                "profileKey_" + randomInt(),
+                randomInt(),
+                "key2_" + randomInt(),
+                "key3_" + randomInt()
         );
+    }
+
+    protected int randomInt() {
+        Random randomGenerator = new Random();
+        return randomGenerator.nextInt(1001234) + 1;
     }
 
     protected Record createSimpleRecord(String country) {
@@ -131,7 +72,7 @@ public abstract class BaseTest {
 
     protected Record createSimpleRecord(String country, String body) {
         return new Record(country,
-                "key_" + RandomStringUtils.randomAlphabetic(5),
+                "key_" + randomInt(),
                 body
         );
     }
@@ -149,5 +90,10 @@ public abstract class BaseTest {
             throws IOException, StorageException, GeneralSecurityException {
         storage = createStorage(encryption);
         storage.write(record);
+    }
+
+    protected void validateRecord(Record expectedRecord) throws GeneralSecurityException, StorageException, IOException {
+        Record actualRecord = storage.read(country, expectedRecord.getKey());
+        assertReflectionEquals("Record validation", expectedRecord, actualRecord);
     }
 }

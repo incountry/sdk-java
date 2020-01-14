@@ -2,40 +2,43 @@ package com.incountry;
 
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 
-@TestMethodOrder(MethodOrderer.Alphanumeric.class)
+@RunWith(Parameterized.class)
 public class DeleteTest extends BaseTest {
 
+    private Record record;
 
-    @DisplayName("Delete record")
-    @ParameterizedTest(name = "Delete record" + testName)
-    @CsvSource({"false, US"})
-    public void deleteRecordTest(boolean encryption, String country) throws GeneralSecurityException, StorageException, IOException {
-        Record record = writeRecord(encryption, country);
-        storage.delete(country, record.key);
+    @Before
+    public void setUp() throws Exception {
+        record = writeRecord(encryption, country);
     }
 
-    @DisplayName("Try to delete not existing record")
-    @ParameterizedTest(name = "Try to delete not existing record" + testNameEnc)
-    @ValueSource(booleans = {false, true})
-    public void deleteNotExistingRecordTest(final boolean encryption) {
-        Assertions.assertThrows(StorageServerException.class, new Executable() {
-            @Override
-            public void execute() throws Throwable {
-                Storage storage = DeleteTest.this.createStorage(encryption);
-                storage.delete("US", "NotExistingRecord123");
-            }
-        });
+    @After
+    public void tearDown() {
+        try {
+            storage.delete(country, record.getKey());
+        } catch (StorageException | IOException e) {
+            System.out.println("Try to delete record after test");
+        }
     }
+
+    @Test
+    public void deleteRecordTest() throws StorageException, IOException {
+        System.out.println(record.getKey());
+        storage.delete(country, record.getKey());
+    }
+
+    @Test(expected = StorageServerException.class)
+    public void deleteNotExistingRecordTest() throws IOException, StorageException {
+        Storage storage = DeleteTest.this.createStorage(encryption);
+        storage.delete(country, "NotExistingRecord123");
+    }
+
 }
