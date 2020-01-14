@@ -50,7 +50,10 @@ public class CryptoTest {
             String encrypted = crypto.encrypt(plainText);
             String decrypted = crypto.decrypt(encrypted);
 
-            assertEquals(encrypted.split(":")[0], "pt");
+            String expectedVersion = "pt";
+            String actualVersion = encrypted.split(":")[0];
+
+            assertEquals(expectedVersion, actualVersion);
             assertEquals(plainText, decrypted);
             assertNotEquals(plainText, encrypted);
         }
