@@ -10,11 +10,11 @@ import com.incountry.keyaccessor.generator.SecretKeyGenerator;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-public class FullMIgration {
+public class FullMigration {
 
     private final String COUNTRY = "us";
 
-    public void startMIgration() throws IOException, StorageException, GeneralSecurityException, FindOptionsException {
+    public void startMigration() throws IOException, StorageException, GeneralSecurityException, FindOptionsException {
 
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator<String>() {
             @Override
