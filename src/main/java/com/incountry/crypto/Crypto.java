@@ -20,7 +20,7 @@ import static com.incountry.Utils.*;
 public class Crypto implements ICrypto {
     private String secret;
     private String envId;
-    private Boolean usePtEncryption;
+    private Boolean isUsingPTEncryption = false;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
@@ -32,21 +32,16 @@ public class Crypto implements ICrypto {
 
     public Crypto(String envId) {
         this.envId = envId;
-        this.usePtEncryption = true;
+        this.isUsingPTEncryption = true;
     }
 
     public Crypto(String secret, String envId) {
         this.secret = secret;
         this.envId = envId;
-        this.usePtEncryption = false;
-    }
-
-    public boolean isPT() {
-        return usePtEncryption;
     }
 
     public String encrypt(String plainText) throws GeneralSecurityException, IOException {
-        if (Boolean.TRUE.equals(this.usePtEncryption)) {
+        if (isUsingPTEncryption) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes());
             return PT_ENC_VERSION + ":" + new String(ptEncoded);
         }
@@ -113,7 +108,7 @@ public class Crypto implements ICrypto {
             return decryptVPT(parts[1]);
         }
 
-        if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(usePtEncryption)) {
+        if (!parts[0].equals(PT_ENC_VERSION) && isUsingPTEncryption) {
             return decryptStub(parts[1]);
         }
 
