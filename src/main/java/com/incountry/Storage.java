@@ -1,20 +1,18 @@
 package com.incountry;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.incountry.FindOptions.FindOptionsException;
-import com.incountry.crypto.Crypto;
-import com.incountry.exceptions.StorageClientException;
-import com.incountry.http.IHttpAgent;
-import com.incountry.key_accessor.ISecretKeyAccessor;
-import org.json.JSONObject;
-import com.incountry.exceptions.StorageException;
-import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.HttpAgent;
-
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
+
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.*;
+import com.incountry.http.IHttpAgent;
+import com.incountry.key_accessor.ISecretKeyAccessor;
+import com.incountry.http.HttpAgent;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONObject;
 
 public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
@@ -73,6 +71,8 @@ public class Storage {
 
         if (encrypt) {
             mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
+        } else {
+            mCrypto = new Crypto(environmentID);
         }
 
     }
@@ -114,7 +114,7 @@ public class Storage {
         httpAgent.request(url, "POST", record.toString(mCrypto), false);
     }
 
-    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
+    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException, RecordException {
         country = country.toLowerCase();
         checkParameters(country, key);
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
@@ -126,7 +126,7 @@ public class Storage {
         return d;
     }
     
-    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
+    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException {
     	FindOptions options = new FindOptions(1, 0);
     	BatchRecord existingRecords = find(country, filter, options);
 
