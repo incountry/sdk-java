@@ -5,11 +5,8 @@ import com.incountry.exceptions.RecordException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class BatchRecord {
     int count;
@@ -29,8 +26,8 @@ public class BatchRecord {
     }
 
     public static BatchRecord fromString(String s, Crypto mCrypto) {
-        List<Record> parsedRecords = new ArrayList<Record>();
-        List<RecordException> errors = new ArrayList<RecordException>();
+        List<Record> parsedRecords = new ArrayList<>();
+        List<RecordException> errors = new ArrayList<>();
 
         JSONObject obj = new JSONObject(s);
         JSONObject meta = obj.getJSONObject("meta");

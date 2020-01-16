@@ -157,7 +157,7 @@ public class Storage {
     public void setHttpAgent(IHttpAgent agent) {
         httpAgent = agent;
     }
-    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
@@ -172,7 +172,7 @@ public class Storage {
         return BatchRecord.fromString(content, mCrypto);
     }
     
-    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException {
     	BatchRecord findResults = find(country, filter, options);
 
     	Record[] records = findResults.getRecords();

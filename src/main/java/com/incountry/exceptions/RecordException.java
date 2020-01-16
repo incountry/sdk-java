@@ -1,12 +1,13 @@
 package com.incountry.exceptions;
 
 public class RecordException extends Exception {
-    String rawData;
-    Exception originalException;
+    private final String rawData;
+    private final Exception originalException;
 
     public RecordException(String exceptionText, String rawData){
         super(exceptionText);
         this.rawData = rawData;
+        this.originalException = null;
     }
 
     public RecordException(String exceptionText, String rawData, Exception originalException){
