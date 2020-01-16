@@ -19,13 +19,13 @@ public class FullMigration {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator<String>() {
             @Override
             public String generate() {
-                return "        {\n" +
-                        "            \"currentVersion\": 1,\n" +
-                        "            \"secrets\": [\n" +
-                        "                {\"secret\": \"password0\", \"version\": 0},\n" +
-                        "                {\"secret\": \"password1\", \"version\": 1},\n" +
-                        "            ],\n" +
-                        "        }";
+                return  "  {\n" +
+                        "      \"currentVersion\": 1,\n" +
+                        "      \"secrets\": [\n" +
+                        "          {\"secret\": \"password0\", \"version\": 0},\n" +
+                        "          {\"secret\": \"password1\", \"version\": 1},\n" +
+                        "      ],\n" +
+                        "  }";
             }
         });
 
