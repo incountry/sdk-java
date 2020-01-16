@@ -75,6 +75,14 @@ public class FindRecordsByKeysTest extends BaseTest {
         validateBatch(batch, expectedRecord);
     }
 
+    @Test
+    public void findByCountryTest()
+            throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
+
+        BatchRecord batch = storage.find(country, new FindFilter(), new FindOptions());
+        validateBatch(batch, expectedRecord);
+    }
+
     private void validateBatch(BatchRecord batch, Record expectedRecord) {
         List<Record> records = Arrays.asList(batch.getRecords());
 
