@@ -101,15 +101,15 @@ public class Record {
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");
 
-            body = mCrypto.decrypt(body);
+            String decryptedBody = mCrypto.decrypt(body);
 
-            if (parts.length != 2){
+            if (parts.length != 2) {
                 key = mCrypto.decrypt(key);
                 profileKey = mCrypto.decrypt(profileKey);
                 key2 = mCrypto.decrypt(key2);
                 key3 = mCrypto.decrypt(key3);
-            } else {
-                JsonNode bodyObj = mapper.readTree(body);
+            } else if (!decryptedBody.equals(parts[1])) {
+                JsonNode bodyObj = mapper.readTree(decryptedBody);
                 body = extractKey(bodyObj, P_PAYLOAD);
                 String meta = extractKey(bodyObj, P_META);
                 JsonNode metaObj = mapper.readTree(meta);
@@ -117,6 +117,8 @@ public class Record {
                 profileKey = extractKey(metaObj, P_PROFILE_KEY);
                 key2 = extractKey(metaObj, P_KEY_2);
                 key3 = extractKey(metaObj, P_KEY_3);
+            } else {
+                body = decryptedBody;
             }
         }
         return new Record(country, key, body, profileKey, rangeKey, key2, key3);

@@ -73,6 +73,8 @@ public class Storage {
 
         if (encrypt) {
             mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
+        } else {
+            mCrypto = new Crypto(environmentID);
         }
 
     }
