@@ -41,7 +41,7 @@ public class Crypto implements ICrypto {
     }
 
     public String encrypt(String plainText) throws GeneralSecurityException, IOException {
-        if (isUsingPTEncryption) {
+        if (Boolean.TRUE.equals(isUsingPTEncryption)) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes());
             return PT_ENC_VERSION + ":" + new String(ptEncoded);
         }
@@ -108,7 +108,7 @@ public class Crypto implements ICrypto {
             return decryptVPT(parts[1]);
         }
 
-        if (!parts[0].equals(PT_ENC_VERSION) && isUsingPTEncryption) {
+        if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
             return decryptStub(parts[1]);
         }
 
