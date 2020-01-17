@@ -1,5 +1,7 @@
 package com.incountry;
 
+import com.incountry.exceptions.FindOptionsException;
+import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.key_accessor.SecretKeyAccessor;
 import org.junit.Before;
@@ -39,7 +41,7 @@ public class StorageTest {
     }
 
     @Test
-    public void test2Read() throws GeneralSecurityException, IOException, StorageException {
+    public void test2Read() throws GeneralSecurityException, IOException, StorageException, RecordException {
         Record d = store.read(country, recordKey);
         assertEquals(recordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
@@ -49,7 +51,7 @@ public class StorageTest {
     }
 
     @Test
-    public void test3Find() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+    public void test3Find() throws FindOptionsException, StorageException, IOException {
         FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
         FindOptions options = new FindOptions(100, 0);
         BatchRecord d = store.find(country, filter, options);
@@ -59,7 +61,7 @@ public class StorageTest {
     }
 
     @Test
-    public void test4FindOne() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+    public void test4FindOne() throws FindOptionsException, StorageException, IOException {
         FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
         FindOptions options = new FindOptions(100, 0);
         Record d = store.findOne(country, filter, options);
@@ -68,7 +70,7 @@ public class StorageTest {
     }
 
     @Test
-    public void test5UpdateOne() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+    public void test5UpdateOne() throws FindOptionsException, GeneralSecurityException, StorageException, IOException, RecordException {
         FindFilter filter = new FindFilter(null, null, new FilterRangeParam(rangeKey), new FilterStringParam(key2), null);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
@@ -83,7 +85,7 @@ public class StorageTest {
     }
 
     @Test
-    public void test6Delete() throws GeneralSecurityException, IOException, StorageException {
+    public void test6Delete() throws GeneralSecurityException, IOException, StorageException, RecordException {
         store.delete(country, recordKey);
         // Cannot read deleted record
         Record d = store.read(country, recordKey);

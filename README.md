@@ -116,7 +116,7 @@ Here is how data is transformed and stored in InCountry database:
 
 Stored record can be read by `key` using `read` method.
 ```java
-public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException
+public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException, RecordException
 ```
 `country` is a country code of the record
 `key` is a record key
@@ -177,13 +177,14 @@ This call returns all records with `key2` equals `kitty` AND `key3` equals `mew`
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
 
 
-`Find` returns BatchRecord object which contains an array of `Record` and some metadata:
+`Find` returns BatchRecord object which contains an array of `Record` objects and some metadata:
 ```java
 int count;
 int limit;
 int offset;
 int total;
 Record[] records;
+List<RecordException> errors;
 ```
 These fields can be accessed using getters, for example:
 ```java
@@ -200,6 +201,9 @@ or if you want just to check equality:
 FilterRangeParam rangeParam = new FilterRangeParam(1000);
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
+
+`BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about
+ records that failed to be processed correctly during `find` request. 
 
 ### Find one record matching filter
 

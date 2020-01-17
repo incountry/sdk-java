@@ -1,5 +1,6 @@
 package com.incountry;
 
+import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageException;
 import org.junit.After;
 import org.junit.Assert;
@@ -29,7 +30,7 @@ public class ReadTest extends BaseTest {
 
     @Test
     public void readFullRecordTest()
-            throws GeneralSecurityException, StorageException, IOException {
+            throws GeneralSecurityException, StorageException, IOException, RecordException {
 
         expectedRecord = createFullRecord(country);
         writeRecord(encryption, expectedRecord);
@@ -40,7 +41,7 @@ public class ReadTest extends BaseTest {
 
     @Test
     public void readReqRecordTest()
-            throws GeneralSecurityException, StorageException, IOException {
+            throws GeneralSecurityException, StorageException, IOException, RecordException {
 
         expectedRecord = createSimpleRecord(country);
         writeRecord(encryption, expectedRecord);
@@ -51,7 +52,7 @@ public class ReadTest extends BaseTest {
 
     @Test
     public void readNotExistingRecordTest()
-            throws IOException, StorageException, GeneralSecurityException {
+            throws IOException, StorageException, GeneralSecurityException, RecordException {
         Storage storage = createStorage(encryption);
 
         expectedRecord.setKey("NotExistingRecord123");

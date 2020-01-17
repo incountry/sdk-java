@@ -1,6 +1,7 @@
 package com.incountry;
 
 
+import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageException;
 import org.junit.After;
 import org.junit.Before;
@@ -19,7 +20,7 @@ public class FindOneByKeysTest extends BaseTest {
 
     private FindOptions options = new FindOptions(1, 0);
 
-    public FindOneByKeysTest() throws FindOptions.FindOptionsException {
+    public FindOneByKeysTest() throws FindOptionsException {
     }
 
     private Record expectedRecord;

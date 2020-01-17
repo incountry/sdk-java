@@ -1,14 +1,15 @@
 package com.incountry;
 
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.RecordException;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.incountry.crypto.Crypto;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-
 
 @JsonFilter("nullFilter")
 public class Record {
@@ -87,7 +88,7 @@ public class Record {
         return new Record(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     }
 
-    public static Record fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static Record fromString(String s, Crypto mCrypto) throws IOException, RecordException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
         String country = extractKey(o, P_COUNTRY);
@@ -101,15 +102,15 @@ public class Record {
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");
 
-            body = mCrypto.decrypt(body);
+            String decryptedBody = mCrypto.decrypt(body);
 
-            if (parts.length != 2){
+            if (parts.length != 2) {
                 key = mCrypto.decrypt(key);
                 profileKey = mCrypto.decrypt(profileKey);
                 key2 = mCrypto.decrypt(key2);
                 key3 = mCrypto.decrypt(key3);
             } else {
-                JsonNode bodyObj = mapper.readTree(body);
+                JsonNode bodyObj = mapper.readTree(decryptedBody);
                 body = extractKey(bodyObj, P_PAYLOAD);
                 String meta = extractKey(bodyObj, P_META);
                 JsonNode metaObj = mapper.readTree(meta);

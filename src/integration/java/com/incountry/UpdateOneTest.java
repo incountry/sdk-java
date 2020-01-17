@@ -1,5 +1,7 @@
 package com.incountry;
 
+import com.incountry.exceptions.FindOptionsException;
+import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageException;
 import org.junit.After;
 import org.junit.Before;
@@ -31,7 +33,7 @@ public class UpdateOneTest extends BaseTest {
 
     @Test
     public void updateRecordByKeyTest()
-            throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
+            throws GeneralSecurityException, StorageException, IOException, FindOptionsException, RecordException {
 
         FindFilter filter = new FindFilter();
         filter.setKeyParam(new FilterStringParam(newRecord.key));
@@ -54,7 +56,7 @@ public class UpdateOneTest extends BaseTest {
 
     @Test
     public void updateRecordByProfileKeyTest()
-            throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
+            throws GeneralSecurityException, StorageException, IOException, FindOptionsException, RecordException {
 
         FindFilter filter = new FindFilter();
         filter.setProfileKeyParam(new FilterStringParam(newRecord.profileKey));
@@ -76,7 +78,7 @@ public class UpdateOneTest extends BaseTest {
 
     @Test
     public void updateRecordWithoutOverrideTest()
-            throws GeneralSecurityException, StorageException, IOException, FindOptions.FindOptionsException {
+            throws GeneralSecurityException, StorageException, IOException, FindOptionsException, RecordException {
 
         FindFilter filter = new FindFilter();
         filter.setProfileKeyParam(new FilterStringParam(newRecord.profileKey));
