@@ -20,10 +20,10 @@ notifications:
 install: true
 
 script:
-  - test -d "${JDK8_HOME}" || export JDK6_HOME=$(jdk_switcher home openjdk8)
+  - test -d "${JDK8_HOME}" || export JDK8_HOME=$(jdk_switcher home openjdk8)
   - test -d "${JDK7_HOME}" || export JDK7_HOME=$(jdk_switcher home openjdk7)
   - test -z "${ZULU_JDK}" || export TRAVIS_JDK_VERSION=zulujdk${ZULU_JDK}
-  - gradle --debug build
+  - gradle build
 
 matrix:
   fast_finish: true
