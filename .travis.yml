@@ -15,4 +15,4 @@ notifications:
 
 script:
   #- gradle test --rerun-tasks
-  - gradle sonarqube
+  #- gradle sonarqube
