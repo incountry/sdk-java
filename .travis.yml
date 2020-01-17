@@ -17,6 +17,8 @@ sudo: required
 notifications:
   email: false
 
+install: true
+
 script:
   - test -d "${JDK8_HOME}" || export JDK6_HOME=$(jdk_switcher home openjdk8)
   - test -d "${JDK7_HOME}" || export JDK7_HOME=$(jdk_switcher home openjdk7)
