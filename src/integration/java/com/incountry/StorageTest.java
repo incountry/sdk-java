@@ -11,6 +11,8 @@ import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -23,7 +25,7 @@ public class StorageTest {
     private String key2 = "key2";
     private String key3 = "key3";
     private Integer rangeKey = 1;
-    private String recordBody = "{\"name\":\"last\"}";
+    private String recordBody = "test";
 
 
     @Before
@@ -48,6 +50,15 @@ public class StorageTest {
                 secretKeyAccessor
 
         );
+    }
+
+    @Test
+    public void testBatchWrite() throws GeneralSecurityException, StorageException, IOException {
+
+        List<Record> records = new ArrayList<>();
+        records.add(new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3));
+        store.batchWrite(country, records);
+
     }
 
     @Test

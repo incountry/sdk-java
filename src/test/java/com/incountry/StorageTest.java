@@ -1,12 +1,13 @@
 package com.incountry;
 
+import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
 import com.incountry.crypto.impl.Crypto;
 import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,9 +18,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -158,11 +157,11 @@ public class StorageTest {
 
             String encrypted = agent.getCallBody();
             String keyHash = crypto.createKeyHash(key);
-            JSONArray responseList = new JSONArray(encrypted);
-            for (Object item : responseList) {
-                JSONObject response = new JSONObject(item.toString());
-                String key = response.getString("key");
-                String encryptedBody = response.getString("body");
+            ArrayList<LinkedTreeMap> responseList = (ArrayList<LinkedTreeMap>) new Gson().fromJson(encrypted, HashMap.class).get("records");
+            for (LinkedTreeMap response : responseList) {
+                System.out.println();
+                String key = (String) response.get("key");
+                String encryptedBody = (String) response.get("body");
                 String actualBodyStr = crypto.decrypt(encryptedBody, 0);
                 JSONObject bodyJsonObj = new JSONObject(actualBodyStr);
                 String actualBody = body != null ? bodyJsonObj.getString("payload") : null;

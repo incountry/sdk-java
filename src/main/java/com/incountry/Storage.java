@@ -3,6 +3,7 @@ package com.incountry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.incountry.crypto.impl.Crypto;
 import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageClientException;
@@ -181,13 +182,13 @@ public class Storage {
      */
     public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException {
         country = country.toLowerCase();
-        List<String> recordsStrings = new ArrayList<>();
+        List<JsonObject> recordsStrings = new ArrayList<>();
         for (Record record : records) {
             checkParameters(country, record.getKey());
-            recordsStrings.add(record.toString(mCrypto));
+            recordsStrings.add(JsonParser.parseString(record.toString(mCrypto)).getAsJsonObject());
         }
         String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
-        httpAgent.request(url, "POST", new Gson().toJson(recordsStrings), false);
+        httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
 
         return true;
     }
