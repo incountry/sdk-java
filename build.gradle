@@ -180,10 +180,10 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integration.runtimeClasspath
     jvmArgs '-Dhttps.protocols=TLSv1.2'
     jvmArgs '-Dhttps.cipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256'
-    testlogger {
+/*    testlogger {
         showFullStackTraces true
         showStandardStreams true
-    }
+    }*/
 }
 
 artifacts {
