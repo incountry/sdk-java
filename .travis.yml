@@ -12,10 +12,6 @@ before_install:
   - test -z "${ZULU_JDK}" || export JDK${ZULU_JDK}_HOME=/usr/lib/jvm/zulu-${ZULU_JDK}-amd64
   - unset _JAVA_OPTIONS
 
-jdk:
-  - openjdk8
-  - openjdk7
-
 sudo: required
 
 notifications:
@@ -26,7 +22,7 @@ script:
   - test -d "${JDK7_HOME}" || export JDK7_HOME=$(jdk_switcher home openjdk7)
   - test -z "${ZULU_JDK}" || export TRAVIS_JDK_VERSION=zulujdk${ZULU_JDK}
   - gradle test --rerun-tasks
-  - gradle sonarqube
+  - gradle build
 
 matrix:
   fast_finish: true
