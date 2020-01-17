@@ -16,14 +16,14 @@ import static org.unitils.reflectionassert.ReflectionAssert.assertReflectionEqua
 @RunWith(Parameterized.class)
 public class ReadTest extends BaseTest {
 
-    Record expectedRecord = new Record();
+    Record expectedRecord;
 
     @After
     public void tearDown() {
         String key = expectedRecord.getKey();
         try {
             storage.delete(country, key);
-        } catch (NullPointerException | StorageException | IOException e){
+        } catch (NullPointerException | StorageException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -55,6 +55,7 @@ public class ReadTest extends BaseTest {
             throws IOException, StorageException, GeneralSecurityException, RecordException {
         Storage storage = createStorage(encryption);
 
+        expectedRecord = new Record();
         expectedRecord.setKey("NotExistingRecord123");
 
         Record record = storage.read(country, expectedRecord.getKey());
