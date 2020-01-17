@@ -1,6 +1,5 @@
 package com.incountry;
 
-import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.key_accessor.SecretKeyAccessor;
@@ -39,8 +38,8 @@ public abstract class BaseTest {
         SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("mySecretKey");
 
         return new Storage(
-                "28aea35a-b8fa-47e0-8295-93743d4badb6",
-                "ntxeco.633d10bddfd9470d92b8171ba1939e7f",
+                "env_id",
+                "api_key",
                 "https://se.qa.incountry.io",
                 encryption,
                 secretKeyAccessor
@@ -93,7 +92,7 @@ public abstract class BaseTest {
         storage.write(record);
     }
 
-    protected void validateRecord(Record expectedRecord) throws GeneralSecurityException, StorageException, IOException, RecordException {
+    protected void validateRecord(Record expectedRecord) throws GeneralSecurityException, StorageException, IOException {
         Record actualRecord = storage.read(country, expectedRecord.getKey());
         assertReflectionEquals("Record validation", expectedRecord, actualRecord);
     }
