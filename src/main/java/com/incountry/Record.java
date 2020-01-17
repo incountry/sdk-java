@@ -1,14 +1,15 @@
 package com.incountry;
 
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.RecordException;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.incountry.crypto.Crypto;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-
 
 @JsonFilter("nullFilter")
 public class Record {
@@ -87,7 +88,7 @@ public class Record {
         return new Record(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     }
 
-    public static Record fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static Record fromString(String s, Crypto mCrypto) throws IOException, RecordException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
         String country = extractKey(o, P_COUNTRY);
@@ -108,7 +109,7 @@ public class Record {
                 profileKey = mCrypto.decrypt(profileKey);
                 key2 = mCrypto.decrypt(key2);
                 key3 = mCrypto.decrypt(key3);
-            } else if (!decryptedBody.equals(parts[1])) {
+            } else {
                 JsonNode bodyObj = mapper.readTree(decryptedBody);
                 body = extractKey(bodyObj, P_PAYLOAD);
                 String meta = extractKey(bodyObj, P_META);
@@ -117,8 +118,6 @@ public class Record {
                 profileKey = extractKey(metaObj, P_PROFILE_KEY);
                 key2 = extractKey(metaObj, P_KEY_2);
                 key3 = extractKey(metaObj, P_KEY_3);
-            } else {
-                body = decryptedBody;
             }
         }
         return new Record(country, key, body, profileKey, rangeKey, key2, key3);

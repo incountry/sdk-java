@@ -1,6 +1,8 @@
 package com.incountry;
 
 import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.FindOptionsException;
+import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.key_accessor.SecretKeyAccessor;
@@ -69,7 +71,7 @@ public class StorageTest {
         }
 
         @Test
-        public void testWrite() throws GeneralSecurityException, StorageException, IOException {
+        public void testWrite() throws GeneralSecurityException, StorageException, IOException, RecordException {
             if (encrypt) {
                 SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
                 storage = new Storage("envId", "apiKey", secretKeyAccessor);
@@ -111,7 +113,7 @@ public class StorageTest {
         }
 
         @Test
-        public void testRead() throws GeneralSecurityException, IOException, StorageException {
+        public void testRead() throws GeneralSecurityException, IOException, StorageException, RecordException {
             if (encrypt) {
                 SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
                 storage = new Storage("envId", "apiKey", secretKeyAccessor);
@@ -164,10 +166,6 @@ public class StorageTest {
     }
 
     public static class StorageSingleTests {
-        Storage storage;
-        Crypto crypto;
-
-        private Storage store;
         private String country = "us";
         private String recordKey = "some_key";
         private String profileKey = "profileKey";
@@ -177,12 +175,12 @@ public class StorageTest {
         private String recordBody = "{\"name\":\"last\"}";
 
         @Test
-        public void testCustomEndpoint() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        public void testCustomEndpoint() throws GeneralSecurityException, StorageException, IOException {
             SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
             String endpoint = "https://custom.endpoint.io";
 
-            storage = new Storage("envId", "apiKey", endpoint, true, secretKeyAccessor);
-            crypto = new Crypto("password", "envId");
+            Storage storage = new Storage("envId", "apiKey", endpoint, true, secretKeyAccessor);
+            Crypto crypto = new Crypto("password", "envId");
 
 
             FakeHttpAgent agent = new FakeHttpAgent("");
@@ -198,10 +196,10 @@ public class StorageTest {
         }
 
         @Test
-        public void testFindWithEnc() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        public void testFindWithEnc() throws GeneralSecurityException, StorageException, IOException, FindOptionsException {
             SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
-            storage = new Storage("envId", "apiKey", secretKeyAccessor);
-            crypto = new Crypto("password", "envId");
+            Storage storage = new Storage("envId", "apiKey", secretKeyAccessor);
+            Crypto crypto = new Crypto("password", "envId");
 
             FindOptions options = new FindOptions(1,0);
             FindFilter filter = new FindFilter();
@@ -229,51 +227,12 @@ public class StorageTest {
         }
 
         @Test
-        public void testFindWithoutEnc() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
-            storage = new Storage("envId", "apiKey", null);
-            Crypto cryptoPT = new Crypto("envId");
-            crypto = new Crypto("password", "envId");
+        public void testFindOne() throws GeneralSecurityException, StorageException, IOException, FindOptionsException {
+            String secret = "password";
+            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor(secret);
+            Crypto crypto = new Crypto(secret, "envId");
+            Storage storage = new Storage("envId", "apiKey", secretKeyAccessor);
 
-            FindOptions options = new FindOptions(2, 0);
-            FindFilter filter = new FindFilter();
-            filter.setProfileKeyParam(new FilterStringParam(profileKey));
-
-            Record recWithPTEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
-            Record recWithEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
-            String encryptedRecWithPTEnc = recWithPTEnc.toString(cryptoPT);
-            String encryptedRecWithEnc = recWithEnc.toString(crypto);
-
-            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRecWithPTEnc + "," + encryptedRecWithEnc + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
-            storage.setHttpAgent(agent);
-
-            BatchRecord d = storage.find(country, filter, options);
-
-            String callBody = agent.getCallBody();
-            assertEquals("{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":2}}", callBody);
-
-            assertEquals(2, d.getCount());
-            assertEquals(2, d.getRecords().length);
-
-            assertEquals(recordKey, d.getRecords()[0].getKey());
-            assertEquals(recordBody, d.getRecords()[0].getBody());
-            assertEquals(key2, d.getRecords()[0].getKey2());
-            assertEquals(key3, d.getRecords()[0].getKey3());
-            assertEquals(profileKey, d.getRecords()[0].getProfileKey());
-            assertEquals(rangeKey, d.getRecords()[0].getRangeKey());
-
-            assertNotEquals(recordKey, d.getRecords()[1].getKey());
-            assertNotEquals(recordBody, d.getRecords()[1].getBody());
-            assertNotEquals(key2, d.getRecords()[1].getKey2());
-            assertNotEquals(key3, d.getRecords()[1].getKey3());
-            assertNotEquals(profileKey, d.getRecords()[1].getProfileKey());
-            assertEquals(rangeKey, d.getRecords()[1].getRangeKey());
-        }
-
-        @Test
-        public void testFindOne() throws FindOptions.FindOptionsException, GeneralSecurityException, StorageException, IOException {
-            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("password");
-            storage = new Storage("envId", "apiKey", secretKeyAccessor);
-            crypto = new Crypto("password", "envId");
 
             FindOptions options = new FindOptions(1,0);
             FindFilter filter = new FindFilter();
@@ -296,6 +255,74 @@ public class StorageTest {
             assertEquals(key3, foundRecord.getKey3());
             assertEquals(profileKey, foundRecord.getProfileKey());
             assertEquals(rangeKey, foundRecord.getRangeKey());
+        }
+
+        @Test
+        public void testFindWithEncByMultipleSecrets() throws GeneralSecurityException, StorageException, IOException, FindOptionsException {
+            String secret = "password";
+            Crypto crypto = new Crypto(secret, "envId");
+            SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor(secret);
+            Crypto cryptoOther = new Crypto("otherpassword", "envId");
+            Storage storage = new Storage("envId", "apiKey", secretKeyAccessor);
+
+            FindOptions options = new FindOptions(2, 0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+            Record recOtherEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            Record recEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encryptedRecOther = recOtherEnc.toString(cryptoOther);
+            String encryptedRec = recEnc.toString(crypto);
+
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
+            storage.setHttpAgent(agent);
+
+            BatchRecord d = storage.find(country, filter, options);
+
+            assertEquals(1, d.getErrors().size());
+            assertEquals(encryptedRecOther, d.getErrors().get(0).getRawData());
+            assertEquals("Record Parse Exception", d.getErrors().get(0).getMessage());
+
+            assertEquals(1, d.getRecords().length);
+            assertEquals(recordKey, d.getRecords()[0].getKey());
+            assertEquals(recordBody, d.getRecords()[0].getBody());
+            assertEquals(key2, d.getRecords()[0].getKey2());
+            assertEquals(key3, d.getRecords()[0].getKey3());
+            assertEquals(profileKey, d.getRecords()[0].getProfileKey());
+            assertEquals(rangeKey, d.getRecords()[0].getRangeKey());
+        }
+
+        @Test
+        public void testFindWithoutEncWithEncryptedData() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+            Storage storage = new Storage("envId", "apiKey", null);
+            Crypto cryptoWithEnc = new Crypto("password", "envId");
+            Crypto cryptoWithPT = new Crypto("envId");
+
+            FindOptions options = new FindOptions(2, 0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+            Record reсWithEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            Record recWithPTEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encryptedRec = reсWithEnc.toString(cryptoWithEnc);
+            String encryptedPTRec = recWithPTEnc.toString(cryptoWithPT);
+
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
+            storage.setHttpAgent(agent);
+
+            BatchRecord d = storage.find(country, filter, options);
+
+            assertEquals(1, d.getErrors().size());
+            assertEquals(encryptedRec, d.getErrors().get(0).getRawData());
+            assertEquals("Record Parse Exception", d.getErrors().get(0).getMessage());
+
+            assertEquals(1, d.getRecords().length);
+            assertEquals(recordKey, d.getRecords()[0].getKey());
+            assertEquals(recordBody, d.getRecords()[0].getBody());
+            assertEquals(key2, d.getRecords()[0].getKey2());
+            assertEquals(key3, d.getRecords()[0].getKey3());
+            assertEquals(profileKey, d.getRecords()[0].getProfileKey());
+            assertEquals(rangeKey, d.getRecords()[0].getRangeKey());
         }
     }
 }

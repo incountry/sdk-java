@@ -1,5 +1,7 @@
 package com.incountry.crypto;
 
+import com.incountry.exceptions.RecordException;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
@@ -99,7 +101,7 @@ public class Crypto implements ICrypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText) throws GeneralSecurityException {
+    public String decrypt(String cipherText) throws GeneralSecurityException, RecordException {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":", -1);
@@ -109,7 +111,7 @@ public class Crypto implements ICrypto {
         }
 
         if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
-            return decryptStub(parts[1]);
+            throw new RecordException("No secret provided. Cannot decrypt record", cipherText);
         }
 
         switch (parts[0]) {
@@ -135,10 +137,6 @@ public class Crypto implements ICrypto {
     private String decryptVPT(String cipherText) {
         byte[] ptBytes = Base64.getDecoder().decode(cipherText);
         return new String(ptBytes);
-    }
-
-    private String decryptStub(String cipherText) {
-        return cipherText;
     }
 
     private String decryptV0(String cipherText) throws GeneralSecurityException {

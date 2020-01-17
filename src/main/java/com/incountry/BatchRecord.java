@@ -1,12 +1,12 @@
 package com.incountry;
 
 import com.incountry.crypto.Crypto;
-import org.json.JSONObject;
+import com.incountry.exceptions.RecordException;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class BatchRecord {
     int count;
@@ -14,16 +14,21 @@ public class BatchRecord {
     int offset;
     int total;
     Record[] records;
+    List<RecordException> errors;
 
-    public BatchRecord(Record[] records, int count, int limit, int offset, int total) {
+    public BatchRecord(Record[] records, int count, int limit, int offset, int total, List<RecordException> errors) {
         this.count = count;
         this.limit = limit;
         this.offset = offset;
         this.total = total;
         this.records = records;
+        this.errors = errors;
     }
 
-    public static BatchRecord fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static BatchRecord fromString(String s, Crypto mCrypto) {
+        List<Record> parsedRecords = new ArrayList<>();
+        List<RecordException> errors = new ArrayList<>();
+
         JSONObject obj = new JSONObject(s);
         JSONObject meta = obj.getJSONObject("meta");
         int count = meta.getInt("count");
@@ -31,20 +36,32 @@ public class BatchRecord {
         int offset = meta.getInt("offset");
         int total = meta.getInt("total");
 
-        Record[] records = new Record[count];
-        if (count == 0) return new BatchRecord(records, count, limit, offset, total);
+        if (count == 0) return new BatchRecord(new Record[0], count, limit, offset, total, errors);
 
         JSONArray data = obj.getJSONArray("data");
+
         for (int i = 0; i < data.length(); i++)
         {
-            records[i] = Record.fromString(data.getJSONObject(i).toString(), mCrypto);
+            String recordString = data.getJSONObject(i).toString();
+            try {
+                parsedRecords.add(Record.fromString(recordString, mCrypto));
+            } catch (Exception e) {
+                errors.add(new RecordException("Record Parse Exception", recordString, e));
+            }
         }
 
-        return new BatchRecord(records, count, limit, offset, total);
+        Record[] records = new Record[parsedRecords.size()];
+        records = parsedRecords.toArray(records);
+
+        return new BatchRecord(records, count, limit, offset, total, errors);
     }
 
     public Record[] getRecords() {
         return records;
+    }
+
+    public List<RecordException> getErrors() {
+        return errors;
     }
 
     public int getCount() {
