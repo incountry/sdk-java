@@ -28,7 +28,7 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 `SecretKeyAccessor` is used to pass a secret used for encryption.
 
-To get secretKeyAccessor object you must use `secretKeyAccessor` interface `getAccessor` static method.
+To get secretKeyAccessor object you must use `SecretKeyAccessor` interface `getAccessor` static method.
 
 `getAccessor` method takes as argument string password or object which implements `SecretKeyGenerator` interface.
 
@@ -36,7 +36,7 @@ Note: even though PBKDF2 is used internally to generate a cryptographically stro
 
 Using the `SecretKeyGenerator` interface, you can pass a list of keys with their versions.
 
-To do it, the generate method of `SecretKeyGenerator` interface should return json of the form
+To do it, the generate method of `SecretKeyGenerator` interface should return the following JSON
 
 ```
 {
@@ -86,15 +86,19 @@ public Record(
 )
 ```
 
-Use the `batchWrite` method to write multiple records to the storage at once.
+Use the `batchWrite` method to write multiple records to the storage in a single request.
 
 public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
 
+`batch_write` returns True on success
+
 #### Keys migration
 
-Use `migrate` method for batched key-rotation-migration of records
+Use `migrate` method for re-encrypt data encrypted with old versions of the secret
 
 public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException
+
+You should specify `country` you want to conduct migration in and `limit` for precise amount of records to migrate
 
 `limit` is the batch-limit parameter for handling the batch size 
 
@@ -107,9 +111,9 @@ public class MigrateResult {
 }
 ```
 
-`migrated` is total records left to migrate
+`migrated` the amount of records migrated
 
-`totalLeft` is total amount of migrated records
+`totalLeft` is total amount of records left to migrate
 
 For a detailed example of a migration please see `/examples/java/com/incountry/FullMigration`
 
