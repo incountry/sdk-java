@@ -16,22 +16,26 @@ For Gradle users plase add this line to your dependencies list
 compile "com.incountry:incountry-java-client:1.0.0a"
 ```
 
-### Java 7 support
+Java 7 support
+----
 
+#### Bouncy Castle Provider
 In order to properly support modern cryptography standards Java7-support version uses Bouncy Castle Cryptography
-provider (https://www.bouncycastle.org/) along with Java Cryptography Extension (JCE) 
-Unlimited Strength Jurisdiction Policy (https://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html)
+provider (https://www.bouncycastle.org/). You need to add it to your project dependencies (e.g using gradle)
+```
+compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
+```
+
+#### Unlimited Strength Jurisdiction Policy  
+To support latest security standards you also need to install Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy (https://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html)
 
 Note: You need to install Unlimited Strength Jurisdiction Policy manually. Installation guide is in the README.txt file 
 along with the policy files.
-
-Note: You can change path to Java 7 home in gradle.properties file if needed.
 
 #### JVM arguments
 
 The following JVM arguments need to be set up in order to properly support TLS v1.2 and establish a viable connection 
 to our servers
-
 ```
 -Dhttps.protocols=TLSv1.2 -Dhttps.cipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
 ```
