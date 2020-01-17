@@ -24,7 +24,7 @@ apply plugin: 'signing'
 
 group group
 version version
-
+/*
 if (hasProperty('targetJavaVersion')) {
 
     java {
@@ -52,7 +52,7 @@ if (hasProperty('targetJavaVersion')) {
     tasks.withType(JavaExec) {
         executable = javaExecutables.java
     }
-}
+} */
 
 archivesBaseName = rootProject.name
 
