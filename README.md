@@ -85,24 +85,25 @@ public Record(
   String key3               // Optional
 )
 ```
+#### Batches
 
 Use the `batchWrite` method to write multiple records to the storage in a single request.
 
+```
 public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
 
-`batch_write` returns True on success
+// `batch_write` returns True on success
+```
 
-#### Keys migration
+## Data Migration and Key Rotation support
 
-Use `migrate` method for re-encrypt data encrypted with old versions of the secret
+Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rotation and data migration support.
 
-public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException
-
-You should specify `country` you want to conduct migration in and `limit` for precise amount of records to migrate
-
-`limit` is the batch-limit parameter for handling the batch size 
-
-method returns `MigrateResult` object
+SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException` 
+method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
+and `limit` for precise amount of records to migrate. `migrate` return a `MigrateResult` object which contains some information about the migration - the 
+amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
+version different from `currentVersion` provided by `SecretKeyAccessor`)
 
 ```
 public class MigrateResult {
@@ -110,10 +111,6 @@ public class MigrateResult {
     private int totalLeft;
 }
 ```
-
-`migrated` the amount of records migrated
-
-`totalLeft` is total amount of records left to migrate
 
 For a detailed example of a migration please see `/examples/java/com/incountry/FullMigration`
 
