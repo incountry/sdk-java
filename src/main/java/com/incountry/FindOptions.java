@@ -1,17 +1,12 @@
 package com.incountry;
 
+import com.incountry.exceptions.FindOptionsException;
 import org.json.JSONObject;
 
 public class FindOptions {
     private static final int MAX_LIMIT = 100;
     int limit;
     int offset;
-
-    class FindOptionsException extends Exception {
-        FindOptionsException(String s){
-            super(s);
-        }
-    }
 
     public FindOptions() throws FindOptionsException {
         this(MAX_LIMIT, 0);

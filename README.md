@@ -16,6 +16,30 @@ For Gradle users plase add this line to your dependencies list
 compile "com.incountry:incountry-java-client:1.0.0a"
 ```
 
+Java 7 support
+----
+
+#### Bouncy Castle Provider
+In order to properly support modern cryptography standards Java7-support version uses Bouncy Castle Cryptography
+provider (https://www.bouncycastle.org/). You need to add it to your project dependencies (e.g using gradle)
+```
+compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
+```
+
+#### Unlimited Strength Jurisdiction Policy  
+To support latest security standards you also need to install Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy (https://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html)
+
+Note: You need to install Unlimited Strength Jurisdiction Policy manually. Installation guide is in the README.txt file 
+along with the policy files.
+
+#### JVM arguments
+
+The following JVM arguments need to be set up in order to properly support TLS v1.2 and establish a viable connection 
+to our servers
+```
+-Dhttps.protocols=TLSv1.2 -Dhttps.cipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+```
+
 Usage
 -----
 To access your data in InCountry using Java SDK, you need to create an instance of `Storage` class.
@@ -96,7 +120,7 @@ Here is how data is transformed and stored in InCountry database:
 
 Stored record can be read by `key` using `read` method.
 ```java
-public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException
+public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException, RecordException
 ```
 `country` is a country code of the record
 `key` is a record key
@@ -157,13 +181,14 @@ This call returns all records with `key2` equals `kitty` AND `key3` equals `mew`
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
 
 
-`Find` returns BatchRecord object which contains an array of `Record` and some metadata:
+`Find` returns BatchRecord object which contains an array of `Record` objects and some metadata:
 ```java
 int count;
 int limit;
 int offset;
 int total;
 Record[] records;
+List<RecordException> errors;
 ```
 These fields can be accessed using getters, for example:
 ```java
@@ -180,6 +205,9 @@ or if you want just to check equality:
 FilterRangeParam rangeParam = new FilterRangeParam(1000);
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
+
+`BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about
+ records that failed to be processed correctly during `find` request. 
 
 ### Find one record matching filter
 

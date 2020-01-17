@@ -1,14 +1,15 @@
 package com.incountry;
 
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.RecordException;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.incountry.crypto.Crypto;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-
 
 @JsonFilter("nullFilter")
 public class Record {
@@ -87,7 +88,7 @@ public class Record {
         return new Record(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     }
 
-    public static Record fromString(String s, Crypto mCrypto) throws IOException, GeneralSecurityException {
+    public static Record fromString(String s, Crypto mCrypto) throws IOException, RecordException, GeneralSecurityException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode o = mapper.readTree(s);
         String country = extractKey(o, P_COUNTRY);
@@ -101,15 +102,15 @@ public class Record {
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");
 
-            body = mCrypto.decrypt(body);
+            String decryptedBody = mCrypto.decrypt(body);
 
-            if (parts.length != 2){
+            if (parts.length != 2) {
                 key = mCrypto.decrypt(key);
                 profileKey = mCrypto.decrypt(profileKey);
                 key2 = mCrypto.decrypt(key2);
                 key3 = mCrypto.decrypt(key3);
             } else {
-                JsonNode bodyObj = mapper.readTree(body);
+                JsonNode bodyObj = mapper.readTree(decryptedBody);
                 body = extractKey(bodyObj, P_PAYLOAD);
                 String meta = extractKey(bodyObj, P_META);
                 JsonNode metaObj = mapper.readTree(meta);
@@ -181,32 +182,32 @@ public class Record {
     public String toString(Crypto mCrypto) throws GeneralSecurityException, IOException {
         if (mCrypto == null) {
             return new JSONObject()
-                .put(P_KEY, key)
-                .put(P_KEY_2, key2)
-                .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profileKey)
-                .put(P_RANGE_KEY, rangeKey)
-                .put(P_BODY, body).toString();
+                    .put(P_KEY, key)
+                    .put(P_KEY_2, key2)
+                    .put(P_KEY_3, key3)
+                    .put(P_PROFILE_KEY, profileKey)
+                    .put(P_RANGE_KEY, rangeKey)
+                    .put(P_BODY, body).toString();
         }
 
         String bodyJson = new JSONObject()
-            .put(P_PAYLOAD, body)
-            .put(P_META, new JSONObject()
-                .put(P_KEY, key)
-                .put(P_KEY_2, key2)
-                .put(P_KEY_3, key3)
-                .put(P_PROFILE_KEY, profileKey)
-                .put(P_RANGE_KEY, rangeKey).toString()
-            ).toString();
+                .put(P_PAYLOAD, body)
+                .put(P_META, new JSONObject()
+                        .put(P_KEY, key)
+                        .put(P_KEY_2, key2)
+                        .put(P_KEY_3, key3)
+                        .put(P_PROFILE_KEY, profileKey)
+                        .put(P_RANGE_KEY, rangeKey).toString()
+                ).toString();
 
         String encryptedBodyJson = mCrypto.encrypt(bodyJson);
 
         return new JSONObject()
-            .put(P_KEY, mCrypto.createKeyHash(key))
-            .put(P_KEY_2, mCrypto.createKeyHash(key2))
-            .put(P_KEY_3, mCrypto.createKeyHash(key3))
-            .put(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey))
-            .put(P_RANGE_KEY, rangeKey)
-            .put(P_BODY, encryptedBodyJson).toString();
+                .put(P_KEY, mCrypto.createKeyHash(key))
+                .put(P_KEY_2, mCrypto.createKeyHash(key2))
+                .put(P_KEY_3, mCrypto.createKeyHash(key3))
+                .put(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey))
+                .put(P_RANGE_KEY, rangeKey)
+                .put(P_BODY, encryptedBodyJson).toString();
     }
 }

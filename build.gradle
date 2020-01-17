@@ -14,6 +14,7 @@ plugins {
     id 'io.codearte.nexus-staging' version '0.11.0'
     id "org.sonarqube" version "2.7.1"
     id 'jacoco'
+    id 'com.adarshr.test-logger' version '2.0.0'
 }
 
 apply plugin: 'maven'
@@ -24,8 +25,34 @@ apply plugin: 'signing'
 group group
 version version
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+if (hasProperty('targetJavaVersion')) {
+
+    java {
+        sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
+    }
+
+    def javaExecutablesPath = new File(javaHome, 'bin')
+    def javaExecutables = [:].withDefault { execName ->
+        def executable = new File(javaExecutablesPath, execName)
+        assert executable.exists(): "There is no ${execName} executable in ${javaExecutablesPath}"
+        executable
+    }
+    tasks.withType(AbstractCompile) {
+        options.with {
+            fork = true
+            forkOptions.javaHome = file(javaHome)
+        }
+    }
+    tasks.withType(Javadoc) {
+        executable = javaExecutables.javadoc
+    }
+    tasks.withType(Test) {
+        executable = javaExecutables.java
+    }
+    tasks.withType(JavaExec) {
+        executable = javaExecutables.java
+    }
+}
 
 archivesBaseName = rootProject.name
 
@@ -40,6 +67,8 @@ sourceSets {
 configurations {
     integrationImplementation.extendsFrom testImplementation
     integrationRuntime.extendsFrom testRuntime
+    provided
+    compile.extendsFrom provided
 }
 
 sonarqube {
@@ -101,6 +130,7 @@ uploadArchives {
 
 dependencies {
     testCompile "junit:junit:${junitVersion}"
+
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
@@ -109,7 +139,13 @@ dependencies {
     compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.1'
+    provided group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.55'
+    implementation "io.github.cdimascio:java-dotenv:${dotenv}"
+    implementation 'org.apache.commons:commons-lang3:3.2'
     compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
+
+    testImplementation("org.unitils:unitils-core:3.4.6")
 }
 
 jar {
@@ -118,6 +154,15 @@ jar {
                 "Implementation-Version": version,
                 "Implementation-Vendor": "InCounty INC")
     }
+
+    from {
+        (configurations.runtime - configurations.provided).collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+
 }
 
 task javadocJar(type: Jar) {
@@ -133,6 +178,12 @@ task sourcesJar(type: Jar) {
 task integrationTest(type: Test) {
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
+    jvmArgs '-Dhttps.protocols=TLSv1.2'
+    jvmArgs '-Dhttps.cipherSuites=TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256'
+    testlogger {
+        showFullStackTraces true
+        showStandardStreams true
+    }
 }
 
 artifacts {
@@ -150,6 +201,7 @@ nexusStaging {
 }
 
 tasks.withType(Test) {
+
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,

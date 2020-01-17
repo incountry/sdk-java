@@ -1,20 +1,18 @@
 package com.incountry;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.incountry.FindOptions.FindOptionsException;
-import com.incountry.crypto.Crypto;
-import com.incountry.exceptions.StorageClientException;
-import com.incountry.http.IHttpAgent;
-import com.incountry.key_accessor.ISecretKeyAccessor;
-import org.json.JSONObject;
-import com.incountry.exceptions.StorageException;
-import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.HttpAgent;
-
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
+
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.*;
+import com.incountry.http.IHttpAgent;
+import com.incountry.key_accessor.ISecretKeyAccessor;
+import com.incountry.http.HttpAgent;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONObject;
 
 public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
@@ -60,19 +58,20 @@ public class Storage {
         mAPIKey = apiKey;
         if (mAPIKey == null) throw new IllegalArgumentException("Please pass api_key param or set INC_API_KEY env var");
 
+        mPoplist = new HashMap<String, POP>();
+        httpAgent = new HttpAgent(apiKey, environmentID);
+
         mEndpoint = endpoint;
         if (mEndpoint == null) {
         	mEndpoint = DEFAULT_ENDPOINT;
         	mIsDefaultEndpoint = true;
+            load_country_endpoints();
         }
-
-        mPoplist = new HashMap<String, POP>();
-        httpAgent = new HttpAgent(apiKey, environmentID);
-
-        load_country_endpoints();
 
         if (encrypt) {
             mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
+        } else {
+            mCrypto = new Crypto(environmentID);
         }
 
     }
@@ -114,7 +113,7 @@ public class Storage {
         httpAgent.request(url, "POST", record.toString(mCrypto), false);
     }
 
-    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException {
+    public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException, RecordException {
         country = country.toLowerCase();
         checkParameters(country, key);
         if (mCrypto != null) key = mCrypto.createKeyHash(key);
@@ -126,7 +125,7 @@ public class Storage {
         return d;
     }
     
-    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
+    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException {
     	FindOptions options = new FindOptions(1, 0);
     	BatchRecord existingRecords = find(country, filter, options);
 
@@ -157,7 +156,7 @@ public class Storage {
     public void setHttpAgent(IHttpAgent agent) {
         httpAgent = agent;
     }
-    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
@@ -172,7 +171,7 @@ public class Storage {
         return BatchRecord.fromString(content, mCrypto);
     }
     
-    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException {
     	BatchRecord findResults = find(country, filter, options);
 
     	Record[] records = findResults.getRecords();
