@@ -14,5 +14,5 @@ notifications:
   email: false
 
 script:
-  #- gradle test --rerun-tasks
-  #- gradle sonarqube
+  - gradle test --rerun-tasks
+  - gradle sonarqube
