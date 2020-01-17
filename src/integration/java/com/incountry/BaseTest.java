@@ -1,5 +1,6 @@
 package com.incountry;
 
+import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.key_accessor.SecretKeyAccessor;
@@ -34,7 +35,6 @@ public abstract class BaseTest {
     }
 
     protected Storage createStorage(boolean encryption) throws IOException, StorageServerException {
-
         SecretKeyAccessor secretKeyAccessor = new SecretKeyAccessor("mySecretKey");
 
         return new Storage(
@@ -92,7 +92,7 @@ public abstract class BaseTest {
         storage.write(record);
     }
 
-    protected void validateRecord(Record expectedRecord) throws GeneralSecurityException, StorageException, IOException {
+    protected void validateRecord(Record expectedRecord) throws GeneralSecurityException, StorageException, IOException, RecordException {
         Record actualRecord = storage.read(country, expectedRecord.getKey());
         assertReflectionEquals("Record validation", expectedRecord, actualRecord);
     }
