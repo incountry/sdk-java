@@ -28,7 +28,7 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 `SecretKeyAccessor` is used to pass a secret used for encryption.
 
-To get secretKeyAccessor object you must use `SecretKeyAccessor` interface `getAccessor` static method.
+To get secretKeyAccessor object you must use static method `getAccessor` of `SecretKeyAccessor` interface.
 
 `getAccessor` method takes as argument string password or object which implements `SecretKeyGenerator` interface.
 
