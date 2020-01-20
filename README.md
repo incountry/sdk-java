@@ -92,7 +92,7 @@ Use the `batchWrite` method to write multiple records to the storage in a single
 ```
 public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
 
-// `batch_write` returns True on success
+// `batchWrite` returns True on success
 ```
 
 ## Data Migration and Key Rotation support
