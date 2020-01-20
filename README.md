@@ -101,7 +101,7 @@ Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rota
 
 SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException` 
 method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
-and `limit` for precise amount of records to migrate. `migrate` return a `MigrateResult` object which contains some information about the migration - the 
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
 amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
 version different from `currentVersion` provided by `SecretKeyAccessor`)
 
