@@ -26,27 +26,45 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-`secretKeyAccessorImpl` is used to pass a secret used for encryption.
+`SecretKeyAccessor` is used to pass a secret used for encryption.
+
+To get secretKeyAccessor object you must use static method `getAccessor` of `SecretKeyAccessor` interface.
+
+`getAccessor` method takes as argument string password or object which implements `SecretKeyGenerator` interface.
 
 Note: even though PBKDF2 is used internally to generate a cryptographically strong encryption key, you must make sure that you use strong enough password.
 
-Here are some examples how you can use `SecretKeyAccessor`.
+Using the `SecretKeyGenerator` interface, you can pass a list of keys with their versions.
+
+To do it, the generate method of `SecretKeyGenerator` interface should return the following JSON
+
 ```
-public class SimpleSecretKeyAccessor implements ISecretKeyAccessor {
-    private String secret;
-
-    public SecretKeyAccessor(String secret) {
-        this.secret = secret;
+{
+  "secrets": [
+    {
+      "secret": "123",
+      "version": 0
     }
+  ],
+  "currentVersion": 0
+}
+```
 
-    @Override
-    public String getKey() {
-        return this.secret;
-    }
+or a `SecretKeysData` object containing currentVersion and a list of `SecretKey` objects each of which contains a String secret and its version
+
+```
+public class SecretKeysData {
+    private List<SecretKey> secrets;
+    private int currentVersion;
 }
 
-SimpleSecretKeyAccessor accessor = new SimpleSecretKeyAccessor("myStrongPassword");
+public class SecretKey {
+    private String secret;
+    private int version;
+}
 ```
+
+Note: the `generate` method should return either valid json as a string or a `SecretKeysData` object.
 
 
 ### Writing data to Storage
@@ -67,6 +85,34 @@ public Record(
   String key3               // Optional
 )
 ```
+#### Batches
+
+Use the `batchWrite` method to write multiple records to the storage in a single request.
+
+```
+public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
+
+// `batchWrite` returns True on success
+```
+
+## Data Migration and Key Rotation support
+
+Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rotation and data migration support.
+
+SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException` 
+method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
+amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
+version different from `currentVersion` provided by `SecretKeyAccessor`)
+
+```
+public class MigrateResult {
+    private int migrated;
+    private int totalLeft;
+}
+```
+
+For a detailed example of a migration please see `/examples/java/com/incountry/FullMigration`
 
 #### Encryption
 InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
