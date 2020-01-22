@@ -159,7 +159,6 @@ public class StorageTest {
             String keyHash = crypto.createKeyHash(key);
             ArrayList<LinkedTreeMap> responseList = (ArrayList<LinkedTreeMap>) new Gson().fromJson(encrypted, HashMap.class).get("records");
             for (LinkedTreeMap response : responseList) {
-                System.out.println();
                 String key = (String) response.get("key");
                 String encryptedBody = (String) response.get("body");
                 String actualBodyStr = crypto.decrypt(encryptedBody, 0);
