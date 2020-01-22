@@ -34,20 +34,23 @@ public class StorageTest {
                 return "{\n" +
                         "  \"secrets\": [\n" +
                         "    {\n" +
-                        "      \"secret\": \"123\",\n" +
-                        "      \"version\": 0\n" +
+                        "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
+                        "      \"version\": 0,\n" +
+                        "      \"isKey\": \"true\"\n" +
                         "    }\n" +
                         "  ],\n" +
                         "  \"currentVersion\": 0\n" +
                         "}";
             }
-        });
-        store = new Storage(
-                "envId",
-                "apiKey",
-                secretKeyAccessor
 
-        );
+        });
+
+        store = new Storage(
+                "5422b4ba-016d-4a3b-aea5-a832083697b1",
+                "nbskjo.4b1ede21dbf7437eb7d8e9ab024dc380",
+                "https://us.qa.incountry.io",
+                false,
+                secretKeyAccessor);
     }
 
     @Test

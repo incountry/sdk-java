@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -47,13 +49,13 @@ public class Crypto implements ICrypto {
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
-        byte[] strong = generateStrongPasswordHash(secretKeyObj.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strongPasswordHash = getKey(salt, secretKeyObj);
 
         SecureRandom randomSecureRandom = new SecureRandom();
         byte[] iv = new byte[IV_LENGTH];
         randomSecureRandom.nextBytes(iv);
 
-        SecretKeySpec secretKeySpec = new SecretKeySpec(strong, "AES");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(strongPasswordHash, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
@@ -71,6 +73,13 @@ public class Crypto implements ICrypto {
         return new Pair<>(VERSION + ":" + new String(encoded), secretKeyObj.getVersion());
     }
 
+    private byte[] getKey(byte[] salt, SecretKey secretKeyObj) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        if (secretKeyObj.getIsKey() != null && secretKeyObj.getIsKey()) {
+            return secretKeyObj.getSecret().getBytes(StandardCharsets.UTF_8);
+        }
+        return generateStrongPasswordHash(secretKeyObj.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+    }
+
     private static String createHash(String stringToHash) {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
@@ -81,7 +90,8 @@ public class Crypto implements ICrypto {
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        byte[] strongPasswordHash = generateStrongPasswordHash(getSecret(decryptKeyVersion).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        byte[] strongPasswordHash = getKey(salt, getSecret(decryptKeyVersion));
+
 
         SecretKeySpec keySpec = new SecretKeySpec(strongPasswordHash, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);

@@ -26,28 +26,54 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-`secretKeyAccessorImpl` is used to pass a secret used for encryption.
+`SecretKeyAccessor` interface is used to pass a secret used for encryption.
+
+It has `getAccessor` static method which takes as argument secret used for encryption.
+Secret can be pasted as string representing your secret.
+
+Also you can pass multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
+It can be done if pass in `getAccessor` object which implements `SecretKeyGenerator` interface.
+`SecretKeyGenerator` has `generate` method which must return string 
+
+```
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+    @Override
+    public String generate() {
+        return "{\n" +
+                "  \"secrets\": [\n" +
+                "    {\n" +
+                "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
+                "      \"version\": 0,\n" +
+                "      \"isKey\": \"true\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"currentVersion\": 0\n" +
+                "}";
+    }
+});
+```
+
+or `SecretKeysData` object
+
+```
+public class SecretKeysData {
+    private List<SecretKey> secrets;
+    private int currentVersion;
+}
+```
+
+where `secrets` is the list of possible keys
+
+```
+public class SecretKey {
+    private String secret;
+    private int version;
+    private Boolean isKey;
+}
+```
+Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretKeysData` object.
 
 Note: even though PBKDF2 is used internally to generate a cryptographically strong encryption key, you must make sure that you use strong enough password.
-
-Here are some examples how you can use `SecretKeyAccessor`.
-```
-public class SimpleSecretKeyAccessor implements ISecretKeyAccessor {
-    private String secret;
-
-    public SecretKeyAccessor(String secret) {
-        this.secret = secret;
-    }
-
-    @Override
-    public String getKey() {
-        return this.secret;
-    }
-}
-
-SimpleSecretKeyAccessor accessor = new SimpleSecretKeyAccessor("myStrongPassword");
-```
-
 
 ### Writing data to Storage
 
