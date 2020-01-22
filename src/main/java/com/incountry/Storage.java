@@ -119,7 +119,7 @@ public class Storage {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        httpAgent.request(url, "POST", record.toString(mCrypto), false);
+        httpAgent.request(url, "POST", record.getAsString(mCrypto), false);
     }
 
     private String createUrl(String country, String recordKey) throws StorageException {
@@ -185,7 +185,7 @@ public class Storage {
         List<JsonObject> recordsStrings = new ArrayList<>();
         for (Record record : records) {
             checkParameters(country, record.getKey());
-            recordsStrings.add(JsonParser.parseString(record.toString(mCrypto)).getAsJsonObject());
+            recordsStrings.add(record.getAsJsonObject(mCrypto));
         }
         String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
         httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
