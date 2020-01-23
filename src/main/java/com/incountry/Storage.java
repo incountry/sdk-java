@@ -3,7 +3,6 @@ package com.incountry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.incountry.crypto.impl.Crypto;
 import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageClientException;
@@ -119,7 +118,7 @@ public class Storage {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        httpAgent.request(url, "POST", record.getAsString(mCrypto), false);
+        httpAgent.request(url, "POST", record.toJsonString(mCrypto), false);
     }
 
     private String createUrl(String country, String recordKey) throws StorageException {
@@ -185,7 +184,7 @@ public class Storage {
         List<JsonObject> recordsStrings = new ArrayList<>();
         for (Record record : records) {
             checkParameters(country, record.getKey());
-            recordsStrings.add(record.getAsJsonObject(mCrypto));
+            recordsStrings.add(record.toJsonObject(mCrypto));
         }
         String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
         httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);

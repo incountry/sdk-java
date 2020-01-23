@@ -121,7 +121,7 @@ public class StorageTest {
         @Test
         public void readTest() throws GeneralSecurityException, IOException, StorageException {
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            FakeHttpAgent agent = new FakeHttpAgent(record.getAsString(crypto));
+            FakeHttpAgent agent = new FakeHttpAgent(record.toJsonString(crypto));
             storage.setHttpAgent(agent);
             Record fetched = storage.read(country, key);
             assertEquals(key, fetched.getKey());
@@ -214,7 +214,7 @@ public class StorageTest {
         @Test
         public void migrateTest() throws StorageException, GeneralSecurityException, IOException, FindOptionsException {
             Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
-            String encrypted = rec.getAsString(crypto);
+            String encrypted = rec.toJsonString(crypto);
             String content = "{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
             FakeHttpAgent agent = new FakeHttpAgent(content);
             storage.setHttpAgent(agent);
@@ -235,7 +235,7 @@ public class StorageTest {
 
 
             Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
-            String encrypted = rec.getAsString(crypto);
+            String encrypted = rec.toJsonString(crypto);
             FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
 
