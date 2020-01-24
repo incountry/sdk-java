@@ -7,6 +7,7 @@ import org.javatuples.Pair;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.crypto.BadPaddingException;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -57,12 +58,11 @@ public class CryptoTest {
         }
     }
 
-    @Test
+    @Test(expected = BadPaddingException.class)
     public void testLegacyDecryption() throws GeneralSecurityException, IOException {
         Crypto crypto = new Crypto(secretKeysData);
         String encrypted = "7765618db31daf5366a6fc3520010327";
-        String decrypted = crypto.decrypt(encrypted, keyVersion);
-        assertEquals("InCountry", decrypted);
+        crypto.decrypt(encrypted, keyVersion);
     }
 
     @Test
