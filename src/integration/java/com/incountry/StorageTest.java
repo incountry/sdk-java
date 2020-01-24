@@ -84,7 +84,6 @@ public class StorageTest {
         BatchRecord d = store.find(country, filter, options);
         assertEquals(1, d.getCount());
         assertEquals(1, d.getRecords().size());
-//        assertEquals(batchWriteRecordKey, d.getRecords().get(0).getKey());
         assertEquals(writeRecordKey, d.getRecords().get(0).getKey());
     }
 

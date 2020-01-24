@@ -149,7 +149,7 @@ public class Record {
     }
 
 
-    private JsonObject recordObjectToJson(Crypto mCrypto) throws GeneralSecurityException, IOException {
+    private JsonObject toJsonObject(Crypto mCrypto) throws GeneralSecurityException, IOException {
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
@@ -183,11 +183,7 @@ public class Record {
     }
 
     public String toJsonString(Crypto mCrypto) throws GeneralSecurityException, IOException {
-        return recordObjectToJson(mCrypto).toString();
-    }
-
-    public JsonObject toJsonObject(Crypto mCrypto) throws GeneralSecurityException, IOException {
-        return recordObjectToJson(mCrypto);
+        return toJsonObject(mCrypto).toString();
     }
 
 }
