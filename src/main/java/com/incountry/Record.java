@@ -149,14 +149,14 @@ public class Record {
     }
 
 
-    public String toString(Crypto mCrypto) throws GeneralSecurityException, IOException {
+    public JsonObject toJsonObject(Crypto mCrypto) throws GeneralSecurityException, IOException {
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         if (mCrypto == null) {
-            JsonElement recordJson = gson.toJsonTree(this);
-            ((JsonObject) recordJson).remove(P_COUNTRY);
-            return recordJson.toString();
+            JsonObject recordJson = (JsonObject) gson.toJsonTree(this);
+            recordJson.remove(P_COUNTRY);
+            return recordJson;
         }
 
         JsonElement nodesElement = gson.toJsonTree(this);
@@ -178,6 +178,12 @@ public class Record {
         recordJson.addProperty(P_RANGE_KEY, rangeKey);
         recordJson.addProperty(P_BODY, encryptedBodyAndVersion.getValue0());
         recordJson.addProperty(VERSION, encryptedBodyAndVersion.getValue1());
-        return recordJson.toString();
+
+        return recordJson;
     }
+
+    public String toJsonString(Crypto mCrypto) throws GeneralSecurityException, IOException {
+        return toJsonObject(mCrypto).toString();
+    }
+
 }

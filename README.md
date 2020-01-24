@@ -93,6 +93,34 @@ public Record(
   String key3               // Optional
 )
 ```
+#### Batches
+
+Use the `batchWrite` method to write multiple records to the storage in a single request.
+
+```
+public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
+
+// `batchWrite` returns True on success
+```
+
+## Data Migration and Key Rotation support
+
+Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rotation and data migration support.
+
+SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException` 
+method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
+amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
+version different from `currentVersion` provided by `SecretKeyAccessor`)
+
+```
+public class MigrateResult {
+    private int migrated;
+    private int totalLeft;
+}
+```
+
+For a detailed example of a migration please see `/examples/java/com/incountry/FullMigration`
 
 #### Encryption
 InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
