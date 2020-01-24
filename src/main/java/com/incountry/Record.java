@@ -149,7 +149,7 @@ public class Record {
     }
 
 
-    private JsonObject toJsonObject(Crypto mCrypto) throws GeneralSecurityException, IOException {
+    public JsonObject toJsonObject(Crypto mCrypto) throws GeneralSecurityException, IOException {
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
