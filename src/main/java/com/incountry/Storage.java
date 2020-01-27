@@ -232,7 +232,7 @@ public class Storage {
     public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
-        String url = getEndpoint(country, STORAGE_URL + country+"/find");
+        String url = getEndpoint(country, STORAGE_URL + country + "/find");
 
         String postData = new JSONObject()
             .put("filter", filter.toJSONObject(mCrypto))
