@@ -1,5 +1,7 @@
 package com.incountry.crypto;
 
+import com.incountry.exceptions.RecordException;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
@@ -20,16 +22,19 @@ import static com.incountry.Utils.*;
 public class Crypto implements ICrypto {
     private String secret;
     private String envId;
+    private Boolean isUsingPTEncryption = false;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
     private static final int SALT_LENGTH = 64;
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
     private static final String VERSION = "2";
+    public static final String PT_ENC_VERSION = "pt";
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
-    public Crypto(String secret) {
-        this.secret = secret;
+    public Crypto(String envId) {
+        this.envId = envId;
+        this.isUsingPTEncryption = true;
     }
 
     public Crypto(String secret, String envId) {
@@ -38,6 +43,11 @@ public class Crypto implements ICrypto {
     }
 
     public String encrypt(String plainText) throws GeneralSecurityException, IOException {
+        if (Boolean.TRUE.equals(isUsingPTEncryption)) {
+            byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes());
+            return PT_ENC_VERSION + ":" + new String(ptEncoded);
+        }
+
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
         byte[] strong = generateStrongPasswordHash(secret, salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
@@ -91,10 +101,18 @@ public class Crypto implements ICrypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText) throws GeneralSecurityException {
+    public String decrypt(String cipherText) throws GeneralSecurityException, RecordException {
         if (cipherText == null) return null;
 
-        String[] parts = cipherText.split(":");
+        String[] parts = cipherText.split(":", -1);
+
+        if (parts[0].equals(PT_ENC_VERSION)) {
+            return decryptVPT(parts[1]);
+        }
+
+        if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
+            throw new RecordException("No secret provided. Cannot decrypt record", cipherText);
+        }
 
         switch (parts[0]) {
             case "1":
@@ -116,6 +134,10 @@ public class Crypto implements ICrypto {
         return this.decryptUnpacked(parts);
     }
 
+    private String decryptVPT(String cipherText) {
+        byte[] ptBytes = Base64.getDecoder().decode(cipherText);
+        return new String(ptBytes);
+    }
 
     private String decryptV0(String cipherText) throws GeneralSecurityException {
         int keySize = 16;
