@@ -22,6 +22,7 @@ import java.util.List;
 public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
+    private static final String STORAGE_URL = "/v2/storage/records/";
 
     class POP {
         String host;
@@ -117,7 +118,7 @@ public class Storage {
     public void write(Record record) throws StorageException, GeneralSecurityException, IOException{
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
-        String url = getEndpoint(country, "/v2/storage/records/"+country);
+        String url = getEndpoint(country, STORAGE_URL + country);
         httpAgent.request(url, "POST", record.toJsonString(mCrypto), false);
     }
 
@@ -125,7 +126,7 @@ public class Storage {
         country = country.toLowerCase();
         checkParameters(country, recordKey);
         if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
-        return getEndpoint(country, "/v2/storage/records/" + country + "/" + recordKey);
+        return getEndpoint(country, STORAGE_URL + country + "/" + recordKey);
     }
 
     /**
@@ -186,7 +187,7 @@ public class Storage {
             checkParameters(country, record.getKey());
             recordsStrings.add(record.toJsonObject(mCrypto));
         }
-        String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
+        String url = getEndpoint(country, STORAGE_URL  + country + "/batchWrite");
         httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
 
         return true;
@@ -231,7 +232,7 @@ public class Storage {
     public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
         if (country == null) throw new StorageClientException("Missing country");
         country = country.toLowerCase();
-        String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
+        String url = getEndpoint(country, STORAGE_URL + country+"/find");
 
         String postData = new JSONObject()
             .put("filter", filter.toJSONObject(mCrypto))
