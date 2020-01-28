@@ -1,9 +1,9 @@
 package com.incountry.crypto.impl;
 
 import com.incountry.crypto.ICrypto;
+import com.incountry.exceptions.StorageDecryptionException;
 import com.incountry.keyaccessor.key.SecretKey;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -112,7 +112,7 @@ public class Crypto implements ICrypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
+    public String decrypt(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException, StorageDecryptionException {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
@@ -123,7 +123,7 @@ public class Crypto implements ICrypto {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                throw new BadPaddingException("Decryption error: Illegal decryption version");
+                throw new StorageDecryptionException("Decryption error: Illegal decryption version");
         }
     }
 
