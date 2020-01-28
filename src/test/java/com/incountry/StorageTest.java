@@ -56,12 +56,18 @@ public class StorageTest {
                 {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithString()},
                 {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithString()},
                 {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
             });
         }
 
@@ -69,7 +75,7 @@ public class StorageTest {
             return SecretKeyAccessor.getAccessor("passwordpasswordpasswordpassword");
         }
 
-        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGenerator() {
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue() {
             return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
                 @Override
                 public String generate() {
@@ -79,6 +85,24 @@ public class StorageTest {
                             "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
                             "      \"version\": 0,\n" +
                             "      \"isKey\": \"true\"\n" +
+                            "    }\n" +
+                            "  ],\n" +
+                            "  \"currentVersion\": 0\n" +
+                            "}";
+                }
+            });
+        }
+
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse() {
+            return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+                @Override
+                public String generate() {
+                    return "{\n" +
+                            "  \"secrets\": [\n" +
+                            "    {\n" +
+                            "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
+                            "      \"version\": 0,\n" +
+                            "      \"isKey\": \"false\"\n" +
                             "    }\n" +
                             "  ],\n" +
                             "  \"currentVersion\": 0\n" +
