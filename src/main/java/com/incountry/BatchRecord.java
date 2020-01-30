@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.incountry.crypto.impl.Crypto;
+import com.incountry.exceptions.StorageDecryptionException;
 import lombok.Getter;
 
 import java.security.GeneralSecurityException;
@@ -27,7 +28,7 @@ public class BatchRecord {
         this.records = records;
     }
 
-    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws GeneralSecurityException {
+    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws GeneralSecurityException, StorageDecryptionException {
 
         JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
 

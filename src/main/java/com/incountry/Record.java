@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import com.incountry.crypto.impl.Crypto;
+import com.incountry.exceptions.StorageDecryptionException;
 import lombok.Getter;
 import lombok.Setter;
 import org.javatuples.Pair;
@@ -113,7 +114,7 @@ public class Record {
      * @return record objects with data from json
      * @throws GeneralSecurityException if decryption failed
      */
-    public static Record fromString(String jsonString, Crypto mCrypto) throws GeneralSecurityException {
+    public static Record fromString(String jsonString, Crypto mCrypto) throws GeneralSecurityException, StorageDecryptionException {
         JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
 
         String key = getPropertyFromJson(jsonObject, P_KEY);
