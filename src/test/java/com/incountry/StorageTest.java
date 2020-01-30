@@ -8,6 +8,8 @@ import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
+import com.incountry.keyaccessor.key.SecretKey;
+import com.incountry.keyaccessor.key.SecretKeysData;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,19 +96,21 @@ public class StorageTest {
         }
 
         private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse() {
-            return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+            return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
                 @Override
-                public String generate() {
-                    return "{\n" +
-                            "  \"secrets\": [\n" +
-                            "    {\n" +
-                            "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
-                            "      \"version\": 0,\n" +
-                            "      \"isKey\": \"false\"\n" +
-                            "    }\n" +
-                            "  ],\n" +
-                            "  \"currentVersion\": 0\n" +
-                            "}";
+                public SecretKeysData generate() {
+                    SecretKey secretKey = new SecretKey();
+                    secretKey.setSecret("vsdvepcbsrwokvhgaqundycksywixhtq");
+                    secretKey.setVersion(0);
+                    secretKey.setIsKey(false);
+
+                    List<SecretKey> secretKeyList = new ArrayList<>();
+                    secretKeyList.add(secretKey);
+
+                    SecretKeysData secretKeysData = new SecretKeysData();
+                    secretKeysData.setSecrets(secretKeyList);
+                    secretKeysData.setCurrentVersion(0);
+                    return secretKeysData;
                 }
             });
         }

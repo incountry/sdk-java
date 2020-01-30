@@ -26,64 +26,71 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-`SecretKeyAccessor` interface allows you to pass a secret which used for encryption.
+The SDK has a built-in SecretKeyAccessorImpl class that implements SecretKeyAccessor interface to allow you pass your own secrets/keys to the SDK.
+
+SecretKeyAccessor introduces getAccessor static method which allows you to pass your secrets/keys to the DK.
+Secrets/keys can be passed in multiple ways:
+
+1. As a string
+
+```
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
+            return SecretKeyAccessor.getAccessor("vsdvepcbsrwokvhgaqundycksywixhtq");
+        }
+```
+
+2. As an object implementing SecretKeyGenerator. SecretKeyGenerator's generate method should return SecretKeysData object or a valid JSON string, representing the following schema (or secrets_data object as we call it) (this JSON string will then be parsed as a SecretKeysData by SecretKeyAccessorImpl class) (code below needed - first - code with getAccessor method overload for SecretKeyGenerator, then with SecretKeysData object, then with JSON example)
+   Both JSON string and SecretKeysData allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or SecretKeysData.
+
+```
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+            @Override
+            public String generate() {
+                return "{\n" +
+                        "  \"secrets\": [\n" +
+                        "    {\n" +
+                        "      \"secret\": \"vsdvepcbsrwokvhgaqundycksywixhtq\",\n" +
+                        "      \"version\": 0,\n" +
+                        "      \"isKey\": \"true\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"currentVersion\": 0\n" +
+                        "}";
+            }
+        });
+        
+        
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
+            @Override
+            public SecretKeysData generate() {
+                SecretKey secretKey = new SecretKey();
+                secretKey.setSecret("vsdvepcbsrwokvhgaqundycksywixhtq");
+                secretKey.setVersion(0);
+                secretKey.setIsKey(true);
+
+                List<SecretKey> secretKeyList = new ArrayList<>();
+                secretKeyList.add(secretKey);
+
+                SecretKeysData secretKeysData = new SecretKeysData();
+                secretKeysData.setSecrets(secretKeyList);
+                secretKeysData.setCurrentVersion(0);
+                return secretKeysData;
+            }
+        }
+        
+```
+
+This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
+SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
+SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret.
+For details please see migrate method.
+
+SDK allows you to use custom encryption keys, instead of secrets. To do so, use isKey param in secrets_data JSON object or in SecretKey object which is a part of SecretKeysData.
+Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
-
-It has `getAccessor` static method which takes as argument secret used for encryption.
-Secret can be pasted as string representing your secret.
-`SecretKeyAccessor` interface also allows you to pass in `getAccessor` object which must implements `SecretKeyGenerator` interface.
-`SecretKeyGenerator` have `generate` method which should return valid json string or a `SecretKeysData` class instance (we call it `secrets_data` object)
-
-`SecretKeyGenerator`allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 
-Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `secrets_data` object.
-
-
-This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. 
-SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. 
-SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. 
-For details please see `migrate` method.
-
-SDK allows you to use custom encryption keys, instead of secrets. 
-Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
-
-Here are some examples how you can use `SecretKeyAccessor`.
-
-```
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
-    @Override
-    public String generate() {
-        return "{\n" +
-                "  \"secrets\": [\n" +
-                "    {\n" +
-                "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
-                "      \"version\": 0,\n" +
-                "      \"isKey\": \"true\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"currentVersion\": 0\n" +
-                "}";
-    }
-});
-```
-
-```
-public class SecretKeysData {
-    private List<SecretKey> secrets;
-    private int currentVersion;
-}
-```
-
-where `secrets` is the list of possible keys
-
-```
-public class SecretKey {
-    private String secret;
-    private int version;
-    private Boolean isKey;
-}
-```
+Here are some examples how you can use SecretKeyAccessor.
 
 ### Writing data to Storage
 
