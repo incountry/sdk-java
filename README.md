@@ -39,8 +39,7 @@ Secrets/keys can be passed in multiple ways:
         }
 ```
 
-2. As an object implementing SecretKeyGenerator. SecretKeyGenerator's generate method should return SecretKeysData object or a valid JSON string, representing the following schema (or secrets_data object as we call it)
-   Both JSON string and SecretKeysData allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or SecretKeysData.
+2. As an object implementing SecretKeyGenerator. SecretKeyGenerator's generate method should return SecretKeysData object or a valid JSON string, representing the following schema (or secrets_data object as we call it) (this JSON string will then be parsed as a SecretKeysData by SecretKeyAccessorImpl class)
 
 ```
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
@@ -71,6 +70,9 @@ Secrets/keys can be passed in multiple ways:
         }
         
 ```
+
+Both JSON string and SecretKeysData allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
+Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or SecretKeysData.
 
 This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
 SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
