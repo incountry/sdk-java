@@ -39,7 +39,7 @@ Secrets/keys can be passed in multiple ways:
         }
 ```
 
-2. As an object implementing SecretKeyGenerator. SecretKeyGenerator's generate method should return SecretKeysData object or a valid JSON string, representing the following schema (or secrets_data object as we call it) (this JSON string will then be parsed as a SecretKeysData by SecretKeyAccessorImpl class) (code below needed - first - code with getAccessor method overload for SecretKeyGenerator, then with SecretKeysData object, then with JSON example)
+2. As an object implementing SecretKeyGenerator. SecretKeyGenerator's generate method should return SecretKeysData object or a valid JSON string, representing the following schema (or secrets_data object as we call it)
    Both JSON string and SecretKeysData allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or SecretKeysData.
 
 ```
