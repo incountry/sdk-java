@@ -11,7 +11,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -49,7 +48,6 @@ public class Crypto implements ICrypto {
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
-//        byte[] strongPasswordHash = getKey(salt, secretKeyObj);
         byte[] key = getKey(salt, secretKeyObj);
 
         SecureRandom randomSecureRandom = new SecureRandom();
