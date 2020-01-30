@@ -1,11 +1,11 @@
 package com.incountry.crypto.impl;
 
 import com.incountry.crypto.ICrypto;
+import com.incountry.exceptions.StorageDecryptionException;
 import com.incountry.keyaccessor.key.SecretKey;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,13 +49,14 @@ public class Crypto implements ICrypto {
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
-        byte[] strongPasswordHash = getKey(salt, secretKeyObj);
+//        byte[] strongPasswordHash = getKey(salt, secretKeyObj);
+        byte[] key = getKey(salt, secretKeyObj);
 
         SecureRandom randomSecureRandom = new SecureRandom();
         byte[] iv = new byte[IV_LENGTH];
         randomSecureRandom.nextBytes(iv);
 
-        SecretKeySpec secretKeySpec = new SecretKeySpec(strongPasswordHash, "AES");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
@@ -90,10 +91,10 @@ public class Crypto implements ICrypto {
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        byte[] strongPasswordHash = getKey(salt, getSecret(decryptKeyVersion));
+        byte[] key = getKey(salt, getSecret(decryptKeyVersion));
 
 
-        SecretKeySpec keySpec = new SecretKeySpec(strongPasswordHash, "AES");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
 
         cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
@@ -124,7 +125,7 @@ public class Crypto implements ICrypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
+    public String decrypt(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException, StorageDecryptionException {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
@@ -135,7 +136,7 @@ public class Crypto implements ICrypto {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                return decryptV0(cipherText, decryptKeyVersion);
+                throw new StorageDecryptionException("Decryption error: Illegal decryption version");
         }
     }
 
@@ -147,29 +148,5 @@ public class Crypto implements ICrypto {
     private String decryptV1(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
         byte[] parts = hexToBytes(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
-    }
-
-
-    private String decryptV0(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
-        int keySize = 16;
-
-        byte[] encryptedBytes  = hexToBytes(cipherText);
-        // Hash key.
-        byte[] keyBytes = new byte[keySize];
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(getSecret(decryptKeyVersion).getSecret().getBytes(StandardCharsets.UTF_8));
-        byte[] longKey = md.digest();
-        System.arraycopy(longKey, 0, keyBytes, 0, keySize);
-        byte[] ivBytes = new byte[keySize];
-        System.arraycopy(longKey, keySize, ivBytes, 0, keySize);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
-
-        // Decrypt.
-        Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
-        byte[] decrypted = cipherDecrypt.doFinal(encryptedBytes);
-
-        return new String(decrypted);
     }
 }

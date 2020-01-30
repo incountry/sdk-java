@@ -22,18 +22,33 @@ Storage(
 
 `endpoint` defines API URL and is used to override default one.
 
-You can turn off encryption (not recommended). Set `encrypt` parameter to `false` if you want to do this.
+You can turn off encryption (not recommended). Set `encrypt` parameter to `false` if you want to do this. 
 
 #### Encryption key
 
-`SecretKeyAccessor` interface is used to pass a secret used for encryption.
+`SecretKeyAccessor` interface allows you to pass a secret which used for encryption.
+
+Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
+
 
 It has `getAccessor` static method which takes as argument secret used for encryption.
 Secret can be pasted as string representing your secret.
+`SecretKeyAccessor` interface also allows you to pass in `getAccessor` object which must implements `SecretKeyGenerator` interface.
+`SecretKeyGenerator` have `generate` method which should return valid json string or a `SecretKeysData` class instance (we call it `secrets_data` object)
 
-Also you can pass multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
-It can be done if pass in `getAccessor` object which implements `SecretKeyGenerator` interface.
-`SecretKeyGenerator` has `generate` method which must return string 
+`SecretKeyGenerator`allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 
+Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `secrets_data` object.
+
+
+This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. 
+SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. 
+SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. 
+For details please see `migrate` method.
+
+SDK allows you to use custom encryption keys, instead of secrets. 
+Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
+
+Here are some examples how you can use `SecretKeyAccessor`.
 
 ```
 SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
@@ -53,8 +68,6 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKe
 });
 ```
 
-or `SecretKeysData` object
-
 ```
 public class SecretKeysData {
     private List<SecretKey> secrets;
@@ -71,9 +84,6 @@ public class SecretKey {
     private Boolean isKey;
 }
 ```
-Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretKeysData` object.
-
-Note: even though PBKDF2 is used internally to generate a cryptographically strong encryption key, you must make sure that you use strong enough password.
 
 ### Writing data to Storage
 
