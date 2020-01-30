@@ -46,16 +46,8 @@ Secrets/keys can be passed in multiple ways:
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
             @Override
             public String generate() {
-                return "{\n" +
-                        "  \"secrets\": [\n" +
-                        "    {\n" +
-                        "      \"secret\": \"vsdvepcbsrwokvhgaqundycksywixhtq\",\n" +
-                        "      \"version\": 0,\n" +
-                        "      \"isKey\": \"true\"\n" +
-                        "    }\n" +
-                        "  ],\n" +
-                        "  \"currentVersion\": 0\n" +
-                        "}";
+                JsonObject jsonObject = jsonSource.getJson();
+                return jsonObject.toString();
             }
         });
         
