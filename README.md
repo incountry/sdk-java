@@ -14,7 +14,7 @@ Storage(
   String apiKey, 
   String endpoint, 
   boolean encrypt, 
-  ISecretKeyAccessor secretKeyAccessorImpl
+  SecretKeyAccessor secretKeyAccessor
 )
 ```
 
@@ -26,65 +26,63 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-The SDK has a built-in SecretKeyAccessorImpl class that implements SecretKeyAccessor interface to allow you pass your own secrets/keys to the SDK.
+The SDK has a `SecretKeyAccessor` interface to allow you pass your own secrets/keys to the SDK.
 
-SecretKeyAccessor introduces getAccessor static method which allows you to pass your secrets/keys to the DK.
+`SecretKeyAccessor` introduces `getAccessor` static method which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
 
 1. As a string
 
 ```
-        private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
-            return SecretKeyAccessor.getAccessor("vsdvepcbsrwokvhgaqundycksywixhtq");
-        }
+private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
+    return SecretKeyAccessor.getAccessor("your_secret_goes_here");
+}
 ```
 
-2. As an object implementing SecretKeyGenerator. SecretKeyGenerator's generate method should return SecretKeysData object or a valid JSON string, representing the following schema (or secrets_data object as we call it) (this JSON string will then be parsed as a SecretKeysData by SecretKeyAccessorImpl class)
+2. As an object implementing `SecretKeyGenerator` interface. SecretKeyGenerator's generate method should return `SecretKeysData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretKeysData`)
 
 ```
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
-            @Override
-            public String generate() {
-                JsonObject jsonObject = jsonSource.getJson();
-                return jsonObject.toString();
-            }
-        });
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+    @Override
+    public String generate() {
+        String secretsDataJsonString = dataSource.methodReturningJsonString();
+        return secretsDataJsonString;
+    }
+});
         
         
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
-            @Override
-            public SecretKeysData generate() {
-                SecretKey secretKey = new SecretKey();
-                secretKey.setSecret("vsdvepcbsrwokvhgaqundycksywixhtq");
-                secretKey.setVersion(0);
-                secretKey.setIsKey(true);
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
+    @Override
+    public SecretKeysData generate() {
+        SecretKey secretKey = new SecretKey();
+        secretKey.setSecret("your_secret_goes_here");
+        secretKey.setVersion(0);
+        secretKey.setIsKey(true);
 
-                List<SecretKey> secretKeyList = new ArrayList<>();
-                secretKeyList.add(secretKey);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(secretKey);
 
-                SecretKeysData secretKeysData = new SecretKeysData();
-                secretKeysData.setSecrets(secretKeyList);
-                secretKeysData.setCurrentVersion(0);
-                return secretKeysData;
-            }
-        }
+        SecretKeysData secretKeysData = new SecretKeysData();
+        secretKeysData.setSecrets(secretKeyList);
+        secretKeysData.setCurrentVersion(0);
+        return secretKeysData;
+    }
+}
         
 ```
 
-Both JSON string and SecretKeysData allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
-Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or SecretKeysData.
+Both JSON string and `SecretKeysData` allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
+Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or `SecretKeysData`.
 
 This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
 SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret.
 For details please see migrate method.
 
-SDK allows you to use custom encryption keys, instead of secrets. To do so, use isKey param in secrets_data JSON object or in SecretKey object which is a part of SecretKeysData.
+SDK allows you to use custom encryption keys, instead of secrets. To do so, use isKey param in secretsData JSON object or in SecretKey object which is a part of `SecretKeysData`.
 Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
-
-Here are some examples how you can use SecretKeyAccessor.
 
 ### Writing data to Storage
 
