@@ -10,11 +10,11 @@ Usage
 To access your data in InCountry using Java SDK, you need to create an instance of `Storage` class.
 ```
 Storage(
-  String environmentID, 
-  String apiKey, 
-  String endpoint, 
-  boolean encrypt, 
-  SecretKeyAccessor secretKeyAccessor
+    String environmentID, 
+    String apiKey, 
+    String endpoint, 
+    boolean encrypt, 
+    SecretKeyAccessor secretKeyAccessor
 )
 ```
 
@@ -26,7 +26,7 @@ You can turn off encryption (not recommended). Set `encrypt` parameter to `false
 
 #### Encryption key
 
-The SDK has a `SecretKeyAccessor` interface to allow you pass your own secrets/keys to the SDK.
+The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 
 `SecretKeyAccessor` introduces `getAccessor` static method which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
@@ -39,9 +39,23 @@ private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
 }
 ```
 
-2. As an object implementing `SecretKeyGenerator` interface. SecretKeyGenerator's generate method should return `SecretKeysData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretKeysData`)
+2. As an object implementing `SecretKeyGenerator` interface. SecretKeyGenerator's `generate` method should return `SecretKeysData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretKeysData`)
 
 ```
+/* secretsData JSON object */
+{
+  "secrets": [{
+       "secret": <string>,
+       "version": <int>,   // Should be a positive integer
+       "isKey": <boolean> // Should be True only for user-defined encryption keys
+    }
+  }, ....],
+  "currentVersion": <int>,
+} 
+
+...
+
+
 SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
     @Override
     public String generate() {
@@ -50,7 +64,8 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKe
     }
 });
         
-        
+...
+
 SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
     @Override
     public SecretKeysData generate() {
@@ -79,7 +94,7 @@ SDK will encrypt data using current secret/key while maintaining the ability to 
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret.
 For details please see migrate method.
 
-SDK allows you to use custom encryption keys, instead of secrets. To do so, use isKey param in secretsData JSON object or in SecretKey object which is a part of `SecretKeysData`.
+SDK allows you to use custom encryption keys, instead of secrets. To do so, use `isKey` param in secretsData JSON object or in SecretKey object which is a part of `SecretKeysData`.
 Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
@@ -90,7 +105,9 @@ Use `write` method in order to create a record.
 ```
 public void write(Record record) throws StorageException, GeneralSecurityException, IOException
 ```
+
 Here is how you initialize a record object:
+
 ```
 public Record(
   String country,           // Required country code of where to store the data
@@ -134,6 +151,7 @@ For a detailed example of a migration please see `/examples/java/com/incountry/F
 #### Encryption
 InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
 Here is how data is transformed and stored in InCountry database:
+
 ```
 {
 	key, 		// hashed
@@ -156,6 +174,7 @@ public Record read(String country, String key) throws StorageException, IOExcept
 This method returns Record object. It contains the following properties: `country`, `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
 
 These properties can be accessed using getters, for example:
+
 ```
 String key2 = record.getKey2();
 String body = record.getBody();
@@ -183,8 +202,9 @@ public FindOptions(int limit, int offset) throws FindOptionsException
 
 There are two different types of filter params: `FilterStringParam` and `FilterRangeParam`.
 `FilterStringParam` is used for all the keys except `rangeKey`:
+
 ```
-public FilterStringParam(String[] value);
+public FilterStringParam(List<String> value);
 ```
 or
 ```
@@ -192,13 +212,14 @@ public FilterStringParam(String value);
 ```
 
 Here is the example of how `find` method can be used:
+
 ```
 FindFilter filter = new FindFilter(
     null,
     null,
     null, 
     new FilterStringParam("kitty"),
-    new FilterStringParam(new String[]{"mew", "pur"})
+    new FilterStringParam(List<String> value)
 );
 
 FindOptions options = new FindOptions(10, 10);
@@ -208,32 +229,36 @@ BatchRecord records = storage.find("us", filter, options);
 This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.  
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
 
-
 `Find` returns BatchRecord object which contains an array of `Record` and some metadata:
+
 ```
     int count;
     int limit;
     int offset;
     int total;
-    Record[] records;
+    List<Record> records;
 ```
 These fields can be accessed using getters, for example:
+
 ```
 int limit = records.getTotal();
 ```
 
 `FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.  
 For example you can request all the records with `rangeKey` less than 1000:
+
 ```
-{
-    FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
-}
+
+FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
+
 ```
 or if you want just to check equality:
+
 ```
-{
-    FilterRangeParam rangeParam = new FilterRangeParam(1000);
-}
+
+
+FilterRangeParam rangeParam = new FilterRangeParam(1000);
+
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
@@ -247,6 +272,6 @@ Use `delete` method in order to delete a record from InCountry storage. It is on
 ```
 public void delete(String country, String key) throws StorageException, IOException
 ```
-Here  
+Here
 `country` - country code of the record,
 `key` - the record's key
