@@ -3,15 +3,17 @@ package com.incountry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.incountry.crypto.impl.Crypto;
-import com.incountry.exceptions.FindOptionsException;
-import com.incountry.exceptions.StorageClientException;
-import com.incountry.http.IHttpAgent;
+import com.incountry.crypto.impl.CryptoImpl;
+import com.incountry.exceptions.StorageCryptoException;
+import com.incountry.http.HttpAgent;
 import com.incountry.keyaccessor.SecretKeyAccessor;
+import com.incountry.response.BatchResponse;
+import com.incountry.response.Metadata;
+import com.incountry.response.SingleResponse;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.impl.HttpAgent;
+import com.incountry.http.impl.HttpAgentImpl;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -36,9 +38,9 @@ public class Storage {
     private String mAPIKey = null;
     private String mEndpoint = null;
     private Boolean mIsDefaultEndpoint = false;
-    private Crypto mCrypto = null;
+    private CryptoImpl mCrypto = null;
     private HashMap<String, POP> mPoplist;
-    private IHttpAgent httpAgent = null;
+    private HttpAgent httpAgent = null;
 
     public Storage() throws StorageServerException, IOException {
         this(null);
@@ -52,11 +54,11 @@ public class Storage {
                 secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, SecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+    public Storage(String environmentID, String apiKey, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
         this(environmentID, apiKey, null, secretKeyAccessor != null, secretKeyAccessor);
     }
 
-    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+    public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
         mEnvID = environmentID;
         if (mEnvID == null) throw new IllegalArgumentException("Please pass environment_id param or set INC_ENVIRONMENT_ID env var");
 
@@ -70,12 +72,12 @@ public class Storage {
         }
 
         mPoplist = new HashMap<String, POP>();
-        httpAgent = new HttpAgent(apiKey, environmentID);
+        httpAgent = new HttpAgentImpl(apiKey, environmentID);
 
         loadCountryEndpoints();
 
         if (encrypt) {
-            mCrypto = new Crypto(secretKeyAccessor.getKey(), environmentID);
+            mCrypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentID);
         }
 
     }
@@ -85,8 +87,13 @@ public class Storage {
      * @throws StorageServerException if server return one of client error responses
      * @throws IOException if server connection failed
      */
-    private void loadCountryEndpoints() throws StorageServerException, IOException {
-        String content = httpAgent.request(PORTALBACKEND_URI + "/countries", "GET", null, false);
+    private void loadCountryEndpoints() throws StorageServerException {
+        String content;
+        try {
+           content = httpAgent.request(PORTALBACKEND_URI + "/countries", "GET", null, false);
+        } catch (IOException e) {
+            throw new StorageServerException("Server request error", e);
+        }
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
@@ -102,26 +109,30 @@ public class Storage {
 
     private String getEndpoint(String country, String path){
     	if (Boolean.FALSE.equals(mIsDefaultEndpoint))
-            return mEndpoint+path;
-        if (path.charAt(0) != '/') path = "/"+path;
+            return mEndpoint + path;
+        if (path.charAt(0) != '/') path = "/" + path;
         if (mPoplist.containsKey(country))
-            return mPoplist.get(country).host+path;
-        return mEndpoint+path;
+            return mPoplist.get(country).host + path;
+        return mEndpoint + path;
     }
 
-    private void checkParameters(String country, String key) throws StorageException {
-        if (country == null) throw new StorageClientException("Missing country");
-        if (key == null) throw new StorageClientException("Missing key");
+    private void checkParameters(String country, String key) {
+        if (country == null) throw new NullPointerException("Missing country");
+        if (key == null) throw new NullPointerException("Missing key");
     }
 
-    public void write(Record record) throws StorageException, GeneralSecurityException, IOException{
+    public void write(Record record) throws StorageServerException, StorageCryptoException {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
-        httpAgent.request(url, "POST", record.toJsonString(mCrypto), false);
+        try {
+            httpAgent.request(url, "POST", record.toJsonString(mCrypto), false);
+        } catch (IOException e) {
+            throw new StorageServerException("Server request error", e);
+        }
     }
 
-    private String createUrl(String country, String recordKey) throws StorageException {
+    private String createUrl(String country, String recordKey) {
         country = country.toLowerCase();
         checkParameters(country, recordKey);
         if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
@@ -137,14 +148,24 @@ public class Storage {
      * @throws IOException if server connection failed
      * @throws GeneralSecurityException if record decryption failed
      */
-    public Record read(String country, String recordKey) throws StorageException, IOException, GeneralSecurityException{
+    public SingleResponse read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
+        SingleResponse response = new SingleResponse();
         String url = createUrl(country, recordKey);
-        String content = httpAgent.request(url, "GET", null, true);
-        if (content == null) return null;
+        String content;
+        try {
+            content = httpAgent.request(url, "GET", null, true);
+        } catch (IOException e) {
+            throw new StorageServerException("Server request error", e);
+        }
+        if (content == null) {
+            return response;
+        }
         Record record = Record.fromString(content,  mCrypto);
         record.setCountry(country);
+        response.setRecord(record);
 
-        return record;
+        return response;
+
     }
 
     /**
@@ -157,17 +178,20 @@ public class Storage {
      * @throws GeneralSecurityException if record encryption failed
      * @throws IOException if server connection failed
      */
-    public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException {
+    public Metadata migrate(String country, int limit) throws StorageServerException, StorageCryptoException {
         if (mCrypto == null) {
-            throw new StorageClientException("Migration is not supported when encryption is off");
+            throw new NullPointerException("Migration is not supported when encryption is off");
         }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
-        BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
+        BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0)).getBatchRecord();
         batchWrite(country, batchRecord.getRecords());
+        Metadata metadata = new Metadata();
+        metadata.setMigrated(batchRecord.getCount());
+        metadata.setTotalLeft(batchRecord.getTotal() - batchRecord.getCount());
 
-        return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
+        return metadata;
     }
 
     /**
@@ -179,7 +203,7 @@ public class Storage {
      * @throws GeneralSecurityException if record encryption failed
      * @throws IOException if server connection failed
      */
-    public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException {
+    public boolean batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
         country = country.toLowerCase();
         List<JsonObject> recordsStrings = new ArrayList<>();
         for (Record record : records) {
@@ -187,14 +211,18 @@ public class Storage {
             recordsStrings.add(record.toJsonObject(mCrypto));
         }
         String url = getEndpoint(country, "/v2/storage/records/"  + country + "/batchWrite");
-        httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
+        try {
+            httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
+        } catch (IOException e) {
+            throw new StorageServerException("Server request error", e);
+        }
 
         return true;
     }
 
-    public Record updateOne(String country, FindFilter filter, Record record) throws StorageException, GeneralSecurityException, IOException, FindOptionsException{
+    public SingleResponse updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {
     	FindOptions options = new FindOptions(1, 0);
-    	BatchRecord existingRecords = find(country, filter, options);
+    	BatchRecord existingRecords = find(country, filter, options).getBatchRecord() ;
 
     	if (existingRecords.getTotal() > 1) {
     		throw new StorageServerException("Multiple records found");
@@ -202,14 +230,15 @@ public class Storage {
     	if (existingRecords.getTotal() <= 0) {
     		throw new StorageServerException("Record not found");
     	}
-    	
+
     	Record foundRecord = existingRecords.getRecords().get(0);
 
     	Record updatedRecord = Record.merge(foundRecord, record);
 
     	write(updatedRecord);
-    	
-    	return updatedRecord;
+        SingleResponse response = new SingleResponse();
+        response.setRecord(updatedRecord);
+    	return response;
     }
 
     /**
@@ -219,17 +248,21 @@ public class Storage {
      * @throws StorageException if country or recordKey is null
      * @throws IOException if server connection failed
      */
-    public void delete(String country, String recordKey) throws StorageException, IOException {
+    public void delete(String country, String recordKey) throws StorageServerException {
         String url = createUrl(country, recordKey);
-        httpAgent.request(url, "DELETE", null, false);
+        try {
+            httpAgent.request(url, "DELETE", null, false);
+        } catch (IOException e) {
+            throw new StorageServerException("Server request error", e);
+        }
     }
 
-    public void setHttpAgent(IHttpAgent agent) {
+    public void setHttpAgent(HttpAgent agent) {
         httpAgent = agent;
     }
 
-    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
-        if (country == null) throw new StorageClientException("Missing country");
+    public BatchResponse find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
+        if (country == null) throw new NullPointerException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
 
@@ -238,22 +271,32 @@ public class Storage {
             .put("options", options.toJSONObject())
             .toString();
 
-        String content = httpAgent.request(url, "POST", postData, false);
+        BatchResponse response = new BatchResponse();
+        String content;
 
-        if (content == null) return null;
-        return BatchRecord.fromString(content, mCrypto);
+        try {
+            content = httpAgent.request(url, "POST", postData, false);
+        } catch (IOException e) {
+            throw new StorageServerException("Server request error", e);
+        }
+
+        if (content == null) {
+            return response;
+        }
+        response.setBatchRecord(BatchRecord.fromString(content, mCrypto));
+        return response;
     }
     
-    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
-    	BatchRecord findResults = find(country, filter, options);
-
-    	List<Record> records = findResults.getRecords();
+    public SingleResponse findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+        BatchRecord findResults =  find(country, filter, options).getBatchRecord();
+        List<Record> records = findResults.getRecords();
 
     	if (records.isEmpty()) {
     		return null;
     	}
-    	
-    	return records.get(0);
+    	SingleResponse response = new SingleResponse();
+    	response.setRecord(records.get(0));
+    	return response;
     }
 
 }

@@ -4,10 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.incountry.crypto.impl.Crypto;
+import com.incountry.crypto.Crypto;
+import com.incountry.crypto.impl.CryptoImpl;
+import com.incountry.exceptions.StorageCryptoException;
 import lombok.Getter;
 
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class BatchRecord {
         this.records = records;
     }
 
-    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws GeneralSecurityException {
+    public static BatchRecord fromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
 
         JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
 

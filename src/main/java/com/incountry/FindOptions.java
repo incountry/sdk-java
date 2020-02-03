@@ -1,6 +1,5 @@
 package com.incountry;
 
-import com.incountry.exceptions.FindOptionsException;
 import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
@@ -16,12 +15,24 @@ public class FindOptions {
     @Setter
     int offset;
 
-    public FindOptions() throws FindOptionsException {
+    /**
+     * Constrictor for FindOptions class
+     * @throws FindOptionsException
+     */
+    public FindOptions() {
         this(MAX_LIMIT, 0);
     }
 
-    public FindOptions(int limit, int offset) throws FindOptionsException {
-        if (limit> MAX_LIMIT) throw new FindOptionsException(String.format("Max limit is %l. Use offset to populate more", MAX_LIMIT));
+    /**
+     * Constrictor for FindOptions class with the specified find options
+     * @param limit the number of records to return
+     * @param offset number of records which on will the result be offset
+     * @throws FindOptionsException
+     */
+    public FindOptions(int limit, int offset) {
+        if (limit > MAX_LIMIT) {
+            throw new IllegalArgumentException(String.format("Max limit is %l. Use offset to populate more", MAX_LIMIT));
+        }
         this.limit = limit;
         this.offset = offset;
     }

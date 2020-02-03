@@ -1,6 +1,6 @@
 package com.incountry;
 
-import com.incountry.crypto.impl.Crypto;
+import com.incountry.crypto.Crypto;
 import lombok.Setter;
 import org.json.JSONObject;
 

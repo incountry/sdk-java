@@ -1,6 +1,7 @@
 package com.incountry.crypto.impl;
 
-import com.incountry.crypto.ICrypto;
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.keyaccessor.key.SecretKey;
 
 import javax.crypto.Cipher;
@@ -23,7 +24,7 @@ import static com.incountry.crypto.CryptoUtils.generateSalt;
 import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
 import static com.incountry.Utils.*;
 
-public class Crypto implements ICrypto {
+public class CryptoImpl implements Crypto {
     private SecretKeysData secretKeysData;
     private String envId;
     private static final int AUTH_TAG_LENGTH = 16;
@@ -34,16 +35,17 @@ public class Crypto implements ICrypto {
     private static final String VERSION = "2";
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
-    public Crypto(SecretKeysData secret) {
+    public CryptoImpl(SecretKeysData secret) {
         this.secretKeysData = secret;
     }
 
-    public Crypto(SecretKeysData secret, String envId) {
+    public CryptoImpl(SecretKeysData secret, String envId) {
         this.secretKeysData = secret;
         this.envId = envId;
     }
 
-    public Pair<String, Integer> encrypt(String plainText) throws GeneralSecurityException, IOException {
+    public Pair<String, Integer> encrypt(String plainText) throws StorageCryptoException {
+
         byte[] clean = plainText.getBytes();
         byte[] salt = generateSalt(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
@@ -55,17 +57,28 @@ public class Crypto implements ICrypto {
 
         SecretKeySpec secretKeySpec = new SecretKeySpec(strong, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
+        byte[] encrypted = {};
 
-        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
-        byte[] encrypted = cipher.doFinal(clean);
+        try {
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(salt);
-        outputStream.write(iv);
-        outputStream.write(encrypted);
+            Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
+            encrypted = cipher.doFinal(clean);
+        } catch (GeneralSecurityException e){
+            throw new StorageCryptoException(ENCRYPTION_ALGORITHM + " algorithm exception", e);
+        }
 
-        byte[] res = outputStream.toByteArray();
+        byte[] res = {};
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            outputStream.write(salt);
+            outputStream.write(iv);
+            outputStream.write(encrypted);
+            res = outputStream.toByteArray();
+
+        } catch (IOException e) {
+            throw new StorageCryptoException("Data encryption error", e);
+        }
+
         byte[] encoded = Base64.getEncoder().encode(res);
 
         return new Pair<>(VERSION + ":" + new String(encoded), secretKeyObj.getVersion());
@@ -75,24 +88,32 @@ public class Crypto implements ICrypto {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException {
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-        Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-        byte[] strongPasswordHash = generateStrongPasswordHash(getSecret(decryptKeyVersion).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
 
-        SecretKeySpec keySpec = new SecretKeySpec(strongPasswordHash, "AES");
-        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
+        byte[] decryptedText ={};
+        try {
 
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
-        byte[] decryptedText = cipher.doFinal(encrypted);
+            Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+            byte[] strongPasswordHash = generateStrongPasswordHash(getSecret(decryptKeyVersion).getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+
+            SecretKeySpec keySpec = new SecretKeySpec(strongPasswordHash, "AES");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
+
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+            decryptedText = cipher.doFinal(encrypted);
+
+        } catch (GeneralSecurityException e) {
+            throw new StorageCryptoException("Data encryption error", e);
+        }
 
         return new String(decryptedText);
     }
 
-    private SecretKey getSecret(Integer version){
+    private SecretKey getSecret(Integer version) {
         SecretKey secret = null;
         for (SecretKey item : secretKeysData.getSecrets()) {
             if (item.getVersion() == version) {
@@ -114,7 +135,7 @@ public class Crypto implements ICrypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
+    public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         if (cipherText == null) return null;
 
         String[] parts = cipherText.split(":");
@@ -129,36 +150,42 @@ public class Crypto implements ICrypto {
         }
     }
 
-    private String decryptV2(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         byte[] parts = Base64.getDecoder().decode(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
-    private String decryptV1(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
+    private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         byte[] parts = hexToBytes(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
-
-    private String decryptV0(String cipherText, Integer decryptKeyVersion) throws GeneralSecurityException {
+    @Deprecated
+    private String decryptV0(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         int keySize = 16;
 
         byte[] encryptedBytes  = hexToBytes(cipherText);
         // Hash key.
         byte[] keyBytes = new byte[keySize];
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        md.update(getSecret(decryptKeyVersion).getSecret().getBytes(StandardCharsets.UTF_8));
-        byte[] longKey = md.digest();
-        System.arraycopy(longKey, 0, keyBytes, 0, keySize);
-        byte[] ivBytes = new byte[keySize];
-        System.arraycopy(longKey, keySize, ivBytes, 0, keySize);
-        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
+        byte[] decrypted = {};
 
-        // Decrypt.
-        Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipherDecrypt.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
-        byte[] decrypted = cipherDecrypt.doFinal(encryptedBytes);
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(getSecret(decryptKeyVersion).getSecret().getBytes(StandardCharsets.UTF_8));
+            byte[] longKey = md.digest();
+            System.arraycopy(longKey, 0, keyBytes, 0, keySize);
+            byte[] ivBytes = new byte[keySize];
+            System.arraycopy(longKey, keySize, ivBytes, 0, keySize);
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
+
+            // Decrypt.
+            Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            decrypted = cipherDecrypt.doFinal(encryptedBytes);
+        } catch (Exception e) {
+            throw new StorageCryptoException("Legacy decryption error", e);
+        }
+
 
         return new String(decrypted);
     }
