@@ -6,13 +6,10 @@ import com.incountry.keyaccessor.key.SecretKey;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
@@ -146,7 +143,7 @@ public class CryptoImpl implements Crypto {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                return decryptV0(cipherText, decryptKeyVersion);
+                throw new StorageCryptoException("Decryption error: Illegal decryption version");
         }
     }
 
@@ -158,35 +155,5 @@ public class CryptoImpl implements Crypto {
     private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         byte[] parts = hexToBytes(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
-    }
-
-    @Deprecated
-    private String decryptV0(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
-        int keySize = 16;
-
-        byte[] encryptedBytes  = hexToBytes(cipherText);
-        // Hash key.
-        byte[] keyBytes = new byte[keySize];
-        byte[] decrypted = {};
-
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(getSecret(decryptKeyVersion).getSecret().getBytes(StandardCharsets.UTF_8));
-            byte[] longKey = md.digest();
-            System.arraycopy(longKey, 0, keyBytes, 0, keySize);
-            byte[] ivBytes = new byte[keySize];
-            System.arraycopy(longKey, keySize, ivBytes, 0, keySize);
-            SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-            IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
-
-            // Decrypt.
-            Cipher cipherDecrypt = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            decrypted = cipherDecrypt.doFinal(encryptedBytes);
-        } catch (Exception e) {
-            throw new StorageCryptoException("Legacy decryption error", e);
-        }
-
-
-        return new String(decrypted);
     }
 }

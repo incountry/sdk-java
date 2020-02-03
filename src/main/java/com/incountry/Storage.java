@@ -3,6 +3,7 @@ package com.incountry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.incountry.crypto.Crypto;
 import com.incountry.crypto.impl.CryptoImpl;
 import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.http.HttpAgent;
@@ -24,6 +25,7 @@ import java.util.List;
 public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
+    private static final String STORAGE_URL = "/v2/storage/records/";
 
     class POP {
         String host;
@@ -38,15 +40,15 @@ public class Storage {
     private String mAPIKey = null;
     private String mEndpoint = null;
     private Boolean mIsDefaultEndpoint = false;
-    private CryptoImpl mCrypto = null;
+    private Crypto mCrypto = null;
     private HashMap<String, POP> mPoplist;
     private HttpAgent httpAgent = null;
 
-    public Storage() throws StorageServerException, IOException {
+    public Storage() throws StorageServerException {
         this(null);
     }
 
-    public Storage(SecretKeyAccessor secretKeyAccessor) throws StorageServerException, IOException {
+    public Storage(SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
         this(System.getenv("INC_ENVIRONMENT_ID"),
                 System.getenv("INC_API_KEY"),
                 System.getenv("INC_ENDPOINT"),
@@ -136,7 +138,7 @@ public class Storage {
         country = country.toLowerCase();
         checkParameters(country, recordKey);
         if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
-        return getEndpoint(country, "/v2/storage/records/" + country + "/" + recordKey);
+        return getEndpoint(country, STORAGE_URL + country + "/" + recordKey);
     }
 
     /**
@@ -264,7 +266,7 @@ public class Storage {
     public BatchResponse find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
         if (country == null) throw new NullPointerException("Missing country");
         country = country.toLowerCase();
-        String url = getEndpoint(country, "/v2/storage/records/"+country+"/find");
+        String url = getEndpoint(country, STORAGE_URL + country + "/find");
 
         String postData = new JSONObject()
             .put("filter", filter.toJSONObject(mCrypto))
@@ -286,8 +288,8 @@ public class Storage {
         response.setBatchRecord(BatchRecord.fromString(content, mCrypto));
         return response;
     }
-    
-    public SingleResponse findOne(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException {
+
+    public SingleResponse findOne(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
         BatchRecord findResults =  find(country, filter, options).getBatchRecord();
         List<Record> records = findResults.getRecords();
 

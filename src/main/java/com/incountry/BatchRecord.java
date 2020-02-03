@@ -5,7 +5,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.incountry.crypto.Crypto;
-import com.incountry.crypto.impl.CryptoImpl;
 import com.incountry.exceptions.StorageCryptoException;
 import lombok.Getter;
 
