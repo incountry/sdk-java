@@ -22,7 +22,7 @@ Storage(
 
 `endpoint` defines API URL and is used to override default one.
 
-You can turn off encryption (not recommended). Set `encrypt` parameter to `false` if you want to do this. 
+You can turn off encryption (not recommended). Set `encrypt` parameter to `false` if you want to do this.
 
 #### Encryption key
 
@@ -46,8 +46,8 @@ private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
 {
   "secrets": [{
        "secret": <string>,
-       "version": <int>,   // Should be a positive integer
-       "isKey": <boolean> // Should be True only for user-defined encryption keys
+       "version": <int>,     // Should be a positive integer
+       "isKey": <boolean>    // Should be True only for user-defined encryption keys
     }
   }, ....],
   "currentVersion": <int>,
@@ -154,13 +154,13 @@ Here is how data is transformed and stored in InCountry database:
 
 ```
 {
-    key, 		// hashed
-    body, 		// encrypted
-    profile_key,// hashed
-    range_key, 	// plain
-    key2, 		// hashed
-    key3 		// hashed
- }
+    key, 		   // hashed
+    body, 		   // encrypted
+    profile_key,   // hashed
+    range_key, 	   // plain
+    key2, 		   // hashed
+    key3 		   // hashed
+}
 ```
 ### Reading stored data
 
@@ -230,7 +230,6 @@ This call returns all records with `key2` equals `kitty` AND `key3` equals `mew`
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
 
 `Find` returns BatchRecord object which contains an array of `Record` and some metadata:
-
 ```
     int count;
     int limit;
