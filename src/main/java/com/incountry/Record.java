@@ -111,7 +111,7 @@ public class Record {
      * @param jsonString json string
      * @param mCrypto crypto object
      * @return record objects with data from json
-     * @throws GeneralSecurityException if decryption failed
+     * @throws StorageCryptoException if decryption failed
      */
     public static Record fromString(String jsonString, Crypto mCrypto) throws StorageCryptoException {
         JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);

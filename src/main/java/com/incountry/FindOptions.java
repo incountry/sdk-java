@@ -17,7 +17,6 @@ public class FindOptions {
 
     /**
      * Constrictor for FindOptions class
-     * @throws FindOptionsException
      */
     public FindOptions() {
         this(MAX_LIMIT, 0);
@@ -27,7 +26,6 @@ public class FindOptions {
      * Constrictor for FindOptions class with the specified find options
      * @param limit the number of records to return
      * @param offset number of records which on will the result be offset
-     * @throws FindOptionsException
      */
     public FindOptions(int limit, int offset) {
         if (limit > MAX_LIMIT) {

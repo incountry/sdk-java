@@ -71,7 +71,7 @@ Note: the `generate` method should return either valid json as a string or a `Se
 
 Use `write` method in order to create a record.
 ```
-public void write(Record record) throws StorageException, GeneralSecurityException, IOException
+public void write(Record record) throws StorageServerException, StorageCryptoException
 ```
 Here is how you initialize a record object:
 ```
@@ -90,7 +90,7 @@ public Record(
 Use the `batchWrite` method to write multiple records to the storage in a single request.
 
 ```
-public boolean batchWrite(String country, List<Record> records) throws StorageException, GeneralSecurityException, IOException
+public boolean batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException
 
 // `batchWrite` returns True on success
 ```
@@ -99,14 +99,14 @@ public boolean batchWrite(String country, List<Record> records) throws StorageEx
 
 Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rotation and data migration support.
 
-SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageException, FindOptionsException, GeneralSecurityException, IOException` 
+SDK introduces `public Metadata migrate(String country, int limit) throws StorageServerException, StorageCryptoException` 
 method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
 and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
 amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
 version different from `currentVersion` provided by `SecretKeyAccessor`)
 
 ```
-public class MigrateResult {
+public class Metadata {
     private int migrated;
     private int totalLeft;
 }
@@ -131,12 +131,20 @@ Here is how data is transformed and stored in InCountry database:
 
 Stored record can be read by `key` using `read` method.
 ```
-public Record read(String country, String key) throws StorageException, IOException, GeneralSecurityException
+public SingleResponse read(String country, String key) throws StorageServerException, StorageCryptoException
 ```
 `country` is a country code of the record
 `key` is a record key
 
-This method returns Record object. It contains the following properties: `country`, `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
+This method returns `SingleResponse` object. Which has one type `Record` field `record`.
+
+```
+public class SingleResponse {
+    private Record record;
+}
+```
+
+`Record` contains the following properties: `country`, `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
 
 These properties can be accessed using getters, for example:
 ```
@@ -148,7 +156,7 @@ String body = record.getBody();
 
 It is possible to search by random keys using `find` method.
 ```
-public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageException, IOException, GeneralSecurityException
+public BatchResponse find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException
 ```
 Parameters:  
 `country` - country code,  
@@ -161,7 +169,7 @@ public FindFilter(FilterStringParam key, FilterStringParam profileKey, FilterRan
 ```
 And for `FindOptions`:
 ```
-public FindOptions(int limit, int offset) throws FindOptionsException
+public FindOptions(int limit, int offset)
 ```
 
 There are two different types of filter params: `FilterStringParam` and `FilterRangeParam`.
@@ -186,8 +194,26 @@ FindFilter filter = new FindFilter(
 
 FindOptions options = new FindOptions(10, 10);
 
-BatchRecord records = storage.find("us", filter, options);
+BatchResponse records = storage.find("us", filter, options);
 ```
+This method returns `BatchResponse` object. Which has two field `batchRecord` and `meta`.
+
+```
+public class BatchResponse {
+    private BatchRecord batchRecord;
+    private Metadata meta;
+}
+```
+
+`Metadata` contains different metadata.
+
+```
+public class Metadata {
+    private int total;
+    private int count;
+}
+```
+
 This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.  
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
 
@@ -228,7 +254,7 @@ It works the same way as `find` but returns the first record or `null` if no mat
 ### Delete records
 Use `delete` method in order to delete a record from InCountry storage. It is only possible using `key` field.
 ```
-public void delete(String country, String key) throws StorageException, IOException
+public void delete(String country, String key) throws StorageServerException
 ```
 Here  
 `country` - country code of the record,

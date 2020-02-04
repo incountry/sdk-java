@@ -12,12 +12,10 @@ import com.incountry.response.BatchResponse;
 import com.incountry.response.Metadata;
 import com.incountry.response.SingleResponse;
 import org.json.JSONObject;
-import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.http.impl.HttpAgentImpl;
 
 import java.io.*;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -86,8 +84,7 @@ public class Storage {
 
     /**
      * Load endpoint from server
-     * @throws StorageServerException if server return one of client error responses
-     * @throws IOException if server connection failed
+     * @throws StorageServerException if server connection failed or server response error
      */
     private void loadCountryEndpoints() throws StorageServerException {
         String content;
@@ -123,6 +120,23 @@ public class Storage {
         if (key == null) throw new NullPointerException("Missing key");
     }
 
+    private String createUrl(String country, String recordKey) {
+        country = country.toLowerCase();
+        checkParameters(country, recordKey);
+        if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
+        return getEndpoint(country, STORAGE_URL + country + "/" + recordKey);
+    }
+
+    public void setHttpAgent(HttpAgent agent) {
+        httpAgent = agent;
+    }
+
+    /**
+     * Write data to remote storage
+     * @param record object which encapsulate data which must be written in storage
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if encryption failed
+     */
     public void write(Record record) throws StorageServerException, StorageCryptoException {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
@@ -134,21 +148,13 @@ public class Storage {
         }
     }
 
-    private String createUrl(String country, String recordKey) {
-        country = country.toLowerCase();
-        checkParameters(country, recordKey);
-        if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
-        return getEndpoint(country, STORAGE_URL + country + "/" + recordKey);
-    }
-
     /**
      * Read data from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
-     * @return record object
-     * @throws StorageException if country or recordKey is null
-     * @throws IOException if server connection failed
-     * @throws GeneralSecurityException if record decryption failed
+     * @return SingleResponse object which contains required record
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if decryption failed
      */
     public SingleResponse read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
         SingleResponse response = new SingleResponse();
@@ -167,18 +173,15 @@ public class Storage {
         response.setRecord(record);
 
         return response;
-
     }
 
     /**
      * Make batched key-rotation-migration of records
      * @param country country identifier
      * @param limit batch-limit parameter
-     * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-     * @throws StorageException if country or recordKey is null
-     * @throws FindOptionsException if limit more than 100
-     * @throws GeneralSecurityException if record encryption failed
-     * @throws IOException if server connection failed
+     * @return Metadata object which contain total records left to migrate and total amount of migrated records
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if encryption failed
      */
     public Metadata migrate(String country, int limit) throws StorageServerException, StorageCryptoException {
         if (mCrypto == null) {
@@ -201,9 +204,8 @@ public class Storage {
      * @param country country identifier
      * @param records record list
      * @return true if writing was successful
-     * @throws StorageException if country or recordKey is null
-     * @throws GeneralSecurityException if record encryption failed
-     * @throws IOException if server connection failed
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if record encryption failed
      */
     public boolean batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
         country = country.toLowerCase();
@@ -247,8 +249,7 @@ public class Storage {
      * Delete record from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
-     * @throws StorageException if country or recordKey is null
-     * @throws IOException if server connection failed
+     * @throws StorageServerException if server connection failed
      */
     public void delete(String country, String recordKey) throws StorageServerException {
         String url = createUrl(country, recordKey);
@@ -259,10 +260,15 @@ public class Storage {
         }
     }
 
-    public void setHttpAgent(HttpAgent agent) {
-        httpAgent = agent;
-    }
-
+    /**
+     * Find records in remote storage
+     * @param country country identifier
+     * @param filter object representing find filters
+     * @param options find options
+     * @return BatchResponse object which contains required records
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if decryption failed
+     */
     public BatchResponse find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
         if (country == null) throw new NullPointerException("Missing country");
         country = country.toLowerCase();
@@ -289,6 +295,15 @@ public class Storage {
         return response;
     }
 
+    /**
+     * Find one record in remote storage
+     * @param country country identifier
+     * @param filter object representing find filters
+     * @param options find options
+     * @return SingleResponse object which contains required record
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if decryption failed
+     */
     public SingleResponse findOne(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
         BatchRecord findResults =  find(country, filter, options).getBatchRecord();
         List<Record> records = findResults.getRecords();
