@@ -251,6 +251,13 @@ Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 If you need to find the first record matching filter, you can use the `findOne` method.
 It works the same way as `find` but returns the first record or `null` if no matching records.
 
+### Update one record
+If you need to update record, you can use `updateOne` method.
+```
+public SingleResponse updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException
+```
+It takes country code of the record, filters and new record object which must replace updating  record.
+
 ### Delete records
 Use `delete` method in order to delete a record from InCountry storage. It is only possible using `key` field.
 ```
