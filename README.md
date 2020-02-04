@@ -110,13 +110,13 @@ Here is how you initialize a record object:
 
 ```
 public Record(
-  String country,           // Required country code of where to store the data
-  String key,               // Required record key
-  String body,              // Optional payload
-  String profileKey,        // Optional
-  Integer rangeKey,         // Optional
-  String key2,              // Optional
-  String key3               // Optional
+    String country,           // Required country code of where to store the data
+    String key,               // Required record key
+    String body,              // Optional payload
+    String profileKey,        // Optional
+    Integer rangeKey,         // Optional
+    String key2,              // Optional
+    String key3               // Optional
 )
 ```
 #### Batches
@@ -154,12 +154,12 @@ Here is how data is transformed and stored in InCountry database:
 
 ```
 {
-	key, 		// hashed
-	body, 		// encrypted
-	profile_key,// hashed
-	range_key, 	// plain
-	key2, 		// hashed
-	key3 		// hashed
+    key, 		// hashed
+    body, 		// encrypted
+    profile_key,// hashed
+    range_key, 	// plain
+    key2, 		// hashed
+    key3 		// hashed
  }
 ```
 ### Reading stored data
@@ -248,17 +248,12 @@ int limit = records.getTotal();
 For example you can request all the records with `rangeKey` less than 1000:
 
 ```
-
 FilterRangeParam rangeParam = new FilterRangeParam("$lt", 1000);
-
 ```
 or if you want just to check equality:
 
 ```
-
-
 FilterRangeParam rangeParam = new FilterRangeParam(1000);
-
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
