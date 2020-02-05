@@ -6,4 +6,5 @@ import lombok.Data;
 public class SecretKey {
     private String secret;
     private int version;
+    private Boolean isKey;
 }

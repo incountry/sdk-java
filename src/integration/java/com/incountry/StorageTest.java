@@ -38,19 +38,21 @@ public class StorageTest {
                 return "{\n" +
                         "  \"secrets\": [\n" +
                         "    {\n" +
-                        "      \"secret\": \"123\",\n" +
-                        "      \"version\": 0\n" +
+                        "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
+                        "      \"version\": 0,\n" +
+                        "      \"isKey\": \"true\"\n" +
                         "    }\n" +
                         "  ],\n" +
                         "  \"currentVersion\": 0\n" +
                         "}";
             }
+
         });
+
         store = new Storage(
                 "envId",
                 "apiKey",
                 secretKeyAccessor
-
         );
     }
 
