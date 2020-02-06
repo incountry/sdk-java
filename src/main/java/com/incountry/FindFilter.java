@@ -52,23 +52,23 @@ public class FindFilter {
      * Add 'not' condition to parameter
      * @param param parameter to which the not condition should be added
      * @param mCrypto crypto object
-     * @param isForString is the condition mus be add sor string params
+     * @param isForString the condition must be added for string params
      * @return JSONObject with added 'not' condition
      */
     private JSONObject addNotCondition(FilterStringParam param, Crypto mCrypto, boolean isForString) {
         if (isForString) {
-            return new JSONObject(String.format("{$not: %s}", param.toStringJSON(mCrypto).toString()));
+            return new JSONObject(String.format("{$not: %s}", param.toJSONString(mCrypto).toString()));
         }
-        return new JSONObject(String.format("{$not: %s}", param.toIntJSON(mCrypto).toString()));
+        return new JSONObject(String.format("{$not: %s}", param.toJSONInt(mCrypto).toString()));
     }
 
 
     private void addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
         if (param != null) {
             if (paramName.equals(VERSION)) {
-                json.put(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : param.toIntJSON(null));
+                json.put(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : param.toJSONInt(null));
             } else {
-                json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto, true) : param.toStringJSON(mCrypto));
+                json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto, true) : param.toJSONString(mCrypto));
             }
         }
     }

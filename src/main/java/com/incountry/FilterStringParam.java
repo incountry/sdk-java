@@ -40,14 +40,14 @@ public class FilterStringParam {
         return value.stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
     }
 
-    public JSONArray toStringJSON(Crypto mCrypto) {
+    public JSONArray toJSONString(Crypto mCrypto) {
         if (value == null) return null;
         if (mCrypto == null) return new JSONArray(value);
 
         return new JSONArray(hashValue(mCrypto));
     }
 
-    public JSONArray toIntJSON(Crypto mCrypto) {
+    public JSONArray toJSONInt(Crypto mCrypto) {
         if (value == null) {
             return null;
         }
