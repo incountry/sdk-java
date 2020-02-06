@@ -14,7 +14,7 @@ Storage(
   String apiKey, 
   String endpoint, 
   boolean encrypt, 
-  ISecretKeyAccessor secretKeyAccessorImpl
+  SecretKeyAccessor secretKeyAccessor
 )
 ```
 
@@ -90,9 +90,9 @@ public Record(
 Use the `batchWrite` method to write multiple records to the storage in a single request.
 
 ```
-public boolean batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException
+public BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException
 
-// `batchWrite` returns True on success
+// `batchWrite` returns `BatchRecord` object
 ```
 
 ## Data Migration and Key Rotation support
@@ -101,7 +101,7 @@ Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rota
 
 SDK introduces `public Metadata migrate(String country, int limit) throws StorageServerException, StorageCryptoException` 
 method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
-and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
+and `limit` for precise amount of records to migrate. `migrate` returns a `Metadata` object which contains some information about the migration - the 
 amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
 version different from `currentVersion` provided by `SecretKeyAccessor`)
 
@@ -131,18 +131,12 @@ Here is how data is transformed and stored in InCountry database:
 
 Stored record can be read by `key` using `read` method.
 ```
-public SingleResponse read(String country, String key) throws StorageServerException, StorageCryptoException
+public Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException
 ```
 `country` is a country code of the record
 `key` is a record key
 
-This method returns `SingleResponse` object. Which has one type `Record` field `record`.
-
-```
-public class SingleResponse {
-    private Record record;
-}
-```
+This method returns `Record` object.
 
 `Record` contains the following properties: `country`, `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
 
@@ -156,7 +150,7 @@ String body = record.getBody();
 
 It is possible to search by random keys using `find` method.
 ```
-public BatchResponse find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException
+public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException
 ```
 Parameters:  
 `country` - country code,  
@@ -175,7 +169,7 @@ public FindOptions(int limit, int offset)
 There are two different types of filter params: `FilterStringParam` and `FilterRangeParam`.
 `FilterStringParam` is used for all the keys except `rangeKey`:
 ```
-public FilterStringParam(String[] value);
+public FilterStringParam(List<String> value);
 ```
 or
 ```
@@ -189,31 +183,13 @@ FindFilter filter = new FindFilter(
     null,
     null, 
     new FilterStringParam("kitty"),
-    new FilterStringParam(new String[]{"mew", "pur"})
+    new FilterStringParam(new ArrayList<>())
 );
 
 FindOptions options = new FindOptions(10, 10);
 
-BatchResponse records = storage.find("us", filter, options);
+BatchRecord records = storage.find("us", filter, options);
 ```
-This method returns `BatchResponse` object. Which has two field `batchRecord` and `meta`.
-
-```
-public class BatchResponse {
-    private BatchRecord batchRecord;
-    private Metadata meta;
-}
-```
-
-`Metadata` contains different metadata.
-
-```
-public class Metadata {
-    private int total;
-    private int count;
-}
-```
-
 This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.  
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
 
@@ -224,7 +200,7 @@ Note: SDK returns 100 records at most. Use pagination to iterate over all the re
     int limit;
     int offset;
     int total;
-    Record[] records;
+    List<Record> records;
 ```
 These fields can be accessed using getters, for example:
 ```
@@ -254,14 +230,14 @@ It works the same way as `find` but returns the first record or `null` if no mat
 ### Update one record
 If you need to update record, you can use `updateOne` method.
 ```
-public SingleResponse updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException
+public Record updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException
 ```
-It takes country code of the record, filters and new record object which must replace updating  record.
+It takes country code of the record, filters and new record object which must replace updating record.
 
 ### Delete records
 Use `delete` method in order to delete a record from InCountry storage. It is only possible using `key` field.
 ```
-public void delete(String country, String key) throws StorageServerException
+public boolean delete(String country, String recordKey) throws StorageServerException
 ```
 Here  
 `country` - country code of the record,

@@ -5,7 +5,6 @@ import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
-import com.incountry.response.SingleResponse;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -72,8 +71,7 @@ public class StorageTest {
 
     @Test
     public void test3Read() throws StorageServerException, StorageCryptoException {
-        SingleResponse response = store.read(country, writeRecordKey);
-        Record incomingRecord = response.getRecord();
+        Record incomingRecord = store.read(country, writeRecordKey);
         assertEquals(writeRecordKey, incomingRecord.getKey());
         assertEquals(recordBody, incomingRecord.getBody());
         assertEquals(profileKey, incomingRecord.getProfileKey());
@@ -85,7 +83,7 @@ public class StorageTest {
     public void test4Find() throws StorageServerException, StorageCryptoException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         FindOptions options = new FindOptions(100, 0);
-        BatchRecord batchRecord = store.find(country, filter, options).getBatchRecord();
+        BatchRecord batchRecord = store.find(country, filter, options);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
@@ -95,7 +93,7 @@ public class StorageTest {
     public void test5FindOne() throws GeneralSecurityException, StorageException, IOException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         FindOptions options = new FindOptions(100, 0);
-        Record d = store.findOne(country, filter, options).getRecord();
+        Record d = store.findOne(country, filter, options);
         assertEquals(writeRecordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
     }
@@ -105,11 +103,11 @@ public class StorageTest {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
-        Record incomingRecord = store.read(country, writeRecordKey).getRecord();
+        Record incomingRecord = store.read(country, writeRecordKey);
         incomingRecord.setBody(newBody);
         incomingRecord.setKey2(newKey2);
         store.updateOne(country, filter, incomingRecord);
-        Record updatedRecord = store.read(country, writeRecordKey).getRecord();
+        Record updatedRecord = store.read(country, writeRecordKey);
         assertEquals(writeRecordKey, updatedRecord.getKey());
         assertEquals(newBody, updatedRecord.getBody());
         assertEquals(newKey2, updatedRecord.getKey2());
@@ -120,8 +118,8 @@ public class StorageTest {
         store.delete(country, writeRecordKey);
         store.delete(country, batchWriteRecordKey);
         // Cannot read deleted record
-        Record writeMethodRecord = store.read(country, writeRecordKey).getRecord();
-        Record batchWriteMethodRecord = store.read(country, batchWriteRecordKey).getRecord();
+        Record writeMethodRecord = store.read(country, writeRecordKey);
+        Record batchWriteMethodRecord = store.read(country, batchWriteRecordKey);
         assertEquals(null, writeMethodRecord);
         assertEquals(null, batchWriteMethodRecord);
 

@@ -1,4 +1,4 @@
-package com.incountry.response;
+package com.incountry;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,8 +6,6 @@ import lombok.Setter;
 @Setter
 @Getter
 public class Metadata {
-    private int total;
-    private int count;
     private int migrated;
     private int totalLeft;
 }

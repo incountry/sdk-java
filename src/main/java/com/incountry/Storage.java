@@ -8,9 +8,6 @@ import com.incountry.crypto.impl.CryptoImpl;
 import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.http.HttpAgent;
 import com.incountry.keyaccessor.SecretKeyAccessor;
-import com.incountry.response.BatchResponse;
-import com.incountry.response.Metadata;
-import com.incountry.response.SingleResponse;
 import org.json.JSONObject;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.http.impl.HttpAgentImpl;
@@ -134,10 +131,11 @@ public class Storage {
     /**
      * Write data to remote storage
      * @param record object which encapsulate data which must be written in storage
+     * @return recorded record
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    public void write(Record record) throws StorageServerException, StorageCryptoException {
+    public Record write(Record record) throws StorageServerException, StorageCryptoException {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/"+country);
@@ -146,18 +144,18 @@ public class Storage {
         } catch (IOException e) {
             throw new StorageServerException("Server request error", e);
         }
+        return new Record();
     }
 
     /**
      * Read data from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
-     * @return SingleResponse object which contains required record
+     * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public SingleResponse read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
-        SingleResponse response = new SingleResponse();
+    public Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
         String url = createUrl(country, recordKey);
         String content;
         try {
@@ -166,13 +164,12 @@ public class Storage {
             throw new StorageServerException("Server request error", e);
         }
         if (content == null) {
-            return response;
+            return null;
         }
         Record record = Record.fromString(content,  mCrypto);
         record.setCountry(country);
-        response.setRecord(record);
 
-        return response;
+        return record;
     }
 
     /**
@@ -190,7 +187,7 @@ public class Storage {
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
-        BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0)).getBatchRecord();
+        BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
         Metadata metadata = new Metadata();
         metadata.setMigrated(batchRecord.getCount());
@@ -203,11 +200,11 @@ public class Storage {
      * Write multiple records at once in remote storage
      * @param country country identifier
      * @param records record list
-     * @return true if writing was successful
+     * @return BatchRecord object which contains list of recorded records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if record encryption failed
      */
-    public boolean batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
+    public BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
         country = country.toLowerCase();
         List<JsonObject> recordsStrings = new ArrayList<>();
         for (Record record : records) {
@@ -221,12 +218,12 @@ public class Storage {
             throw new StorageServerException("Server request error", e);
         }
 
-        return true;
+        return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0);
     }
 
-    public SingleResponse updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {
+    public Record updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {
     	FindOptions options = new FindOptions(1, 0);
-    	BatchRecord existingRecords = find(country, filter, options).getBatchRecord() ;
+        BatchRecord existingRecords = find(country, filter, options);
 
     	if (existingRecords.getTotal() > 1) {
     		throw new StorageServerException("Multiple records found");
@@ -235,29 +232,30 @@ public class Storage {
     		throw new StorageServerException("Record not found");
     	}
 
-    	Record foundRecord = existingRecords.getRecords().get(0);
+        Record foundRecord = existingRecords.getRecords().get(0);
 
-    	Record updatedRecord = Record.merge(foundRecord, record);
+        Record updatedRecord = Record.merge(foundRecord, record);
 
-    	write(updatedRecord);
-        SingleResponse response = new SingleResponse();
-        response.setRecord(updatedRecord);
-    	return response;
+        write(updatedRecord);
+
+        return updatedRecord;
     }
 
     /**
      * Delete record from remote storage
      * @param country country identifier
      * @param recordKey record unique identifier
+     * @return true if delete was successful
      * @throws StorageServerException if server connection failed
      */
-    public void delete(String country, String recordKey) throws StorageServerException {
+    public boolean delete(String country, String recordKey) throws StorageServerException {
         String url = createUrl(country, recordKey);
         try {
             httpAgent.request(url, "DELETE", null, false);
         } catch (IOException e) {
             throw new StorageServerException("Server request error", e);
         }
+        return true;
     }
 
     /**
@@ -265,11 +263,11 @@ public class Storage {
      * @param country country identifier
      * @param filter object representing find filters
      * @param options find options
-     * @return BatchResponse object which contains required records
+     * @return BatchRecord object which contains required records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public BatchResponse find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
+    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
         if (country == null) throw new NullPointerException("Missing country");
         country = country.toLowerCase();
         String url = getEndpoint(country, STORAGE_URL + country + "/find");
@@ -279,7 +277,6 @@ public class Storage {
             .put("options", options.toJSONObject())
             .toString();
 
-        BatchResponse response = new BatchResponse();
         String content;
 
         try {
@@ -289,10 +286,9 @@ public class Storage {
         }
 
         if (content == null) {
-            return response;
+            return null;
         }
-        response.setBatchRecord(BatchRecord.fromString(content, mCrypto));
-        return response;
+        return BatchRecord.fromString(content, mCrypto);
     }
 
     /**
@@ -300,20 +296,18 @@ public class Storage {
      * @param country country identifier
      * @param filter object representing find filters
      * @param options find options
-     * @return SingleResponse object which contains required record
+     * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public SingleResponse findOne(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
-        BatchRecord findResults =  find(country, filter, options).getBatchRecord();
+    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
+        BatchRecord findResults = find(country, filter, options);
         List<Record> records = findResults.getRecords();
 
     	if (records.isEmpty()) {
     		return null;
     	}
-    	SingleResponse response = new SingleResponse();
-    	response.setRecord(records.get(0));
-    	return response;
+    	return records.get(0);
     }
 
 }

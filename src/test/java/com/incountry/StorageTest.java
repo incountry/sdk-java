@@ -8,8 +8,6 @@ import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
-import com.incountry.response.Metadata;
-import com.incountry.response.SingleResponse;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,8 +122,7 @@ public class StorageTest {
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             FakeHttpAgent agent = new FakeHttpAgent(record.toJsonString(crypto));
             storage.setHttpAgent(agent);
-            SingleResponse response = storage.read(country, key);
-            Record incomingRecord = response.getRecord();
+            Record incomingRecord = storage.read(country, key);
             assertEquals(key, incomingRecord.getKey());
             assertEquals(body, incomingRecord.getBody());
             assertEquals(profileKey, incomingRecord.getProfileKey());
@@ -240,7 +237,7 @@ public class StorageTest {
             FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
 
-            BatchRecord batchRecord = storage.find(country, filter, options).getBatchRecord();
+            BatchRecord batchRecord = storage.find(country, filter, options);
 
             String callBody = agent.getCallBody();
             assertEquals("{\"filter\":{\"profile_key\":[\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
