@@ -21,6 +21,7 @@ public class Storage {
     private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
+    private static final String SERVER_ERROR_MESSAGE = "Server request error";
 
     class POP {
         String host;
@@ -88,7 +89,7 @@ public class Storage {
         try {
            content = httpAgent.request(PORTALBACKEND_URI + "/countries", "GET", null, false);
         } catch (IOException e) {
-            throw new StorageServerException("Server request error", e);
+            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
 
         GsonBuilder builder = new GsonBuilder();
@@ -142,7 +143,7 @@ public class Storage {
         try {
             httpAgent.request(url, "POST", record.toJsonString(mCrypto), false);
         } catch (IOException e) {
-            throw new StorageServerException("Server request error", e);
+            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
         return new Record();
     }
@@ -161,7 +162,7 @@ public class Storage {
         try {
             content = httpAgent.request(url, "GET", null, true);
         } catch (IOException e) {
-            throw new StorageServerException("Server request error", e);
+            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
         if (content == null) {
             return null;
@@ -215,7 +216,7 @@ public class Storage {
         try {
             httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
         } catch (IOException e) {
-            throw new StorageServerException("Server request error", e);
+            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
 
         return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0);
@@ -253,7 +254,7 @@ public class Storage {
         try {
             httpAgent.request(url, "DELETE", null, false);
         } catch (IOException e) {
-            throw new StorageServerException("Server request error", e);
+            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
         return true;
     }
@@ -282,7 +283,7 @@ public class Storage {
         try {
             content = httpAgent.request(url, "POST", postData, false);
         } catch (IOException e) {
-            throw new StorageServerException("Server request error", e);
+            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
 
         if (content == null) {

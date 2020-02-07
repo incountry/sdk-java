@@ -27,7 +27,6 @@ public class CryptoUtils {
         return trongPasswordHash;
     }
 
-//    public static byte[] generateSalt(int length) throws NoSuchAlgorithmException {
     public static byte[] generateSalt(int length) throws StorageCryptoException {
         SecureRandom sr;
         try {
