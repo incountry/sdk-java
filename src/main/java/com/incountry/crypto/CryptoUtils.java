@@ -9,9 +9,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 
 public class CryptoUtils {
-    private CryptoUtils() {
-        throw new IllegalStateException("Utility class");
-    }
+    private CryptoUtils() {}
 
     public static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
         char[] chars = password.toCharArray();

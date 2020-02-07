@@ -8,6 +8,8 @@ import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
+import com.incountry.keyaccessor.key.SecretKey;
+import com.incountry.keyaccessor.key.SecretKeysData;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,32 +57,59 @@ public class StorageTest {
                 {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithString()},
                 {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithString()},
                 {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGenerator()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGenerator()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
             });
         }
 
         private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
-            return SecretKeyAccessor.getAccessor("password");
+            return SecretKeyAccessor.getAccessor("passwordpasswordpasswordpassword");
         }
 
-        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGenerator() {
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue() {
             return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
                 @Override
                 public String generate() {
                     return "{\n" +
                             "  \"secrets\": [\n" +
                             "    {\n" +
-                            "      \"secret\": \"123\",\n" +
-                            "      \"version\": 0\n" +
+                            "      \"secret\": \"passwordpasswordpasswordpassword\",\n" +
+                            "      \"version\": 0,\n" +
+                            "      \"isKey\": \"true\"\n" +
                             "    }\n" +
                             "  ],\n" +
                             "  \"currentVersion\": 0\n" +
                             "}";
+                }
+            });
+        }
+
+        private static SecretKeyAccessor initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse() {
+            return SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
+                @Override
+                public SecretKeysData generate() {
+                    SecretKey secretKey = new SecretKey();
+                    secretKey.setSecret("vsdvepcbsrwokvhgaqundycksywixhtq");
+                    secretKey.setVersion(0);
+                    secretKey.setIsKey(false);
+
+                    List<SecretKey> secretKeyList = new ArrayList<>();
+                    secretKeyList.add(secretKey);
+
+                    SecretKeysData secretKeysData = new SecretKeysData();
+                    secretKeysData.setSecrets(secretKeyList);
+                    secretKeysData.setCurrentVersion(0);
+                    return secretKeysData;
                 }
             });
         }
