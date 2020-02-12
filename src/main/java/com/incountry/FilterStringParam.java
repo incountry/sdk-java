@@ -1,6 +1,6 @@
 package com.incountry;
 
-import com.incountry.crypto.impl.Crypto;
+import com.incountry.crypto.Crypto;
 import lombok.Getter;
 import org.json.JSONArray;
 

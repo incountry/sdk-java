@@ -1,7 +1,8 @@
 package com.incountry;
 
-import com.incountry.exceptions.FindOptionsException;
+import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.exceptions.StorageException;
+import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
 import org.junit.Before;
@@ -54,43 +55,44 @@ public class StorageTest {
                 "apiKey",
                 secretKeyAccessor
         );
+
     }
 
     @Test
-    public void test1BatchWrite() throws GeneralSecurityException, StorageException, IOException {
+    public void test1BatchWrite() throws StorageServerException, StorageCryptoException {
         List<Record> records = new ArrayList<>();
         records.add(new Record(country, batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
         store.batchWrite(country, records);
     }
 
     @Test
-    public void test2Write() throws GeneralSecurityException, IOException, StorageException {
+    public void test2Write() throws StorageServerException, StorageCryptoException {
         Record record = new Record(country, writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
         store.write(record);
     }
 
     @Test
-    public void test3Read() throws GeneralSecurityException, IOException, StorageException {
-        Record d = store.read(country, writeRecordKey);
-        assertEquals(writeRecordKey, d.getKey());
-        assertEquals(recordBody, d.getBody());
-        assertEquals(profileKey, d.getProfileKey());
-        assertEquals(key2, d.getKey2());
-        assertEquals(key3, d.getKey3());
+    public void test3Read() throws StorageServerException, StorageCryptoException {
+        Record incomingRecord = store.read(country, writeRecordKey);
+        assertEquals(writeRecordKey, incomingRecord.getKey());
+        assertEquals(recordBody, incomingRecord.getBody());
+        assertEquals(profileKey, incomingRecord.getProfileKey());
+        assertEquals(key2, incomingRecord.getKey2());
+        assertEquals(key3, incomingRecord.getKey3());
     }
 
     @Test
-    public void test4Find() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+    public void test4Find() throws StorageServerException, StorageCryptoException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         FindOptions options = new FindOptions(100, 0);
-        BatchRecord d = store.find(country, filter, options);
-        assertEquals(1, d.getCount());
-        assertEquals(1, d.getRecords().size());
-        assertEquals(writeRecordKey, d.getRecords().get(0).getKey());
+        BatchRecord batchRecord = store.find(country, filter, options);
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(1, batchRecord.getRecords().size());
+        assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
     }
 
     @Test
-    public void test5FindOne() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+    public void test5FindOne() throws GeneralSecurityException, StorageException, IOException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         FindOptions options = new FindOptions(100, 0);
         Record d = store.findOne(country, filter, options);
@@ -99,22 +101,22 @@ public class StorageTest {
     }
 
     @Test
-    public void test6UpdateOne() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+    public void test6UpdateOne() throws StorageServerException, StorageCryptoException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
-        Record current = store.read(country, writeRecordKey);
-        current.setBody(newBody);
-        current.setKey2(newKey2);
-        store.updateOne(country, filter, current);
-        Record updated = store.read(country, writeRecordKey);
-        assertEquals(writeRecordKey, updated.getKey());
-        assertEquals(newBody, updated.getBody());
-        assertEquals(newKey2, updated.getKey2());
+        Record incomingRecord = store.read(country, writeRecordKey);
+        incomingRecord.setBody(newBody);
+        incomingRecord.setKey2(newKey2);
+        store.updateOne(country, filter, incomingRecord);
+        Record updatedRecord = store.read(country, writeRecordKey);
+        assertEquals(writeRecordKey, updatedRecord.getKey());
+        assertEquals(newBody, updatedRecord.getBody());
+        assertEquals(newKey2, updatedRecord.getKey2());
     }
 
     @Test
-    public void test7Delete() throws GeneralSecurityException, IOException, StorageException {
+    public void test7Delete() throws StorageServerException, StorageCryptoException {
         store.delete(country, writeRecordKey);
         store.delete(country, batchWriteRecordKey);
         // Cannot read deleted record
@@ -122,5 +124,6 @@ public class StorageTest {
         Record batchWriteMethodRecord = store.read(country, batchWriteRecordKey);
         assertEquals(null, writeMethodRecord);
         assertEquals(null, batchWriteMethodRecord);
+
     }
 }

@@ -1,7 +1,7 @@
 package com.incountry.http.impl;
 
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.IHttpAgent;
+import com.incountry.http.HttpAgent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,11 +10,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class HttpAgent implements IHttpAgent {
+public class HttpAgentImpl implements HttpAgent {
     private String apiKey;
     private String environmentId;
 
-    public HttpAgent(String apiKey, String environmentId) {
+    public HttpAgentImpl(String apiKey, String environmentId) {
         this.apiKey = apiKey;
         this.environmentId = environmentId;
     }

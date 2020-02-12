@@ -1,7 +1,12 @@
 package com.incountry.exceptions;
 
 public class StorageException extends Exception {
-    StorageException(String s){
+    public StorageException(String s){
         super(s);
     }
+
+    public StorageException(String s, Throwable cause) {
+        super(s, cause);
+    }
+
 }
