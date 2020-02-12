@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class Metadata {
+public class MigrateResult {
     private int migrated;
     private int totalLeft;
 }

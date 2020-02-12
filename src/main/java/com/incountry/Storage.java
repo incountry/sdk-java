@@ -177,11 +177,11 @@ public class Storage {
      * Make batched key-rotation-migration of records
      * @param country country identifier
      * @param limit batch-limit parameter
-     * @return Metadata object which contain total records left to migrate and total amount of migrated records
+     * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    public Metadata migrate(String country, int limit) throws StorageServerException, StorageCryptoException {
+    public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException {
         if (mCrypto == null) {
             throw new NullPointerException("Migration is not supported when encryption is off");
         }
@@ -190,11 +190,11 @@ public class Storage {
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
         BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
-        Metadata metadata = new Metadata();
-        metadata.setMigrated(batchRecord.getCount());
-        metadata.setTotalLeft(batchRecord.getTotal() - batchRecord.getCount());
+        MigrateResult migrateResult = new MigrateResult();
+        migrateResult.setMigrated(batchRecord.getCount());
+        migrateResult.setTotalLeft(batchRecord.getTotal() - batchRecord.getCount());
 
-        return metadata;
+        return migrateResult;
     }
 
     /**

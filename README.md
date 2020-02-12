@@ -133,14 +133,14 @@ public BatchRecord batchWrite(String country, List<Record> records) throws Stora
 
 Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rotation and data migration support.
 
-SDK introduces `public Metadata migrate(String country, int limit) throws StorageServerException, StorageCryptoException` 
+SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException` 
 method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
-and `limit` for precise amount of records to migrate. `migrate` returns a `Metadata` object which contains some information about the migration - the 
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
 amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
 version different from `currentVersion` provided by `SecretKeyAccessor`)
 
 ```
-public class Metadata {
+public class MigrateResult {
     private int migrated;
     private int totalLeft;
 }

@@ -249,7 +249,7 @@ public class StorageTest {
 
             int migratedRecords = batchRecord.getCount();
             int totalLeft =  batchRecord.getTotal() - batchRecord.getCount();
-            Metadata migrateResult = storage.migrate("us", 2);
+            MigrateResult migrateResult = storage.migrate("us", 2);
             assertEquals(migratedRecords, migrateResult.getMigrated());
             assertEquals(totalLeft, migrateResult.getTotalLeft());
         }
