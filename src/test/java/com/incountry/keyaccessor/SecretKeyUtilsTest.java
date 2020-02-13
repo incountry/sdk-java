@@ -27,7 +27,7 @@ public class SecretKeyUtilsTest {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(version);
-        secretKey.setIsKey(true);
+        secretKey.setIsKey(isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         secretKeysData.setSecrets(secretKeyList);
