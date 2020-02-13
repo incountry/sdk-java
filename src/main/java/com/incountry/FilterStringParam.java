@@ -1,6 +1,6 @@
 package com.incountry;
 
-import com.incountry.crypto.impl.Crypto;
+import com.incountry.crypto.Crypto;
 import lombok.Getter;
 import org.json.JSONArray;
 
@@ -40,10 +40,21 @@ public class FilterStringParam {
         return value.stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
     }
 
-    public JSONArray toJSON(Crypto mCrypto) {
+    public JSONArray toJSONString(Crypto mCrypto) {
         if (value == null) return null;
         if (mCrypto == null) return new JSONArray(value);
 
         return new JSONArray(hashValue(mCrypto));
     }
+
+    public JSONArray toJSONInt(Crypto mCrypto) {
+        if (value == null) {
+            return null;
+        }
+        if (mCrypto == null) {
+            return new JSONArray(value.stream().map(Integer::parseInt).collect(Collectors.toList()));
+        }
+        return new JSONArray(hashValue(mCrypto).stream().map(Integer::parseInt).collect(Collectors.toList()));
+    }
+
 }

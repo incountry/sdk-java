@@ -5,15 +5,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
-import com.incountry.crypto.impl.Crypto;
-import com.incountry.exceptions.StorageDecryptionException;
+import com.incountry.crypto.Crypto;
+import com.incountry.exceptions.StorageCryptoException;
 import lombok.Getter;
 import lombok.Setter;
 import org.javatuples.Pair;
 
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,9 +110,9 @@ public class Record {
      * @param jsonString json string
      * @param mCrypto crypto object
      * @return record objects with data from json
-     * @throws GeneralSecurityException if decryption failed
+     * @throws StorageCryptoException if decryption failed
      */
-    public static Record fromString(String jsonString, Crypto mCrypto) throws GeneralSecurityException, StorageDecryptionException {
+    public static Record fromString(String jsonString, Crypto mCrypto) throws StorageCryptoException {
         JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
 
         String key = getPropertyFromJson(jsonObject, P_KEY);
@@ -150,7 +148,7 @@ public class Record {
     }
 
 
-    public JsonObject toJsonObject(Crypto mCrypto) throws GeneralSecurityException, IOException {
+    public JsonObject toJsonObject(Crypto mCrypto) throws StorageCryptoException {
 
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
@@ -183,7 +181,7 @@ public class Record {
         return recordJson;
     }
 
-    public String toJsonString(Crypto mCrypto) throws GeneralSecurityException, IOException {
+    public String toJsonString(Crypto mCrypto) throws StorageCryptoException {
         return toJsonObject(mCrypto).toString();
     }
 

@@ -1,10 +1,10 @@
 package com.incountry;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
+@Setter
 @Getter
-@AllArgsConstructor
 public class MigrateResult {
     private int migrated;
     private int totalLeft;

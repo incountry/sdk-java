@@ -2,9 +2,9 @@ package com.incountry;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import com.incountry.crypto.impl.Crypto;
-import com.incountry.exceptions.FindOptionsException;
-import com.incountry.exceptions.StorageException;
+import com.incountry.crypto.Crypto;
+import com.incountry.crypto.impl.CryptoImpl;
+import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
@@ -17,9 +17,8 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -116,7 +115,7 @@ public class StorageTest {
         }
 
         @Before
-        public void initializeStorage() throws IOException, StorageServerException {
+        public void initializeStorage() throws StorageServerException {
             storage = new Storage(
                     "envId",
                     "apiKey",
@@ -124,12 +123,12 @@ public class StorageTest {
 
             );
 
-            crypto = new Crypto(secretKeyAccessor.getKey(), "envId");
+            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
 
         }
 
         @Test
-        public void writeTest() throws GeneralSecurityException, StorageException, IOException {
+        public void writeTest() throws StorageServerException, StorageCryptoException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
@@ -148,22 +147,22 @@ public class StorageTest {
         }
 
         @Test
-        public void readTest() throws GeneralSecurityException, IOException, StorageException {
+        public void readTest() throws StorageServerException, StorageCryptoException {
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             FakeHttpAgent agent = new FakeHttpAgent(record.toJsonString(crypto));
             storage.setHttpAgent(agent);
-            Record fetched = storage.read(country, key);
-            assertEquals(key, fetched.getKey());
-            assertEquals(body, fetched.getBody());
-            assertEquals(profileKey, fetched.getProfileKey());
-            assertEquals(key2, fetched.getKey2());
-            assertEquals(key3, fetched.getKey3());
-            assertEquals(rangeKey, fetched.getRangeKey());
+            Record incomingRecord = storage.read(country, key);
+            assertEquals(key, incomingRecord.getKey());
+            assertEquals(body, incomingRecord.getBody());
+            assertEquals(profileKey, incomingRecord.getProfileKey());
+            assertEquals(key2, incomingRecord.getKey2());
+            assertEquals(key3, incomingRecord.getKey3());
+            assertEquals(rangeKey, incomingRecord.getRangeKey());
         }
 
 
         @Test
-        public void deleteTest() throws GeneralSecurityException, StorageException, IOException {
+        public void deleteTest() throws StorageServerException, MalformedURLException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             storage.delete(country, key);
@@ -177,7 +176,7 @@ public class StorageTest {
         }
 
         @Test
-        public void batchWriteTest() throws StorageException, GeneralSecurityException, IOException {
+        public void batchWriteTest() throws StorageServerException, StorageCryptoException {
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             List<Record> records = new ArrayList<>();
@@ -202,10 +201,9 @@ public class StorageTest {
     }
 
     public static class StorageSingleTests {
-        Storage storage;
-        Crypto crypto;
+        private Storage storage;
+        private Crypto crypto;
 
-        private Storage store;
         private String country = "US";
         private String recordKey = "some_key";
         private String profileKey = "profileKey";
@@ -215,7 +213,7 @@ public class StorageTest {
         private String recordBody = "{\"name\":\"last\"}";
 
         @Before
-        public void initializeStorage() throws IOException, StorageServerException {
+        public void initializeStorage() throws StorageServerException {
             SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
                 @Override
                 public String generate() {
@@ -237,11 +235,11 @@ public class StorageTest {
 
             );
 
-            crypto = new Crypto(secretKeyAccessor.getKey(), "envId");
+            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
         }
 
         @Test
-        public void migrateTest() throws StorageException, GeneralSecurityException, IOException, FindOptionsException {
+        public void migrateTest() throws StorageServerException, StorageCryptoException {
             Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
             String encrypted = rec.toJsonString(crypto);
             String content = "{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
@@ -257,7 +255,7 @@ public class StorageTest {
         }
 
         @Test
-        public void findTest() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+        public void findTest() throws StorageServerException, StorageCryptoException {
             FindOptions options = new FindOptions(1,0);
             FindFilter filter = new FindFilter();
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
@@ -268,15 +266,15 @@ public class StorageTest {
             FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
 
-            BatchRecord d = storage.find(country, filter, options);
+            BatchRecord batchRecord = storage.find(country, filter, options);
 
             String callBody = agent.getCallBody();
             assertEquals("{\"filter\":{\"profile_key\":[\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
 
-            assertEquals(1, d.getCount());
-            assertEquals(1, d.getRecords().size());
-            assertEquals(recordKey, d.getRecords().get(0).getKey());
-            assertEquals(recordBody, d.getRecords().get(0).getBody());
+            assertEquals(1, batchRecord.getCount());
+            assertEquals(1, batchRecord.getRecords().size());
+            assertEquals(recordKey, batchRecord.getRecords().get(0).getKey());
+            assertEquals(recordBody, batchRecord.getRecords().get(0).getBody());
         }
     }
 }

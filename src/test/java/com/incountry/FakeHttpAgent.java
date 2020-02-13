@@ -1,11 +1,11 @@
 package com.incountry;
 
 import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.IHttpAgent;
+import com.incountry.http.HttpAgent;
 
 import java.io.IOException;
 
-public class FakeHttpAgent implements IHttpAgent {
+public class FakeHttpAgent implements HttpAgent {
     private String response;
     private String callEndpoint;
     private String callBody;
