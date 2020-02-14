@@ -72,7 +72,6 @@ public class CryptoImpl implements Crypto {
             outputStream.write(iv);
             outputStream.write(encrypted);
             res = outputStream.toByteArray();
-
         } catch (IOException e) {
             throw new StorageCryptoException("Data encryption error", e);
         }

@@ -183,16 +183,14 @@ public class Storage {
      */
     public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException {
         if (mCrypto == null) {
-            throw new NullPointerException("Migration is not supported when encryption is off");
+            throw new StorageCryptoException("Migration is not supported when encryption is off");
         }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
         BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
-        MigrateResult migrateResult = new MigrateResult();
-        migrateResult.setMigrated(batchRecord.getCount());
-        migrateResult.setTotalLeft(batchRecord.getTotal() - batchRecord.getCount());
+        MigrateResult migrateResult = new MigrateResult(batchRecord.getCount(),batchRecord.getTotal() - batchRecord.getCount());
 
         return migrateResult;
     }
@@ -219,7 +217,7 @@ public class Storage {
             throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
 
-        return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0);
+        return new BatchRecord(records, 0, 0, 0, 0);
     }
 
     public Record updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {
@@ -269,7 +267,7 @@ public class Storage {
      * @throws StorageCryptoException if decryption failed
      */
     public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
-        if (country == null) throw new NullPointerException("Missing country");
+        if (country == null) throw new NullPointerException("Country cannot be null");
         country = country.toLowerCase();
         String url = getEndpoint(country, STORAGE_URL + country + "/find");
 
