@@ -66,17 +66,17 @@ public class CryptoImpl implements Crypto {
             throw new StorageCryptoException(ENCRYPTION_ALGORITHM + " algorithm exception", e);
         }
 
-        byte[] res = {};
+        byte[] resultByteArray = {};
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(salt);
             outputStream.write(iv);
             outputStream.write(encrypted);
-            res = outputStream.toByteArray();
+            resultByteArray = outputStream.toByteArray();
         } catch (IOException e) {
             throw new StorageCryptoException("Data encryption error", e);
         }
 
-        byte[] encoded = Base64.getEncoder().encode(res);
+        byte[] encoded = Base64.getEncoder().encode(resultByteArray);
 
         return new Pair<>(VERSION + ":" + new String(encoded), secretKeyObj.getVersion());
     }

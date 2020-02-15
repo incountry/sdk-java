@@ -267,7 +267,7 @@ public class Storage {
      * @throws StorageCryptoException if decryption failed
      */
     public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
-        if (country == null) throw new NullPointerException("Country cannot be null");
+        if (country == null) throw new IllegalArgumentException("Country cannot be null");
         country = country.toLowerCase();
         String url = getEndpoint(country, STORAGE_URL + country + "/find");
 
