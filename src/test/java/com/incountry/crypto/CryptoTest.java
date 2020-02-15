@@ -5,8 +5,8 @@ import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.keyaccessor.key.SecretKey;
 import com.incountry.keyaccessor.key.SecretKeysData;
 import org.javatuples.Pair;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
@@ -19,7 +19,7 @@ public class CryptoTest {
     private String secret;
     private Integer keyVersion;
 
-    @Before
+    @BeforeEach
     public void init() {
         secret = "password";
         keyVersion = 0;

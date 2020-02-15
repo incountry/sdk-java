@@ -60,8 +60,14 @@ repositories {
     mavenCentral()
 }
 
+test {
+    useJUnitPlatform()
+}
+
 dependencies {
-    testCompile "junit:junit:${junitVersion}"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.6.0'
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
