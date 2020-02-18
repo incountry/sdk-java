@@ -8,5 +8,4 @@ public class StorageException extends Exception {
     public StorageException(String s, Throwable cause) {
         super(s, cause);
     }
-
 }

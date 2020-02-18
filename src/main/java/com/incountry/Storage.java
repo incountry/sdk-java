@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Storage {
-    private static final String PORTALBACKEND_URI = "https://portal-backend.incountry.com";
+    private static final String PORTAL_BACKEND_URI = "https://portal-backend.incountry.com";
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
     private static final String SERVER_ERROR_MESSAGE = "Server request error";
@@ -87,9 +87,9 @@ public class Storage {
     private void loadCountryEndpoints() throws StorageServerException {
         String content;
         try {
-           content = httpAgent.request(PORTALBACKEND_URI + "/countries", "GET", null, false);
+           content = httpAgent.request(PORTAL_BACKEND_URI + "/countries", "GET", null, false);
         } catch (IOException e) {
-            throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
+            throw new StorageServerException("Unable to retrieve available countries list", e);
         }
 
         GsonBuilder builder = new GsonBuilder();
@@ -114,8 +114,8 @@ public class Storage {
     }
 
     private void checkParameters(String country, String key) {
-        if (country == null) throw new NullPointerException("Missing country");
-        if (key == null) throw new NullPointerException("Missing key");
+        if (country == null) throw new IllegalArgumentException("Country cannot be null");
+        if (key == null) throw new IllegalArgumentException("Key cannot be null");
     }
 
     private String createUrl(String country, String recordKey) {
@@ -145,7 +145,7 @@ public class Storage {
         } catch (IOException e) {
             throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
-        return new Record();
+        return record;
     }
 
     /**
@@ -308,5 +308,4 @@ public class Storage {
     	}
     	return records.get(0);
     }
-
 }

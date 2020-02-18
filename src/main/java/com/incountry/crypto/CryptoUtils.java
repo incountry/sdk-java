@@ -27,15 +27,10 @@ public class CryptoUtils {
         return strongPasswordHash;
     }
 
-    public static byte[] generateSalt(int length) throws StorageCryptoException {
-        SecureRandom sr;
-        try {
-            sr = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e) {
-            throw new StorageCryptoException("Unable to generate salt for encryption - cannot find SHA1PRNG algorithm. Please, check your JVM configuration", e);
-        }
+    public static byte[] generateRandomBytes(int length) {
+        SecureRandom randomSecureRandom = new SecureRandom();
         byte[] salt = new byte[length];
-        sr.nextBytes(salt);
+        randomSecureRandom.nextBytes(salt);
         return salt;
     }
 }

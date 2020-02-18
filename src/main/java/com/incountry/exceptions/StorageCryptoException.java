@@ -9,5 +9,4 @@ public class StorageCryptoException extends StorageException {
     public StorageCryptoException(String s, Throwable cause) {
         super(s, cause);
     }
-
 }

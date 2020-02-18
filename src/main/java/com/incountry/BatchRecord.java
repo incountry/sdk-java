@@ -28,7 +28,6 @@ public class BatchRecord {
     }
 
     public static BatchRecord fromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
-
         JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
 
         JsonObject meta = (JsonObject) responseObject.get("meta");
