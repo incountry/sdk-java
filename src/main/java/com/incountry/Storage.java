@@ -190,9 +190,8 @@ public class Storage {
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
         BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
-        MigrateResult migrateResult = new MigrateResult(batchRecord.getCount(),batchRecord.getTotal() - batchRecord.getCount());
-
-        return migrateResult;
+        
+        return new MigrateResult(batchRecord.getCount(),batchRecord.getTotal() - batchRecord.getCount());
     }
 
     /**
