@@ -5,6 +5,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.incountry.crypto.Crypto;
 import com.incountry.crypto.impl.CryptoImpl;
 import com.incountry.exceptions.StorageCryptoException;
+import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
@@ -239,7 +240,7 @@ public class StorageTest {
         }
 
         @Test
-        public void migrateTest() throws StorageServerException, StorageCryptoException {
+        public void migrateTest() throws StorageException {
             Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
             String encrypted = rec.toJsonString(crypto);
             String content = "{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
