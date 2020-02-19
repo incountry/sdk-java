@@ -29,8 +29,8 @@ public class CryptoUtils {
 
     public static byte[] generateRandomBytes(int length) {
         SecureRandom randomSecureRandom = new SecureRandom();
-        byte[] salt = new byte[length];
-        randomSecureRandom.nextBytes(salt);
-        return salt;
+        byte[] randomBytes = new byte[length];
+        randomSecureRandom.nextBytes(randomBytes);
+        return randomBytes;
     }
 }

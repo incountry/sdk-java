@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.incountry.crypto.Crypto;
 import com.incountry.crypto.impl.CryptoImpl;
 import com.incountry.exceptions.StorageCryptoException;
+import com.incountry.exceptions.StorageException;
 import com.incountry.http.HttpAgent;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import org.json.JSONObject;
@@ -181,9 +182,9 @@ public class Storage {
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException {
+    public MigrateResult migrate(String country, int limit) throws StorageException {
         if (mCrypto == null) {
-            throw new StorageCryptoException("Migration is not supported when encryption is off");
+            throw new StorageException("Migration is not supported when encryption is off");
         }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
