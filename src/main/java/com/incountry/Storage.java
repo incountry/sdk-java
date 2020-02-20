@@ -179,8 +179,7 @@ public class Storage {
      * @param country country identifier
      * @param limit batch-limit parameter
      * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-     * @throws StorageServerException if server connection failed or server response error
-     * @throws StorageCryptoException if encryption failed
+     * @throws StorageException if encryption is off/failed, if server connection failed or server response error
      */
     public MigrateResult migrate(String country, int limit) throws StorageException {
         if (mCrypto == null) {
