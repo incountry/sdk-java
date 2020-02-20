@@ -14,28 +14,23 @@ public class CryptoUtils {
     public static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
         char[] chars = password.toCharArray();
         PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
-        byte[] trongPasswordHash = {};
+        byte[] strongPasswordHash = {};
         try {
             SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-            trongPasswordHash = skf.generateSecret(spec).getEncoded();
+            strongPasswordHash = skf.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException e) {
-            throw new StorageCryptoException("PBKDF2WithHmacSHA512 security algorithm exception", e);
+            throw new StorageCryptoException("Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration", e);
         } catch (InvalidKeySpecException e) {
             throw new StorageCryptoException("Secret generation exception", e);
         }
 
-        return trongPasswordHash;
+        return strongPasswordHash;
     }
 
-    public static byte[] generateSalt(int length) throws StorageCryptoException {
-        SecureRandom sr;
-        try {
-            sr = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e) {
-            throw new StorageCryptoException("SHA1PRNG security algorithm exception", e);
-        }
-        byte[] salt = new byte[length];
-        sr.nextBytes(salt);
-        return salt;
+    public static byte[] generateRandomBytes(int length) {
+        SecureRandom randomSecureRandom = new SecureRandom();
+        byte[] randomBytes = new byte[length];
+        randomSecureRandom.nextBytes(randomBytes);
+        return randomBytes;
     }
 }

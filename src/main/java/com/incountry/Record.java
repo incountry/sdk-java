@@ -147,7 +147,6 @@ public class Record {
         return new Record(null, key, body, profileKey, rangeKey, key2, key3);
     }
 
-
     public JsonObject toJsonObject(Crypto mCrypto) throws StorageCryptoException {
 
         GsonBuilder builder = new GsonBuilder();
@@ -184,5 +183,4 @@ public class Record {
     public String toJsonString(Crypto mCrypto) throws StorageCryptoException {
         return toJsonObject(mCrypto).toString();
     }
-
 }

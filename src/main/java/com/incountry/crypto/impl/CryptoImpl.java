@@ -11,16 +11,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 
 import com.incountry.keyaccessor.key.SecretKeysData;
 import org.javatuples.Pair;
 
-import static com.incountry.crypto.CryptoUtils.generateSalt;
-import static com.incountry.crypto.CryptoUtils.generateStrongPasswordHash;
 import static com.incountry.Utils.*;
+import static com.incountry.crypto.CryptoUtils.*;
 
 public class CryptoImpl implements Crypto {
     private SecretKeysData secretKeysData;
@@ -43,22 +41,17 @@ public class CryptoImpl implements Crypto {
     }
 
     public Pair<String, Integer> encrypt(String plainText) throws StorageCryptoException {
-
         byte[] clean = plainText.getBytes();
-        byte[] salt = generateSalt(SALT_LENGTH);
+        byte[] salt = generateRandomBytes(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
         byte[] key = getKey(salt, secretKeyObj);
-
-        SecureRandom randomSecureRandom = new SecureRandom();
-        byte[] iv = new byte[IV_LENGTH];
-        randomSecureRandom.nextBytes(iv);
+        byte[] iv = generateRandomBytes(IV_LENGTH);
 
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
+
         byte[] encrypted = {};
-
         try {
-
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
             encrypted = cipher.doFinal(clean);
@@ -66,18 +59,17 @@ public class CryptoImpl implements Crypto {
             throw new StorageCryptoException(ENCRYPTION_ALGORITHM + " algorithm exception", e);
         }
 
-        byte[] res = {};
+        byte[] resultByteArray = {};
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(salt);
             outputStream.write(iv);
             outputStream.write(encrypted);
-            res = outputStream.toByteArray();
-
+            resultByteArray = outputStream.toByteArray();
         } catch (IOException e) {
             throw new StorageCryptoException("Data encryption error", e);
         }
 
-        byte[] encoded = Base64.getEncoder().encode(res);
+        byte[] encoded = Base64.getEncoder().encode(resultByteArray);
 
         return new Pair<>(VERSION + ":" + new String(encoded), secretKeyObj.getVersion());
     }
@@ -98,20 +90,16 @@ public class CryptoImpl implements Crypto {
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-
         byte[] decryptedText ={};
         try {
-
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             byte[] key = getKey(salt, getSecret(decryptKeyVersion));
-
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
 
             cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
             decryptedText = cipher.doFinal(encrypted);
-
         } catch (GeneralSecurityException e) {
             throw new StorageCryptoException("Data encryption error", e);
         }
