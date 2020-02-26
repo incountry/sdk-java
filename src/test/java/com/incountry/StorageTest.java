@@ -57,7 +57,7 @@ public class StorageTest {
         return SecretKeyAccessor.getAccessor( () -> secretKeysData);
     }
 
-    private static Stream<Arguments> provideStringsForIsBlank() {
+    private static Stream<Arguments> recordArgs() {
         return Stream.of(
                 Arguments.of("us", "key1", null, null, null, null, null),
                 Arguments.of("us", "key1", "body", null, null, null, null),
@@ -69,16 +69,8 @@ public class StorageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideStringsForIsBlank")
-    public void writeTest(
-            String country,
-            String key,
-            String body,
-            String key2,
-            String key3,
-            String profileKey,
-            Integer rangeKey) throws StorageException {
-
+    @MethodSource("recordArgs")
+    public void writeTest(String country, String key, String body, String key2, String key3, String profileKey, Integer rangeKey) throws StorageException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
@@ -99,7 +91,7 @@ public class StorageTest {
 
 
     @ParameterizedTest
-    @MethodSource("provideStringsForIsBlank")
+    @MethodSource("recordArgs")
     public void readTest(String country, String key, String body, String key2, String key3, String profileKey, Integer rangeKey) throws StorageException {
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         FakeHttpAgent agent = new FakeHttpAgent(record.toJsonString(crypto));
@@ -115,7 +107,7 @@ public class StorageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideStringsForIsBlank")
+    @MethodSource("recordArgs")
     public void deleteTest(String country, String key) throws StorageException, IOException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
@@ -130,7 +122,7 @@ public class StorageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideStringsForIsBlank")
+    @MethodSource("recordArgs")
     public void batchWriteTest(String country, String key, String body, String key2, String key3, String profileKey, Integer rangeKey) throws StorageException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
@@ -154,10 +146,9 @@ public class StorageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideStringsForIsBlank")
+    @MethodSource("recordArgs")
     public void migrateTest(String country, String key, String body, String key2, String key3, String profileKey, Integer rangeKey) throws StorageException {
         Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-//        Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
         String encrypted = rec.toJsonString(crypto);
         String content = "{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         FakeHttpAgent agent = new FakeHttpAgent(content);
@@ -173,7 +164,7 @@ public class StorageTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideStringsForIsBlank")
+    @MethodSource("recordArgs")
     public void findTest(String country, String key, String body, String key2, String key3, String profileKey, Integer rangeKey) throws StorageException {
         FindOptions options = new FindOptions(1,0);
         FindFilter filter = new FindFilter();

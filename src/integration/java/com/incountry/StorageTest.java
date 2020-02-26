@@ -4,17 +4,14 @@ import com.incountry.exceptions.StorageException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.key.SecretKey;
 import com.incountry.keyaccessor.key.SecretKeysData;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageTest {
     private Storage store;
     private String country = "US";
@@ -32,7 +29,7 @@ public class StorageTest {
     private boolean isKey = true;
     private int currentVersion = 0;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         SecretKeysData secretKeysData = new SecretKeysData();
         SecretKey secretKey = new SecretKey();
@@ -53,20 +50,23 @@ public class StorageTest {
     }
 
     @Test
-    public void test1BatchWrite() throws StorageException {
+    @Order(1)
+    public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
         records.add(new Record(country, batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
         store.batchWrite(country, records);
     }
 
     @Test
-    public void test2Write() throws StorageException {
+    @Order(2)
+    public void writeTest() throws StorageException {
         Record record = new Record(country, writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
         store.write(record);
     }
 
     @Test
-    public void test3Read() throws StorageException {
+    @Order(3)
+    public void readTest() throws StorageException {
         Record incomingRecord = store.read(country, writeRecordKey);
         assertEquals(writeRecordKey, incomingRecord.getKey());
         assertEquals(recordBody, incomingRecord.getBody());
@@ -76,7 +76,8 @@ public class StorageTest {
     }
 
     @Test
-    public void test4Find() throws StorageException {
+    @Order(4)
+    public void findTest() throws StorageException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         FindOptions options = new FindOptions(100, 0);
         BatchRecord batchRecord = store.find(country, filter, options);
@@ -86,7 +87,8 @@ public class StorageTest {
     }
 
     @Test
-    public void test5FindOne() throws StorageException {
+    @Order(5)
+    public void findOneTest() throws StorageException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         FindOptions options = new FindOptions(100, 0);
         Record d = store.findOne(country, filter, options);
@@ -95,7 +97,8 @@ public class StorageTest {
     }
 
     @Test
-    public void test6UpdateOne() throws StorageException {
+    @Order(6)
+    public void updateOneTest() throws StorageException {
         FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
@@ -110,7 +113,8 @@ public class StorageTest {
     }
 
     @Test
-    public void test7Delete() throws StorageException {
+    @Order(7)
+    public void deleteTest() throws StorageException {
         store.delete(country, writeRecordKey);
         store.delete(country, batchWriteRecordKey);
         // Cannot read deleted record
