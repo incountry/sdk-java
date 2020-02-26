@@ -15,5 +15,4 @@ public interface SecretKeyAccessor {
     static SecretKeyAccessorImpl getAccessor(SecretKeyGenerator secretKeyGenerator) {
         return new SecretKeyAccessorImpl(secretKeyGenerator);
     }
-
 }
