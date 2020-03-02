@@ -145,11 +145,9 @@ public class CryptoImpl implements Crypto {
     public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         if (cipherText == null) return null;
 
-//        String[] parts = cipherText.split(":");
         String[] parts = cipherText.split(":", -1);
 
         if (parts[0].equals(PT_ENC_VERSION)) {
-            System.out.println();
             return decryptVPT(parts[1]);
         }
 

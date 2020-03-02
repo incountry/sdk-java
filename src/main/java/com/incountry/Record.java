@@ -78,29 +78,6 @@ public class Record {
         this.key3 = key3;
     }
 
-    private static String extractKey(JsonNode o, String k){
-        if (o.has(k)){
-            JsonNode v = o.get(k);
-            if (!v.isNull()){
-                if (!v.isTextual()) {
-                    return v.toString();
-                }
-                return v.asText();
-            }
-        }
-        return null;
-    }
-
-    private static Integer extractIntegerKey(JsonNode o, String k){
-        if (o.has(k)){
-            JsonNode v = o.get(k);
-            if (!v.isNull()){
-                return v.asInt();
-            }
-        }
-        return null;
-    }
-
     private static <T> T mergeKeys(T a, T b){
         return b != null ? b : a;
     }
