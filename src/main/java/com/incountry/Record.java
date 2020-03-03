@@ -125,7 +125,7 @@ public class Record {
         String key2 = getPropertyFromJson(jsonObject, P_KEY_2);
         String key3 = getPropertyFromJson(jsonObject, P_KEY_3);
 
-        Integer version = Integer.parseInt(VERSION == null ? getPropertyFromJson(jsonObject, VERSION) : "0");
+        Integer version = Integer.parseInt(getPropertyFromJson(jsonObject, VERSION) != null ? getPropertyFromJson(jsonObject, VERSION) : "0");
 
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");
@@ -179,7 +179,7 @@ public class Record {
         recordJson.addProperty(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey));
         recordJson.addProperty(P_RANGE_KEY, rangeKey);
         recordJson.addProperty(P_BODY, encryptedBodyAndVersion.getValue0());
-        recordJson.addProperty(VERSION, encryptedBodyAndVersion.getValue1());
+        recordJson.addProperty(VERSION, encryptedBodyAndVersion.getValue1() != null ? encryptedBodyAndVersion.getValue1() : 0);
 
         return recordJson;
     }
