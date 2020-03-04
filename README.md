@@ -1,9 +1,20 @@
 InCountry Storage SDK
 ============
 
-Important notes
----------------
-We've changed the encryption algorithm since version `0.5.0` so it is not compatible with earlier versions.
+Installation
+-----
+For Maven users please add this section to your dependencies list
+```
+<dependency>
+  <groupId>com.incountry</groupId>
+  <artifactId>incountry-java-client</artifactId>
+  <version>1.1.0</version>
+</dependency>
+```
+For Gradle users plase add this line to your dependencies list
+```
+compile "com.incountry:incountry-java-client:1.1.0"
+```
 
 Usage
 -----
@@ -228,8 +239,8 @@ FindOptions options = new FindOptions(10, 10);
 
 BatchRecord records = storage.find("us", filter, options);
 ```
-This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.  
-Note: SDK returns 100 records at most. Use pagination to iterate over all the records.  
+This call returns all records with `key2` equals `kitty` AND `key3` equals `mew` OR `purr`.
+Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
 
 `Find` returns BatchRecord object which contains an array of `Record` and some metadata:
 ```
@@ -245,7 +256,7 @@ These fields can be accessed using getters, for example:
 int limit = records.getTotal();
 ```
 
-`FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.  
+`FilterRangeParam` works differently from `FilterStringParam`. `rangeKey` is an integer non-encrypted field so you can perform range operations on it.
 For example you can request all the records with `rangeKey` less than 1000:
 
 ```
@@ -257,6 +268,9 @@ or if you want just to check equality:
 FilterRangeParam rangeParam = new FilterRangeParam(1000);
 ```
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
+
+`BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about
+ records that failed to be processed correctly during `find` request. 
 
 ### Find one record matching filter
 

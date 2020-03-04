@@ -6,11 +6,11 @@ import com.google.gson.JsonObject;
 import com.incountry.crypto.Crypto;
 import com.incountry.crypto.impl.CryptoImpl;
 import com.incountry.exceptions.StorageCryptoException;
+import org.json.JSONObject;
 import com.incountry.exceptions.StorageException;
+import com.incountry.exceptions.StorageServerException;
 import com.incountry.http.HttpAgent;
 import com.incountry.keyaccessor.SecretKeyAccessor;
-import org.json.JSONObject;
-import com.incountry.exceptions.StorageServerException;
 import com.incountry.http.impl.HttpAgentImpl;
 
 import java.io.*;
@@ -77,6 +77,8 @@ public class Storage {
 
         if (encrypt) {
             mCrypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentID);
+        } else {
+            mCrypto = new CryptoImpl(environmentID);
         }
 
     }
@@ -190,7 +192,7 @@ public class Storage {
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
         BatchRecord batchRecord = find(country, findFilter,  new FindOptions(limit, 0));
         batchWrite(country, batchRecord.getRecords());
-        
+
         return new MigrateResult(batchRecord.getCount(),batchRecord.getTotal() - batchRecord.getCount());
     }
 
@@ -216,7 +218,7 @@ public class Storage {
             throw new StorageServerException(SERVER_ERROR_MESSAGE, e);
         }
 
-        return new BatchRecord(records, 0, 0, 0, 0);
+        return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
     public Record updateOne(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {

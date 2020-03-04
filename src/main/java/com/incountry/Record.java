@@ -1,5 +1,6 @@
 package com.incountry;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -11,11 +12,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.javatuples.Pair;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
 
+@JsonFilter("nullFilter")
 public class Record {
     private static final String P_COUNTRY = "country";
     private static final String P_BODY = "body";
@@ -113,15 +114,18 @@ public class Record {
      * @throws StorageCryptoException if decryption failed
      */
     public static Record fromString(String jsonString, Crypto mCrypto) throws StorageCryptoException {
+
         JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
 
+        String country = getPropertyFromJson(jsonObject, P_COUNTRY);
         String key = getPropertyFromJson(jsonObject, P_KEY);
         String body = getPropertyFromJson(jsonObject, P_BODY);
         String profileKey = getPropertyFromJson(jsonObject, P_PROFILE_KEY);
         Integer rangeKey = getPropertyFromJson(jsonObject, P_RANGE_KEY) != null ? Integer.parseInt(getPropertyFromJson(jsonObject, P_RANGE_KEY)) : null;
         String key2 = getPropertyFromJson(jsonObject, P_KEY_2);
         String key3 = getPropertyFromJson(jsonObject, P_KEY_3);
-        Integer version = Integer.parseInt(getPropertyFromJson(jsonObject, VERSION));
+
+        Integer version = Integer.parseInt(getPropertyFromJson(jsonObject, VERSION) != null ? getPropertyFromJson(jsonObject, VERSION) : "0");
 
         if (body != null && mCrypto != null){
             String[] parts = body.split(":");
@@ -144,7 +148,7 @@ public class Record {
                 key3 = getPropertyFromJson(metaObj, P_KEY_3);
             }
         }
-        return new Record(null, key, body, profileKey, rangeKey, key2, key3);
+        return new Record(country, key, body, profileKey, rangeKey, key2, key3);
     }
 
     public JsonObject toJsonObject(Crypto mCrypto) throws StorageCryptoException {
@@ -175,7 +179,7 @@ public class Record {
         recordJson.addProperty(P_PROFILE_KEY, mCrypto.createKeyHash(profileKey));
         recordJson.addProperty(P_RANGE_KEY, rangeKey);
         recordJson.addProperty(P_BODY, encryptedBodyAndVersion.getValue0());
-        recordJson.addProperty(VERSION, encryptedBodyAndVersion.getValue1());
+        recordJson.addProperty(VERSION, encryptedBodyAndVersion.getValue1() != null ? encryptedBodyAndVersion.getValue1() : 0);
 
         return recordJson;
     }

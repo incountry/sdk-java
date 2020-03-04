@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.incountry.crypto.Crypto;
 import com.incountry.crypto.impl.CryptoImpl;
+import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.exceptions.StorageServerException;
@@ -18,11 +19,14 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @RunWith(Enclosed.class)
 public class StorageTest {
@@ -48,28 +52,30 @@ public class StorageTest {
         public Integer rangeKey;
         @Parameterized.Parameter(7)
         public SecretKeyAccessor secretKeyAccessor;
+        @Parameterized.Parameter(8)
+        public Boolean encrypt;
 
         @Parameterized.Parameters(name = "{index}:withParams({0}, {1}, {2}")
         public static Iterable<Object[]> dataForTest() {
             return Arrays.asList(new Object[][]{
-                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithString()},
-                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
-                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
-                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
-                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue()},
-                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
-                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
-                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
-                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
-                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse()},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithString(), false},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithString(), false},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithString(), false},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithString(), true},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithString(), true},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithString(), true},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue(), true},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue(), true},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue(), true},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue(), false},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue(), false},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyTrue(), false},
+                {"us", "key1", null, null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse(), false},
+                {"us", "key1", "body", null, null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse(), false},
+                {"us", "key1", "body", "key2", null, null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse(), false},
+                {"us", "key1", "body", "key2", "key3", null, null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse(), true},
+                {"us", "key1", "body", "key2", "key3", "profileKey", null, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse(), true},
+                {"us", "key1", "body", "key2", "key3", "profileKey", 1, initializeSecretKeyAccessorWithSecretKeyGeneratorWithIsKeyFalse(), true},
             });
         }
 
@@ -117,48 +123,71 @@ public class StorageTest {
 
         @Before
         public void initializeStorage() throws StorageServerException {
-            storage = new Storage(
-                    "envId",
-                    "apiKey",
-                    secretKeyAccessor
+            if (encrypt) {
+                storage = new Storage(
+                        "envId",
+                        "apiKey",
+                        secretKeyAccessor
 
-            );
+                );
 
-            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
-
+                crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            } else {
+                storage = new Storage("envId", "apiKey", null);
+                crypto = new CryptoImpl("envId");
+            }
         }
 
         @Test
-        public void writeTest() throws StorageServerException, StorageCryptoException {
+        public void writeTest() throws StorageServerException, StorageCryptoException, MalformedURLException {
+            String expectedPath = "/v2/storage/records/"+ country;
+
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             storage.write(record);
 
-            String encrypted = agent.getCallBody();
-            String keyHash = crypto.createKeyHash(key);
-            JSONObject response = new JSONObject(encrypted);
-            String key = response.getString("key");
-            String encryptedBody = response.getString("body");
-            String actualBodyStr = crypto.decrypt(encryptedBody, 0);
-            JSONObject bodyJsonObj = new JSONObject(actualBodyStr);
-            String actualBody = body != null ? bodyJsonObj.getString("payload") : null;
-            assertEquals(keyHash, key);
-            assertEquals(body, actualBody);
+            String received = agent.getCallBody();
+            String callPath = new URL(agent.getCallEndpoint()).getPath();
+
+            Record receivedRecord = Record.fromString(received, null);
+
+            assertEquals(expectedPath, callPath);
+            assertNotEquals(key, receivedRecord.getKey());
+            if (key2 != null) {
+                assertNotEquals(key2, receivedRecord.getKey2());
+            }
+            if (key3 != null) {
+                assertNotEquals(key3, receivedRecord.getKey3());
+            }
+            if (profileKey != null) {
+                assertNotEquals(profileKey, receivedRecord.getProfileKey());
+            }
+            if (body != null) {
+                assertNotEquals(body, receivedRecord.getBody());
+            }
+            if (rangeKey != null) {
+                assertEquals(rangeKey, receivedRecord.getRangeKey());
+            }
         }
 
         @Test
-        public void readTest() throws StorageServerException, StorageCryptoException {
+        public void readTest() throws StorageServerException, StorageCryptoException, MalformedURLException {
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+            String keyHash = crypto.createKeyHash(key);
+            String expectedPath = "/v2/storage/records/"+ country + "/" + keyHash;
+
             FakeHttpAgent agent = new FakeHttpAgent(record.toJsonString(crypto));
             storage.setHttpAgent(agent);
-            Record incomingRecord = storage.read(country, key);
-            assertEquals(key, incomingRecord.getKey());
-            assertEquals(body, incomingRecord.getBody());
-            assertEquals(profileKey, incomingRecord.getProfileKey());
-            assertEquals(key2, incomingRecord.getKey2());
-            assertEquals(key3, incomingRecord.getKey3());
-            assertEquals(rangeKey, incomingRecord.getRangeKey());
+
+            Record fetched = storage.read(country, key);
+            assertEquals(expectedPath, new URL(agent.getCallEndpoint()).getPath());
+            assertEquals(key, fetched.getKey());
+            assertEquals(body, fetched.getBody());
+            assertEquals(profileKey, fetched.getProfileKey());
+            assertEquals(key2, fetched.getKey2());
+            assertEquals(key3, fetched.getKey3());
+            assertEquals(rangeKey, fetched.getRangeKey());
         }
 
 
@@ -196,8 +225,6 @@ public class StorageTest {
                 assertEquals(keyHash, key);
                 assertEquals(body, actualBody);
             }
-
-
         }
     }
 
@@ -205,7 +232,7 @@ public class StorageTest {
         private Storage storage;
         private Crypto crypto;
 
-        private String country = "US";
+        private String country = "us";
         private String recordKey = "some_key";
         private String profileKey = "profileKey";
         private String key2 = "key2";
@@ -277,5 +304,160 @@ public class StorageTest {
             assertEquals(recordKey, batchRecord.getRecords().get(0).getKey());
             assertEquals(recordBody, batchRecord.getRecords().get(0).getBody());
         }
+
+        @Test
+        public void testCustomEndpoint() throws GeneralSecurityException, StorageException, IOException {
+            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("password");
+            String endpoint = "https://custom.endpoint.io";
+
+
+            Storage storage = new Storage("envId", "apiKey", endpoint, true, secretKeyAccessor);
+            Crypto crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+//            Crypto crypto = new CryptoImpl("password", "envId");
+
+
+            FakeHttpAgent agent = new FakeHttpAgent("");
+            storage.setHttpAgent(agent);
+            Record record = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            storage.write(record);
+
+            String expectedURL = endpoint + "/v2/storage/records/"+ country;
+
+            String realURL = new URL(agent.getCallEndpoint()).toString();
+
+            assertEquals(expectedURL, realURL);
+        }
+
+        @Test
+        public void testFindWithEnc() throws GeneralSecurityException, StorageException, IOException, FindOptionsException {
+            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("password");
+            Storage storage = new Storage("envId", "apiKey", secretKeyAccessor);
+            Crypto crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+//            Crypto crypto = new Crypto("password", "envId");
+
+            FindOptions options = new FindOptions(1,0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+
+            Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encrypted = rec.toJsonString(crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            storage.setHttpAgent(agent);
+
+            BatchRecord d = storage.find(country, filter, options);
+
+            String callBody = agent.getCallBody();
+            assertEquals("{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
+
+            assertEquals(1, d.getCount());
+            assertEquals(1, d.getRecords().size());
+            assertEquals(recordKey, d.getRecords().get(0).getKey());
+            assertEquals(recordBody, d.getRecords().get(0).getBody());
+            assertEquals(key2, d.getRecords().get(0).getKey2());
+            assertEquals(key3, d.getRecords().get(0).getKey3());
+            assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
+            assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
+        }
+
+        @Test
+        public void testFindOne() throws GeneralSecurityException, StorageException, IOException, FindOptionsException {
+            String secret = "password";
+            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(secret);
+            Crypto crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            Storage storage = new Storage("envId", "apiKey", secretKeyAccessor);
+
+
+            FindOptions options = new FindOptions(1,0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+
+            Record rec = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encrypted = rec.toJsonString(crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            storage.setHttpAgent(agent);
+
+            Record foundRecord = storage.findOne(country, filter, options);
+
+            String callBody = agent.getCallBody();
+            assertEquals("{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
+
+            assertEquals(recordKey, foundRecord.getKey());
+            assertEquals(recordBody, foundRecord.getBody());
+            assertEquals(key2, foundRecord.getKey2());
+            assertEquals(key3, foundRecord.getKey3());
+            assertEquals(profileKey, foundRecord.getProfileKey());
+            assertEquals(rangeKey, foundRecord.getRangeKey());
+        }
+
+        @Test
+        public void testFindWithEncByMultipleSecrets() throws GeneralSecurityException, StorageException, IOException, FindOptionsException {
+            String secret = "password";
+            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(secret);
+            Crypto crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getKey(), "envId");
+            Storage storage = new Storage("envId", "apiKey", secretKeyAccessor);
+
+            FindOptions options = new FindOptions(2, 0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+            Record recOtherEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            Record recEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encryptedRecOther = recOtherEnc.toJsonString(cryptoOther);
+            String encryptedRec = recEnc.toJsonString(crypto);
+
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
+            storage.setHttpAgent(agent);
+
+            BatchRecord d = storage.find(country, filter, options);
+
+            assertEquals(1, d.getErrors().size());
+            assertEquals(encryptedRecOther, d.getErrors().get(0).getRawData());
+            assertEquals("Record Parse Exception", d.getErrors().get(0).getMessage());
+
+            assertEquals(1, d.getRecords().size());
+            assertEquals(recordKey, d.getRecords().get(0).getKey());
+            assertEquals(recordBody, d.getRecords().get(0).getBody());
+            assertEquals(key2, d.getRecords().get(0).getKey2());
+            assertEquals(key3, d.getRecords().get(0).getKey3());
+            assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
+            assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
+        }
+
+        @Test
+        public void testFindWithoutEncWithEncryptedData() throws FindOptionsException, GeneralSecurityException, StorageException, IOException {
+            Storage storage = new Storage("envId", "apiKey", null);
+            Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getKey(), "envId");
+            Crypto cryptoWithPT = new CryptoImpl("envId");
+
+            FindOptions options = new FindOptions(2, 0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+            Record reсWithEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            Record recWithPTEnc = new Record(country, recordKey, recordBody, profileKey, rangeKey, key2, key3);
+            String encryptedRec = reсWithEnc.toJsonString(cryptoWithEnc);
+            String encryptedPTRec = recWithPTEnc.toJsonString(cryptoWithPT);
+
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
+            storage.setHttpAgent(agent);
+
+            BatchRecord d = storage.find(country, filter, options);
+
+            assertEquals(1, d.getErrors().size());
+            assertEquals(encryptedRec, d.getErrors().get(0).getRawData());
+            assertEquals("Record Parse Exception", d.getErrors().get(0).getMessage());
+
+            assertEquals(1, d.getRecords().size());
+            assertEquals(recordKey, d.getRecords().get(0).getKey());
+            assertEquals(recordBody, d.getRecords().get(0).getBody());
+            assertEquals(key2, d.getRecords().get(0).getKey2());
+            assertEquals(key3, d.getRecords().get(0).getKey3());
+            assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
+            assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
+        }
+
     }
 }
