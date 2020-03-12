@@ -23,17 +23,25 @@ import static com.incountry.crypto.CryptoUtils.*;
 public class CryptoImpl implements Crypto {
     private SecretKeysData secretKeysData;
     private String envId;
+    private Boolean isUsingPTEncryption = false;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
     private static final int SALT_LENGTH = 64;
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
     private static final String VERSION = "2";
+    public static final String PT_ENC_VERSION = "pt";
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
     public CryptoImpl(SecretKeysData secret) {
         this.secretKeysData = secret;
     }
+
+    public CryptoImpl(String envId) {
+        this.envId = envId;
+        this.isUsingPTEncryption = true;
+    }
+
 
     public CryptoImpl(SecretKeysData secret, String envId) {
         this.secretKeysData = secret;
@@ -41,6 +49,11 @@ public class CryptoImpl implements Crypto {
     }
 
     public Pair<String, Integer> encrypt(String plainText) throws StorageCryptoException {
+        if (Boolean.TRUE.equals(isUsingPTEncryption)) {
+            byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes());
+            return new Pair<>(PT_ENC_VERSION + ":" + new String(ptEncoded), null);
+        }
+
         byte[] clean = plainText.getBytes();
         byte[] salt = generateRandomBytes(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
@@ -132,7 +145,15 @@ public class CryptoImpl implements Crypto {
     public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         if (cipherText == null) return null;
 
-        String[] parts = cipherText.split(":");
+        String[] parts = cipherText.split(":", -1);
+
+        if (parts[0].equals(PT_ENC_VERSION)) {
+            return decryptVPT(parts[1]);
+        }
+
+        if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
+            throw new StorageCryptoException("No secret provided. Cannot decrypt record: "+ cipherText);
+        }
 
         switch (parts[0]) {
             case "1":
@@ -152,5 +173,10 @@ public class CryptoImpl implements Crypto {
     private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
         byte[] parts = hexToBytes(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
+    }
+
+    private String decryptVPT(String cipherText) {
+        byte[] ptBytes = Base64.getDecoder().decode(cipherText);
+        return new String(ptBytes);
     }
 }
