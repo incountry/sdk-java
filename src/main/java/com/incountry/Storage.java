@@ -122,8 +122,8 @@ public class Storage {
     }
 
     private String createUrl(String country, String recordKey) {
-        country = country.toLowerCase();
         checkParameters(country, recordKey);
+        country = country.toLowerCase();
         if (mCrypto != null) recordKey = mCrypto.createKeyHash(recordKey);
         return getEndpoint(country, STORAGE_URL + country + "/" + recordKey);
     }
@@ -184,9 +184,6 @@ public class Storage {
      * @throws StorageException if encryption is off/failed, if server connection failed or server response error
      */
     public MigrateResult migrate(String country, int limit) throws StorageException {
-        if (mCrypto == null) {
-            throw new StorageException("Migration is not supported when encryption is off");
-        }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
@@ -269,6 +266,8 @@ public class Storage {
      */
     public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
         if (country == null) throw new IllegalArgumentException("Country cannot be null");
+        if (filter == null) throw new IllegalArgumentException("Filters cannot be null");
+        if (options == null) throw new IllegalArgumentException("Options cannot be null");
         country = country.toLowerCase();
         String url = getEndpoint(country, STORAGE_URL + country + "/find");
 

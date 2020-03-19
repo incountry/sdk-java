@@ -21,8 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StorageTest {
 
@@ -428,5 +427,64 @@ public class StorageTest {
             assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
             assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
         }
+
+        @Test
+        public void testFindIncorrectRecords() throws StorageException {
+            FindOptions options = new FindOptions(2, 0);
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+            FakeHttpAgent agent = new FakeHttpAgent(null);
+            storage.setHttpAgent(agent);
+            BatchRecord findResult = storage.find(country, filter, options);
+
+            assertNull(findResult);
+
+        }
+
+        @Test
+        public void testReadNotFound() throws StorageException {
+            Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+            FakeHttpAgent agent = new FakeHttpAgent(null);
+            storage.setHttpAgent(agent);
+            Record readedRecord = storage.read(country, key);
+            assertNull(readedRecord);
+
+        }
+
+        @Test
+        public void testErrorFindOneInsufficientArgs() throws StorageException {
+            FindFilter filter = new FindFilter();
+            filter.setProfileKeyParam(new FilterStringParam(profileKey));
+
+            Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+            String encrypted = record.toJsonString(crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            storage.setHttpAgent(agent);
+            assertThrows(IllegalArgumentException.class, () -> storage.find(null, null, null));
+            assertThrows(IllegalArgumentException.class, () -> storage.find(country, null, null));
+            assertThrows(IllegalArgumentException.class, () -> storage.find(country, filter, null));
+        }
+
+        @Test
+        public void testInitErrorOnInsufficientArgs() {
+            SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> new SecretKeysData());
+            assertThrows(IllegalArgumentException.class, () ->  new Storage(null,null, secretKeyAccessor));
+        }
+
+        @Test
+        public void testErrorReadInsufficientArgs() {
+            FakeHttpAgent agent = new FakeHttpAgent("");
+            storage.setHttpAgent(agent);
+            assertThrows(IllegalArgumentException.class, () -> storage.read(null, null));
+        }
+
+        @Test
+        public void testErrorDeleteInsufficientArgs() {
+            FakeHttpAgent agent = new FakeHttpAgent("");
+            storage.setHttpAgent(agent);
+            assertThrows(IllegalArgumentException.class, () -> storage.delete(null, null));
+        }
+
     }
 }

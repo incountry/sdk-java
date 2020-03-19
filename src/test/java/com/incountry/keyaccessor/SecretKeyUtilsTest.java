@@ -14,13 +14,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SecretKeyUtilsTest {
 
-    private String secret = "user_password";
-    private int version = 0;
-    private boolean isKey = true;
-    private int currentVersion = 0;
-
     @Test
-    public void testConvertStringToSecretKeyData(){
+    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsJson(){
+        String secret = "user_password";
+        int version = 1;
+        boolean isKey = true;
+        int currentVersion = 1;
 
         SecretKeysData secretKeysData = new SecretKeysData();
         SecretKey secretKey = new SecretKey();
@@ -39,6 +38,19 @@ public class SecretKeyUtilsTest {
         assertEquals(secret, resultSecretKeysData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretKeysData.getSecrets().get(0).getVersion());
         assertEquals(isKey, resultSecretKeysData.getSecrets().get(0).getIsKey());
+    }
+
+    @Test
+    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsNotJson(){
+        String secret = "user_password";
+        int version = 0;
+        int currentVersion = 0;
+
+        SecretKeysData resultSecretKeysData = SecretKeyUtils.convertStringToSecretKeyData("user_password");
+        assertEquals(currentVersion, resultSecretKeysData.getCurrentVersion());
+        assertEquals(secret, resultSecretKeysData.getSecrets().get(0).getSecret());
+        assertEquals(version, resultSecretKeysData.getSecrets().get(0).getVersion());
+        assertNull(resultSecretKeysData.getSecrets().get(0).getIsKey());
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class FilterStringParam {
 
     private List<String> value;
+
     @Getter
     private boolean notCondition;
 
@@ -47,14 +48,11 @@ public class FilterStringParam {
         return new JSONArray(hashValue(mCrypto));
     }
 
-    public JSONArray toJSONInt(Crypto mCrypto) {
+    public JSONArray toJSONInt() {
         if (value == null) {
             return null;
         }
-        if (mCrypto == null) {
-            return new JSONArray(value.stream().map(Integer::parseInt).collect(Collectors.toList()));
-        }
-        return new JSONArray(hashValue(mCrypto).stream().map(Integer::parseInt).collect(Collectors.toList()));
+        return new JSONArray(value.stream().map(Integer::parseInt).collect(Collectors.toList()));
     }
 
 }

@@ -115,6 +115,8 @@ dependencies {
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junit5}"
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
+    compile group: 'com.google.guava', name: 'guava', version: '28.2-jre'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.4'
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     compile "com.google.http-client:google-http-client:${httpClientVersion}"
     compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"

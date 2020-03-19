@@ -7,6 +7,7 @@ import com.incountry.keyaccessor.key.SecretKey;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +18,6 @@ import java.util.Base64;
 import com.incountry.keyaccessor.key.SecretKeysData;
 import org.javatuples.Pair;
 
-import static com.incountry.Utils.*;
 import static com.incountry.crypto.CryptoUtils.*;
 
 public class CryptoImpl implements Crypto {
@@ -171,7 +171,7 @@ public class CryptoImpl implements Crypto {
     }
 
     private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
-        byte[] parts = hexToBytes(cipherText);
+        byte[] parts = DatatypeConverter.parseHexBinary(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
