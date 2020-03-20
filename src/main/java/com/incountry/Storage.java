@@ -33,13 +33,14 @@ public class Storage {
         }
     }
 
-    private String mEnvID = null;
-    private String mAPIKey = null;
-    private String mEndpoint = null;
+    private String mEnvID;
+    private String mAPIKey;
+    private String mEndpoint;
     private Boolean mIsDefaultEndpoint = false;
-    private Crypto mCrypto = null;
+    private Crypto mCrypto;
     private HashMap<String, POP> mPoplist;
-    private HttpAgent httpAgent = null;
+    private HttpAgent httpAgent;
+    private boolean isEncrypted;
 
     public Storage() throws StorageServerException {
         this(null);
@@ -75,6 +76,7 @@ public class Storage {
 
         loadCountryEndpoints();
 
+        isEncrypted = encrypt;
         if (encrypt) {
             mCrypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentID);
         } else {
@@ -184,6 +186,9 @@ public class Storage {
      * @throws StorageException if encryption is off/failed, if server connection failed or server response error
      */
     public MigrateResult migrate(String country, int limit) throws StorageException {
+        if (!isEncrypted) {
+            throw new StorageException("Migration is not supported when encryption is off");
+        }
         Integer secretKeyCurrentVersion = mCrypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));

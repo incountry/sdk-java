@@ -236,6 +236,8 @@ public class StorageTest {
         private Integer rangeKey = 1;
         private String body = "body";
 
+        private String environmentId = "envId";
+        private String apiKey = "apiKey";
 
         @BeforeEach
         public void initializeStorage() throws StorageServerException {
@@ -252,13 +254,12 @@ public class StorageTest {
             SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
             storage = new Storage(
-                    "envId",
-                    "apiKey",
+                    environmentId,
+                    apiKey,
                     secretKeyAccessor
-
             );
 
-            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentId);
         }
 
         @Test
@@ -300,9 +301,7 @@ public class StorageTest {
             SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("password");
             String endpoint = "https://custom.endpoint.io";
 
-            Storage storage = new Storage("envId", "apiKey", endpoint, true, secretKeyAccessor);
-            Crypto crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
-
+            Storage storage = new Storage(environmentId, apiKey, endpoint, true, secretKeyAccessor);
             FakeHttpAgent agent = new FakeHttpAgent("");
             storage.setHttpAgent(agent);
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
@@ -367,7 +366,7 @@ public class StorageTest {
 
         @Test
         public void testFindWithEncByMultipleSecrets() throws StorageException {
-            Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getKey(), "envId");
+            Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getKey(), environmentId);
 
             FindOptions options = new FindOptions(2, 0);
             FindFilter filter = new FindFilter();
@@ -398,8 +397,8 @@ public class StorageTest {
 
         @Test
         public void testFindWithoutEncWithEncryptedData() throws StorageException {
-            Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getKey(), "envId");
-            Crypto cryptoWithPT = new CryptoImpl("envId");
+            Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getKey(), environmentId);
+            Crypto cryptoWithPT = new CryptoImpl(environmentId);
 
             FindOptions options = new FindOptions(2, 0);
             FindFilter filter = new FindFilter();
@@ -439,16 +438,14 @@ public class StorageTest {
             BatchRecord findResult = storage.find(country, filter, options);
 
             assertNull(findResult);
-
         }
 
         @Test
         public void testReadNotFound() throws StorageException {
-            Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             FakeHttpAgent agent = new FakeHttpAgent(null);
             storage.setHttpAgent(agent);
-            Record readedRecord = storage.read(country, key);
-            assertNull(readedRecord);
+            Record readRecord = storage.read(country, key);
+            assertNull(readRecord);
 
         }
 
@@ -486,5 +483,14 @@ public class StorageTest {
             assertThrows(IllegalArgumentException.class, () -> storage.delete(null, null));
         }
 
+        @Test
+        public void testErrorMigrateWhenEncryptionOff() throws StorageException {
+            Storage storage = new Storage(
+                    environmentId,
+                    apiKey,
+                    null
+            );
+            assertThrows(StorageException.class, () -> storage.migrate(null, 100));
+        }
     }
 }
