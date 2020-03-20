@@ -179,7 +179,6 @@ public class StorageTest {
 
             String keyHash = crypto.createKeyHash(key);
             String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
-
             String callPath = new URL(agent.getCallEndpoint()).getPath();
 
             assertEquals(expectedPath, callPath);
