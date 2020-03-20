@@ -10,6 +10,8 @@ import java.security.spec.InvalidKeySpecException;
 
 public class CryptoUtils {
 
+    private CryptoUtils() {}
+
     public static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
         char[] chars = password.toCharArray();
         PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);

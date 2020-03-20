@@ -2,12 +2,8 @@ package com.incountry.keyaccessor.impl;
 
 import com.incountry.keyaccessor.SecretKeyAccessor;
 import com.incountry.keyaccessor.generator.SecretKeyGenerator;
-import com.incountry.keyaccessor.key.SecretKey;
 import com.incountry.keyaccessor.key.SecretKeysData;
 import com.incountry.keyaccessor.utils.SecretKeyUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SecretKeyAccessorImpl implements SecretKeyAccessor {
     private SecretKeysData secretKeysData;
