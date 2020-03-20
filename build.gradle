@@ -14,6 +14,7 @@ plugins {
     id 'io.codearte.nexus-staging' version '0.11.0'
     id "org.sonarqube" version "2.7.1"
     id 'jacoco'
+    id 'org.barfuin.gradle.jacocolog' version '1.0.1'
 }
 
 apply plugin: 'maven'
@@ -104,10 +105,19 @@ uploadArchives {
     }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 dependencies {
-    testCompile "junit:junit:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junit5}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junit5}"
+    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junit5}"
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junit5}"
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
+    compile group: 'com.google.guava', name: 'guava', version: '28.2-jre'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.4'
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     compile "com.google.http-client:google-http-client:${httpClientVersion}"
     compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
@@ -141,6 +151,10 @@ task sourcesJar(type: Jar) {
 task integrationTest(type: Test) {
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
+}
+
+integrationTest {
+    useJUnitPlatform()
 }
 
 artifacts {

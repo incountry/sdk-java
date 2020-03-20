@@ -151,6 +151,12 @@ public class Record {
         return new Record(country, key, body, profileKey, rangeKey, key2, key3);
     }
 
+    /**
+     * Converts a Record object to JsonObject
+     * @param mCrypto object which is using to encrypt data
+     * @return JsonObject with Record data
+     * @throws StorageCryptoException if encryption failed
+     */
     public JsonObject toJsonObject(Crypto mCrypto) throws StorageCryptoException {
 
         GsonBuilder builder = new GsonBuilder();
@@ -184,6 +190,12 @@ public class Record {
         return recordJson;
     }
 
+    /**
+     *
+     * @param mCrypto object which is using to encrypt data
+     * @return Json string with Record data
+     * @throws StorageCryptoException if encryption failed
+     */
     public String toJsonString(Crypto mCrypto) throws StorageCryptoException {
         return toJsonObject(mCrypto).toString();
     }

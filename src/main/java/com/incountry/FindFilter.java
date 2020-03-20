@@ -49,7 +49,7 @@ public class FindFilter {
     }
 
     /**
-     * Add 'not' condition to parameter
+     * Adds 'not' condition to parameter
      * @param param parameter to which the not condition should be added
      * @param mCrypto crypto object
      * @param isForString the condition must be added for string params
@@ -59,20 +59,25 @@ public class FindFilter {
         if (isForString) {
             return new JSONObject(String.format("{$not: %s}", param.toJSONString(mCrypto).toString()));
         }
-        return new JSONObject(String.format("{$not: %s}", param.toJSONInt(mCrypto).toString()));
+        return new JSONObject(String.format("{$not: %s}", param.toJSONInt().toString()));
     }
 
 
     private void addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
         if (param != null) {
             if (paramName.equals(VERSION)) {
-                json.put(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : param.toJSONInt(null));
+                json.put(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : param.toJSONInt());
             } else {
                 json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto, true) : param.toJSONString(mCrypto));
             }
         }
     }
 
+    /**
+     * Creates JSONObject with FindFilter object properties
+     * @param mCrypto crypto object
+     * @return JSONObject with properties corresponding to FindFilter object properties
+     */
     public JSONObject toJSONObject(Crypto mCrypto) {
         JSONObject json = new JSONObject();
         addToJson(json, P_KEY, keyParam, mCrypto);

@@ -5,13 +5,14 @@ import com.incountry.exceptions.StorageCryptoException;
 import com.incountry.keyaccessor.key.SecretKey;
 import com.incountry.keyaccessor.key.SecretKeysData;
 import org.javatuples.Pair;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CryptoTest {
 
@@ -19,7 +20,7 @@ public class CryptoTest {
     private String secret;
     private Integer keyVersion;
 
-    @Before
+    @BeforeEach
     public void init() {
         secret = "password";
         keyVersion = 0;
@@ -113,6 +114,25 @@ public class CryptoTest {
         String encrypted = "pt:SW5Db3VudHJ5";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
+    }
+
+    @Test
+    public void testDecryptionErrorOnSecretMismatch() {
+        secret = "otherpassword";
+        keyVersion = 0;
+
+        secretKeysData = new SecretKeysData();
+        SecretKey secretKey = new SecretKey();
+        secretKey.setSecret(secret);
+        secretKey.setVersion(keyVersion);
+        secretKeysData.setSecrets(new ArrayList<SecretKey>() {{
+            add(secretKey);
+        }});
+        secretKeysData.setCurrentVersion(keyVersion);
+
+        CryptoImpl crypto = new CryptoImpl(secretKeysData);
+        String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
+        assertThrows(StorageCryptoException.class, () -> crypto.decrypt(encrypted, keyVersion));
     }
 
 }
