@@ -16,14 +16,14 @@ public class FindOptions {
     int offset;
 
     /**
-     * Constrictor for FindOptions class
+     * Constructor for FindOptions class
      */
     public FindOptions() {
         this(MAX_LIMIT, 0);
     }
 
     /**
-     * Constrictor for FindOptions class with the specified find options
+     * Constructor for FindOptions class with the specified find options
      * @param limit the number of records to return
      * @param offset number of records which on will the result be offset
      */
