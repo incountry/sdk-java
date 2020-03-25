@@ -40,7 +40,7 @@ public class StorageTest {
         secretKeyList.add(secretKey);
         secretKeysData.setSecrets(secretKeyList);
         secretKeysData.setCurrentVersion(currentVersion);
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor( () -> secretKeysData);
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
         store = new Storage(
                 "envId",

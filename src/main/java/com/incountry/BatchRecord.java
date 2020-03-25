@@ -7,19 +7,17 @@ import com.google.gson.JsonObject;
 import com.incountry.crypto.Crypto;
 import com.incountry.exceptions.RecordException;
 import com.incountry.exceptions.StorageCryptoException;
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public class BatchRecord {
-    int count;
-    int limit;
-    int offset;
-    int total;
-    List<Record> records;
-    List<RecordException> errors;
+    private int count;
+    private int limit;
+    private int offset;
+    private int total;
+    private List<Record> records;
+    private List<RecordException> errors;
 
     public BatchRecord(List<Record> records, int count, int limit, int offset, int total, List<RecordException> errors) {
         this.count = count;
@@ -28,6 +26,30 @@ public class BatchRecord {
         this.total = total;
         this.records = records;
         this.errors = errors;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public List<Record> getRecords() {
+        return records;
+    }
+
+    public List<RecordException> getErrors() {
+        return errors;
     }
 
     public static BatchRecord fromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
@@ -41,13 +63,13 @@ public class BatchRecord {
         int offset = meta.get("offset").getAsInt();
         int total = meta.get("total").getAsInt();
 
-        List<Record>  records = new ArrayList<>();
+        List<Record> records = new ArrayList<>();
 
         if (count == 0) return new BatchRecord(records, count, limit, offset, total, errors);
 
         JsonArray data = responseObject.getAsJsonArray("data");
 
-        for (JsonElement item: data) {
+        for (JsonElement item : data) {
             try {
                 records.add(Record.fromString(item.toString(), mCrypto));
             } catch (Exception e) {

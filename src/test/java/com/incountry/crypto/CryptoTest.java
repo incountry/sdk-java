@@ -49,7 +49,7 @@ public class CryptoTest {
                 "你好", // <- Chinese
         };
 
-        for (String plainText: plainTexts) {
+        for (String plainText : plainTexts) {
             Pair<String, Integer> encrypted = crypto.encrypt(plainText);
             String decrypted = crypto.decrypt(encrypted.getValue0(), encrypted.getValue1());
             assertEquals(plainText, decrypted);
@@ -72,7 +72,7 @@ public class CryptoTest {
         };
         String expectedVersion = "pt";
 
-        for (String plainText: plainTexts) {
+        for (String plainText : plainTexts) {
             Pair<String, Integer> encrypted = crypto.encrypt(plainText);
             String decrypted = crypto.decrypt(encrypted.getValue0(), encrypted.getValue1());
 

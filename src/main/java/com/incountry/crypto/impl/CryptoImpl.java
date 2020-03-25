@@ -68,7 +68,7 @@ public class CryptoImpl implements Crypto {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
             encrypted = cipher.doFinal(clean);
-        } catch (GeneralSecurityException e){
+        } catch (GeneralSecurityException e) {
             throw new StorageCryptoException(ENCRYPTION_ALGORITHM + " algorithm exception", e);
         }
 
@@ -103,7 +103,7 @@ public class CryptoImpl implements Crypto {
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-        byte[] decryptedText ={};
+        byte[] decryptedText = {};
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             byte[] key = getKey(salt, getSecret(decryptKeyVersion));
@@ -128,7 +128,8 @@ public class CryptoImpl implements Crypto {
                 break;
             }
         }
-        if (secret == null) throw new IllegalArgumentException("SecretKeyGenerator returns data in which there is no current version of the key");
+        if (secret == null)
+            throw new IllegalArgumentException("SecretKeyGenerator returns data in which there is no current version of the key");
         return secret;
     }
 
@@ -152,7 +153,7 @@ public class CryptoImpl implements Crypto {
         }
 
         if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
-            throw new StorageCryptoException("No secret provided. Cannot decrypt record: "+ cipherText);
+            throw new StorageCryptoException("No secret provided. Cannot decrypt record: " + cipherText);
         }
 
         switch (parts[0]) {

@@ -1,7 +1,6 @@
 package com.incountry;
 
 import com.incountry.crypto.Crypto;
-import lombok.Setter;
 import org.json.JSONObject;
 
 
@@ -13,25 +12,20 @@ public class FindFilter {
     private static final String P_RANGE_KEY = "range_key";
     private static final String VERSION = "version";
 
-    @Setter
-    FilterStringParam keyParam;
+    private FilterStringParam keyParam;
 
-    @Setter
-    FilterStringParam key2Param;
+    private FilterStringParam key2Param;
 
-    @Setter
-    FilterStringParam key3Param;
+    private FilterStringParam key3Param;
 
-    @Setter
-    FilterStringParam profileKeyParam;
+    private FilterStringParam profileKeyParam;
 
-    @Setter
-    FilterRangeParam rangeKeyParam;
+    private FilterRangeParam rangeKeyParam;
 
-    @Setter
-    FilterStringParam versionParam;
+    private FilterStringParam versionParam;
 
-    public FindFilter(){}
+    public FindFilter() {
+    }
 
     public FindFilter(
             FilterStringParam key,
@@ -48,10 +42,59 @@ public class FindFilter {
         this.versionParam = version;
     }
 
+    public FilterStringParam getKeyParam() {
+        return keyParam;
+    }
+
+    public void setKeyParam(FilterStringParam keyParam) {
+        this.keyParam = keyParam;
+    }
+
+    public FilterStringParam getKey2Param() {
+        return key2Param;
+    }
+
+    public void setKey2Param(FilterStringParam key2Param) {
+        this.key2Param = key2Param;
+    }
+
+    public FilterStringParam getKey3Param() {
+        return key3Param;
+    }
+
+    public void setKey3Param(FilterStringParam key3Param) {
+        this.key3Param = key3Param;
+    }
+
+    public FilterStringParam getProfileKeyParam() {
+        return profileKeyParam;
+    }
+
+    public void setProfileKeyParam(FilterStringParam profileKeyParam) {
+        this.profileKeyParam = profileKeyParam;
+    }
+
+    public FilterRangeParam getRangeKeyParam() {
+        return rangeKeyParam;
+    }
+
+    public void setRangeKeyParam(FilterRangeParam rangeKeyParam) {
+        this.rangeKeyParam = rangeKeyParam;
+    }
+
+    public FilterStringParam getVersionParam() {
+        return versionParam;
+    }
+
+    public void setVersionParam(FilterStringParam versionParam) {
+        this.versionParam = versionParam;
+    }
+
     /**
      * Adds 'not' condition to parameter
-     * @param param parameter to which the not condition should be added
-     * @param mCrypto crypto object
+     *
+     * @param param       parameter to which the not condition should be added
+     * @param mCrypto     crypto object
      * @param isForString the condition must be added for string params
      * @return JSONObject with added 'not' condition
      */
@@ -75,6 +118,7 @@ public class FindFilter {
 
     /**
      * Creates JSONObject with FindFilter object properties
+     *
      * @param mCrypto crypto object
      * @return JSONObject with properties corresponding to FindFilter object properties
      */
@@ -85,8 +129,8 @@ public class FindFilter {
         addToJson(json, P_KEY_3, key3Param, mCrypto);
         addToJson(json, P_PROFILE_KEY, profileKeyParam, mCrypto);
         addToJson(json, VERSION, versionParam, mCrypto);
-        if (rangeKeyParam != null){
-            json.put(P_RANGE_KEY,  rangeKeyParam.isConditional() ? rangeKeyParam.conditionJSON() : rangeKeyParam.valueJSON());
+        if (rangeKeyParam != null) {
+            json.put(P_RANGE_KEY, rangeKeyParam.isConditional() ? rangeKeyParam.conditionJSON() : rangeKeyParam.valueJSON());
         }
         return json;
     }

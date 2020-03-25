@@ -1,19 +1,12 @@
 package com.incountry;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.json.JSONObject;
 
 public class FindOptions {
     private static final int MAX_LIMIT = 100;
 
-    @Getter
-    @Setter
-    int limit;
-
-    @Getter
-    @Setter
-    int offset;
+    private int limit;
+    private int offset;
 
     /**
      * Constructor for FindOptions class
@@ -24,7 +17,8 @@ public class FindOptions {
 
     /**
      * Constructor for FindOptions class with the specified find options
-     * @param limit the number of records to return
+     *
+     * @param limit  the number of records to return
      * @param offset number of records which on will the result be offset
      */
     public FindOptions(int limit, int offset) {
@@ -35,9 +29,25 @@ public class FindOptions {
         this.offset = offset;
     }
 
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
     public JSONObject toJSONObject() {
         return new JSONObject()
-            .put("limit", limit)
-            .put("offset", offset);
+                .put("limit", limit)
+                .put("offset", offset);
     }
 }

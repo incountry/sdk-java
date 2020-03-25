@@ -8,8 +8,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import com.incountry.crypto.Crypto;
 import com.incountry.exceptions.StorageCryptoException;
-import lombok.Getter;
-import lombok.Setter;
 import org.javatuples.Pair;
 
 import java.util.HashMap;
@@ -29,39 +27,20 @@ public class Record {
     private static final String P_META = "meta";
     private static final String VERSION = "version";
 
-    @Getter
-    @Setter
-    String country;
-
-    @Getter
-    @Setter
-    String key;
-
-    @Getter
-    @Setter
-    String body;
-
-    @Getter
-    @Setter
+    private String country;
+    private String key;
+    private String body;
     @SerializedName("profile_key")
-    String profileKey;
-
-    @Getter
-    @Setter
+    private String profileKey;
     @SerializedName("range_key")
-    Integer rangeKey;
+    private Integer rangeKey;
+    private String key2;
+    private String key3;
 
-    @Getter
-    @Setter
-    String key2;
+    public Record() {
+    }
 
-    @Getter
-    @Setter
-    String key3;
-
-    public Record(){}
-
-    public Record(String country, String key, String body){
+    public Record(String country, String key, String body) {
         this.country = country;
         this.key = key;
         this.body = body;
@@ -77,11 +56,67 @@ public class Record {
         this.key3 = key3;
     }
 
-    private static <T> T mergeKeys(T a, T b){
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
+
+    public String getProfileKey() {
+        return profileKey;
+    }
+
+    public void setProfileKey(String profileKey) {
+        this.profileKey = profileKey;
+    }
+
+    public Integer getRangeKey() {
+        return rangeKey;
+    }
+
+    public void setRangeKey(Integer rangeKey) {
+        this.rangeKey = rangeKey;
+    }
+
+    public String getKey2() {
+        return key2;
+    }
+
+    public void setKey2(String key2) {
+        this.key2 = key2;
+    }
+
+    public String getKey3() {
+        return key3;
+    }
+
+    public void setKey3(String key3) {
+        this.key3 = key3;
+    }
+
+    private static <T> T mergeKeys(T a, T b) {
         return b != null ? b : a;
     }
 
-    public static Record merge(Record base, Record merged){
+    public static Record merge(Record base, Record merged) {
         String country = mergeKeys(base.getCountry(), merged.getCountry());
         String mergedKey = mergeKeys(base.getKey(), merged.getKey());
         String mergedBody = mergeKeys(base.getBody(), merged.getBody());
@@ -95,8 +130,9 @@ public class Record {
 
     /**
      * Get property value from json
+     *
      * @param jsonObject json object
-     * @param property property name
+     * @param property   property name
      * @return property value
      */
     private static String getPropertyFromJson(JsonObject jsonObject, String property) {
@@ -108,8 +144,9 @@ public class Record {
 
     /**
      * Create record object from json string
+     *
      * @param jsonString json string
-     * @param mCrypto crypto object
+     * @param mCrypto    crypto object
      * @return record objects with data from json
      * @throws StorageCryptoException if decryption failed
      */
@@ -127,12 +164,12 @@ public class Record {
 
         Integer version = Integer.parseInt(getPropertyFromJson(jsonObject, VERSION) != null ? getPropertyFromJson(jsonObject, VERSION) : "0");
 
-        if (body != null && mCrypto != null){
+        if (body != null && mCrypto != null) {
             String[] parts = body.split(":");
 
             body = mCrypto.decrypt(body, version);
 
-            if (parts.length != 2){
+            if (parts.length != 2) {
                 key = mCrypto.decrypt(key, version);
                 profileKey = mCrypto.decrypt(profileKey, version);
                 key2 = mCrypto.decrypt(key2, version);
@@ -153,6 +190,7 @@ public class Record {
 
     /**
      * Converts a Record object to JsonObject
+     *
      * @param mCrypto object which is using to encrypt data
      * @return JsonObject with Record data
      * @throws StorageCryptoException if encryption failed
@@ -191,7 +229,6 @@ public class Record {
     }
 
     /**
-     *
      * @param mCrypto object which is using to encrypt data
      * @return Json string with Record data
      * @throws StorageCryptoException if encryption failed

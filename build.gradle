@@ -124,8 +124,6 @@ dependencies {
     compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     implementation "com.google.code.gson:gson:${gsonVersion}"
     compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
 }

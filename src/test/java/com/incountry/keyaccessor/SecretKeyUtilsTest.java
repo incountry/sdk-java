@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SecretKeyUtilsTest {
 
     @Test
-    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsJson(){
+    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsJson() {
         String secret = "user_password";
         int version = 1;
         boolean isKey = true;
@@ -41,7 +41,7 @@ public class SecretKeyUtilsTest {
     }
 
     @Test
-    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsNotJson(){
+    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsNotJson() {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;

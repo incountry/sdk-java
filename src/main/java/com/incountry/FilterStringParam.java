@@ -1,7 +1,6 @@
 package com.incountry;
 
 import com.incountry.crypto.Crypto;
-import lombok.Getter;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
@@ -9,10 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FilterStringParam {
-
     private List<String> value;
-
-    @Getter
     private boolean notCondition;
 
     public FilterStringParam(List<String> value) {
@@ -35,6 +31,14 @@ public class FilterStringParam {
             notCondition = notConditionValue;
 
         }
+    }
+
+    public boolean isNotCondition() {
+        return notCondition;
+    }
+
+    public void setNotCondition(boolean notCondition) {
+        this.notCondition = notCondition;
     }
 
     private List<String> hashValue(Crypto mCrypto) {
