@@ -1,7 +1,7 @@
-package com.incountry;
+package com.incountry.storage.sdk;
 
-import com.incountry.exceptions.StorageServerException;
-import com.incountry.http.HttpAgent;
+import com.incountry.storage.sdk.tools.exceptions.StorageServerException;
+import com.incountry.storage.sdk.tools.http.HttpAgent;
 
 import java.io.IOException;
 

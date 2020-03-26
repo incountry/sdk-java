@@ -1,9 +1,10 @@
-package com.incountry;
+package com.incountry.storage.sdk;
 
-import com.incountry.exceptions.StorageException;
-import com.incountry.keyaccessor.SecretKeyAccessor;
-import com.incountry.keyaccessor.key.SecretKey;
-import com.incountry.keyaccessor.key.SecretKeysData;
+import com.incountry.storage.sdk.dto.*;
+import com.incountry.storage.sdk.tools.exceptions.StorageException;
+import com.incountry.storage.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKeysData;
 import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;

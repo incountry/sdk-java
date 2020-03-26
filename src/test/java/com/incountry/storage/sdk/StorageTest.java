@@ -1,13 +1,14 @@
-package com.incountry;
+package com.incountry.storage.sdk;
 
 import com.google.gson.*;
-import com.incountry.crypto.Crypto;
-import com.incountry.crypto.impl.CryptoImpl;
-import com.incountry.exceptions.StorageException;
-import com.incountry.exceptions.StorageServerException;
-import com.incountry.keyaccessor.SecretKeyAccessor;
-import com.incountry.keyaccessor.key.SecretKey;
-import com.incountry.keyaccessor.key.SecretKeysData;
+import com.incountry.storage.sdk.tools.crypto.Crypto;
+import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.storage.sdk.dto.*;
+import com.incountry.storage.sdk.tools.exceptions.StorageException;
+import com.incountry.storage.sdk.tools.exceptions.StorageServerException;
+import com.incountry.storage.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKeysData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -1,9 +1,10 @@
-package com.incountry.crypto;
+package com.incountry.storage.sdk.crypto;
 
-import com.incountry.crypto.impl.CryptoImpl;
-import com.incountry.exceptions.StorageCryptoException;
-import com.incountry.keyaccessor.key.SecretKey;
-import com.incountry.keyaccessor.key.SecretKeysData;
+import com.incountry.storage.sdk.tools.crypto.Crypto;
+import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.storage.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKeysData;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

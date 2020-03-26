@@ -1,10 +1,10 @@
-package com.incountry.keyaccessor;
+package com.incountry.storage.sdk.keyaccessor;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.incountry.keyaccessor.key.SecretKey;
-import com.incountry.keyaccessor.key.SecretKeysData;
-import com.incountry.keyaccessor.utils.SecretKeyUtils;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKeysData;
+import com.incountry.storage.sdk.tools.keyaccessor.utils.SecretKeyUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
