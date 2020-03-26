@@ -112,10 +112,12 @@ public class Record {
         this.key3 = key3;
     }
 
+    //todo push to external class
     private static <T> T mergeKeys(T a, T b) {
         return b != null ? b : a;
     }
 
+    //todo push to external class
     public static Record merge(Record base, Record merged) {
         String country = mergeKeys(base.getCountry(), merged.getCountry());
         String mergedKey = mergeKeys(base.getKey(), merged.getKey());
@@ -128,6 +130,7 @@ public class Record {
         return new Record(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     }
 
+    //todo push to external class
     /**
      * Get property value from json
      *
@@ -142,6 +145,7 @@ public class Record {
         return jsonObject.get(property).isJsonNull() ? null : jsonObject.get(property).getAsString();
     }
 
+    //todo push to external class
     /**
      * Create record object from json string
      *
