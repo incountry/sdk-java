@@ -1,11 +1,7 @@
 package com.incountry.storage.sdk.dto;
 
-import com.incountry.storage.sdk.tools.crypto.Crypto;
-import org.json.JSONArray;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FilterStringParam {
     private List<String> value;
@@ -20,7 +16,6 @@ public class FilterStringParam {
         if (filterValue != null) {
             value.add(filterValue);
             notCondition = false;
-
         }
     }
 
@@ -29,34 +24,22 @@ public class FilterStringParam {
         if (filterValue != null) {
             value.add(filterValue);
             notCondition = notConditionValue;
-
         }
+    }
+
+    public List<String> getValue() {
+        return value;
     }
 
     public boolean isNotCondition() {
         return notCondition;
     }
 
-    public void setNotCondition(boolean notCondition) {
-        this.notCondition = notCondition;
+    @Override
+    public String toString() {
+        return "FilterStringParam{" +
+                "value=" + value +
+                ", notCondition=" + notCondition +
+                '}';
     }
-
-    private List<String> hashValue(Crypto mCrypto) {
-        return value.stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
-    }
-
-    public JSONArray toJSONString(Crypto mCrypto) {
-        if (value == null) return null;
-        if (mCrypto == null) return new JSONArray(value);
-
-        return new JSONArray(hashValue(mCrypto));
-    }
-
-    public JSONArray toJSONInt() {
-        if (value == null) {
-            return null;
-        }
-        return new JSONArray(value.stream().map(Integer::parseInt).collect(Collectors.toList()));
-    }
-
 }

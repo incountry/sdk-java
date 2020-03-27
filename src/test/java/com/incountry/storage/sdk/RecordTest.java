@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.incountry.storage.sdk.dto.Record;
+import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.exceptions.StorageCryptoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RecordTest {
-
-    @Expose (serialize = false, deserialize = false)
+    @Expose(serialize = false, deserialize = false)
     public String country;
     @Expose
     public String key;
@@ -59,7 +59,7 @@ public class RecordTest {
         assertEquals(newKey, resultRecord.getKey());
         assertEquals(newBody, resultRecord.getBody());
         assertEquals(newProfileKey, resultRecord.getProfileKey());
-        assertEquals((Integer)rangeKey, resultRecord.getRangeKey());
+        assertEquals((Integer) rangeKey, resultRecord.getRangeKey());
         assertEquals(newKey2, resultRecord.getKey2());
         assertEquals(key3, resultRecord.getKey3());
     }
@@ -77,7 +77,7 @@ public class RecordTest {
         jsonObject.addProperty("version", 2);
         String jsonString = new Gson().toJson(jsonObject);
         System.out.println();
-        Record record = Record.fromString(jsonString, null);
+        Record record = JsonUtils.recordFromString(jsonString, null);
 
         assertEquals(jsonObject.get("key").getAsString(), record.getKey());
         assertEquals(jsonObject.get("body").getAsString(), record.getBody());
@@ -92,7 +92,7 @@ public class RecordTest {
         JsonElement jsonElement = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJsonTree(this);
         JsonObject jsonObject = (JsonObject) jsonElement;
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        JsonObject recordJsonObject = record.toJsonObject(null);
+        JsonObject recordJsonObject = JsonUtils.toJson(record, null);
 
         assertEquals(jsonObject.get("key"), recordJsonObject.get("key"));
         assertEquals(jsonObject.get("body"), recordJsonObject.get("body"));
@@ -102,12 +102,20 @@ public class RecordTest {
         assertEquals(jsonObject.get("key3"), recordJsonObject.get("key3"));
     }
 
+    /**
+     * test case: serialize to json string some custom object with the same structure
+     * as Record (orders of fields are different). Then test fuction of serialize/deserialize
+     * to JSON and compare objects
+     *
+     * @throws StorageCryptoException
+     */
     @Test
     public void testToJsonString() throws StorageCryptoException {
-        String comparisonString = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
-        Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        String recordJsonString = record.toJsonString(null);
-
-        assertEquals(comparisonString, recordJsonString);
+        String quaziJsonString = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
+        Record nativeRecord = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        String nativeRecordJson = JsonUtils.toJsonString(nativeRecord, null);
+        Record recordFromQuazy = JsonUtils.recordFromString(quaziJsonString, null);
+        Record recordFromNative = JsonUtils.recordFromString(nativeRecordJson, null);
+        assertEquals(recordFromQuazy, recordFromNative);
     }
 }

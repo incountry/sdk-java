@@ -1,5 +1,6 @@
 package com.incountry.storage.sdk;
 
+import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.storage.sdk.dto.FilterStringParam;
@@ -19,7 +20,7 @@ public class FilterStringParamTest {
         String filterValue = "filterValue";
         Crypto crypto = new CryptoImpl("envId");
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        JSONArray jsonArray = filterStringParam.toJSONString(crypto);
+        JSONArray jsonArray = JsonUtils.toJsonString(filterStringParam, crypto);
         assertEquals(crypto.createKeyHash(filterValue), jsonArray.get(0));
     }
 
@@ -27,7 +28,7 @@ public class FilterStringParamTest {
     public void toJSONStringWithCryptoNullTest() {
         String filterValue = "filterValue";
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        JSONArray jsonArray = filterStringParam.toJSONString(null);
+        JSONArray jsonArray = JsonUtils.toJsonString(filterStringParam, null);
         assertEquals(filterValue, jsonArray.get(0));
     }
 
@@ -36,14 +37,14 @@ public class FilterStringParamTest {
         Crypto crypto = new CryptoImpl("envId");
         List<String> filterValue = null;
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        assertNull(filterStringParam.toJSONString(crypto));
+        assertNull(JsonUtils.toJsonString(filterStringParam, crypto));
     }
 
     @Test
     public void toJSONIntTest() {
         int filterValue = 1;
-        FilterStringParam filterStringParam = new FilterStringParam( Integer.toString(filterValue));
-        JSONArray jsonArray = filterStringParam.toJSONInt();
+        FilterStringParam filterStringParam = new FilterStringParam(Integer.toString(filterValue));
+        JSONArray jsonArray = JsonUtils.toJsonInt(filterStringParam);;
         assertEquals(filterValue, jsonArray.get(0));
     }
 
@@ -51,7 +52,6 @@ public class FilterStringParamTest {
     public void toJSONIntTestWithFilterStringParamValueNull() {
         List<String> filterValue = null;
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        assertNull(filterStringParam.toJSONInt());
+        assertNull(JsonUtils.toJsonInt(filterStringParam));
     }
-
 }

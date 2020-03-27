@@ -1,6 +1,7 @@
 package com.incountry.storage.sdk;
 
 import com.google.gson.*;
+import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.storage.sdk.dto.*;
@@ -105,8 +106,7 @@ public class StorageTest {
 
             String received = agent.getCallBody();
             String callPath = new URL(agent.getCallEndpoint()).getPath();
-
-            Record receivedRecord = Record.fromString(received, null);
+            Record receivedRecord = JsonUtils.recordFromString(received, null);
 
             assertEquals(expectedPath, callPath);
             assertNotEquals(key, receivedRecord.getKey());
@@ -146,7 +146,7 @@ public class StorageTest {
             String keyHash = crypto.createKeyHash(key);
             String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
-            FakeHttpAgent agent = new FakeHttpAgent(record.toJsonString(crypto));
+            FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, crypto));
             storage.setHttpAgent(agent);
 
             Record fetched = storage.read(country, key);
@@ -157,8 +157,6 @@ public class StorageTest {
             assertEquals(key2, fetched.getKey2());
             assertEquals(key3, fetched.getKey3());
             assertEquals(rangeKey, fetched.getRangeKey());
-
-
         }
 
         @ParameterizedTest()
@@ -265,11 +263,11 @@ public class StorageTest {
         @Test
         public void migrateTest() throws StorageException {
             Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encrypted = rec.toJsonString(crypto);
+            String encrypted = JsonUtils.toJsonString(rec, crypto);
             String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
             FakeHttpAgent agent = new FakeHttpAgent(content);
             storage.setHttpAgent(agent);
-            BatchRecord batchRecord = BatchRecord.fromString(content, crypto);
+            BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, crypto);
 
             int migratedRecords = batchRecord.getCount();
             int totalLeft = batchRecord.getTotal() - batchRecord.getCount();
@@ -285,7 +283,7 @@ public class StorageTest {
             FindFilter filter = new FindFilter();
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
             Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encrypted = rec.toJsonString(crypto);
+            String encrypted = JsonUtils.toJsonString(rec, crypto);
             FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
             BatchRecord batchRecord = storage.find(country, filter, options);
@@ -316,13 +314,13 @@ public class StorageTest {
 
         @Test
         public void testFindWithEnc() throws StorageException {
-            FindOptions options = new FindOptions(1,0);
+            FindOptions options = new FindOptions(1, 0);
             FindFilter filter = new FindFilter();
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
 
             Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encrypted = rec.toJsonString(crypto);
-            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            String encrypted = JsonUtils.toJsonString(rec, crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
 
             BatchRecord d = storage.find(country, filter, options);
@@ -342,13 +340,13 @@ public class StorageTest {
 
         @Test
         public void testFindOne() throws StorageException {
-            FindOptions options = new FindOptions(1,0);
+            FindOptions options = new FindOptions(1, 0);
             FindFilter filter = new FindFilter();
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
 
             Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encrypted = rec.toJsonString(crypto);
-            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            String encrypted = JsonUtils.toJsonString(rec, crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
 
             Record foundRecord = storage.findOne(country, filter, options);
@@ -374,8 +372,8 @@ public class StorageTest {
 
             Record recOtherEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             Record recEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encryptedRecOther = recOtherEnc.toJsonString(cryptoOther);
-            String encryptedRec = recEnc.toJsonString(crypto);
+            String encryptedRecOther = JsonUtils.toJsonString(recOtherEnc, cryptoOther);
+            String encryptedRec = JsonUtils.toJsonString(recEnc, crypto);
 
             FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
             storage.setHttpAgent(agent);
@@ -406,8 +404,8 @@ public class StorageTest {
 
             Record reсWithEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
             Record recWithPTEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encryptedRec = reсWithEnc.toJsonString(cryptoWithEnc);
-            String encryptedPTRec = recWithPTEnc.toJsonString(cryptoWithPT);
+            String encryptedRec = JsonUtils.toJsonString(reсWithEnc, cryptoWithEnc);
+            String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
 
             FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
             storage.setHttpAgent(agent);
@@ -455,8 +453,8 @@ public class StorageTest {
             filter.setProfileKeyParam(new FilterStringParam(profileKey));
 
             Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-            String encrypted = record.toJsonString(crypto);
-            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":["+ encrypted +"],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
+            String encrypted = JsonUtils.toJsonString(record, crypto);
+            FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
             storage.setHttpAgent(agent);
             assertThrows(IllegalArgumentException.class, () -> storage.find(null, null, null));
             assertThrows(IllegalArgumentException.class, () -> storage.find(country, null, null));
@@ -466,7 +464,7 @@ public class StorageTest {
         @Test
         public void testInitErrorOnInsufficientArgs() {
             SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> new SecretKeysData());
-            assertThrows(IllegalArgumentException.class, () ->  new Storage(null,null, secretKeyAccessor));
+            assertThrows(IllegalArgumentException.class, () -> new Storage(null, null, secretKeyAccessor));
         }
 
         @Test

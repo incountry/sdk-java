@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.storage.sdk.dto.*;
+import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.storage.sdk.tools.exceptions.StorageCryptoException;
@@ -19,6 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Access point of SDK
+ */
 public class Storage {
     private static final String PORTAL_BACKEND_URI = "https://portal-backend.incountry.com";
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
@@ -153,7 +157,7 @@ public class Storage {
         checkParameters(country, record.getKey());
         String url = getEndpoint(country, "/v2/storage/records/" + country);
         try {
-            httpAgent.request(url, "POST", record.toJsonString(crypto), false);
+            httpAgent.request(url, "POST", JsonUtils.toJsonString(record, crypto), false);
         } catch (IOException e) {
             throw new StorageServerException(MESSAGE_SERVER_ERROR, e);
         }
@@ -180,7 +184,7 @@ public class Storage {
         if (content == null) {
             return null;
         }
-        Record record = Record.fromString(content, crypto);
+        Record record = JsonUtils.recordFromString(content, crypto);
         record.setCountry(country);
 
         return record;
@@ -221,7 +225,7 @@ public class Storage {
         List<JsonObject> recordsStrings = new ArrayList<>();
         for (Record record : records) {
             checkParameters(country, record.getKey());
-            recordsStrings.add(record.toJsonObject(crypto));
+            recordsStrings.add(JsonUtils.toJson(record, crypto));
         }
         String url = getEndpoint(country, "/v2/storage/records/" + country + "/batchWrite");
         try {
@@ -289,8 +293,8 @@ public class Storage {
         String url = getEndpoint(country, STORAGE_URL + country + "/find");
 
         String postData = new JSONObject()
-                .put("filter", filter.toJSONObject(crypto))
-                .put("options", options.toJSONObject())
+                .put("filter", JsonUtils.toJson(filter,crypto))
+                .put("options", JsonUtils.toJson(options))
                 .toString();
 
         String content;
@@ -304,7 +308,7 @@ public class Storage {
         if (content == null) {
             return null;
         }
-        return BatchRecord.fromString(content, crypto);
+        return JsonUtils.batchRecordFromString(content, crypto);
     }
 
     /**

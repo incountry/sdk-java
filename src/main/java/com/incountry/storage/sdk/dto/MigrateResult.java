@@ -16,4 +16,12 @@ public class MigrateResult {
     public int getTotalLeft() {
         return totalLeft;
     }
+
+    @Override
+    public String toString() {
+        return "MigrateResult{" +
+                "migrated=" + migrated +
+                ", totalLeft=" + totalLeft +
+                '}';
+    }
 }

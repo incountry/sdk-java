@@ -1,13 +1,11 @@
 package com.incountry.storage.sdk.dto;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.util.Arrays;
 
 public class FilterRangeParam {
     private int[] values;
-    private String operator;
     private int value;
-
+    private String operator;
 
     public FilterRangeParam(int[] values) {
         this.values = values;
@@ -26,12 +24,24 @@ public class FilterRangeParam {
         return operator != null;
     }
 
-    public JSONArray valueJSON() {
-        if (values == null) return null;
-        return new JSONArray(values);
+    public int[] getValues() {
+        return values;
     }
 
-    public JSONObject conditionJSON() {
-        return new JSONObject().put(operator, value);
+    public int getValue() {
+        return value;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    @Override
+    public String toString() {
+        return "FilterRangeParam{" +
+                "values=" + Arrays.toString(values) +
+                ", value=" + value +
+                ", operator='" + operator + '\'' +
+                '}';
     }
 }

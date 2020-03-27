@@ -2,6 +2,7 @@ package com.incountry.storage.sdk;
 
 import com.incountry.storage.sdk.dto.FilterStringParam;
 import com.incountry.storage.sdk.dto.FindFilter;
+import com.incountry.storage.sdk.tools.JsonUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ public class FindFilterTest {
         findFilter.setVersionParam(versionFilterParam);
         findFilter.setKeyParam(keyFilterParam);
         findFilter.setProfileKeyParam(profileKeyFilterParam);
-        JSONObject jsonObject = findFilter.toJSONObject(null);
+        JSONObject jsonObject = JsonUtils.toJson(findFilter,null);
 
         assertEquals(String.format("{\"$not\":[%d]}", version), jsonObject.get("version").toString());
         assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());

@@ -1,7 +1,5 @@
 package com.incountry.storage.sdk.dto;
 
-import org.json.JSONObject;
-
 public class FindOptions {
     private static final int MAX_LIMIT = 100;
 
@@ -25,6 +23,9 @@ public class FindOptions {
         if (limit > MAX_LIMIT) {
             throw new IllegalArgumentException(String.format("Max limit is %l. Use offset to populate more", MAX_LIMIT));
         }
+        if (limit < 1) {
+            throw new IllegalArgumentException(String.format("Limit must be more than 0"));
+        }
         this.limit = limit;
         this.offset = offset;
     }
@@ -45,9 +46,11 @@ public class FindOptions {
         this.offset = offset;
     }
 
-    public JSONObject toJSONObject() {
-        return new JSONObject()
-                .put("limit", limit)
-                .put("offset", offset);
+    @Override
+    public String toString() {
+        return "FindOptions{" +
+                "limit=" + limit +
+                ", offset=" + offset +
+                '}';
     }
 }
