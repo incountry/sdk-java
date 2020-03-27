@@ -181,8 +181,8 @@ public class JsonUtils {
      * @return JSONObject with added 'not' condition
      */
     private static JSONObject addNotCondition(FilterStringParam param, Crypto mCrypto, boolean isForString) {
-        String val = (isForString ? toJsonString(param, mCrypto) : toJsonInt(param)).toString();
-        return new JSONObject(String.format("{$not: %s}", val));
+        JSONArray arr = isForString ? toJsonString(param, mCrypto) : toJsonInt(param);
+        return new JSONObject(String.format("{$not: %s}", arr != null ? arr.toString() : null));
     }
 
     public static BatchRecord batchRecordFromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
