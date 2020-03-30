@@ -1,7 +1,7 @@
 package com.incountry.storage.sdk;
 
-import com.incountry.storage.sdk.dto.FilterStringParam;
-import com.incountry.storage.sdk.dto.FindFilter;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
+import com.incountry.storage.sdk.dto.search.FindFilter;
 import com.incountry.storage.sdk.tools.JsonUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;

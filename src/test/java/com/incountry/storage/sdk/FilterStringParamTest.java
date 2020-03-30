@@ -3,7 +3,7 @@ package com.incountry.storage.sdk;
 import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
-import com.incountry.storage.sdk.dto.FilterStringParam;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
 

@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.storage.sdk.dto.*;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
+import com.incountry.storage.sdk.dto.search.FindFilter;
+import com.incountry.storage.sdk.dto.search.FindOptions;
 import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;
@@ -32,12 +35,15 @@ public class Storage {
     private static final String PARAM_API_KEY = "INC_API_KEY";
     private static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     //error messages
-    private static final String MESSAGE_SERVER_ERROR = "Server request error";
-    private static final String MESSAGE_ENV_EXCEPTION = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MESSAGE_ERR_GET_COUNTRIES = "Unable to retrieve available countries list";
-    private static final String MESSAGE_ERROR_NULL_COUNTRY = "Country cannot be null";
-    private static final String MESSAGE_NULL_KEY = "Key cannot be null";
-    private static final String MESSAGE_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
+    private static final String MSG_SERVER_ERROR = "Server request error";
+    private static final String MSG_ENV_EXCEPTION = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
+    private static final String MSG_ERR_GET_COUNTRIES = "Unable to retrieve available countries list";
+    private static final String MSG_ERROR_NULL_COUNTRY = "Country cannot be null";
+    private static final String MSG_NULL_KEY = "Key cannot be null";
+    private static final String MSG_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
+    private static final String MSG_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
+    private static final String MSG_MULTIPLE_FOUND = "Multiple records found";
+    private static final String MSG_RECORD_NOT_FOUND = "Record not found";
 
     private String envID;
     private String apiKey;
@@ -67,11 +73,11 @@ public class Storage {
     public Storage(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
         envID = environmentID;
         if (envID == null) {
-            throw new IllegalArgumentException(MESSAGE_ENV_EXCEPTION);
+            throw new IllegalArgumentException(MSG_ENV_EXCEPTION);
         }
         this.apiKey = apiKey;
         if (this.apiKey == null) {
-            throw new IllegalArgumentException(MESSAGE_PASS_API_KEY);
+            throw new IllegalArgumentException(MSG_PASS_API_KEY);
         }
         this.endpoint = endpoint;
         if (this.endpoint == null) {
@@ -99,7 +105,7 @@ public class Storage {
         try {
             content = httpAgent.request(PORTAL_BACKEND_URI + "/countries", "GET", null, false);
         } catch (IOException e) {
-            throw new StorageServerException(MESSAGE_ERR_GET_COUNTRIES, e);
+            throw new StorageServerException(MSG_ERR_GET_COUNTRIES, e);
         }
 
         GsonBuilder builder = new GsonBuilder();
@@ -129,8 +135,8 @@ public class Storage {
     }
 
     private void checkParameters(String country, String key) {
-        if (country == null) throw new IllegalArgumentException(MESSAGE_ERROR_NULL_COUNTRY);
-        if (key == null) throw new IllegalArgumentException(MESSAGE_NULL_KEY);
+        if (country == null) throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
+        if (key == null) throw new IllegalArgumentException(MSG_NULL_KEY);
     }
 
     private String createUrl(String country, String recordKey) {
@@ -155,11 +161,11 @@ public class Storage {
     public Record write(Record record) throws StorageServerException, StorageCryptoException {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
-        String url = getEndpoint(country, "/v2/storage/records/" + country);
+        String url = getEndpoint(country, STORAGE_URL + country);
         try {
             httpAgent.request(url, "POST", JsonUtils.toJsonString(record, crypto), false);
         } catch (IOException e) {
-            throw new StorageServerException(MESSAGE_SERVER_ERROR, e);
+            throw new StorageServerException(MSG_SERVER_ERROR, e);
         }
         return record;
     }
@@ -179,7 +185,7 @@ public class Storage {
         try {
             content = httpAgent.request(url, "GET", null, true);
         } catch (IOException e) {
-            throw new StorageServerException(MESSAGE_SERVER_ERROR, e);
+            throw new StorageServerException(MSG_SERVER_ERROR, e);
         }
         if (content == null) {
             return null;
@@ -200,7 +206,7 @@ public class Storage {
      */
     public MigrateResult migrate(String country, int limit) throws StorageException {
         if (!isEncrypted) {
-            throw new StorageException("Migration is not supported when encryption is off");
+            throw new StorageException(MSG_MIGR_NOT_SUPPORT);
         }
         Integer secretKeyCurrentVersion = crypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
@@ -227,11 +233,11 @@ public class Storage {
             checkParameters(country, record.getKey());
             recordsStrings.add(JsonUtils.toJson(record, crypto));
         }
-        String url = getEndpoint(country, "/v2/storage/records/" + country + "/batchWrite");
+        String url = getEndpoint(country, STORAGE_URL + country + "/batchWrite");
         try {
             httpAgent.request(url, "POST", "{ \"records\" : " + new Gson().toJson(recordsStrings) + "}", false);
         } catch (IOException e) {
-            throw new StorageServerException(MESSAGE_SERVER_ERROR, e);
+            throw new StorageServerException(MSG_SERVER_ERROR, e);
         }
 
         return new BatchRecord(records, 0, 0, 0, 0, null);
@@ -242,10 +248,10 @@ public class Storage {
         BatchRecord existingRecords = find(country, filter, options);
 
         if (existingRecords.getTotal() > 1) {
-            throw new StorageServerException("Multiple records found");
+            throw new StorageServerException(MSG_MULTIPLE_FOUND);
         }
         if (existingRecords.getTotal() <= 0) {
-            throw new StorageServerException("Record not found");
+            throw new StorageServerException(MSG_RECORD_NOT_FOUND);
         }
 
         Record foundRecord = existingRecords.getRecords().get(0);
@@ -270,7 +276,7 @@ public class Storage {
         try {
             httpAgent.request(url, "DELETE", null, false);
         } catch (IOException e) {
-            throw new StorageServerException(MESSAGE_SERVER_ERROR, e);
+            throw new StorageServerException(MSG_SERVER_ERROR, e);
         }
         return true;
     }
@@ -293,7 +299,7 @@ public class Storage {
         String url = getEndpoint(country, STORAGE_URL + country + "/find");
 
         String postData = new JSONObject()
-                .put("filter", JsonUtils.toJson(filter,crypto))
+                .put("filter", JsonUtils.toJson(filter, crypto))
                 .put("options", JsonUtils.toJson(options))
                 .toString();
 
@@ -302,7 +308,7 @@ public class Storage {
         try {
             content = httpAgent.request(url, "POST", postData, false);
         } catch (IOException e) {
-            throw new StorageServerException(MESSAGE_SERVER_ERROR, e);
+            throw new StorageServerException(MSG_SERVER_ERROR, e);
         }
 
         if (content == null) {

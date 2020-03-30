@@ -1,6 +1,9 @@
 package com.incountry.storage.sdk;
 
 import com.google.gson.*;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
+import com.incountry.storage.sdk.dto.search.FindFilter;
+import com.incountry.storage.sdk.dto.search.FindOptions;
 import com.incountry.storage.sdk.tools.JsonUtils;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.crypto.impl.CryptoImpl;

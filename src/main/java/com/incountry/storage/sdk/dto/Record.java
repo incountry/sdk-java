@@ -1,20 +1,13 @@
 package com.incountry.storage.sdk.dto;
 
-//todo delete this import
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.google.gson.annotations.SerializedName;
-
 import java.util.Objects;
 
-@JsonFilter("nullFilter")
 public class Record {
     private String country;
     private String key;
     private String key2;
     private String key3;
-    @SerializedName("profile_key")
     private String profileKey;
-    @SerializedName("range_key")
     private Integer rangeKey;
     private String body;
 
@@ -42,6 +35,12 @@ public class Record {
         return b != null ? b : a;
     }
 
+    /**
+     * merge records. Notnull field values from @merged replaces old ones in @base
+     * @param base
+     * @param merged
+     * @return
+     */
     public static Record merge(Record base, Record merged) {
         String country = mergeKeys(base.getCountry(), merged.getCountry());
         String mergedKey = mergeKeys(base.getKey(), merged.getKey());

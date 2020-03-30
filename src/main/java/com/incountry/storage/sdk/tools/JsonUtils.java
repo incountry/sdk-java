@@ -2,6 +2,10 @@ package com.incountry.storage.sdk.tools;
 
 import com.google.gson.*;
 import com.incountry.storage.sdk.dto.*;
+import com.incountry.storage.sdk.dto.search.FilterRangeParam;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
+import com.incountry.storage.sdk.dto.search.FindFilter;
+import com.incountry.storage.sdk.dto.search.FindOptions;
 import com.incountry.storage.sdk.tools.crypto.Crypto;
 import com.incountry.storage.sdk.tools.exceptions.RecordException;
 import com.incountry.storage.sdk.tools.exceptions.StorageCryptoException;
@@ -38,36 +42,33 @@ public class JsonUtils {
      * @throws StorageCryptoException if encryption failed
      */
     public static JsonObject toJson(Record record, Crypto mCrypto) throws StorageCryptoException {
-
-        GsonBuilder builder = new GsonBuilder();
-        Gson gson = builder.create();
+        Gson gson = getGson();
+        JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
+        jsonObject.remove(P_COUNTRY);
         if (mCrypto == null) {
-            JsonObject recordJson = (JsonObject) gson.toJsonTree(record);
-            recordJson.remove(P_COUNTRY);
-            return recordJson;
+            return jsonObject;
         }
+        jsonObject.remove(P_BODY);
+        Map<String, String> mapBodyMeta = new HashMap<>();
+        mapBodyMeta.put(P_PAYLOAD, record.getBody());
+        mapBodyMeta.put(P_META, jsonObject.toString());
+        String packedBody = gson.toJson(mapBodyMeta);
+        VersionRecord encRec = cryptRecord(record, mCrypto, packedBody);
+        return  (JsonObject)gson.toJsonTree(encRec);
+    }
 
-        JsonElement nodesElement = gson.toJsonTree(record);
-        ((JsonObject) nodesElement).remove(P_COUNTRY);
-        ((JsonObject) nodesElement).remove(P_BODY);
+    private static VersionRecord cryptRecord(Record record, Crypto mCrypto, String bodyJsonString) throws StorageCryptoException {
+        VersionRecord encVersRec = new VersionRecord();
+        encVersRec.setKey(mCrypto.createKeyHash(record.getKey()));
+        encVersRec.setKey2(mCrypto.createKeyHash(record.getKey2()));
+        encVersRec.setKey3(mCrypto.createKeyHash(record.getKey3()));
+        encVersRec.setProfileKey(mCrypto.createKeyHash(record.getProfileKey()));
+        encVersRec.setRangeKey(record.getRangeKey());
 
-        Map<String, String> bodyJson = new HashMap<>();
-        bodyJson.put(P_PAYLOAD, record.getBody());
-        bodyJson.put(P_META, nodesElement.toString());
-        String bodyJsonString = gson.toJson(bodyJson);
-
-        Pair<String, Integer> encryptedBodyAndVersion = mCrypto.encrypt(bodyJsonString);
-
-        JsonObject recordJson = new JsonObject();
-        recordJson.addProperty(P_KEY, mCrypto.createKeyHash(record.getKey()));
-        recordJson.addProperty(P_KEY_2, mCrypto.createKeyHash(record.getKey2()));
-        recordJson.addProperty(P_KEY_3, mCrypto.createKeyHash(record.getKey3()));
-        recordJson.addProperty(P_PROFILE_KEY, mCrypto.createKeyHash(record.getProfileKey()));
-        recordJson.addProperty(P_RANGE_KEY, record.getRangeKey());
-        recordJson.addProperty(P_BODY, encryptedBodyAndVersion.getValue0());
-        recordJson.addProperty(P_VERSION, encryptedBodyAndVersion.getValue1() != null ? encryptedBodyAndVersion.getValue1() : 0);
-
-        return recordJson;
+        Pair<String, Integer> encBodyAndVersion = mCrypto.encrypt(bodyJsonString);
+        encVersRec.setBody(encBodyAndVersion.getValue0());
+        encVersRec.setVersion(encBodyAndVersion.getValue1() != null ? encBodyAndVersion.getValue1() : 0);
+        return encVersRec;
     }
 
     /**
@@ -79,8 +80,8 @@ public class JsonUtils {
      * @throws StorageCryptoException if decryption failed
      */
     public static Record recordFromString(String jsonString, Crypto mCrypto) throws StorageCryptoException {
-
-        JsonObject jsonObject = new Gson().fromJson(jsonString, JsonObject.class);
+        Gson gson = getGson();
+        JsonObject jsonObject = gson.fromJson(jsonString, JsonObject.class);
 
         String country = getPropertyFromJson(jsonObject, P_COUNTRY);
         String key = getPropertyFromJson(jsonObject, P_KEY);
@@ -103,10 +104,10 @@ public class JsonUtils {
                 key2 = mCrypto.decrypt(key2, version);
                 key3 = mCrypto.decrypt(key3, version);
             } else {
-                JsonObject bodyObj = new Gson().fromJson(body, JsonObject.class);
+                JsonObject bodyObj = gson.fromJson(body, JsonObject.class);
                 body = getPropertyFromJson(bodyObj, P_PAYLOAD);
                 String meta = getPropertyFromJson(bodyObj, P_META);
-                JsonObject metaObj = new Gson().fromJson(meta, JsonObject.class);
+                JsonObject metaObj = gson.fromJson(meta, JsonObject.class);
                 key = getPropertyFromJson(metaObj, P_KEY);
                 profileKey = getPropertyFromJson(metaObj, P_PROFILE_KEY);
                 key2 = getPropertyFromJson(metaObj, P_KEY_2);
@@ -187,29 +188,25 @@ public class JsonUtils {
 
     public static BatchRecord batchRecordFromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
         List<RecordException> errors = new ArrayList<>();
-
-        JsonObject responseObject = new Gson().fromJson(responseString, JsonObject.class);
+        Gson gson = getGson();
+        JsonObject responseObject = gson.fromJson(responseString, JsonObject.class);
 
         JsonObject meta = (JsonObject) responseObject.get("meta");
         int count = meta.get("count").getAsInt();
         int limit = meta.get("limit").getAsInt();
         int offset = meta.get("offset").getAsInt();
         int total = meta.get("total").getAsInt();
-
         List<Record> records = new ArrayList<>();
-
-        if (count == 0) return new BatchRecord(records, count, limit, offset, total, errors);
-
-        JsonArray data = responseObject.getAsJsonArray("data");
-
-        for (JsonElement item : data) {
-            try {
-                records.add(JsonUtils.recordFromString(item.toString(), mCrypto));
-            } catch (Exception e) {
-                errors.add(new RecordException("Record Parse Exception", item.toString(), e));
+        if (count != 0) {
+            JsonArray data = responseObject.getAsJsonArray("data");
+            for (JsonElement item : data) {
+                try {
+                    records.add(JsonUtils.recordFromString(item.toString(), mCrypto));
+                } catch (Exception e) {
+                    errors.add(new RecordException("Record Parse Exception", item.toString(), e));
+                }
             }
         }
-
         return new BatchRecord(records, count, limit, offset, total, errors);
     }
 
@@ -246,5 +243,21 @@ public class JsonUtils {
             return null;
         }
         return new JSONArray(param.getValue().stream().map(Integer::parseInt).collect(Collectors.toList()));
+    }
+
+    private static Gson getGson() {
+        return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+    }
+
+    private static class VersionRecord extends Record {
+        private Integer version;
+
+        public Integer getVersion() {
+            return version;
+        }
+
+        public void setVersion(Integer version) {
+            this.version = version;
+        }
     }
 }

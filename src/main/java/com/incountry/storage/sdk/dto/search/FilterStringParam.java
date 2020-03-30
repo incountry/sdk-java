@@ -1,4 +1,4 @@
-package com.incountry.storage.sdk.dto;
+package com.incountry.storage.sdk.dto.search;
 
 import java.util.ArrayList;
 import java.util.List;

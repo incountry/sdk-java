@@ -1,6 +1,10 @@
-package com.incountry.storage.sdk.dto;
+package com.incountry.storage.sdk.dto.search;
 
 //todo create using Builder pattern
+
+import com.incountry.storage.sdk.dto.search.FilterRangeParam;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
+
 /**
  * Container for filters to searching of stored data by param values
  */

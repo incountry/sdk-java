@@ -1,4 +1,4 @@
-package com.incountry.storage.sdk.dto;
+package com.incountry.storage.sdk.dto.search;
 
 public class FindOptions {
     private static final int MAX_LIMIT = 100;

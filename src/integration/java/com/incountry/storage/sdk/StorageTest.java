@@ -1,6 +1,10 @@
 package com.incountry.storage.sdk;
 
 import com.incountry.storage.sdk.dto.*;
+import com.incountry.storage.sdk.dto.search.FilterRangeParam;
+import com.incountry.storage.sdk.dto.search.FilterStringParam;
+import com.incountry.storage.sdk.dto.search.FindFilter;
+import com.incountry.storage.sdk.dto.search.FindOptions;
 import com.incountry.storage.sdk.tools.exceptions.StorageException;
 import com.incountry.storage.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.storage.sdk.tools.keyaccessor.key.SecretKey;
