@@ -1,6 +1,5 @@
 package com.incountry.residence.sdk.tools;
 
-
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -39,6 +38,10 @@ public class JsonUtils {
     private static final String P_VERSION = "version";
     private static final String P_LIMIT = "limit";
     private static final String P_OFFSET = "offset";
+    private static final String P_COUNT = "count";
+    private static final String P_TOTAL = "total";
+    private static final String P_DATA = "data";
+    private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
 
     /**
      * Converts a Record object to JsonObject
@@ -64,8 +67,6 @@ public class JsonUtils {
         EncryptedRecord encRec = new EncryptedRecord(record, mCrypto, packedBody);
         return (JsonObject) gson.toJsonTree(encRec);
     }
-
-    //todo refactor
 
     /**
      * Create record object from json string
@@ -115,9 +116,6 @@ public class JsonUtils {
         }
         return jsonObject.get(property).isJsonNull() ? null : jsonObject.get(property).getAsString();
     }
-
-
-    //todo refactor
 
     /**
      * Creates JSONObject with FindFilter object properties
@@ -170,20 +168,19 @@ public class JsonUtils {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
         JsonObject responseObject = gson.fromJson(responseString, JsonObject.class);
-
-        JsonObject meta = (JsonObject) responseObject.get("meta");
-        int count = meta.get("count").getAsInt();
-        int limit = meta.get("limit").getAsInt();
-        int offset = meta.get("offset").getAsInt();
-        int total = meta.get("total").getAsInt();
+        JsonObject meta = (JsonObject) responseObject.get(P_META);
+        int count = meta.get(P_COUNT).getAsInt();
+        int limit = meta.get(P_LIMIT).getAsInt();
+        int offset = meta.get(P_OFFSET).getAsInt();
+        int total = meta.get(P_TOTAL).getAsInt();
         List<Record> records = new ArrayList<>();
         if (count != 0) {
-            JsonArray data = responseObject.getAsJsonArray("data");
+            JsonArray data = responseObject.getAsJsonArray(P_DATA);
             for (JsonElement item : data) {
                 try {
                     records.add(JsonUtils.recordFromString(item.toString(), mCrypto));
                 } catch (Exception e) {
-                    errors.add(new RecordException("Record Parse Exception", item.toString(), e));
+                    errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, item.toString(), e));
                 }
             }
         }
@@ -286,11 +283,11 @@ public class JsonUtils {
             JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
             setBody(getPropertyFromJson(bodyObj, P_PAYLOAD));
             String meta = getPropertyFromJson(bodyObj, P_META);
-            JsonObject metaObj = gson.fromJson(meta, JsonObject.class);
-            setKey(getPropertyFromJson(metaObj, P_KEY));
-            setProfileKey(getPropertyFromJson(metaObj, P_PROFILE_KEY));
-            setKey2(getPropertyFromJson(metaObj, P_KEY_2));
-            setKey3(getPropertyFromJson(metaObj, P_KEY_3));
+            Record recordFromMeta = gson.fromJson(meta, Record.class);
+            setKey(recordFromMeta.getKey());
+            setKey2(recordFromMeta.getKey2());
+            setKey3(recordFromMeta.getKey3());
+            setProfileKey(recordFromMeta.getProfileKey());
         }
     }
 }

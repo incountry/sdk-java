@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+
+//todo move json transformations from this class
 /**
  * Access point of SDK
  */
