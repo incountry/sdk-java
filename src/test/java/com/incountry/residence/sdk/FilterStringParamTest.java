@@ -33,25 +33,10 @@ public class FilterStringParamTest {
     }
 
     @Test
-    public void toJSONStringTestWithFilterStringParamValueNullTest() {
-        Crypto crypto = new CryptoImpl("envId");
-        List<String> filterValue = null;
-        FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        assertNull(JsonUtils.toJsonString(filterStringParam, crypto));
-    }
-
-    @Test
     public void toJSONIntTest() {
         int filterValue = 1;
         FilterStringParam filterStringParam = new FilterStringParam(Integer.toString(filterValue));
         JSONArray jsonArray = JsonUtils.toJsonInt(filterStringParam);;
         assertEquals(filterValue, jsonArray.get(0));
-    }
-
-    @Test
-    public void toJSONIntTestWithFilterStringParamValueNull() {
-        List<String> filterValue = null;
-        FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        assertNull(JsonUtils.toJsonInt(filterStringParam));
     }
 }

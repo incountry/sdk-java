@@ -5,7 +5,6 @@ import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindOptions;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
@@ -47,7 +46,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_MULTIPLE_FOUND = "Multiple records found";
     private static final String MSG_RECORD_NOT_FOUND = "Record not found";
     private static final String MSG_ERROR_NULL_FILTERS = "Filters cannot be null";
-    private static final String MSG_ERROR_NULL_OPTIONS = "Options cannot be null";
 
     private String envID;
     private String apiKey;
@@ -211,8 +209,10 @@ public class StorageImpl implements Storage {
         }
         Integer secretKeyCurrentVersion = crypto.getCurrentSecretVersion();
         FindFilter findFilter = new FindFilter();
-        findFilter.setVersionParam(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
-        BatchRecord batchRecord = find(country, findFilter, new FindOptions(limit, 0));
+        findFilter.setLimit(limit);
+        findFilter.setOffset(0);
+        findFilter.setVersionFilter(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
+        BatchRecord batchRecord = find(country, findFilter);
         createBatch(country, batchRecord.getRecords());
 
         return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
@@ -242,8 +242,9 @@ public class StorageImpl implements Storage {
     }
 
     public Record update(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {
-        FindOptions options = new FindOptions(1, 0);
-        BatchRecord existingRecords = find(country, filter, options);
+        filter.setLimit(1);
+        filter.setOffset(0);
+        BatchRecord existingRecords = find(country, filter);
 
         if (existingRecords.getTotal() > 1) {
             throw new StorageServerException(MSG_MULTIPLE_FOUND);
@@ -284,24 +285,20 @@ public class StorageImpl implements Storage {
      *
      * @param country country identifier
      * @param filter  object representing find filters
-     * @param options find options
      * @return BatchRecord object which contains required records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
+    public BatchRecord find(String country, FindFilter filter) throws StorageServerException, StorageCryptoException {
         if (country == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
         }
         if (filter == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
-        if (options == null) {
-            throw new IllegalArgumentException(MSG_ERROR_NULL_OPTIONS);
-        }
         country = country.toLowerCase();
         String url = getEndpoint(country, STORAGE_URL + country + URI_DELIMITER + "find");
-        String postData = JsonUtils.toJsonString(filter, options, crypto);
+        String postData = JsonUtils.toJsonString(filter, crypto);
         String content;
         try {
             content = httpAgent.request(url, URI_POST, postData, false);
@@ -319,13 +316,12 @@ public class StorageImpl implements Storage {
      *
      * @param country country identifier
      * @param filter  object representing find filters
-     * @param options find options
      * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public Record findOne(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException {
-        BatchRecord findResults = find(country, filter, options);
+    public Record findOne(String country, FindFilter filter) throws StorageServerException, StorageCryptoException {
+        BatchRecord findResults = find(country, filter);
         List<Record> records = findResults.getRecords();
 
         if (records.isEmpty()) {

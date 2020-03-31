@@ -11,7 +11,6 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterRangeParam;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
-import com.incountry.residence.sdk.dto.search.FindOptions;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -136,12 +135,12 @@ public class JsonUtils {
     public static JSONObject toJson(FindFilter filter, Crypto mCrypto) {
         JSONObject json = new JSONObject();
         if (filter != null) {
-            addToJson(json, P_KEY, filter.getKeyParam(), mCrypto);
-            addToJson(json, P_KEY_2, filter.getKey2Param(), mCrypto);
-            addToJson(json, P_KEY_3, filter.getKey3Param(), mCrypto);
-            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyParam(), mCrypto);
-            addToJson(json, P_VERSION, filter.getVersionParam(), mCrypto);
-            FilterRangeParam range = filter.getRangeKeyParam();
+            addToJson(json, P_KEY, filter.getKeyFilter(), mCrypto);
+            addToJson(json, P_KEY_2, filter.getKey2Filter(), mCrypto);
+            addToJson(json, P_KEY_3, filter.getKey3Filter(), mCrypto);
+            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), mCrypto);
+            addToJson(json, P_VERSION, filter.getVersionFilter(), mCrypto);
+            FilterRangeParam range = filter.getRangeKeyFilter();
             if (range != null) {
                 json.put(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
             }
@@ -206,10 +205,10 @@ public class JsonUtils {
         return new JSONObject().put(range.getOperator(), range.getValue());
     }
 
-    public static JSONObject toJson(FindOptions options) {
+    private static JSONObject findOptionstoJson(int limit, int offset) {
         return new JSONObject()
-                .put(P_LIMIT, options.getLimit())
-                .put(P_OFFSET, options.getOffset());
+                .put(P_LIMIT, limit)
+                .put(P_OFFSET, offset);
     }
 
     private static List<String> hashValue(FilterStringParam param, Crypto mCrypto) {
@@ -246,6 +245,7 @@ public class JsonUtils {
         });
     }
 
+    //todo refactor
     public static String toJsonString(List<Record> records, String country, Crypto crypto, BiConsumer<String, String> lambda)
             throws StorageCryptoException {
         List<JsonObject> jsonList = new ArrayList<>();
@@ -256,10 +256,10 @@ public class JsonUtils {
         return "{ \"records\" : " + (getGson4Records().toJson(jsonList)) + "}";
     }
 
-    public static String toJsonString(FindFilter filter, FindOptions options, Crypto crypto) {
+    public static String toJsonString(FindFilter filter, Crypto crypto) {
         return new JSONObject()
                 .put(P_FILTER, JsonUtils.toJson(filter, crypto))
-                .put(P_OPTIONS, JsonUtils.toJson(options))
+                .put(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()))
                 .toString();
     }
 

@@ -4,7 +4,6 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
-import com.incountry.residence.sdk.dto.search.FindOptions;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -27,9 +26,9 @@ public interface Storage {
 
     boolean delete(String country, String recordKey) throws StorageServerException;
 
-    BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException;
+    BatchRecord find(String country, FindFilter filter) throws StorageServerException, StorageCryptoException;
 
-    Record findOne(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilter filter) throws StorageServerException, StorageCryptoException;
 
     MigrateResult migrate(String country, int limit) throws StorageException;
 

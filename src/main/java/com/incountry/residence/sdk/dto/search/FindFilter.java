@@ -1,93 +1,134 @@
 package com.incountry.residence.sdk.dto.search;
 
-//todo create using Builder pattern
-
 /**
  * Container for filters to searching of stored data by param values
  */
 public class FindFilter {
-    private FilterStringParam keyParam;
-    private FilterStringParam key2Param;
-    private FilterStringParam key3Param;
-    private FilterStringParam profileKeyParam;
-    private FilterRangeParam rangeKeyParam;
-    private FilterStringParam versionParam;
+    private static final int MAX_LIMIT = 100;
+    private static final String MSG_MAX_LIMIT = "Max limit is %l. Use offset to populate more";
+    private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
+    private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
+
+    private FilterStringParam keyFilter;
+    private FilterStringParam key2Filter;
+    private FilterStringParam key3Filter;
+    private FilterStringParam profileKeyFilter;
+    private FilterRangeParam rangeKeyFilter;
+    private FilterStringParam versionFilter;
+
+    private int limit = MAX_LIMIT;
+    private int offset = 0;
 
     public FindFilter() {
     }
 
-    public FindFilter(
-            FilterStringParam key,
-            FilterStringParam key2,
-            FilterStringParam key3,
-            FilterStringParam profileKey,
-            FilterRangeParam rangeKey,
-            FilterStringParam version) {
-        this.keyParam = key;
-        this.profileKeyParam = profileKey;
-        this.key2Param = key2;
-        this.key3Param = key3;
-        this.rangeKeyParam = rangeKey;
-        this.versionParam = version;
+    public FindFilter(FilterStringParam keyFilter, FilterStringParam key2Filter, FilterStringParam key3Filter, FilterStringParam profileKeyFilter, FilterRangeParam rangeKeyFilter, FilterStringParam versionFilter) {
+        this.keyFilter = keyFilter;
+        this.key2Filter = key2Filter;
+        this.key3Filter = key3Filter;
+        this.profileKeyFilter = profileKeyFilter;
+        this.rangeKeyFilter = rangeKeyFilter;
+        this.versionFilter = versionFilter;
     }
 
-    public FilterStringParam getKeyParam() {
-        return keyParam;
+    public void setLimit(int limit) {
+        if (limit > MAX_LIMIT) {
+            throw new IllegalArgumentException(String.format(MSG_MAX_LIMIT, MAX_LIMIT));
+        }
+        if (limit < 1) {
+            throw new IllegalArgumentException(String.format(MSG_NEG_LIMIT));
+        }
+        this.limit = limit;
     }
 
-    public void setKeyParam(FilterStringParam keyParam) {
-        this.keyParam = keyParam;
+    public void setOffset(int offset) {
+        if (offset < 0) {
+            throw new IllegalArgumentException(String.format(MSG_NEG_OFFSET));
+        }
+        this.offset = offset;
     }
 
-    public FilterStringParam getKey2Param() {
-        return key2Param;
+    public int getLimit() {
+        return limit;
     }
 
-    public void setKey2Param(FilterStringParam key2Param) {
-        this.key2Param = key2Param;
+    public int getOffset() {
+        return offset;
     }
 
-    public FilterStringParam getKey3Param() {
-        return key3Param;
+    public FilterStringParam getKeyFilter() {
+        return keyFilter;
     }
 
-    public void setKey3Param(FilterStringParam key3Param) {
-        this.key3Param = key3Param;
+    public void setKeyFilter(FilterStringParam keyFilter) {
+        this.keyFilter = keyFilter;
     }
 
-    public FilterStringParam getProfileKeyParam() {
-        return profileKeyParam;
+    public FilterStringParam getKey2Filter() {
+        return key2Filter;
     }
 
-    public void setProfileKeyParam(FilterStringParam profileKeyParam) {
-        this.profileKeyParam = profileKeyParam;
+    public void setKey2Filter(FilterStringParam key2Filter) {
+        this.key2Filter = key2Filter;
     }
 
-    public FilterRangeParam getRangeKeyParam() {
-        return rangeKeyParam;
+    public FilterStringParam getKey3Filter() {
+        return key3Filter;
     }
 
-    public void setRangeKeyParam(FilterRangeParam rangeKeyParam) {
-        this.rangeKeyParam = rangeKeyParam;
+    public void setKey3Filter(FilterStringParam key3Filter) {
+        this.key3Filter = key3Filter;
     }
 
-    public FilterStringParam getVersionParam() {
-        return versionParam;
+    public FilterStringParam getProfileKeyFilter() {
+        return profileKeyFilter;
     }
 
-    public void setVersionParam(FilterStringParam versionParam) {
-        this.versionParam = versionParam;
+    public void setProfileKeyFilter(FilterStringParam profileKeyFilter) {
+        this.profileKeyFilter = profileKeyFilter;
+    }
+
+    public FilterRangeParam getRangeKeyFilter() {
+        return rangeKeyFilter;
+    }
+
+    public void setRangeKeyFilter(FilterRangeParam rangeKeyFilter) {
+        this.rangeKeyFilter = rangeKeyFilter;
+    }
+
+    public FilterStringParam getVersionFilter() {
+        return versionFilter;
+    }
+
+    public void setVersionFilter(FilterStringParam versionFilter) {
+        this.versionFilter = versionFilter;
+    }
+
+    @Override
+    protected FindFilter clone() {
+        FindFilter clone = new FindFilter();
+        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().clone() : null);
+        clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().clone() : null);
+        clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().clone() : null);
+        clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().clone() : null);
+        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().clone() : null);
+        clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().clone() : null);
+        clone.setOffset(getOffset());
+        clone.setLimit(getLimit());
+        return clone;
     }
 
     @Override
     public String toString() {
         return "FindFilter{" +
-                "keyParam=" + keyParam +
-                ", key2Param=" + key2Param +
-                ", key3Param=" + key3Param +
-                ", profileKeyParam=" + profileKeyParam +
-                ", rangeKeyParam=" + rangeKeyParam +
-                ", versionParam=" + versionParam +
+                "keyFilter=" + keyFilter +
+                ", key2Filter=" + key2Filter +
+                ", key3Filter=" + key3Filter +
+                ", profileKeyFilter=" + profileKeyFilter +
+                ", rangeKeyFilter=" + rangeKeyFilter +
+                ", versionFilter=" + versionFilter +
+                ", limit=" + limit +
+                ", offset=" + offset +
                 '}';
     }
 }

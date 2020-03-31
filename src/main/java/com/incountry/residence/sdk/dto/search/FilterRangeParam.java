@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.dto.search;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FilterRangeParam {
@@ -8,7 +9,7 @@ public class FilterRangeParam {
     private String operator;
 
     public FilterRangeParam(int[] values) {
-        this.values = values;
+        this(null, values);
     }
 
     public FilterRangeParam(int value) {
@@ -17,6 +18,14 @@ public class FilterRangeParam {
 
     public FilterRangeParam(String operator, int value) {
         this.value = value;
+        this.operator = operator;
+    }
+
+    public FilterRangeParam(String operator, int[] values) {
+        if (values == null || values.length == 0) {
+            throw new IllegalArgumentException("FilterRangeParam values can't be null");
+        }
+        this.values = values;
         this.operator = operator;
     }
 
@@ -34,6 +43,15 @@ public class FilterRangeParam {
 
     public String getOperator() {
         return operator;
+    }
+
+    @Override
+    protected FilterRangeParam clone() {
+        FilterRangeParam clone = new FilterRangeParam(operator, value);
+        if (values != null) {
+            clone.values = Arrays.copyOf(values, values.length);
+        }
+        return clone;
     }
 
     @Override

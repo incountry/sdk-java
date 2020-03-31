@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FindFilterTest {
 
@@ -22,14 +23,22 @@ public class FindFilterTest {
         FilterStringParam profileKeyFilterParam = new FilterStringParam(profileKey);
 
         FindFilter findFilter = new FindFilter();
-        findFilter.setVersionParam(versionFilterParam);
-        findFilter.setKeyParam(keyFilterParam);
-        findFilter.setProfileKeyParam(profileKeyFilterParam);
+        findFilter.setVersionFilter(versionFilterParam);
+        findFilter.setKeyFilter(keyFilterParam);
+        findFilter.setProfileKeyFilter(profileKeyFilterParam);
         JSONObject jsonObject = JsonUtils.toJson(findFilter,null);
 
         assertEquals(String.format("{\"$not\":[%d]}", version), jsonObject.get("version").toString());
         assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
         assertEquals(String.format("[\"%s\"]", profileKey), jsonObject.get("profile_key").toString());
+    }
 
+
+    @Test
+    public void testErrorArgs(){
+        FindFilter findFilter = new FindFilter();
+        assertThrows(IllegalArgumentException.class,() -> findFilter.setLimit(0));
+        assertThrows(IllegalArgumentException.class,() -> findFilter.setLimit(Integer.MAX_VALUE));
+        assertThrows(IllegalArgumentException.class,() -> findFilter.setOffset(-1));
     }
 }
