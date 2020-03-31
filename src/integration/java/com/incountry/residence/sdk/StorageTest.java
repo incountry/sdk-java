@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageTest {
-    private Storage store;
+    private StorageImpl store;
     private String country = "US";
     private String batchWriteRecordKey = "batch_write_key";
     private String writeRecordKey = "write_key";
@@ -52,7 +52,7 @@ public class StorageTest {
         secretKeysData.setCurrentVersion(currentVersion);
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
-        store = new Storage(
+        store = new StorageImpl(
                 "envId",
                 "apiKey",
                 secretKeyAccessor
@@ -64,14 +64,14 @@ public class StorageTest {
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
         records.add(new Record(country, batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
-        store.batchWrite(country, records);
+        store.createBatch(country, records);
     }
 
     @Test
     @Order(2)
     public void writeTest() throws StorageException {
         Record record = new Record(country, writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
-        store.write(record);
+        store.create(record);
     }
 
     @Test
@@ -115,7 +115,7 @@ public class StorageTest {
         Record incomingRecord = store.read(country, writeRecordKey);
         incomingRecord.setBody(newBody);
         incomingRecord.setKey2(newKey2);
-        store.updateOne(country, filter, incomingRecord);
+        store.update(country, filter, incomingRecord);
         Record updatedRecord = store.read(country, writeRecordKey);
         assertEquals(writeRecordKey, updatedRecord.getKey());
         assertEquals(newBody, updatedRecord.getBody());

@@ -36,18 +36,18 @@ public class StorageParamTests {
     private int version = 0;
     private int currentVersion = 0;
 
-    public Storage initializeStorage(boolean isKey, boolean encrypt) throws StorageServerException {
+    public StorageImpl initializeStorage(boolean isKey, boolean encrypt) throws StorageServerException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        Storage storage;
+        StorageImpl storage;
         if (encrypt) {
-            storage = new Storage(
+            storage = new StorageImpl(
                     "envId",
                     "apiKey",
                     secretKeyAccessor
             );
             crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
         } else {
-            storage = new Storage("envId", "apiKey", null);
+            storage = new StorageImpl("envId", "apiKey", null);
             crypto = new CryptoImpl("envId");
         }
         return storage;
@@ -96,14 +96,14 @@ public class StorageParamTests {
                           Integer rangeKey,
                           boolean isKey,
                           boolean encrypt) throws StorageException, MalformedURLException {
-        Storage storage = initializeStorage(isKey, encrypt);
+        StorageImpl storage = initializeStorage(isKey, encrypt);
 
         String expectedPath = "/v2/storage/records/" + country;
 
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        storage.write(record);
+        storage.create(record);
 
         String received = agent.getCallBody();
         String callPath = new URL(agent.getCallEndpoint()).getPath();
@@ -141,7 +141,7 @@ public class StorageParamTests {
                          boolean isKey,
                          boolean encrypt) throws StorageException, MalformedURLException {
 
-        Storage storage = initializeStorage(isKey, encrypt);
+        StorageImpl storage = initializeStorage(isKey, encrypt);
 
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         String keyHash = crypto.createKeyHash(key);
@@ -172,7 +172,7 @@ public class StorageParamTests {
                            boolean isKey,
                            boolean encrypt) throws StorageException, IOException {
 
-        Storage storage = initializeStorage(isKey, encrypt);
+        StorageImpl storage = initializeStorage(isKey, encrypt);
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
         storage.delete(country, key);
@@ -196,12 +196,12 @@ public class StorageParamTests {
                                boolean isKey,
                                boolean encrypt) throws StorageException {
 
-        Storage storage = initializeStorage(isKey, encrypt);
+        StorageImpl storage = initializeStorage(isKey, encrypt);
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
         List<Record> records = new ArrayList<>();
         records.add(new Record(country, key, body, profileKey, rangeKey, key2, key3));
-        storage.batchWrite(country, records);
+        storage.createBatch(country, records);
 
         String encrypted = agent.getCallBody();
         String keyHash = crypto.createKeyHash(key);

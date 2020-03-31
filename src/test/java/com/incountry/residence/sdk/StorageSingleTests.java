@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class StorageSingleTests {
-    private Storage storage;
+    private StorageImpl storage;
     private Crypto crypto;
     private String secret = "passwordpasswordpasswordpassword";
     int version = 0;
@@ -58,7 +58,7 @@ public class StorageSingleTests {
 
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
-        storage = new Storage(
+        storage = new StorageImpl(
                 environmentId,
                 apiKey,
                 secretKeyAccessor
@@ -106,11 +106,11 @@ public class StorageSingleTests {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("password");
         String endpoint = "https://custom.endpoint.io";
 
-        Storage storage = new Storage(environmentId, apiKey, endpoint, true, secretKeyAccessor);
+        StorageImpl storage = new StorageImpl(environmentId, apiKey, endpoint, true, secretKeyAccessor);
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setHttpAgent(agent);
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        storage.write(record);
+        storage.create(record);
 
         String expectedURL = endpoint + "/v2/storage/records/" + country;
 
@@ -271,7 +271,7 @@ public class StorageSingleTests {
     @Test
     public void testInitErrorOnInsufficientArgs() {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> new SecretKeysData());
-        assertThrows(IllegalArgumentException.class, () -> new Storage(null, null, secretKeyAccessor));
+        assertThrows(IllegalArgumentException.class, () -> new StorageImpl(null, null, secretKeyAccessor));
     }
 
     @Test
@@ -290,7 +290,7 @@ public class StorageSingleTests {
 
     @Test
     public void testErrorMigrateWhenEncryptionOff() throws StorageException {
-        Storage storage = new Storage(
+        StorageImpl storage = new StorageImpl(
                 environmentId,
                 apiKey,
                 null

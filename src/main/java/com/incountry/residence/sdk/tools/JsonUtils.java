@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class JsonUtils {
@@ -41,7 +42,15 @@ public class JsonUtils {
     private static final String P_COUNT = "count";
     private static final String P_TOTAL = "total";
     private static final String P_DATA = "data";
+    private static final String P_CODE = "countries";
+    private static final String P_DIRECT = "direct";
+    private static final String P_ID = "id";
+    private static final String P_NAME = "name";
+    private static final String P_OPTIONS = "options";
+    private static final String P_FILTER = "filter";
+    /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
+
 
     /**
      * Converts a Record object to JsonObject
@@ -163,7 +172,6 @@ public class JsonUtils {
         return new JSONObject(String.format("{$not: %s}", arr != null ? arr.toString() : null));
     }
 
-    //todo refactor
     public static BatchRecord batchRecordFromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
@@ -224,6 +232,35 @@ public class JsonUtils {
 
     private static Gson getGson4Records() {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+    }
+
+    public static void getCountryEntryPoint(String content, BiConsumer<String, String> lambda) {
+        Gson gson = new GsonBuilder().create();
+        JsonObject contentJson = gson.fromJson(content, JsonObject.class);
+        contentJson.getAsJsonArray(P_CODE).forEach(item -> {
+            if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
+                String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
+                String countryName = ((JsonObject) item).get(P_NAME).getAsString();
+                lambda.accept(countryCode, countryName);
+            }
+        });
+    }
+
+    public static String toJsonString(List<Record> records, String country, Crypto crypto, BiConsumer<String, String> lambda)
+            throws StorageCryptoException {
+        List<JsonObject> jsonList = new ArrayList<>();
+        for (Record record : records) {
+            lambda.accept(country, record.getKey());
+            jsonList.add(toJson(record, crypto));
+        }
+        return "{ \"records\" : " + (getGson4Records().toJson(jsonList)) + "}";
+    }
+
+    public static String toJsonString(FindFilter filter, FindOptions options, Crypto crypto) {
+        return new JSONObject()
+                .put(P_FILTER, JsonUtils.toJson(filter, crypto))
+                .put(P_OPTIONS, JsonUtils.toJson(options))
+                .toString();
     }
 
     /**
