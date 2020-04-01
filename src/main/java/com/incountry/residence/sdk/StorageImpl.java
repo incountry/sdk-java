@@ -67,7 +67,7 @@ public class StorageImpl implements Storage {
                 secretKeyAccessor);
     }
 
-    @SuppressWarnings("cwe")
+    @SuppressWarnings("squid:cwe")
     private static String loadFromEnv(String key) {
         return System.getenv(key);
     }
