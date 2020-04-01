@@ -15,8 +15,6 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import org.javatuples.Pair;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,9 +45,9 @@ public class JsonUtils {
     private static final String P_NAME = "name";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
+    private static final String OPER_NOT = "$not";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-
 
     /**
      * Converts a Record object to JsonObject
@@ -126,14 +124,14 @@ public class JsonUtils {
     }
 
     /**
-     * Creates JSONObject with FindFilter object properties
+     * Creates JsonObject with FindFilter object properties
      *
      * @param filter  FindFilter
      * @param mCrypto crypto object
-     * @return JSONObject with properties corresponding to FindFilter object properties
+     * @return JsonObject with properties corresponding to FindFilter object properties
      */
-    public static JSONObject toJson(FindFilter filter, Crypto mCrypto) {
-        JSONObject json = new JSONObject();
+    public static JsonObject toJson(FindFilter filter, Crypto mCrypto) {
+        JsonObject json = new JsonObject();
         if (filter != null) {
             addToJson(json, P_KEY, filter.getKeyFilter(), mCrypto);
             addToJson(json, P_KEY_2, filter.getKey2Filter(), mCrypto);
@@ -142,18 +140,18 @@ public class JsonUtils {
             addToJson(json, P_VERSION, filter.getVersionFilter(), mCrypto);
             FilterRangeParam range = filter.getRangeKeyFilter();
             if (range != null) {
-                json.put(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
+                json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
             }
         }
         return json;
     }
 
-    private static void addToJson(JSONObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
+    private static void addToJson(JsonObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
         if (param != null) {
             if (paramName.equals(P_VERSION)) {
-                json.put(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
+                json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
             } else {
-                json.put(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto, true) : toJsonString(param, mCrypto));
+                json.add(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto, true) : toJsonString(param, mCrypto));
             }
         }
     }
@@ -164,11 +162,13 @@ public class JsonUtils {
      * @param param       parameter to which the not condition should be added
      * @param mCrypto     crypto object
      * @param isForString the condition must be added for string params
-     * @return JSONObject with added 'not' condition
+     * @return JsonObject with added 'not' condition
      */
-    private static JSONObject addNotCondition(FilterStringParam param, Crypto mCrypto, boolean isForString) {
-        JSONArray arr = isForString ? toJsonString(param, mCrypto) : toJsonInt(param);
-        return new JSONObject(String.format("{$not: %s}", arr != null ? arr.toString() : null));
+    private static JsonObject addNotCondition(FilterStringParam param, Crypto mCrypto, boolean isForString) {
+        JsonArray arr = isForString ? toJsonString(param, mCrypto) : toJsonInt(param);
+        JsonObject object = new JsonObject();
+        object.add(OPER_NOT, arr);
+        return object;
     }
 
     public static BatchRecord batchRecordFromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
@@ -194,39 +194,51 @@ public class JsonUtils {
         return new BatchRecord(records, count, limit, offset, total, errors);
     }
 
-    private static JSONArray valueJSON(FilterRangeParam range) {
+    private static JsonArray valueJSON(FilterRangeParam range) {
         if (range.getValues() == null) {
             return null;
         }
-        return new JSONArray(range.getValues());
+        JsonArray array = new JsonArray();
+        for (int i : range.getValues()) {
+            array.add(i);
+        }
+        return array;
     }
 
-    private static JSONObject conditionJSON(FilterRangeParam range) {
-        return new JSONObject().put(range.getOperator(), range.getValue());
+    private static JsonObject conditionJSON(FilterRangeParam range) {
+        JsonObject object = new JsonObject();
+        object.addProperty(range.getOperator(), range.getValue());
+        return object;
     }
 
-    private static JSONObject findOptionstoJson(int limit, int offset) {
-        return new JSONObject()
-                .put(P_LIMIT, limit)
-                .put(P_OFFSET, offset);
+    private static JsonObject findOptionstoJson(int limit, int offset) {
+        JsonObject object = new JsonObject();
+        object.addProperty(P_LIMIT, limit);
+        object.addProperty(P_OFFSET, offset);
+        return object;
     }
 
     private static List<String> hashValue(FilterStringParam param, Crypto mCrypto) {
         return param.getValue().stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
     }
 
-    public static JSONArray toJsonString(FilterStringParam param, Crypto mCrypto) {
-        if (param.getValue() == null) return null;
-        if (mCrypto == null) return new JSONArray(param.getValue());
-
-        return new JSONArray(hashValue(param, mCrypto));
-    }
-
-    public static JSONArray toJsonInt(FilterStringParam param) {
+    public static JsonArray toJsonString(FilterStringParam param, Crypto mCrypto) {
         if (param.getValue() == null) {
             return null;
         }
-        return new JSONArray(param.getValue().stream().map(Integer::parseInt).collect(Collectors.toList()));
+        JsonArray array = new JsonArray();
+        List<String> values = (mCrypto != null ? hashValue(param, mCrypto) : param.getValue());
+        values.forEach(array::add);
+        return array;
+    }
+
+    public static JsonArray toJsonInt(FilterStringParam param) {
+        if (param.getValue() == null) {
+            return null;
+        }
+        JsonArray array = new JsonArray();
+        param.getValue().stream().map(Integer::parseInt).forEach(array::add);
+        return array;
     }
 
     private static Gson getGson4Records() {
@@ -245,22 +257,23 @@ public class JsonUtils {
         });
     }
 
-    //todo refactor
     public static String toJsonString(List<Record> records, String country, Crypto crypto, BiConsumer<String, String> lambda)
             throws StorageCryptoException {
-        List<JsonObject> jsonList = new ArrayList<>();
+        JsonArray array = new JsonArray();
         for (Record record : records) {
             lambda.accept(country, record.getKey());
-            jsonList.add(toJson(record, crypto));
+            array.add(toJson(record, crypto));
         }
-        return "{ \"records\" : " + (getGson4Records().toJson(jsonList)) + "}";
+        JsonObject obj = new JsonObject();
+        obj.add("records", array);
+        return obj.toString();
     }
 
     public static String toJsonString(FindFilter filter, Crypto crypto) {
-        return new JSONObject()
-                .put(P_FILTER, JsonUtils.toJson(filter, crypto))
-                .put(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()))
-                .toString();
+        JsonObject object = new JsonObject();
+        object.add(P_FILTER, JsonUtils.toJson(filter, crypto));
+        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()));
+        return object.toString();
     }
 
     /**
@@ -295,7 +308,7 @@ public class JsonUtils {
         /**
          * immutable get Record
          *
-         * @return
+         * @return return immutalbe Record
          */
         public Record toRecord() {
             Record rec = new Record();

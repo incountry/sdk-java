@@ -4,7 +4,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
@@ -72,7 +72,8 @@ public class StorageImpl implements Storage {
         this(environmentID, apiKey, null, secretKeyAccessor != null, secretKeyAccessor);
     }
 
-    public StorageImpl(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
+    public StorageImpl(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor)
+            throws StorageServerException {
         envID = environmentID;
         if (envID == null) {
             throw new IllegalArgumentException(MSG_ENV_EXCEPTION);
@@ -207,12 +208,10 @@ public class StorageImpl implements Storage {
         if (!isEncrypted) {
             throw new StorageException(MSG_MIGR_NOT_SUPPORT);
         }
-        Integer secretKeyCurrentVersion = crypto.getCurrentSecretVersion();
-        FindFilter findFilter = new FindFilter();
-        findFilter.setLimit(limit);
-        findFilter.setOffset(0);
-        findFilter.setVersionFilter(new FilterStringParam(secretKeyCurrentVersion.toString(), true));
-        BatchRecord batchRecord = find(country, findFilter);
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(limit, 0)
+                .versionNotEq(String.valueOf(crypto.getCurrentSecretVersion()));
+        BatchRecord batchRecord = find(country, builder);
         createBatch(country, batchRecord.getRecords());
 
         return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
@@ -241,10 +240,9 @@ public class StorageImpl implements Storage {
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
-    public Record update(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException {
-        filter.setLimit(1);
-        filter.setOffset(0);
-        BatchRecord existingRecords = find(country, filter);
+    public Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException {
+        FindFilter filter = builder.limitAndOffset(1, 0).build();
+        BatchRecord existingRecords = find(country, builder);
 
         if (existingRecords.getTotal() > 1) {
             throw new StorageServerException(MSG_MULTIPLE_FOUND);
@@ -255,7 +253,7 @@ public class StorageImpl implements Storage {
 
         Record foundRecord = existingRecords.getRecords().get(0);
 
-        Record updatedRecord = Record.merge(foundRecord, record);
+        Record updatedRecord = Record.merge(foundRecord, recordForMerging);
 
         create(updatedRecord);
 
@@ -284,21 +282,21 @@ public class StorageImpl implements Storage {
      * Find records in remote storage
      *
      * @param country country identifier
-     * @param filter  object representing find filters
+     * @param builder object representing find filters
      * @return BatchRecord object which contains required records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public BatchRecord find(String country, FindFilter filter) throws StorageServerException, StorageCryptoException {
+    public BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException {
         if (country == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
         }
-        if (filter == null) {
+        if (builder == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
         country = country.toLowerCase();
         String url = getEndpoint(country, STORAGE_URL + country + URI_DELIMITER + "find");
-        String postData = JsonUtils.toJsonString(filter, crypto);
+        String postData = JsonUtils.toJsonString(builder.build(), crypto);
         String content;
         try {
             content = httpAgent.request(url, URI_POST, postData, false);
@@ -315,15 +313,14 @@ public class StorageImpl implements Storage {
      * Find one record in remote storage
      *
      * @param country country identifier
-     * @param filter  object representing find filters
+     * @param builder object representing find filters
      * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    public Record findOne(String country, FindFilter filter) throws StorageServerException, StorageCryptoException {
-        BatchRecord findResults = find(country, filter);
+    public Record findOne(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException {
+        BatchRecord findResults = find(country, builder);
         List<Record> records = findResults.getRecords();
-
         if (records.isEmpty()) {
             return null;
         }

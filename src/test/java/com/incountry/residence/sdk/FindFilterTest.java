@@ -1,9 +1,9 @@
 package com.incountry.residence.sdk;
 
+import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.tools.JsonUtils;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,7 +16,7 @@ public class FindFilterTest {
     public String profileKey = "profileKey";
 
     @Test
-    public void testToJSONObject() {
+    public void testToJsonObject() {
 
         FilterStringParam versionFilterParam = new FilterStringParam(Integer.toString(version), true);
         FilterStringParam keyFilterParam = new FilterStringParam(key, true);
@@ -26,7 +26,7 @@ public class FindFilterTest {
         findFilter.setVersionFilter(versionFilterParam);
         findFilter.setKeyFilter(keyFilterParam);
         findFilter.setProfileKeyFilter(profileKeyFilterParam);
-        JSONObject jsonObject = JsonUtils.toJson(findFilter,null);
+        JsonObject jsonObject = JsonUtils.toJson(findFilter, null);
 
         assertEquals(String.format("{\"$not\":[%d]}", version), jsonObject.get("version").toString());
         assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
@@ -35,10 +35,10 @@ public class FindFilterTest {
 
 
     @Test
-    public void testErrorArgs(){
+    public void testErrorArgs() {
         FindFilter findFilter = new FindFilter();
-        assertThrows(IllegalArgumentException.class,() -> findFilter.setLimit(0));
-        assertThrows(IllegalArgumentException.class,() -> findFilter.setLimit(Integer.MAX_VALUE));
-        assertThrows(IllegalArgumentException.class,() -> findFilter.setOffset(-1));
+        assertThrows(IllegalArgumentException.class, () -> findFilter.setLimit(0));
+        assertThrows(IllegalArgumentException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> findFilter.setOffset(-1));
     }
 }

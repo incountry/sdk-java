@@ -2,13 +2,10 @@ package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FilterRangeParam;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
-import com.incountry.residence.sdk.dto.search.FindOptions;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -88,9 +85,10 @@ public class StorageTest {
     @Test
     @Order(4)
     public void findTest() throws StorageException {
-        FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
-        FindOptions options = new FindOptions(100, 0);
-        BatchRecord batchRecord = store.find(country, filter, options);
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .key2Eq(key2)
+                .rangeKeyEq(writeRangeKey);
+        BatchRecord batchRecord = store.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
@@ -99,9 +97,10 @@ public class StorageTest {
     @Test
     @Order(5)
     public void findOneTest() throws StorageException {
-        FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
-        FindOptions options = new FindOptions(100, 0);
-        Record d = store.findOne(country, filter, options);
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .key2Eq(key2)
+                .rangeKeyEq(writeRangeKey);
+        Record d = store.findOne(country, builder);
         assertEquals(writeRecordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
     }
@@ -109,13 +108,15 @@ public class StorageTest {
     @Test
     @Order(6)
     public void updateOneTest() throws StorageException {
-        FindFilter filter = new FindFilter(null, new FilterStringParam(key2), null, null, new FilterRangeParam(writeRangeKey), null);
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .key2Eq(key2)
+                .rangeKeyEq(writeRangeKey);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
         Record incomingRecord = store.read(country, writeRecordKey);
         incomingRecord.setBody(newBody);
         incomingRecord.setKey2(newKey2);
-        store.update(country, filter, incomingRecord);
+        store.updateOne(country, builder, incomingRecord);
         Record updatedRecord = store.read(country, writeRecordKey);
         assertEquals(writeRecordKey, updatedRecord.getKey());
         assertEquals(newBody, updatedRecord.getBody());

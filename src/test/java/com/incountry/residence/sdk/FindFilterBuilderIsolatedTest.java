@@ -9,44 +9,11 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FindFilterBuilderTest {
-
-//    private Storage storage;
-//    private Crypto crypto;
-//    private String secret = "passwordpasswordpasswordpassword";
-//    private int version = 0;
-//    private int currentVersion = 0;
-//    private String environmentId = "envId";
-//    private String apiKey = "apiKey";
-//    private String defaultCountry="us";
-
-//    @BeforeEach
-//    public void initializeStorage() throws StorageServerException {
-//        SecretKeysData secretKeysData = new SecretKeysData();
-//        SecretKey secretKey = new SecretKey();
-//        secretKey.setSecret(secret);
-//        secretKey.setVersion(version);
-//        secretKey.setIsKey(true);
-//        List<SecretKey> secretKeyList = new ArrayList<>();
-//        secretKeyList.add(secretKey);
-//        secretKeysData.setSecrets(secretKeyList);
-//        secretKeysData.setCurrentVersion(currentVersion);
-//
-//        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
-//
-//        storage = new StorageImpl(
-//                environmentId,
-//                apiKey,
-//                secretKeyAccessor
-//        );
-//
-//        crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentId);
-//    }
+public class FindFilterBuilderIsolatedTest {
 
     @Test
     public void defaultPositiveTest() {

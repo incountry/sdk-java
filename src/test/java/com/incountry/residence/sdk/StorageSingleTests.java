@@ -1,10 +1,13 @@
 package com.incountry.residence.sdk;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
@@ -85,15 +88,14 @@ public class StorageSingleTests {
 
     @Test
     public void findTest() throws StorageException {
-        FindFilter filter = new FindFilter();
-        filter.setLimit(1);
-        filter.setOffset(0);
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(1, 0)
+                .profileKeyEq(profileKey);
         Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setHttpAgent(agent);
-        BatchRecord batchRecord = storage.find(country, filter);
+        BatchRecord batchRecord = storage.find(country, builder);
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
@@ -121,20 +123,20 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithEnc() throws StorageException {
-        FindFilter filter = new FindFilter();
-        filter.setLimit(1);
-        filter.setOffset(0);
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(1, 0)
+                .profileKeyEq(profileKey);
 
         Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setHttpAgent(agent);
 
-        BatchRecord d = storage.find(country, filter);
+        BatchRecord d = storage.find(country, builder);
 
         String callBody = agent.getCallBody();
-        assertEquals("{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
+        String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
+        assertEquals(new Gson().fromJson(expected, JsonObject.class), new Gson().fromJson(callBody, JsonObject.class));
 
         assertEquals(1, d.getCount());
         assertEquals(1, d.getRecords().size());
@@ -148,20 +150,20 @@ public class StorageSingleTests {
 
     @Test
     public void testFindOne() throws StorageException {
-        FindFilter filter = new FindFilter();
-        filter.setLimit(1);
-        filter.setOffset(0);
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(1, 0)
+                .profileKeyEq(profileKey);
 
         Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setHttpAgent(agent);
 
-        Record foundRecord = storage.findOne(country, filter);
+        Record foundRecord = storage.findOne(country, builder);
 
         String callBody = agent.getCallBody();
-        assertEquals("{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}", callBody);
+        String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
+        assertEquals(new Gson().fromJson(expected, JsonObject.class), new Gson().fromJson(callBody, JsonObject.class));
 
         assertEquals(key, foundRecord.getKey());
         assertEquals(body, foundRecord.getBody());
@@ -174,10 +176,10 @@ public class StorageSingleTests {
     @Test
     public void testFindWithEncByMultipleSecrets() throws StorageException {
         Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getKey(), environmentId);
-        FindFilter filter = new FindFilter();
-        filter.setLimit(2);
-        filter.setOffset(0);
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
+
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(2, 0)
+                .profileKeyEq(profileKey);
 
         Record recOtherEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         Record recEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
@@ -187,7 +189,7 @@ public class StorageSingleTests {
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         storage.setHttpAgent(agent);
 
-        BatchRecord d = storage.find(country, filter);
+        BatchRecord d = storage.find(country, builder);
 
         assertEquals(1, d.getErrors().size());
         assertEquals(encryptedRecOther, d.getErrors().get(0).getRawData());
@@ -206,20 +208,19 @@ public class StorageSingleTests {
     public void testFindWithoutEncWithEncryptedData() throws StorageException {
         Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getKey(), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
-        FindFilter filter = new FindFilter();
-        filter.setLimit(2);
-        filter.setOffset(0);
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(2, 0)
+                .profileKeyEq(profileKey);
 
-        Record reсWithEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record recWithEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         Record recWithPTEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        String encryptedRec = JsonUtils.toJsonString(reсWithEnc, cryptoWithEnc);
+        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
 
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         storage.setHttpAgent(agent);
 
-        BatchRecord d = storage.find(country, filter);
+        BatchRecord d = storage.find(country, builder);
 
         assertEquals(1, d.getErrors().size());
         assertEquals(encryptedRec, d.getErrors().get(0).getRawData());
@@ -236,14 +237,13 @@ public class StorageSingleTests {
 
     @Test
     public void testFindIncorrectRecords() throws StorageException {
-        FindFilter filter = new FindFilter();
-        filter.setLimit(2);
-        filter.setOffset(0);
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .limitAndOffset(2, 0)
+                .profileKeyEq(profileKey);
 
         FakeHttpAgent agent = new FakeHttpAgent(null);
         storage.setHttpAgent(agent);
-        BatchRecord findResult = storage.find(country, filter);
+        BatchRecord findResult = storage.find(country, builder);
 
         assertNull(findResult);
     }
@@ -269,7 +269,6 @@ public class StorageSingleTests {
         assertThrows(IllegalArgumentException.class, () -> storage.find(null, null));
         assertThrows(IllegalArgumentException.class, () -> storage.find(country, null));
     }
-
 
     @Test
     public void testInitErrorOnInsufficientArgs() {

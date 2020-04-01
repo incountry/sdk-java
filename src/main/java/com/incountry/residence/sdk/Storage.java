@@ -3,7 +3,7 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -22,13 +22,13 @@ public interface Storage {
 
     Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException;
 
-    Record update(String country, FindFilter filter, Record record) throws StorageServerException, StorageCryptoException;
+    Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException;
 
     boolean delete(String country, String recordKey) throws StorageServerException;
 
-    BatchRecord find(String country, FindFilter filter) throws StorageServerException, StorageCryptoException;
+    BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
 
-    Record findOne(String country, FindFilter filter) throws StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
 
     MigrateResult migrate(String country, int limit) throws StorageException;
 
