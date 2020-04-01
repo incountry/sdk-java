@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageTest {
-    private StorageImpl store;
+    private Storage storage;
     private String country = "US";
     private String batchWriteRecordKey = "batch_write_key";
     private String writeRecordKey = "write_key";
@@ -49,7 +49,7 @@ public class StorageTest {
         secretKeysData.setCurrentVersion(currentVersion);
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
-        store = new StorageImpl(
+        storage = new StorageImpl(
                 "envId",
                 "apiKey",
                 secretKeyAccessor
@@ -61,20 +61,20 @@ public class StorageTest {
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
         records.add(new Record(country, batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
-        store.createBatch(country, records);
+        storage.createBatch(country, records);
     }
 
     @Test
     @Order(2)
     public void writeTest() throws StorageException {
         Record record = new Record(country, writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
-        store.create(record);
+        storage.create(record);
     }
 
     @Test
     @Order(3)
     public void readTest() throws StorageException {
-        Record incomingRecord = store.read(country, writeRecordKey);
+        Record incomingRecord = storage.read(country, writeRecordKey);
         assertEquals(writeRecordKey, incomingRecord.getKey());
         assertEquals(recordBody, incomingRecord.getBody());
         assertEquals(profileKey, incomingRecord.getProfileKey());
@@ -88,7 +88,7 @@ public class StorageTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(key2)
                 .rangeKeyEq(writeRangeKey);
-        BatchRecord batchRecord = store.find(country, builder);
+        BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
@@ -100,7 +100,7 @@ public class StorageTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(key2)
                 .rangeKeyEq(writeRangeKey);
-        Record d = store.findOne(country, builder);
+        Record d = storage.findOne(country, builder);
         assertEquals(writeRecordKey, d.getKey());
         assertEquals(recordBody, d.getBody());
     }
@@ -113,11 +113,11 @@ public class StorageTest {
                 .rangeKeyEq(writeRangeKey);
         String newBody = "{\"hello\":\"world\"}";
         String newKey2 = "newKey2";
-        Record incomingRecord = store.read(country, writeRecordKey);
+        Record incomingRecord = storage.read(country, writeRecordKey);
         incomingRecord.setBody(newBody);
         incomingRecord.setKey2(newKey2);
-        store.updateOne(country, builder, incomingRecord);
-        Record updatedRecord = store.read(country, writeRecordKey);
+        storage.updateOne(country, builder, incomingRecord);
+        Record updatedRecord = storage.read(country, writeRecordKey);
         assertEquals(writeRecordKey, updatedRecord.getKey());
         assertEquals(newBody, updatedRecord.getBody());
         assertEquals(newKey2, updatedRecord.getKey2());
@@ -126,11 +126,11 @@ public class StorageTest {
     @Test
     @Order(7)
     public void deleteTest() throws StorageException {
-        store.delete(country, writeRecordKey);
-        store.delete(country, batchWriteRecordKey);
+        storage.delete(country, writeRecordKey);
+        storage.delete(country, batchWriteRecordKey);
         // Cannot read deleted record
-        Record writeMethodRecord = store.read(country, writeRecordKey);
-        Record batchWriteMethodRecord = store.read(country, batchWriteRecordKey);
+        Record writeMethodRecord = storage.read(country, writeRecordKey);
+        Record batchWriteMethodRecord = storage.read(country, batchWriteRecordKey);
         assertEquals(null, writeMethodRecord);
         assertEquals(null, batchWriteMethodRecord);
 

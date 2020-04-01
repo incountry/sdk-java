@@ -60,11 +60,16 @@ public class StorageImpl implements Storage {
     }
 
     public StorageImpl(SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
-        this(System.getenv(PARAM_ENV_ID),
-                System.getenv(PARAM_API_KEY),
-                System.getenv(PARAM_ENDPOINT),
+        this(loadFromEnv(PARAM_ENV_ID),
+                loadFromEnv(PARAM_API_KEY),
+                loadFromEnv(PARAM_ENDPOINT),
                 secretKeyAccessor != null,
                 secretKeyAccessor);
+    }
+
+    @SuppressWarnings("cwe")
+    private static String loadFromEnv(String key) {
+        return System.getenv(key);
     }
 
     public StorageImpl(String environmentID, String apiKey, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {

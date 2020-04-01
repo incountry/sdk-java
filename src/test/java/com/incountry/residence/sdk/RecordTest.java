@@ -76,7 +76,6 @@ public class RecordTest {
         jsonObject.addProperty("range_key", 1);
         jsonObject.addProperty("version", 2);
         String jsonString = new Gson().toJson(jsonObject);
-        System.out.println();
         Record record = JsonUtils.recordFromString(jsonString, null);
 
         assertEquals(jsonObject.get("key").getAsString(), record.getKey());
