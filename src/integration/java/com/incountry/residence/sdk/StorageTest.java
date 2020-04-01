@@ -38,13 +38,13 @@ public class StorageTest {
 
     @BeforeEach
     public void init() throws Exception {
-        SecretKeysData secretKeysData = new SecretKeysData();
         SecretKey secretKey = new SecretKey();
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKey.setSecret(secret);
         secretKey.setVersion(version);
         secretKey.setIsKey(isKey);
         secretKeyList.add(secretKey);
+        SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeyList);
         secretKeysData.setCurrentVersion(currentVersion);
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
@@ -100,9 +100,9 @@ public class StorageTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(key2)
                 .rangeKeyEq(writeRangeKey);
-        Record d = storage.findOne(country, builder);
-        assertEquals(writeRecordKey, d.getKey());
-        assertEquals(recordBody, d.getBody());
+        Record record = storage.findOne(country, builder);
+        assertEquals(writeRecordKey, record.getKey());
+        assertEquals(recordBody, record.getBody());
     }
 
     @Test
