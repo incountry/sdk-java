@@ -19,7 +19,6 @@ plugins {
 
 apply plugin: 'maven'
 apply plugin: 'java'
-apply plugin: 'groovy'
 apply plugin: 'signing'
 
 group group
@@ -148,10 +147,10 @@ jar {
     }
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
+//task javadocJar(type: Jar) {
+//    classifier = 'javadoc'
+//    from javadoc
+//}
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
@@ -168,7 +167,8 @@ integrationTest {
 }
 
 artifacts {
-    archives javadocJar, sourcesJar
+//    archives javadocJar, sourcesJar
+    sourcesJar
 }
 
 if (project.hasProperty('signing.keyId')) {
