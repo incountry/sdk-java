@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -110,20 +111,6 @@ public class JsonUtils {
      */
     public static String toJsonString(Record record, Crypto mCrypto) throws StorageCryptoException {
         return toJson(record, mCrypto).toString();
-    }
-
-    /**
-     * Get property value from json
-     *
-     * @param jsonObject json object
-     * @param property   property name
-     * @return property value
-     */
-    private static String getPropertyFromJson(JsonObject jsonObject, String property) {
-        if (!jsonObject.has(property)) {
-            return null;
-        }
-        return jsonObject.get(property).isJsonNull() ? null : jsonObject.get(property).getAsString();
     }
 
     /**
@@ -341,6 +328,34 @@ public class JsonUtils {
             setKey2(recordFromMeta.getKey2());
             setKey3(recordFromMeta.getKey3());
             setProfileKey(recordFromMeta.getProfileKey());
+        }
+
+        /**
+         * Get property value from json
+         *
+         * @param jsonObject json object
+         * @param property   property name
+         * @return property value
+         */
+        private String getPropertyFromJson(JsonObject jsonObject, String property) {
+            if (!jsonObject.has(property)) {
+                return null;
+            }
+            return jsonObject.get(property).isJsonNull() ? null : jsonObject.get(property).getAsString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            EncryptedRecord that = (EncryptedRecord) o;
+            return Objects.equals(version, that.version);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), version);
         }
     }
 }
