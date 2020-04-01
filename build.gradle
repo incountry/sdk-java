@@ -48,6 +48,18 @@ configurations {
     integrationRuntime.extendsFrom testRuntime
 }
 
+apply plugin: 'checkstyle'
+checkstyle {
+    toolVersion '8.26'
+    configFile file("$projectDir/config/checkstyle/checkstyle.xml")
+}
+checkstyleMain {
+    source = 'src/main/java'
+}
+checkstyleTest {
+    source = 'src/test/java'
+}
+
 sonarqube {
     properties {
         property "sonar.projectKey", "incountry_sdk-java"
@@ -71,7 +83,7 @@ uploadArchives {
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: nexusUsername, password: nexusPassword )
+                authentication(userName: nexusUsername, password: nexusPassword)
             }
 
             pom.project {
