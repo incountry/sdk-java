@@ -18,8 +18,8 @@ public class FindFilterBuilderIsolatedTest {
     @Test
     public void defaultPositiveTest() {
         FindFilter filter = FindFilterBuilder.create().build();
-        assertEquals(filter.getLimit(), 100);
-        assertEquals(filter.getOffset(), 0);
+        assertEquals(100, filter.getLimit());
+        assertEquals(0, filter.getOffset());
     }
 
     @Test

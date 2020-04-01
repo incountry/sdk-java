@@ -231,7 +231,6 @@ public class StorageImpl implements Storage {
         String recListJson = JsonUtils.toJsonString(records, country, crypto, this::checkParameters);
         String url = getEndpoint(country, STORAGE_URL + country + URI_DELIMITER + "batchWrite");
         try {
-//            httpAgent.request(url, "POST", "{ \"records\" : " + recordsString + "}", false);
             httpAgent.request(url, URI_POST, recListJson, false);
         } catch (IOException e) {
             throw new StorageServerException(MSG_SERVER_ERROR, e);
@@ -241,7 +240,6 @@ public class StorageImpl implements Storage {
     }
 
     public Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException {
-        FindFilter filter = builder.limitAndOffset(1, 0).build();
         BatchRecord existingRecords = find(country, builder);
 
         if (existingRecords.getTotal() > 1) {

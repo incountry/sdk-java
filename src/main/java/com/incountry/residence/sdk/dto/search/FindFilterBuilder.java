@@ -24,7 +24,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilter build() {
-        return filter.clone();
+        return filter.copy();
     }
 
     public FindFilterBuilder clear() {

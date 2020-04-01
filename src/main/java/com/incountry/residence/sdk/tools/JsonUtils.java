@@ -49,6 +49,9 @@ public class JsonUtils {
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
 
+    private JsonUtils() {
+    }
+
     /**
      * Converts a Record object to JsonObject
      *

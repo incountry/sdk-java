@@ -1,6 +1,5 @@
 package com.incountry.residence.sdk.dto.search;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FilterRangeParam {
@@ -45,8 +44,7 @@ public class FilterRangeParam {
         return operator;
     }
 
-    @Override
-    protected FilterRangeParam clone() {
+    public FilterRangeParam copy() {
         FilterRangeParam clone = new FilterRangeParam(operator, value);
         if (values != null) {
             clone.values = Arrays.copyOf(values, values.length);

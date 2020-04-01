@@ -104,15 +104,14 @@ public class FindFilter {
         this.versionFilter = versionFilter;
     }
 
-    @Override
-    protected FindFilter clone() {
+    public FindFilter copy() {
         FindFilter clone = new FindFilter();
-        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().clone() : null);
-        clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().clone() : null);
-        clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().clone() : null);
-        clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().clone() : null);
-        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().clone() : null);
-        clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().clone() : null);
+        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
+        clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
+        clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
+        clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().copy() : null);
+        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
+        clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().copy() : null);
         clone.setOffset(getOffset());
         clone.setLimit(getLimit());
         return clone;

@@ -40,8 +40,7 @@ public class FilterStringParam {
         return notCondition;
     }
 
-    @Override
-    protected FilterStringParam clone() {
+    public FilterStringParam copy() {
         FilterStringParam clone = new FilterStringParam(new ArrayList<>(value));
         clone.notCondition = notCondition;
         return clone;
