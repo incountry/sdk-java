@@ -24,10 +24,10 @@ public class HttpAgentImpl implements HttpAgent {
         URL url = new URL(endpoint);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
-        con.setRequestProperty("Authorization", "Bearer "+apiKey);
+        con.setRequestProperty("Authorization", "Bearer " + apiKey);
         con.setRequestProperty("x-env-id", environmentId);
         con.setRequestProperty("Content-Type", "application/json");
-        if (body != null){
+        if (body != null) {
             con.setDoOutput(true);
             OutputStream os = con.getOutputStream();
             os.write(body.getBytes());
@@ -38,8 +38,7 @@ public class HttpAgentImpl implements HttpAgent {
         BufferedReader in = null;
         if (status < 400) {
             in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        }
-        else {
+        } else {
             in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
         }
         String inputLine;
@@ -49,10 +48,12 @@ public class HttpAgentImpl implements HttpAgent {
         }
         in.close();
 
-        if (allowNone && status == 404) return null;
-        if (status >= 400)
+        if (allowNone && status == 404) {
+            return null;
+        }
+        if (status >= 400) {
             throw new StorageServerException(status + " " + endpoint + " - " + content);
-
+        }
         return content.toString();
     }
 }

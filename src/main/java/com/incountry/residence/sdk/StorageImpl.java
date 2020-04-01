@@ -335,9 +335,9 @@ public class StorageImpl implements Storage {
         String host;
         String name;
 
-        POP(String h, String n) {
-            host = h;
-            name = n;
+        POP(String host, String name) {
+            this.host = host;
+            this.name = name;
         }
     }
 }

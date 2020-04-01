@@ -10,7 +10,8 @@ import java.security.spec.InvalidKeySpecException;
 
 public class CryptoUtils {
 
-    private CryptoUtils() {}
+    private CryptoUtils() {
+    }
 
     public static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
         char[] chars = password.toCharArray();

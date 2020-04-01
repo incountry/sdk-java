@@ -1,11 +1,11 @@
 package com.incountry.residence.sdk.tools.exceptions;
 
 public class StorageException extends Exception {
-    public StorageException(String s){
-        super(s);
+    public StorageException(String message) {
+        super(message);
     }
 
-    public StorageException(String s, Throwable cause) {
-        super(s, cause);
+    public StorageException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

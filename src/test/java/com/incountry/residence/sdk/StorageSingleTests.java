@@ -48,13 +48,13 @@ public class StorageSingleTests {
 
     @BeforeEach
     public void initializeStorage() throws StorageServerException {
-        SecretKeysData secretKeysData = new SecretKeysData();
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(version);
         secretKey.setIsKey(true);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
+        SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeyList);
         secretKeysData.setCurrentVersion(currentVersion);
 
@@ -131,21 +131,19 @@ public class StorageSingleTests {
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setHttpAgent(agent);
-
-        BatchRecord d = storage.find(country, builder);
-
+        BatchRecord batchRecord = storage.find(country, builder);
         String callBody = agent.getCallBody();
         String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
         assertEquals(new Gson().fromJson(expected, JsonObject.class), new Gson().fromJson(callBody, JsonObject.class));
 
-        assertEquals(1, d.getCount());
-        assertEquals(1, d.getRecords().size());
-        assertEquals(key, d.getRecords().get(0).getKey());
-        assertEquals(body, d.getRecords().get(0).getBody());
-        assertEquals(key2, d.getRecords().get(0).getKey2());
-        assertEquals(key3, d.getRecords().get(0).getKey3());
-        assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
-        assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(1, batchRecord.getRecords().size());
+        assertEquals(key, batchRecord.getRecords().get(0).getKey());
+        assertEquals(body, batchRecord.getRecords().get(0).getBody());
+        assertEquals(key2, batchRecord.getRecords().get(0).getKey2());
+        assertEquals(key3, batchRecord.getRecords().get(0).getKey3());
+        assertEquals(profileKey, batchRecord.getRecords().get(0).getProfileKey());
+        assertEquals(rangeKey, batchRecord.getRecords().get(0).getRangeKey());
     }
 
     @Test
@@ -189,19 +187,18 @@ public class StorageSingleTests {
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         storage.setHttpAgent(agent);
 
-        BatchRecord d = storage.find(country, builder);
+        BatchRecord batchRecord = storage.find(country, builder);
+        assertEquals(1, batchRecord.getErrors().size());
+        assertEquals(encryptedRecOther, batchRecord.getErrors().get(0).getRawData());
+        assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
-        assertEquals(1, d.getErrors().size());
-        assertEquals(encryptedRecOther, d.getErrors().get(0).getRawData());
-        assertEquals("Record Parse Exception", d.getErrors().get(0).getMessage());
-
-        assertEquals(1, d.getRecords().size());
-        assertEquals(key, d.getRecords().get(0).getKey());
-        assertEquals(body, d.getRecords().get(0).getBody());
-        assertEquals(key2, d.getRecords().get(0).getKey2());
-        assertEquals(key3, d.getRecords().get(0).getKey3());
-        assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
-        assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
+        assertEquals(1, batchRecord.getRecords().size());
+        assertEquals(key, batchRecord.getRecords().get(0).getKey());
+        assertEquals(body, batchRecord.getRecords().get(0).getBody());
+        assertEquals(key2, batchRecord.getRecords().get(0).getKey2());
+        assertEquals(key3, batchRecord.getRecords().get(0).getKey3());
+        assertEquals(profileKey, batchRecord.getRecords().get(0).getProfileKey());
+        assertEquals(rangeKey, batchRecord.getRecords().get(0).getRangeKey());
     }
 
     @Test
@@ -220,19 +217,18 @@ public class StorageSingleTests {
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         storage.setHttpAgent(agent);
 
-        BatchRecord d = storage.find(country, builder);
+        BatchRecord batchRecord = storage.find(country, builder);
+        assertEquals(1, batchRecord.getErrors().size());
+        assertEquals(encryptedRec, batchRecord.getErrors().get(0).getRawData());
+        assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
-        assertEquals(1, d.getErrors().size());
-        assertEquals(encryptedRec, d.getErrors().get(0).getRawData());
-        assertEquals("Record Parse Exception", d.getErrors().get(0).getMessage());
-
-        assertEquals(1, d.getRecords().size());
-        assertEquals(key, d.getRecords().get(0).getKey());
-        assertEquals(body, d.getRecords().get(0).getBody());
-        assertEquals(key2, d.getRecords().get(0).getKey2());
-        assertEquals(key3, d.getRecords().get(0).getKey3());
-        assertEquals(profileKey, d.getRecords().get(0).getProfileKey());
-        assertEquals(rangeKey, d.getRecords().get(0).getRangeKey());
+        assertEquals(1, batchRecord.getRecords().size());
+        assertEquals(key, batchRecord.getRecords().get(0).getKey());
+        assertEquals(body, batchRecord.getRecords().get(0).getBody());
+        assertEquals(key2, batchRecord.getRecords().get(0).getKey2());
+        assertEquals(key3, batchRecord.getRecords().get(0).getKey3());
+        assertEquals(profileKey, batchRecord.getRecords().get(0).getProfileKey());
+        assertEquals(rangeKey, batchRecord.getRecords().get(0).getRangeKey());
     }
 
     @Test

@@ -129,8 +129,9 @@ public class CryptoImpl implements Crypto {
                 break;
             }
         }
-        if (secret == null)
+        if (secret == null) {
             throw new IllegalArgumentException("SecretKeyGenerator returns data in which there is no current version of the key");
+        }
         return secret;
     }
 
@@ -139,24 +140,24 @@ public class CryptoImpl implements Crypto {
     }
 
     public String createKeyHash(String key) {
-        if (key == null) return null;
+        if (key == null) {
+            return null;
+        }
         String stringToHash = key + ":" + envId;
         return createHash(stringToHash);
     }
 
     public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
-        if (cipherText == null) return null;
-
+        if (cipherText == null) {
+            return null;
+        }
         String[] parts = cipherText.split(":", -1);
-
         if (parts[0].equals(PT_ENC_VERSION)) {
             return decryptVPT(parts[1]);
         }
-
         if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
             throw new StorageCryptoException("No secret provided. Cannot decrypt record: " + cipherText);
         }
-
         switch (parts[0]) {
             case "1":
                 return decryptV1(parts[1], decryptKeyVersion);

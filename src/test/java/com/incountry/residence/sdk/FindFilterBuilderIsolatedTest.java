@@ -32,7 +32,7 @@ public class FindFilterBuilderIsolatedTest {
 
     @Test
     public void toStrirngPositiveTest() {
-        String s = FindFilterBuilder.create()
+        String string = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
                 .keyNotIn(Arrays.asList("3", "4"))
                 .key2NotIn(Arrays.asList("5", "6"))
@@ -41,15 +41,15 @@ public class FindFilterBuilderIsolatedTest {
                 .versionNotIn(Arrays.asList("11", "12"))
                 .rangeKeyNotIn(new int[]{13, 14})
                 .build().toString();
-        assertNotNull(s);
-        assertTrue(s.contains("limit=1"));
-        assertTrue(s.contains("offset=2"));
-        assertTrue(s.contains("[3, 4]"));
-        assertTrue(s.contains("[5, 6]"));
-        assertTrue(s.contains("[7, 8]"));
-        assertTrue(s.contains("[9, 10]"));
-        assertTrue(s.contains("[11, 12]"));
-        assertTrue(s.contains("[13, 14]"));
+        assertNotNull(string);
+        assertTrue(string.contains("limit=1"));
+        assertTrue(string.contains("offset=2"));
+        assertTrue(string.contains("[3, 4]"));
+        assertTrue(string.contains("[5, 6]"));
+        assertTrue(string.contains("[7, 8]"));
+        assertTrue(string.contains("[9, 10]"));
+        assertTrue(string.contains("[11, 12]"));
+        assertTrue(string.contains("[13, 14]"));
     }
 
 

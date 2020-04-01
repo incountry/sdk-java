@@ -56,16 +56,16 @@ public class JsonUtils {
     /**
      * Converts a Record object to JsonObject
      *
-     * @param record  data record
-     * @param mCrypto object which is using to encrypt data
+     * @param record data record
+     * @param crypto object which is using to encrypt data
      * @return JsonObject with Record data
      * @throws StorageCryptoException if encryption failed
      */
-    public static JsonObject toJson(Record record, Crypto mCrypto) throws StorageCryptoException {
+    public static JsonObject toJson(Record record, Crypto crypto) throws StorageCryptoException {
         Gson gson = getGson4Records();
         JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
         jsonObject.remove(P_COUNTRY);
-        if (mCrypto == null) {
+        if (crypto == null) {
             return jsonObject;
         }
         //store keys in new composite body with encription
@@ -74,60 +74,25 @@ public class JsonUtils {
         mapBodyMeta.put(P_PAYLOAD, record.getBody());
         mapBodyMeta.put(P_META, jsonObject.toString());
         String packedBody = gson.toJson(mapBodyMeta);
-        EncryptedRecord encRec = new EncryptedRecord(record, mCrypto, packedBody);
+        EncryptedRecord encRec = new EncryptedRecord(record, crypto, packedBody);
         return (JsonObject) gson.toJsonTree(encRec);
-    }
-
-    /**
-     * Create record object from json string
-     *
-     * @param jsonString json string
-     * @param mCrypto    crypto object
-     * @return record objects with data from json
-     * @throws StorageCryptoException if decryption failed
-     */
-    public static Record recordFromString(String jsonString, Crypto mCrypto) throws StorageCryptoException {
-        Gson gson = getGson4Records();
-        EncryptedRecord verRec = gson.fromJson(jsonString, EncryptedRecord.class);
-        if (verRec.getVersion() == null) {
-            verRec.setVersion(0);
-        }
-        if (mCrypto != null && verRec.getBody() != null) {
-            String[] parts = verRec.getBody().split(":");
-            verRec.setBody(mCrypto.decrypt(verRec.getBody(), verRec.getVersion()));
-            if (parts.length != 2) {
-                verRec.justDecryptKeys(mCrypto);
-            } else {
-                verRec.decryptAllFromBody(gson);
-            }
-        }
-        return verRec.toRecord();
-    }
-
-    /**
-     * @param mCrypto object which is using to encrypt data
-     * @return Json string with Record data
-     * @throws StorageCryptoException if encryption failed
-     */
-    public static String toJsonString(Record record, Crypto mCrypto) throws StorageCryptoException {
-        return toJson(record, mCrypto).toString();
     }
 
     /**
      * Creates JsonObject with FindFilter object properties
      *
-     * @param filter  FindFilter
-     * @param mCrypto crypto object
+     * @param filter FindFilter
+     * @param crypto crypto object
      * @return JsonObject with properties corresponding to FindFilter object properties
      */
-    public static JsonObject toJson(FindFilter filter, Crypto mCrypto) {
+    public static JsonObject toJson(FindFilter filter, Crypto crypto) {
         JsonObject json = new JsonObject();
         if (filter != null) {
-            addToJson(json, P_KEY, filter.getKeyFilter(), mCrypto);
-            addToJson(json, P_KEY_2, filter.getKey2Filter(), mCrypto);
-            addToJson(json, P_KEY_3, filter.getKey3Filter(), mCrypto);
-            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), mCrypto);
-            addToJson(json, P_VERSION, filter.getVersionFilter(), mCrypto);
+            addToJson(json, P_KEY, filter.getKeyFilter(), crypto);
+            addToJson(json, P_KEY_2, filter.getKey2Filter(), crypto);
+            addToJson(json, P_KEY_3, filter.getKey3Filter(), crypto);
+            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), crypto);
+            addToJson(json, P_VERSION, filter.getVersionFilter(), crypto);
             FilterRangeParam range = filter.getRangeKeyFilter();
             if (range != null) {
                 json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
@@ -136,12 +101,38 @@ public class JsonUtils {
         return json;
     }
 
-    private static void addToJson(JsonObject json, String paramName, FilterStringParam param, Crypto mCrypto) {
+    /**
+     * Create record object from json string
+     *
+     * @param jsonString json string
+     * @param crypto     crypto object
+     * @return record objects with data from json
+     * @throws StorageCryptoException if decryption failed
+     */
+    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageCryptoException {
+        Gson gson = getGson4Records();
+        EncryptedRecord verRec = gson.fromJson(jsonString, EncryptedRecord.class);
+        if (verRec.getVersion() == null) {
+            verRec.setVersion(0);
+        }
+        if (crypto != null && verRec.getBody() != null) {
+            String[] parts = verRec.getBody().split(":");
+            verRec.setBody(crypto.decrypt(verRec.getBody(), verRec.getVersion()));
+            if (parts.length != 2) {
+                verRec.justDecryptKeys(crypto);
+            } else {
+                verRec.decryptAllFromBody(gson);
+            }
+        }
+        return verRec.toRecord();
+    }
+
+    private static void addToJson(JsonObject json, String paramName, FilterStringParam param, Crypto crypto) {
         if (param != null) {
             if (paramName.equals(P_VERSION)) {
                 json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
             } else {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, mCrypto, true) : toJsonString(param, mCrypto));
+                json.add(paramName, param.isNotCondition() ? addNotCondition(param, crypto, true) : toJsonString(param, crypto));
             }
         }
     }
@@ -150,18 +141,18 @@ public class JsonUtils {
      * Adds 'not' condition to parameter of FindFilter
      *
      * @param param       parameter to which the not condition should be added
-     * @param mCrypto     crypto object
+     * @param crypto      crypto object
      * @param isForString the condition must be added for string params
      * @return JsonObject with added 'not' condition
      */
-    private static JsonObject addNotCondition(FilterStringParam param, Crypto mCrypto, boolean isForString) {
-        JsonArray arr = isForString ? toJsonString(param, mCrypto) : toJsonInt(param);
+    private static JsonObject addNotCondition(FilterStringParam param, Crypto crypto, boolean isForString) {
+        JsonArray arr = isForString ? toJsonString(param, crypto) : toJsonInt(param);
         JsonObject object = new JsonObject();
         object.add(OPER_NOT, arr);
         return object;
     }
 
-    public static BatchRecord batchRecordFromString(String responseString, Crypto mCrypto) throws StorageCryptoException {
+    public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) throws StorageCryptoException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
         JsonObject responseObject = gson.fromJson(responseString, JsonObject.class);
@@ -175,7 +166,7 @@ public class JsonUtils {
             JsonArray data = responseObject.getAsJsonArray(P_DATA);
             for (JsonElement item : data) {
                 try {
-                    records.add(JsonUtils.recordFromString(item.toString(), mCrypto));
+                    records.add(JsonUtils.recordFromString(item.toString(), crypto));
                 } catch (Exception e) {
                     errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, item.toString(), e));
                 }
@@ -208,18 +199,8 @@ public class JsonUtils {
         return object;
     }
 
-    private static List<String> hashValue(FilterStringParam param, Crypto mCrypto) {
-        return param.getValue().stream().map(mCrypto::createKeyHash).collect(Collectors.toList());
-    }
-
-    public static JsonArray toJsonString(FilterStringParam param, Crypto mCrypto) {
-        if (param.getValue() == null) {
-            return null;
-        }
-        JsonArray array = new JsonArray();
-        List<String> values = (mCrypto != null ? hashValue(param, mCrypto) : param.getValue());
-        values.forEach(array::add);
-        return array;
+    private static List<String> hashValue(FilterStringParam param, Crypto crypto) {
+        return param.getValue().stream().map(crypto::createKeyHash).collect(Collectors.toList());
     }
 
     public static JsonArray toJsonInt(FilterStringParam param) {
@@ -259,6 +240,25 @@ public class JsonUtils {
         return obj.toString();
     }
 
+    /**
+     * @param crypto object which is using to encrypt data
+     * @return Json string with Record data
+     * @throws StorageCryptoException if encryption failed
+     */
+    public static String toJsonString(Record record, Crypto crypto) throws StorageCryptoException {
+        return toJson(record, crypto).toString();
+    }
+
+    public static JsonArray toJsonString(FilterStringParam param, Crypto crypto) {
+        if (param.getValue() == null) {
+            return null;
+        }
+        JsonArray array = new JsonArray();
+        List<String> values = (crypto != null ? hashValue(param, crypto) : param.getValue());
+        values.forEach(array::add);
+        return array;
+    }
+
     public static String toJsonString(FindFilter filter, Crypto crypto) {
         JsonObject object = new JsonObject();
         object.add(P_FILTER, JsonUtils.toJson(filter, crypto));
@@ -272,17 +272,14 @@ public class JsonUtils {
     private static class EncryptedRecord extends Record {
         private Integer version;
 
-        public EncryptedRecord() {
-        }
-
-        public EncryptedRecord(Record record, Crypto mCrypto, String bodyJsonString) throws StorageCryptoException {
-            setKey(mCrypto.createKeyHash(record.getKey()));
-            setKey2(mCrypto.createKeyHash(record.getKey2()));
-            setKey3(mCrypto.createKeyHash(record.getKey3()));
-            setProfileKey(mCrypto.createKeyHash(record.getProfileKey()));
+        EncryptedRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageCryptoException {
+            setKey(crypto.createKeyHash(record.getKey()));
+            setKey2(crypto.createKeyHash(record.getKey2()));
+            setKey3(crypto.createKeyHash(record.getKey3()));
+            setProfileKey(crypto.createKeyHash(record.getProfileKey()));
             setRangeKey(record.getRangeKey());
 
-            Pair<String, Integer> encBodyAndVersion = mCrypto.encrypt(bodyJsonString);
+            Pair<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
             setBody(encBodyAndVersion.getValue0());
             setVersion(encBodyAndVersion.getValue1() != null ? encBodyAndVersion.getValue1() : 0);
         }
@@ -312,11 +309,11 @@ public class JsonUtils {
             return rec;
         }
 
-        public void justDecryptKeys(Crypto mCrypto) throws StorageCryptoException {
-            setKey(mCrypto.decrypt(getKey(), version));
-            setKey2(mCrypto.decrypt(getKey2(), version));
-            setKey3(mCrypto.decrypt(getKey3(), version));
-            setProfileKey(mCrypto.decrypt(getProfileKey(), version));
+        public void justDecryptKeys(Crypto crypto) throws StorageCryptoException {
+            setKey(crypto.decrypt(getKey(), version));
+            setKey2(crypto.decrypt(getKey2(), version));
+            setKey3(crypto.decrypt(getKey3(), version));
+            setProfileKey(crypto.decrypt(getProfileKey(), version));
         }
 
         public void decryptAllFromBody(Gson gson) {
@@ -345,11 +342,17 @@ public class JsonUtils {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            if (!super.equals(o)) return false;
-            EncryptedRecord that = (EncryptedRecord) o;
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            if (!super.equals(obj)) {
+                return false;
+            }
+            EncryptedRecord that = (EncryptedRecord) obj;
             return Objects.equals(version, that.version);
         }
 

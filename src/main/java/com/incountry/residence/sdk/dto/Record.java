@@ -31,12 +31,13 @@ public class Record {
         this.key3 = key3;
     }
 
-    private static <T> T mergeKeys(T a, T b) {
-        return b != null ? b : a;
+    private static <T> T mergeKeys(T oldKey, T newKey) {
+        return newKey != null ? newKey : oldKey;
     }
 
     /**
      * merge records. Notnull field values from @merged replaces old ones in @base
+     *
      * @param base
      * @param merged
      * @return
@@ -123,10 +124,14 @@ public class Record {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Record record = (Record) o;
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Record record = (Record) obj;
         return Objects.equals(country, record.country) &&
                 Objects.equals(key, record.key) &&
                 Objects.equals(key2, record.key2) &&

@@ -17,7 +17,10 @@ public class FakeHttpAgent implements HttpAgent {
     public String getCallBody() {
         return callBody;
     }
-    public String getCallEndpoint() { return callEndpoint; }
+
+    public String getCallEndpoint() {
+        return callEndpoint;
+    }
 
     @Override
     public String request(String endpoint, String method, String body, boolean allowNone) throws IOException, StorageServerException {
