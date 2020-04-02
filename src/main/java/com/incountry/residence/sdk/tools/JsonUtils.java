@@ -152,7 +152,7 @@ public class JsonUtils {
         return object;
     }
 
-    public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) throws StorageCryptoException {
+    public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
         JsonObject responseObject = gson.fromJson(responseString, JsonObject.class);
