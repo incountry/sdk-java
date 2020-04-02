@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:5.2.1'
+        classpath 'org.owasp:dependency-check-gradle:5.3.2'
     }
 }
 
@@ -15,11 +15,13 @@ plugins {
     id "org.sonarqube" version "2.7.1"
     id 'jacoco'
     id 'org.barfuin.gradle.jacocolog' version '1.0.1'
+//    id "com.github.spotbugs" version "4.0.5"
 }
 
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'signing'
+apply plugin: 'org.owasp.dependencycheck'
 
 group group
 version version
@@ -47,9 +49,14 @@ configurations {
     integrationRuntime.extendsFrom testRuntime
 }
 
+//apply plugin: 'spotbugs'
+//spotbugs {
+//    toolVersion = "${spotbugsVersion}"
+//}
+
 apply plugin: 'checkstyle'
 checkstyle {
-    toolVersion '8.26'
+    toolVersion "${checkStyleVersion}"
     configFile file("$projectDir/config/checkstyle/checkstyle.xml")
 }
 checkstyleMain {
@@ -137,6 +144,7 @@ dependencies {
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
     implementation "com.google.code.gson:gson:${gsonVersion}"
     compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
+//    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
 }
 
 jar {

@@ -19,10 +19,8 @@
         <module name="JavadocMethod">
             <property name="scope" value="public"/>
             <property name="allowMissingParamTags" value="false"/>
-            <property name="allowMissingThrowsTags" value="true"/>
             <property name="allowMissingReturnTag" value="false"/>
             <property name="allowedAnnotations" value="Override, Test"/>
-            <property name="allowThrowsTagsForSubclasses" value="true"/>
             <property name="tokens" value="INTERFACE_DEF"/>
         </module>
         <module name="AtclauseOrder">

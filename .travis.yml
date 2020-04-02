@@ -15,4 +15,5 @@ notifications:
 
 script:
   - gradle build --rerun-tasks
+  - gradle dependencyCheckAnalyze
   - gradle sonarqube
