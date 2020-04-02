@@ -31,7 +31,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void toStrirngPositiveTest() {
+    public void toStringPositiveTest() {
         String s = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
                 .keyNotIn(Arrays.asList("3", "4"))
