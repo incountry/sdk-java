@@ -7,11 +7,11 @@ import java.util.List;
  */
 public class FindFilterBuilder {
 
-    private static final String OPER_NOT = "not";
-    private static final String OPER_GT = "gt";
-    private static final String OPER_GTE = "gte";
-    private static final String OPER_LT = "lt";
-    private static final String OPER_LTE = "lte";
+    public static final String OPER_NOT = "$not";
+    public static final String OPER_GT = "$gt";
+    public static final String OPER_GTE = "$gte";
+    public static final String OPER_LT = "$lt";
+    public static final String OPER_LTE = "$lte";
 
     private FindFilter filter;
 
@@ -145,42 +145,54 @@ public class FindFilterBuilder {
 
     //rangeKey
     public FindFilterBuilder rangeKeyEq(int key) {
-        filter.setRangeKeyFilter(new FilterRangeParam(key));
+        filter.setRangeKeyFilter(new FilterNumberParam(key));
         return this;
     }
 
     public FindFilterBuilder rangeKeyIn(int[] keys) {
-        filter.setRangeKeyFilter(new FilterRangeParam(keys));
+        filter.setRangeKeyFilter(new FilterNumberParam(keys));
         return this;
     }
 
     public FindFilterBuilder rangeKeyNotEq(int key) {
-        filter.setRangeKeyFilter(new FilterRangeParam(OPER_NOT, key));
+        filter.setRangeKeyFilter(new FilterNumberParam(OPER_NOT, key));
         return this;
     }
 
     public FindFilterBuilder rangeKeyNotIn(int[] keys) {
-        filter.setRangeKeyFilter(new FilterRangeParam(OPER_NOT, keys));
+        filter.setRangeKeyFilter(FilterNumberParam.createNotFilter(keys));
         return this;
     }
 
     public FindFilterBuilder rangeKeyGT(int key) {
-        filter.setRangeKeyFilter(new FilterRangeParam(OPER_GT, key));
+        filter.setRangeKeyFilter(new FilterNumberParam(OPER_GT, key));
         return this;
     }
 
     public FindFilterBuilder rangeKeyGTE(int key) {
-        filter.setRangeKeyFilter(new FilterRangeParam(OPER_GTE, key));
+        filter.setRangeKeyFilter(new FilterNumberParam(OPER_GTE, key));
         return this;
     }
 
     public FindFilterBuilder rangeKeyLT(int key) {
-        filter.setRangeKeyFilter(new FilterRangeParam(OPER_LT, key));
+        filter.setRangeKeyFilter(new FilterNumberParam(OPER_LT, key));
         return this;
     }
 
     public FindFilterBuilder rangeKeyLTE(int key) {
-        filter.setRangeKeyFilter(new FilterRangeParam(OPER_LTE, key));
+        filter.setRangeKeyFilter(new FilterNumberParam(OPER_LTE, key));
+        return this;
+    }
+
+    public FindFilterBuilder rangeKeyBetween(int fromValue, int toValue) {
+        return rangeKeyBetween(fromValue, true, toValue, true);
+    }
+
+    public FindFilterBuilder rangeKeyBetween(int fromValue, boolean includeFrom, int toValue, boolean includeTo) {
+        filter.setRangeKeyFilter(new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
+                fromValue,
+                includeTo ? OPER_LTE : OPER_LT,
+                toValue));
         return this;
     }
 

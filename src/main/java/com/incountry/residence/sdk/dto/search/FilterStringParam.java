@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterStringParam {
+
     private List<String> value;
     private boolean notCondition;
 

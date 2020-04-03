@@ -329,7 +329,7 @@ public class StorageImpl implements Storage {
     }
 
     /**
-     * inner class-container to store host lisk with POP API
+     * inner class-container to store host list with POP API
      */
     class POP {
         String host;

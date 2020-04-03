@@ -13,7 +13,7 @@ public class FindFilter {
     private FilterStringParam key2Filter;
     private FilterStringParam key3Filter;
     private FilterStringParam profileKeyFilter;
-    private FilterRangeParam rangeKeyFilter;
+    private FilterNumberParam rangeKeyFilter;
     private FilterStringParam versionFilter;
 
     private int limit = MAX_LIMIT;
@@ -22,7 +22,7 @@ public class FindFilter {
     public FindFilter() {
     }
 
-    public FindFilter(FilterStringParam keyFilter, FilterStringParam key2Filter, FilterStringParam key3Filter, FilterStringParam profileKeyFilter, FilterRangeParam rangeKeyFilter, FilterStringParam versionFilter) {
+    public FindFilter(FilterStringParam keyFilter, FilterStringParam key2Filter, FilterStringParam key3Filter, FilterStringParam profileKeyFilter, FilterNumberParam rangeKeyFilter, FilterStringParam versionFilter) {
         this.keyFilter = keyFilter;
         this.key2Filter = key2Filter;
         this.key3Filter = key3Filter;
@@ -88,11 +88,11 @@ public class FindFilter {
         this.profileKeyFilter = profileKeyFilter;
     }
 
-    public FilterRangeParam getRangeKeyFilter() {
+    public FilterNumberParam getRangeKeyFilter() {
         return rangeKeyFilter;
     }
 
-    public void setRangeKeyFilter(FilterRangeParam rangeKeyFilter) {
+    public void setRangeKeyFilter(FilterNumberParam rangeKeyFilter) {
         this.rangeKeyFilter = rangeKeyFilter;
     }
 
