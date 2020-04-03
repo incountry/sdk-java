@@ -32,7 +32,7 @@ public class FindFilterBuilderIsolatedTest {
 
     @Test
     public void toStringPositiveTest() {
-        String s = FindFilterBuilder.create()
+        String string = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
                 .keyNotIn(Arrays.asList("3", "4"))
                 .key2NotIn(Arrays.asList("5", "6"))
@@ -41,15 +41,15 @@ public class FindFilterBuilderIsolatedTest {
                 .versionNotIn(Arrays.asList("11", "12"))
                 .rangeKeyNotIn(new int[]{13, 14})
                 .build().toString();
-        assertNotNull(s);
-        assertTrue(s.contains("limit=1"));
-        assertTrue(s.contains("offset=2"));
-        assertTrue(s.contains("[3, 4]"));
-        assertTrue(s.contains("[5, 6]"));
-        assertTrue(s.contains("[7, 8]"));
-        assertTrue(s.contains("[9, 10]"));
-        assertTrue(s.contains("[11, 12]"));
-        assertTrue(s.contains("[13, 14]"));
+        assertNotNull(string);
+        assertTrue(string.contains("limit=1"));
+        assertTrue(string.contains("offset=2"));
+        assertTrue(string.contains("keyFilter=FilterStringParam{value=[3, 4], notCondition=true}"));
+        assertTrue(string.contains("key2Filter=FilterStringParam{value=[5, 6], notCondition=true"));
+        assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=true"));
+        assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=true}"));
+        assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12]"));
+        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], value=0, operator='not'"));
     }
 
 
