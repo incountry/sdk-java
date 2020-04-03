@@ -49,7 +49,7 @@ public class FindFilterBuilderIsolatedTest {
         assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=true"));
         assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=true}"));
         assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12]"));
-        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], value=0, operator='not'"));
+        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='$not', operator2='null'}"));
     }
 
 
@@ -171,6 +171,9 @@ public class FindFilterBuilderIsolatedTest {
         assertThrows(IllegalArgumentException.class, () -> {
             FindFilterBuilder.create().limitAndOffset(1, -1);
         });
+        assertThrows(IllegalArgumentException.class, () -> {
+            FindFilterBuilder.create().rangeKeyBetween(1, -1);
+        });
     }
 
     @Test
@@ -233,17 +236,27 @@ public class FindFilterBuilderIsolatedTest {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertTrue(builder.rangeKeyEq(1).build().getRangeKeyFilter().getValues()[0] == 1);
         assertTrue(builder.rangeKeyIn(new int[]{1, 2}).build().getRangeKeyFilter().getValues()[1] == 2);
-        assertTrue(builder.rangeKeyNotEq(3).build().getRangeKeyFilter().getValue() == 3);
-        assertTrue(builder.rangeKeyNotEq(4).build().getRangeKeyFilter().getOperator().equals("not"));
+        assertTrue(builder.rangeKeyNotEq(3).build().getRangeKeyFilter().getValues()[0] == 3);
+        assertTrue(builder.rangeKeyNotEq(4).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_NOT));
         assertTrue(builder.rangeKeyNotIn(new int[]{5, 6}).build().getRangeKeyFilter().getValues()[1] == 6);
-        assertTrue(builder.rangeKeyNotIn(new int[]{7, 8}).build().getRangeKeyFilter().getOperator().equals("not"));
-        assertTrue(builder.rangeKeyGT(9).build().getRangeKeyFilter().getValue() == 9);
-        assertTrue(builder.rangeKeyGT(10).build().getRangeKeyFilter().getOperator().equals("gt"));
-        assertTrue(builder.rangeKeyGTE(11).build().getRangeKeyFilter().getValue() == 11);
-        assertTrue(builder.rangeKeyGTE(12).build().getRangeKeyFilter().getOperator().equals("gte"));
-        assertTrue(builder.rangeKeyLT(13).build().getRangeKeyFilter().getValue() == 13);
-        assertTrue(builder.rangeKeyLT(14).build().getRangeKeyFilter().getOperator().equals("lt"));
-        assertTrue(builder.rangeKeyLTE(15).build().getRangeKeyFilter().getValue() == 15);
-        assertTrue(builder.rangeKeyLTE(16).build().getRangeKeyFilter().getOperator().equals("lte"));
+        assertTrue(builder.rangeKeyNotIn(new int[]{7, 8}).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_NOT));
+        assertTrue(builder.rangeKeyGT(9).build().getRangeKeyFilter().getValues()[0] == 9);
+        assertTrue(builder.rangeKeyGT(10).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_GT));
+        assertTrue(builder.rangeKeyGTE(11).build().getRangeKeyFilter().getValues()[0] == 11);
+        assertTrue(builder.rangeKeyGTE(12).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_GTE));
+        assertTrue(builder.rangeKeyLT(13).build().getRangeKeyFilter().getValues()[0] == 13);
+        assertTrue(builder.rangeKeyLT(14).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_LT));
+        assertTrue(builder.rangeKeyLTE(15).build().getRangeKeyFilter().getValues()[0] == 15);
+        assertTrue(builder.rangeKeyLTE(16).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_LTE));
+        builder.rangeKeyBetween(17,18);
+        assertTrue(builder.build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_GTE));
+        assertTrue(builder.build().getRangeKeyFilter().getOperator2().equals(FindFilterBuilder.OPER_LTE));
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[0]==17);
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[1]==18);
+        builder.rangeKeyBetween(19,true,20,false);
+        assertTrue(builder.build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_GTE));
+        assertTrue(builder.build().getRangeKeyFilter().getOperator2().equals(FindFilterBuilder.OPER_LT));
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[0]==19);
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[1]==20);
     }
 }

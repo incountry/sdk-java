@@ -8,9 +8,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FilterRangeParam;
+import com.incountry.residence.sdk.dto.search.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -46,7 +47,6 @@ public class JsonUtils {
     private static final String P_NAME = "name";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
-    private static final String OPER_NOT = "$not";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
 
@@ -128,7 +128,7 @@ public class JsonUtils {
             addToJson(json, P_KEY_3, filter.getKey3Filter(), mCrypto);
             addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), mCrypto);
             addToJson(json, P_VERSION, filter.getVersionFilter(), mCrypto);
-            FilterRangeParam range = filter.getRangeKeyFilter();
+            FilterNumberParam range = filter.getRangeKeyFilter();
             if (range != null) {
                 json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
             }
@@ -157,7 +157,7 @@ public class JsonUtils {
     private static JsonObject addNotCondition(FilterStringParam param, Crypto mCrypto, boolean isForString) {
         JsonArray arr = isForString ? toJsonString(param, mCrypto) : toJsonInt(param);
         JsonObject object = new JsonObject();
-        object.add(OPER_NOT, arr);
+        object.add(FindFilterBuilder.OPER_NOT, arr);
         return object;
     }
 
@@ -184,7 +184,7 @@ public class JsonUtils {
         return new BatchRecord(records, count, limit, offset, total, errors);
     }
 
-    private static JsonArray valueJSON(FilterRangeParam range) {
+    private static JsonArray valueJSON(FilterNumberParam range) {
         if (range.getValues() == null) {
             return null;
         }
@@ -195,9 +195,14 @@ public class JsonUtils {
         return array;
     }
 
-    private static JsonObject conditionJSON(FilterRangeParam range) {
+    private static JsonObject conditionJSON(FilterNumberParam range) {
         JsonObject object = new JsonObject();
-        object.addProperty(range.getOperator(), range.getValue());
+        object.addProperty(range.getOperator1(), range.getValues()[0]);
+        if (range.isRange()) {
+            object.addProperty(range.getOperator2(), range.getValues()[1]);
+        }
+
+
         return object;
     }
 
