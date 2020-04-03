@@ -38,9 +38,9 @@ public class Record {
     /**
      * merge records. Notnull field values from @merged replaces old ones in @base
      *
-     * @param base
-     * @param merged
-     * @return
+     * @param base base record
+     * @param merged new records, null fileds are ignored
+     * @return new record with merged fileds
      */
     public static Record merge(Record base, Record merged) {
         String country = mergeKeys(base.getCountry(), merged.getCountry());

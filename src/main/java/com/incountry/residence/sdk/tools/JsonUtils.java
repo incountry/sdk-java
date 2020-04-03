@@ -246,9 +246,12 @@ public class JsonUtils {
     }
 
     /**
+     * Put record into JSON format
+     *
+     * @param record data for JSON
      * @param crypto object which is using to encrypt data
-     * @return Json string with Record data
-     * @throws StorageCryptoException if encryption failed
+     * @return String with JSON
+     * @throws StorageCryptoException when there are problems with encryption
      */
     public static String toJsonString(Record record, Crypto crypto) throws StorageCryptoException {
         return toJson(record, crypto).toString();
