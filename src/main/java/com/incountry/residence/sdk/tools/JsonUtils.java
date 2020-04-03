@@ -93,7 +93,7 @@ public class JsonUtils {
             addToJson(json, P_KEY_3, filter.getKey3Filter(), crypto);
             addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), crypto);
             addToJson(json, P_VERSION, filter.getVersionFilter(), crypto);
-            FilterRangeParam range = filter.getRangeKeyFilter();
+            FilterNumberParam range = filter.getRangeKeyFilter();
             if (range != null) {
                 json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
             }
