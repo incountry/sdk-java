@@ -17,7 +17,7 @@ public class FilterStringParamTest {
         String filterValue = "filterValue";
         Crypto crypto = new CryptoImpl("envId");
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        JsonArray jsonArray = JsonUtils.toJsonString(filterStringParam, crypto);
+        JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, crypto);
         assertEquals(crypto.createKeyHash(filterValue), jsonArray.get(0).getAsString());
     }
 
@@ -25,7 +25,7 @@ public class FilterStringParamTest {
     public void toJSONStringWithCryptoNullTest() {
         String filterValue = "filterValue";
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
-        JsonArray jsonArray = JsonUtils.toJsonString(filterStringParam, null);
+        JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, null);
         assertEquals(filterValue, jsonArray.get(0).getAsString());
     }
 

@@ -132,7 +132,7 @@ public class JsonUtils {
             if (paramName.equals(P_VERSION)) {
                 json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
             } else {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, crypto, true) : toJsonString(param, crypto));
+                json.add(paramName, param.isNotCondition() ? addNotCondition(param, crypto, true) : toJsonArray(param, crypto));
             }
         }
     }
@@ -146,7 +146,7 @@ public class JsonUtils {
      * @return JsonObject with added 'not' condition
      */
     private static JsonObject addNotCondition(FilterStringParam param, Crypto crypto, boolean isForString) {
-        JsonArray arr = isForString ? toJsonString(param, crypto) : toJsonInt(param);
+        JsonArray arr = isForString ? toJsonArray(param, crypto) : toJsonInt(param);
         JsonObject object = new JsonObject();
         object.add(FindFilterBuilder.OPER_NOT, arr);
         return object;
@@ -257,7 +257,14 @@ public class JsonUtils {
         return toJson(record, crypto).toString();
     }
 
-    public static JsonArray toJsonString(FilterStringParam param, Crypto crypto) {
+    public static String toJsonString(FindFilter filter, Crypto crypto) {
+        JsonObject object = new JsonObject();
+        object.add(P_FILTER, JsonUtils.toJson(filter, crypto));
+        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()));
+        return object.toString();
+    }
+
+    public static JsonArray toJsonArray(FilterStringParam param, Crypto crypto) {
         if (param.getValue() == null) {
             return null;
         }
@@ -265,13 +272,6 @@ public class JsonUtils {
         List<String> values = (crypto != null ? hashValue(param, crypto) : param.getValue());
         values.forEach(array::add);
         return array;
-    }
-
-    public static String toJsonString(FindFilter filter, Crypto crypto) {
-        JsonObject object = new JsonObject();
-        object.add(P_FILTER, JsonUtils.toJson(filter, crypto));
-        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()));
-        return object.toString();
     }
 
     /**
