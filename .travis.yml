@@ -13,7 +13,13 @@ sudo: false
 notifications:
   email: false
 
+before_install:
+  - wget http://services.gradle.org/distributions/gradle-6.3-bin.zip
+  - unzip -qq gradle-6.3-bin.zip
+  - export GRADLE_HOME=$PWD/gradle-6.3
+  - export PATH=$GRADLE_HOME/bin:$PATH
+  - gradle -v
+
 script:
-  - gradle wrapper --gradle-version=6.3
   - gradle build --rerun-tasks
   - gradle sonarqube
