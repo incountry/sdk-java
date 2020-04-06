@@ -85,7 +85,7 @@ public class FilterNumberParam {
         if (values != null) {
             return Arrays.copyOf(values, values.length);
         }
-        return null;
+        return values;
     }
 
     public String getOperator1() {
