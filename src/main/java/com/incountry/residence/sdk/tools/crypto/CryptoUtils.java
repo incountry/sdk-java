@@ -16,7 +16,7 @@ public class CryptoUtils {
     public static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
         char[] chars = password.toCharArray();
         PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
-        byte[] strongPasswordHash = {};
+        byte[] strongPasswordHash;
         try {
             SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
             strongPasswordHash = skf.generateSecret(spec).getEncoded();

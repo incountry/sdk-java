@@ -9,8 +9,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 public class HttpAgentImpl implements HttpAgent {
+    private static Charset charset = Charset.defaultCharset();
+
     private String apiKey;
     private String environmentId;
 
@@ -30,16 +33,16 @@ public class HttpAgentImpl implements HttpAgent {
         if (body != null) {
             con.setDoOutput(true);
             OutputStream os = con.getOutputStream();
-            os.write(body.getBytes());
+            os.write(body.getBytes(Charset.defaultCharset()));
             os.flush();
             os.close();
         }
         int status = con.getResponseCode();
-        BufferedReader in = null;
+        BufferedReader in;
         if (status < 400) {
-            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
         } else {
-            in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+            in = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
         }
         String inputLine;
         StringBuilder content = new StringBuilder();

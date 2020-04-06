@@ -11,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.generateStron
 public class CryptoImpl implements Crypto {
     private SecretKeysData secretKeysData;
     private String envId;
-    private Boolean isUsingPTEncryption = false;
+    private boolean isUsingPTEncryption = false;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
@@ -33,6 +34,8 @@ public class CryptoImpl implements Crypto {
     private static final String VERSION = "2";
     public static final String PT_ENC_VERSION = "pt";
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
+
+    private static Charset charset = Charset.defaultCharset();
 
     public CryptoImpl(SecretKeysData secret) {
         this.secretKeysData = secret;
@@ -50,12 +53,12 @@ public class CryptoImpl implements Crypto {
     }
 
     public Pair<String, Integer> encrypt(String plainText) throws StorageCryptoException {
-        if (Boolean.TRUE.equals(isUsingPTEncryption)) {
-            byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes());
-            return new Pair<>(PT_ENC_VERSION + ":" + new String(ptEncoded), null);
+        if (isUsingPTEncryption) {
+            byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(charset));
+            return new Pair<>(PT_ENC_VERSION + ":" + new String(ptEncoded, charset), null);
         }
 
-        byte[] clean = plainText.getBytes();
+        byte[] clean = plainText.getBytes(charset);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
         byte[] key = getKey(salt, secretKeyObj);
@@ -64,7 +67,7 @@ public class CryptoImpl implements Crypto {
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
 
-        byte[] encrypted = {};
+        byte[] encrypted;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
@@ -73,7 +76,7 @@ public class CryptoImpl implements Crypto {
             throw new StorageCryptoException(ENCRYPTION_ALGORITHM + " algorithm exception", e);
         }
 
-        byte[] resultByteArray = {};
+        byte[] resultByteArray;
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(salt);
             outputStream.write(iv);
@@ -85,7 +88,7 @@ public class CryptoImpl implements Crypto {
 
         byte[] encoded = Base64.getEncoder().encode(resultByteArray);
 
-        return new Pair<>(VERSION + ":" + new String(encoded), secretKeyObj.getVersion());
+        return new Pair<>(VERSION + ":" + new String(encoded, charset), secretKeyObj.getVersion());
     }
 
     private byte[] getKey(byte[] salt, SecretKey secretKeyObj) throws StorageCryptoException {
@@ -104,7 +107,7 @@ public class CryptoImpl implements Crypto {
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-        byte[] decryptedText = {};
+        byte[] decryptedText;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             byte[] key = getKey(salt, getSecret(decryptKeyVersion));
@@ -118,7 +121,7 @@ public class CryptoImpl implements Crypto {
             throw new StorageCryptoException("Data encryption error", e);
         }
 
-        return new String(decryptedText);
+        return new String(decryptedText, charset);
     }
 
     private SecretKey getSecret(Integer version) {
@@ -155,7 +158,7 @@ public class CryptoImpl implements Crypto {
         if (parts[0].equals(PT_ENC_VERSION)) {
             return decryptVPT(parts[1]);
         }
-        if (!parts[0].equals(PT_ENC_VERSION) && Boolean.TRUE.equals(isUsingPTEncryption)) {
+        if (isUsingPTEncryption) {
             throw new StorageCryptoException("No secret provided. Cannot decrypt record: " + cipherText);
         }
         switch (parts[0]) {
@@ -180,6 +183,6 @@ public class CryptoImpl implements Crypto {
 
     private String decryptVPT(String cipherText) {
         byte[] ptBytes = Base64.getDecoder().decode(cipherText);
-        return new String(ptBytes);
+        return new String(ptBytes, charset);
     }
 }

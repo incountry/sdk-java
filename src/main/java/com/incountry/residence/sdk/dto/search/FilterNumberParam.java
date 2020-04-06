@@ -28,7 +28,7 @@ public class FilterNumberParam {
         if (values == null || values.length == 0) {
             throw new IllegalArgumentException(ERR_NULL_VALUE);
         }
-        this.values = values;
+        this.values = Arrays.copyOf(values, values.length);
     }
 
     public FilterNumberParam(int value) {
@@ -82,7 +82,10 @@ public class FilterNumberParam {
     }
 
     public int[] getValues() {
-        return values;
+        if (values != null) {
+            return Arrays.copyOf(values, values.length);
+        }
+        return null;
     }
 
     public String getOperator1() {
@@ -95,9 +98,7 @@ public class FilterNumberParam {
 
     public FilterNumberParam copy() {
         FilterNumberParam clone = new FilterNumberParam();
-        if (values != null) {
-            clone.values = Arrays.copyOf(values, values.length);
-        }
+        clone.values = getValues();
         clone.operator1 = operator1;
         clone.operator2 = operator2;
         return clone;

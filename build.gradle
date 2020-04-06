@@ -15,7 +15,7 @@ plugins {
     id "org.sonarqube" version "${sonarQubeVersion}"
     id 'jacoco'
     id 'org.barfuin.gradle.jacocolog' version "${jacocologVersion}"
-//    id "com.github.spotbugs" version "4.0.5"
+    id "com.github.spotbugs" version "${spotbugsVersion}"
 }
 
 apply plugin: 'maven'
@@ -65,8 +65,7 @@ dependencies {
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
     implementation "com.google.code.gson:gson:${gsonVersion}"
     compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
-//    spotbugs configurations.spotbugsPlugins.dependencies
-//    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
+    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
 }
 
 apply plugin: 'org.owasp.dependencycheck'
@@ -75,10 +74,14 @@ dependencyCheck {
 }
 check.dependsOn dependencyCheckAnalyze
 
-//apply plugin: 'spotbugs'
-//spotbugs {
-//    toolVersion = "${spotbugsVersion}"
-//}
+apply plugin: 'com.github.spotbugs'
+spotbugs {
+    excludeFilter= file("$projectDir/config/spotbugs/exclude.xml")
+    ignoreFailures=false
+    showProgress = true
+//    effort = 'default'
+//    reportLevel = 'default'
+}
 
 apply plugin: 'checkstyle'
 checkstyle {

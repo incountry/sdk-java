@@ -5,8 +5,6 @@ import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
@@ -255,9 +253,6 @@ public class StorageSingleTests {
 
     @Test
     public void testErrorFindOneInsufficientArgs() throws StorageException {
-        FindFilter filter = new FindFilter();
-        filter.setProfileKeyFilter(new FilterStringParam(profileKey));
-
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(record, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
@@ -268,7 +263,7 @@ public class StorageSingleTests {
 
     @Test
     public void testInitErrorOnInsufficientArgs() {
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> new SecretKeysData());
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(SecretKeysData::new);
         assertThrows(IllegalArgumentException.class, () -> new StorageImpl(null, null, secretKeyAccessor));
     }
 
