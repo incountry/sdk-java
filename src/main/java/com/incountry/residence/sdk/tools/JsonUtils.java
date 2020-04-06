@@ -98,7 +98,7 @@ public class JsonUtils {
             if (parts.length != 2) {
                 verRec.justDecryptKeys(mCrypto);
             } else {
-                verRec.decryptAllFromBody(gson);
+                verRec.decryptAllFromBody();
             }
         }
         return verRec.toRecord();
@@ -324,7 +324,8 @@ public class JsonUtils {
             setProfileKey(mCrypto.decrypt(getProfileKey(), version));
         }
 
-        public void decryptAllFromBody(Gson gson) {
+        public void decryptAllFromBody() {
+            Gson gson = getGson4Records();
             JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
             setBody(getPropertyFromJson(bodyObj, P_PAYLOAD));
             String meta = getPropertyFromJson(bodyObj, P_META);
