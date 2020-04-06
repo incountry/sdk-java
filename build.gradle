@@ -110,22 +110,20 @@ test {
 }
 
 dependencies {
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${junit5}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junit5}"
-    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junit5}"
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junit5}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junitVersion}"
     testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
     testCompile "org.spockframework:spock-core:${spockVersion}"
-    compile group: 'com.google.guava', name: 'guava', version: '28.2-jre'
-    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.4'
+    compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     compile "com.google.http-client:google-http-client:${httpClientVersion}"
     compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
     compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     implementation "com.google.code.gson:gson:${gsonVersion}"
     compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
 }
