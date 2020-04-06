@@ -14,5 +14,6 @@ notifications:
   email: false
 
 script:
+  - gradle wrapper --gradle-version=6.3
   - gradle build --rerun-tasks
   - gradle sonarqube
