@@ -6,15 +6,15 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:5.3.2'
+        classpath "org.owasp:dependency-check-gradle:${dependencyCheckVersion}"
     }
 }
 
 plugins {
-    id 'io.codearte.nexus-staging' version '0.11.0'
-    id "org.sonarqube" version "2.7.1"
+    id 'io.codearte.nexus-staging' version "${nexusStagingVersion}"
+    id "org.sonarqube" version "${sonarQubeVersion}"
     id 'jacoco'
-    id 'org.barfuin.gradle.jacocolog' version '1.0.1'
+    id 'org.barfuin.gradle.jacocolog' version "${jacocologVersion}"
 //    id "com.github.spotbugs" version "4.0.5"
 }
 
@@ -46,6 +46,27 @@ sourceSets {
 configurations {
     integrationImplementation.extendsFrom testImplementation
     integrationRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junitVersion}"
+    testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+    testCompile "org.spockframework:spock-core:${spockVersion}"
+    compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "com.google.http-client:google-http-client:${httpClientVersion}"
+    compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
+    compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile group: 'org.json', name: 'json', version: "${jsonVersion}"
+    implementation "com.google.code.gson:gson:${gsonVersion}"
+    compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
+//    spotbugs configurations.spotbugsPlugins.dependencies
+//    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
 }
 
 apply plugin: 'org.owasp.dependencycheck'
@@ -130,26 +151,6 @@ uploadArchives {
 
 test {
     useJUnitPlatform()
-}
-
-dependencies {
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junitVersion}"
-    testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
-    testCompile "org.spockframework:spock-core:${spockVersion}"
-    compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
-    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
-    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    compile "com.google.http-client:google-http-client:${httpClientVersion}"
-    compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
-    compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
-    compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile group: 'org.json', name: 'json', version: "${jsonVersion}"
-    implementation "com.google.code.gson:gson:${gsonVersion}"
-    compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
-//    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
 }
 
 jar {
