@@ -72,7 +72,9 @@ dependencies {
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
     failOnError = true
+    failBuildOnCVSS=1
 }
+
 check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
@@ -241,4 +243,3 @@ tasks.withType(Test) {
         }
     }
 }
-
