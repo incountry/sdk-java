@@ -176,7 +176,7 @@ public class JsonUtils {
     }
 
     private static JsonArray valueJSON(FilterNumberParam range) {
-        if (range.getValues() == null) {
+        if (range.getValues() == null || range.getValues().length == 0) {
             return null;
         }
         JsonArray array = new JsonArray();
@@ -192,8 +192,6 @@ public class JsonUtils {
         if (range.isRange()) {
             object.addProperty(range.getOperator2(), range.getValues()[1]);
         }
-
-
         return object;
     }
 

@@ -82,10 +82,10 @@ public class FilterNumberParam {
     }
 
     public int[] getValues() {
-        if (values != null) {
+        if (values != null && values.length > 0) {
             return Arrays.copyOf(values, values.length);
         }
-        return values;
+        return new int[]{};
     }
 
     public String getOperator1() {

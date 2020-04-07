@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import com.github.spotbugs.snom.SpotBugsTask
 
 buildscript {
     repositories {
@@ -70,17 +71,25 @@ dependencies {
 
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
-    failOnError=true
+    failOnError = true
 }
 check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
 spotbugs {
-    excludeFilter= file("$projectDir/config/spotbugs/exclude.xml")
-    ignoreFailures=false
-    showProgress = true
-//    effort = 'default'
-//    reportLevel = 'default'
+    excludeFilter = file("$projectDir/config/spotbugs/exclude.xml")
+    ignoreFailures = false
+    effort = "max"
+}
+
+tasks.withType(SpotBugsTask.class) {
+    reports { result ->
+        xml.enabled = false
+        html {
+            enabled = true
+            println("REPORT FILE [" + getTask() + "]: " + getDestination())
+        }
+    }
 }
 
 apply plugin: 'checkstyle'

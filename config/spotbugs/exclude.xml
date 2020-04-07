@@ -1,9 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-    <Match>
-        <Class name="apply"/>
-    </Match>
-    <Match>
-        <Class name="accept"/>
-    </Match>
 </FindBugsFilter>
