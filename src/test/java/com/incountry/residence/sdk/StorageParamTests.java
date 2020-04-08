@@ -54,13 +54,13 @@ public class StorageParamTests {
     }
 
     private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) {
-        SecretKeysData secretKeysData = new SecretKeysData();
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(version);
         secretKey.setIsKey(isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
+        SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeyList);
         secretKeysData.setCurrentVersion(currentVersion);
 

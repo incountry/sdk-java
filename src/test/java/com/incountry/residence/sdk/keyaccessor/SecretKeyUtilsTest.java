@@ -22,15 +22,14 @@ public class SecretKeyUtilsTest {
         String secret = "user_password";
         int version = 1;
         boolean isKey = true;
-        int currentVersion = 1;
-
-        SecretKeysData secretKeysData = new SecretKeysData();
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(version);
         secretKey.setIsKey(isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
+        int currentVersion = 1;
+        SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeyList);
         secretKeysData.setCurrentVersion(currentVersion);
 

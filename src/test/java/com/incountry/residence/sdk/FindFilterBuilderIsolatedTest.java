@@ -248,15 +248,15 @@ public class FindFilterBuilderIsolatedTest {
         assertTrue(builder.rangeKeyLT(14).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_LT));
         assertTrue(builder.rangeKeyLTE(15).build().getRangeKeyFilter().getValues()[0] == 15);
         assertTrue(builder.rangeKeyLTE(16).build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_LTE));
-        builder.rangeKeyBetween(17,18);
+        builder.rangeKeyBetween(17, 18);
         assertTrue(builder.build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_GTE));
         assertTrue(builder.build().getRangeKeyFilter().getOperator2().equals(FindFilterBuilder.OPER_LTE));
-        assertTrue(builder.build().getRangeKeyFilter().getValues()[0]==17);
-        assertTrue(builder.build().getRangeKeyFilter().getValues()[1]==18);
-        builder.rangeKeyBetween(19,true,20,false);
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[0] == 17);
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[1] == 18);
+        builder.rangeKeyBetween(19, true, 20, false);
         assertTrue(builder.build().getRangeKeyFilter().getOperator1().equals(FindFilterBuilder.OPER_GTE));
         assertTrue(builder.build().getRangeKeyFilter().getOperator2().equals(FindFilterBuilder.OPER_LT));
-        assertTrue(builder.build().getRangeKeyFilter().getValues()[0]==19);
-        assertTrue(builder.build().getRangeKeyFilter().getValues()[1]==20);
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[0] == 19);
+        assertTrue(builder.build().getRangeKeyFilter().getValues()[1] == 20);
     }
 }

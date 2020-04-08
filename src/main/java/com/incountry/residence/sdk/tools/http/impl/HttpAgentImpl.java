@@ -9,8 +9,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 public class HttpAgentImpl implements HttpAgent {
+    private static Charset charset = Charset.defaultCharset();
+
     private String apiKey;
     private String environmentId;
 
@@ -24,23 +27,22 @@ public class HttpAgentImpl implements HttpAgent {
         URL url = new URL(endpoint);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
-        con.setRequestProperty("Authorization", "Bearer "+apiKey);
+        con.setRequestProperty("Authorization", "Bearer " + apiKey);
         con.setRequestProperty("x-env-id", environmentId);
         con.setRequestProperty("Content-Type", "application/json");
-        if (body != null){
+        if (body != null) {
             con.setDoOutput(true);
             OutputStream os = con.getOutputStream();
-            os.write(body.getBytes());
+            os.write(body.getBytes(Charset.defaultCharset()));
             os.flush();
             os.close();
         }
         int status = con.getResponseCode();
-        BufferedReader in = null;
+        BufferedReader in;
         if (status < 400) {
-            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        }
-        else {
-            in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+            in = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
+        } else {
+            in = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
         }
         String inputLine;
         StringBuilder content = new StringBuilder();
@@ -49,10 +51,12 @@ public class HttpAgentImpl implements HttpAgent {
         }
         in.close();
 
-        if (allowNone && status == 404) return null;
-        if (status >= 400)
+        if (allowNone && status == 404) {
+            return null;
+        }
+        if (status >= 400) {
             throw new StorageServerException(status + " " + endpoint + " - " + content);
-
+        }
         return content.toString();
     }
 }

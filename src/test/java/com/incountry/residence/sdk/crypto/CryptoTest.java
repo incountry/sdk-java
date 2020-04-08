@@ -30,9 +30,11 @@ public class CryptoTest {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(keyVersion);
-        secretKeysData.setSecrets(new ArrayList<SecretKey>() {{
-            add(secretKey);
-        }});
+        secretKeysData.setSecrets(new ArrayList<SecretKey>() {
+            {
+                add(secretKey);
+            }
+        });
         secretKeysData.setCurrentVersion(keyVersion);
     }
 
@@ -126,9 +128,11 @@ public class CryptoTest {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secret);
         secretKey.setVersion(keyVersion);
-        secretKeysData.setSecrets(new ArrayList<SecretKey>() {{
-            add(secretKey);
-        }});
+        secretKeysData.setSecrets(new ArrayList<SecretKey>() {
+            {
+                add(secretKey);
+            }
+        });
         secretKeysData.setCurrentVersion(keyVersion);
 
         CryptoImpl crypto = new CryptoImpl(secretKeysData);

@@ -25,8 +25,8 @@ public class SecretKeyUtils {
     public static SecretKeysData convertStringToSecretKeyData(String secretKeyString) {
 
         if (isJson(secretKeyString)) {
-            Gson g = new Gson();
-            return g.fromJson(secretKeyString, SecretKeysData.class);
+            Gson gson = new Gson();
+            return gson.fromJson(secretKeyString, SecretKeysData.class);
         }
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret(secretKeyString);

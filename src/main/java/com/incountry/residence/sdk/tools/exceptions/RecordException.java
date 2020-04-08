@@ -4,13 +4,13 @@ public class RecordException extends Exception {
     private final String rawData;
     private final Exception originalException;
 
-    public RecordException(String exceptionText, String rawData){
+    public RecordException(String exceptionText, String rawData) {
         super(exceptionText);
         this.rawData = rawData;
         this.originalException = null;
     }
 
-    public RecordException(String exceptionText, String rawData, Exception originalException){
+    public RecordException(String exceptionText, String rawData, Exception originalException) {
         super(exceptionText);
         this.rawData = rawData;
         this.originalException = originalException;
@@ -20,5 +20,7 @@ public class RecordException extends Exception {
         return this.rawData;
     }
 
-    public Exception getOriginalException() { return this.originalException; }
+    public Exception getOriginalException() {
+        return this.originalException;
+    }
 }

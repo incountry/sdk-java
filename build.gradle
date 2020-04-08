@@ -1,25 +1,26 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import com.github.spotbugs.snom.SpotBugsTask
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:5.2.1'
+        classpath "org.owasp:dependency-check-gradle:${dependencyCheckVersion}"
     }
 }
 
 plugins {
-    id 'io.codearte.nexus-staging' version '0.11.0'
-    id "org.sonarqube" version "2.7.1"
+    id 'io.codearte.nexus-staging' version "${nexusStagingVersion}"
+    id "org.sonarqube" version "${sonarQubeVersion}"
     id 'jacoco'
-    id 'org.barfuin.gradle.jacocolog' version '1.0.1'
+    id 'org.barfuin.gradle.jacocolog' version "${jacocologVersion}"
+    id "com.github.spotbugs" version "${spotbugsVersion}"
 }
 
 apply plugin: 'maven'
 apply plugin: 'java'
-apply plugin: 'groovy'
 apply plugin: 'signing'
 
 group group
@@ -48,6 +49,63 @@ configurations {
     integrationRuntime.extendsFrom testRuntime
 }
 
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junitVersion}"
+    testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+    testCompile "org.spockframework:spock-core:${spockVersion}"
+    compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "com.google.http-client:google-http-client:${httpClientVersion}"
+    compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
+    compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile group: 'org.json', name: 'json', version: "${jsonVersion}"
+    implementation "com.google.code.gson:gson:${gsonVersion}"
+    compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
+    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
+}
+
+apply plugin: 'org.owasp.dependencycheck'
+dependencyCheck {
+    failOnError = true
+    failBuildOnCVSS=1
+}
+
+check.dependsOn dependencyCheckAnalyze
+
+apply plugin: 'com.github.spotbugs'
+spotbugs {
+    excludeFilter = file("$projectDir/config/spotbugs/exclude.xml")
+    ignoreFailures = false
+    effort = "max"
+}
+
+tasks.withType(SpotBugsTask.class) {
+    reports { result ->
+        xml.enabled = false
+        html {
+            enabled = true
+            println("REPORT FILE [" + getTask() + "]: " + getDestination())
+        }
+    }
+}
+
+apply plugin: 'checkstyle'
+checkstyle {
+    toolVersion "${checkStyleVersion}"
+    configFile file("$projectDir/config/checkstyle/checkstyle.xml")
+}
+checkstyleMain {
+    source = 'src/main/java'
+}
+checkstyleTest {
+    source = 'src/test/java'
+}
+
 sonarqube {
     properties {
         property "sonar.projectKey", "incountry_sdk-java"
@@ -71,7 +129,7 @@ uploadArchives {
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: nexusUsername, password: nexusPassword )
+                authentication(userName: nexusUsername, password: nexusPassword)
             }
 
             pom.project {
@@ -109,25 +167,6 @@ test {
     useJUnitPlatform()
 }
 
-dependencies {
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${junitVersion}"
-    testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
-    testCompile "org.spockframework:spock-core:${spockVersion}"
-    compile group: 'com.google.guava', name: 'guava', version: "${guavaVersion}"
-    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
-    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    compile "com.google.http-client:google-http-client:${httpClientVersion}"
-    compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
-    compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
-    compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile group: 'org.json', name: 'json', version: "${jsonVersion}"
-    implementation "com.google.code.gson:gson:${gsonVersion}"
-    compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
-}
-
 jar {
     manifest {
         attributes("Implementation-Title": "${rootProject.group}:${rootProject.name}",
@@ -137,12 +176,12 @@ jar {
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    getArchiveClassifier().set('javadoc')
     from javadoc
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    getArchiveClassifier().set('sources')
     from sourceSets.main.allSource
 }
 
@@ -204,4 +243,3 @@ tasks.withType(Test) {
         }
     }
 }
-

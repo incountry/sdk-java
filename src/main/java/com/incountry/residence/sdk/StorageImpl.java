@@ -67,7 +67,6 @@ public class StorageImpl implements Storage {
                 secretKeyAccessor);
     }
 
-    @SuppressWarnings("squid:cwe")
     private static String loadFromEnv(String key) {
         return System.getenv(key);
     }
@@ -287,9 +286,8 @@ public class StorageImpl implements Storage {
      * @param builder object representing find filters
      * @return BatchRecord object which contains required records
      * @throws StorageServerException if server connection failed or server response error
-     * @throws StorageCryptoException if decryption failed
      */
-    public BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException {
+    public BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException {
         if (country == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
         }
@@ -318,9 +316,8 @@ public class StorageImpl implements Storage {
      * @param builder object representing find filters
      * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
-     * @throws StorageCryptoException if decryption failed
      */
-    public Record findOne(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException {
+    public Record findOne(String country, FindFilterBuilder builder) throws StorageServerException {
         BatchRecord findResults = find(country, builder);
         List<Record> records = findResults.getRecords();
         if (records.isEmpty()) {
@@ -332,13 +329,21 @@ public class StorageImpl implements Storage {
     /**
      * inner class-container to store host list with POP API
      */
-    class POP {
+    static class POP {
         String host;
         String name;
 
-        POP(String h, String n) {
-            host = h;
-            name = n;
+        POP(String host, String name) {
+            this.host = host;
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return "POP{" +
+                    "host='" + host + '\'' +
+                    ", name='" + name + '\'' +
+                    '}';
         }
     }
 }
