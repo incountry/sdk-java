@@ -9,6 +9,7 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
@@ -28,7 +29,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-public class StorageParamTests {
+public class HttpDaoImplTests {
 
     private Crypto crypto;
 
@@ -101,7 +102,7 @@ public class StorageParamTests {
         String expectedPath = "/v2/storage/records/" + country;
 
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setHttpAgent(agent);
+        storage.setDao(new HttpDaoImpl(null, agent));
         Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
         storage.create(record);
 
@@ -148,7 +149,7 @@ public class StorageParamTests {
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
         FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, crypto));
-        storage.setHttpAgent(agent);
+        storage.setDao(new HttpDaoImpl(null, agent));
 
         Record fetched = storage.read(country, key);
         assertEquals(expectedPath, new URL(agent.getCallEndpoint()).getPath());
@@ -174,13 +175,11 @@ public class StorageParamTests {
 
         StorageImpl storage = initializeStorage(isKey, encrypt);
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setHttpAgent(agent);
+        storage.setDao(new HttpDaoImpl(null, agent));
         storage.delete(country, key);
-
         String keyHash = crypto.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
         String callPath = new URL(agent.getCallEndpoint()).getPath();
-
         assertEquals(expectedPath, callPath);
     }
 
@@ -198,7 +197,7 @@ public class StorageParamTests {
 
         StorageImpl storage = initializeStorage(isKey, encrypt);
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setHttpAgent(agent);
+        storage.setDao(new HttpDaoImpl(null, agent));
         List<Record> records = new ArrayList<>();
         records.add(new Record(country, key, body, profileKey, rangeKey, key2, key3));
         storage.createBatch(country, records);

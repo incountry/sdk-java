@@ -4,40 +4,29 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.dao.Dao;
+import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
+import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Basic implementation
  */
 public class StorageImpl implements Storage {
-    private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
-    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
-    private static final String URI_ENDPOINT_PART = ".api.incountry.io";
-    private static final String STORAGE_URL = "/v2/storage/records/";
-    private static final String URI_HTTPS = "https://";
-    private static final String URI_POST = "POST";
-    private static final String URI_GET = "GET";
-    private static final String URI_DELIMITER = "/";
     //params from OS env
     private static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
     private static final String PARAM_API_KEY = "INC_API_KEY";
     private static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     //error messages
-    private static final String MSG_SERVER_ERROR = "Server request error";
     private static final String MSG_ENV_EXCEPTION = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_ERR_GET_COUNTRIES = "Unable to retrieve available countries list";
     private static final String MSG_ERROR_NULL_COUNTRY = "Country cannot be null";
     private static final String MSG_NULL_KEY = "Key cannot be null";
     private static final String MSG_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
@@ -48,12 +37,15 @@ public class StorageImpl implements Storage {
 
     private String envID;
     private String apiKey;
-    private String endpoint;
-    private boolean defaultEndpoint = false;
+
     private Crypto crypto;
-    private HashMap<String, POP> poplist;
-    private HttpAgent httpAgent;
+    private Map<String, POP> popMap;
+    private Dao dao;
     private boolean isEncrypted;
+
+    private static String loadFromEnv(String key) {
+        return System.getenv(key);
+    }
 
     public StorageImpl() throws StorageServerException {
         this(null);
@@ -65,10 +57,6 @@ public class StorageImpl implements Storage {
                 loadFromEnv(PARAM_ENDPOINT),
                 secretKeyAccessor != null,
                 secretKeyAccessor);
-    }
-
-    private static String loadFromEnv(String key) {
-        return System.getenv(key);
     }
 
     public StorageImpl(String environmentID, String apiKey, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
@@ -85,20 +73,14 @@ public class StorageImpl implements Storage {
         if (this.apiKey == null) {
             throw new IllegalArgumentException(MSG_PASS_API_KEY);
         }
-        this.endpoint = endpoint;
-        if (this.endpoint == null) {
-            this.endpoint = DEFAULT_ENDPOINT;
-            defaultEndpoint = true;
-        }
-        poplist = new HashMap<>();
-        httpAgent = new HttpAgentImpl(apiKey, environmentID);
-        loadCountryEndpoints();
         isEncrypted = encrypt;
         if (encrypt) {
             crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentID);
         } else {
             crypto = new CryptoImpl(environmentID);
         }
+        dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+        loadCountryEndpoints();
     }
 
     /**
@@ -107,29 +89,7 @@ public class StorageImpl implements Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     private void loadCountryEndpoints() throws StorageServerException {
-        String content;
-        try {
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
-        } catch (IOException e) {
-            throw new StorageServerException(MSG_ERR_GET_COUNTRIES, e);
-        }
-        JsonUtils.getCountryEntryPoint(content, (String code, String name) -> {
-            POP pop = new POP(URI_HTTPS + code + URI_ENDPOINT_PART, name);
-            poplist.put(name, pop);
-        });
-    }
-
-    private String getEndpoint(String country, String path) {
-        if (!defaultEndpoint) {
-            return endpoint + path;
-        }
-        if (!path.startsWith(URI_DELIMITER)) {
-            path = URI_DELIMITER + path;
-        }
-        if (poplist.containsKey(country)) {
-            return poplist.get(country).host + path;
-        }
-        return endpoint + path;
+        popMap = dao.loadCounties();
     }
 
     private void checkParameters(String country, String key) {
@@ -141,72 +101,28 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private String createUrl(String country, String recordKey) {
-        checkParameters(country, recordKey);
-        country = country.toLowerCase();
-        if (crypto != null) {
-            recordKey = crypto.createKeyHash(recordKey);
-        }
-        return getEndpoint(country, STORAGE_URL + country + URI_DELIMITER + recordKey);
+    public void setDao(Dao dao) {
+        this.dao = dao;
     }
 
-    public void setHttpAgent(HttpAgent agent) {
-        httpAgent = agent;
-    }
 
-    /**
-     * Write data to remote storage
-     *
-     * @param record object which encapsulate data which must be written in storage
-     * @return recorded record
-     * @throws StorageServerException if server connection failed or server response error
-     * @throws StorageCryptoException if encryption failed
-     */
     public Record create(Record record) throws StorageServerException, StorageCryptoException {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
-        String url = getEndpoint(country, STORAGE_URL + country);
-        try {
-            httpAgent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), false);
-        } catch (IOException e) {
-            throw new StorageServerException(MSG_SERVER_ERROR, e);
-        }
+        dao.createRecord(country, popMap.get(country), record, crypto);
         return record;
     }
 
-    /**
-     * Read data from remote storage
-     *
-     * @param country   country identifier
-     * @param recordKey record unique identifier
-     * @return Record object which contains required data
-     * @throws StorageServerException if server connection failed or server response error
-     * @throws StorageCryptoException if decryption failed
-     */
+
     public Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
-        String url = createUrl(country, recordKey);
-        String content;
-        try {
-            content = httpAgent.request(url, URI_GET, null, true);
-        } catch (IOException e) {
-            throw new StorageServerException(MSG_SERVER_ERROR, e);
+        checkParameters(country, recordKey);
+        Record record = dao.read(country, popMap.get(country), recordKey, crypto);
+        if (record != null) {
+            record.setCountry(country);
         }
-        if (content == null) {
-            return null;
-        }
-        Record record = JsonUtils.recordFromString(content, crypto);
-        record.setCountry(country);
         return record;
     }
 
-    /**
-     * Make batched key-rotation-migration of records
-     *
-     * @param country country identifier
-     * @param limit   batch-limit parameter
-     * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-     * @throws StorageException if encryption is off/failed, if server connection failed or server response error
-     */
     public MigrateResult migrate(String country, int limit) throws StorageException {
         if (!isEncrypted) {
             throw new StorageException(MSG_MIGR_NOT_SUPPORT);
@@ -216,77 +132,26 @@ public class StorageImpl implements Storage {
                 .versionNotEq(String.valueOf(crypto.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
         createBatch(country, batchRecord.getRecords());
-
         return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
     }
 
-    /**
-     * Write multiple records at once in remote storage
-     *
-     * @param country country identifier
-     * @param records record list
-     * @return BatchRecord object which contains list of recorded records
-     * @throws StorageServerException if server connection failed or server response error
-     * @throws StorageCryptoException if record encryption failed
-     */
     public BatchRecord createBatch(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
-        country = country.toLowerCase();
-        String recListJson = JsonUtils.toJsonString(records, country, crypto, this::checkParameters);
-        String url = getEndpoint(country, STORAGE_URL + country + URI_DELIMITER + "batchWrite");
-        try {
-            httpAgent.request(url, URI_POST, recListJson, false);
-        } catch (IOException e) {
-            throw new StorageServerException(MSG_SERVER_ERROR, e);
+        if (records != null && records.isEmpty()) {
+            for (Record one : records) {
+                checkParameters(country, one.getKey());
+            }
+            country = country.toLowerCase();
+            dao.createBatch(records, country, popMap.get(country), crypto);
         }
-
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
-    public Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException {
-        BatchRecord existingRecords = find(country, builder);
-
-        if (existingRecords.getTotal() > 1) {
-            throw new StorageServerException(MSG_MULTIPLE_FOUND);
-        }
-        if (existingRecords.getTotal() <= 0) {
-            throw new StorageServerException(MSG_RECORD_NOT_FOUND);
-        }
-
-        Record foundRecord = existingRecords.getRecords().get(0);
-
-        Record updatedRecord = Record.merge(foundRecord, recordForMerging);
-
-        create(updatedRecord);
-
-        return updatedRecord;
-    }
-
-    /**
-     * Delete record from remote storage
-     *
-     * @param country   country identifier
-     * @param recordKey record unique identifier
-     * @return true if delete was successful
-     * @throws StorageServerException if server connection failed
-     */
     public boolean delete(String country, String recordKey) throws StorageServerException {
-        String url = createUrl(country, recordKey);
-        try {
-            httpAgent.request(url, "DELETE", null, false);
-        } catch (IOException e) {
-            throw new StorageServerException(MSG_SERVER_ERROR, e);
-        }
+        checkParameters(country, recordKey);
+        dao.delete(country, popMap.get(country), recordKey, crypto);
         return true;
     }
 
-    /**
-     * Find records in remote storage
-     *
-     * @param country country identifier
-     * @param builder object representing find filters
-     * @return BatchRecord object which contains required records
-     * @throws StorageServerException if server connection failed or server response error
-     */
     public BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException {
         if (country == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
@@ -295,18 +160,7 @@ public class StorageImpl implements Storage {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
         country = country.toLowerCase();
-        String url = getEndpoint(country, STORAGE_URL + country + URI_DELIMITER + "find");
-        String postData = JsonUtils.toJsonString(builder.build(), crypto);
-        String content;
-        try {
-            content = httpAgent.request(url, URI_POST, postData, false);
-        } catch (IOException e) {
-            throw new StorageServerException(MSG_SERVER_ERROR, e);
-        }
-        if (content == null) {
-            return null;
-        }
-        return JsonUtils.batchRecordFromString(content, crypto);
+        return dao.find(country, popMap.get(country), builder, crypto);
     }
 
     /**
@@ -326,24 +180,16 @@ public class StorageImpl implements Storage {
         return records.get(0);
     }
 
-    /**
-     * inner class-container to store host list with POP API
-     */
-    static class POP {
-        String host;
-        String name;
-
-        POP(String host, String name) {
-            this.host = host;
-            this.name = name;
+    public Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException {
+        BatchRecord existingRecords = find(country, builder);
+        if (existingRecords.getTotal() > 1) {
+            throw new StorageServerException(MSG_MULTIPLE_FOUND);
         }
-
-        @Override
-        public String toString() {
-            return "POP{" +
-                    "host='" + host + '\'' +
-                    ", name='" + name + '\'' +
-                    '}';
+        if (existingRecords.getTotal() <= 0) {
+            throw new StorageServerException(MSG_RECORD_NOT_FOUND);
         }
+        Record foundRecord = existingRecords.getRecords().get(0);
+        Record updatedRecord = Record.merge(foundRecord, recordForMerging);
+        return create(updatedRecord);
     }
 }

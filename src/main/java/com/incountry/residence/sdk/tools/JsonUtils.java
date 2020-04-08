@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class JsonUtils {
@@ -219,23 +218,24 @@ public class JsonUtils {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
-    public static void getCountryEntryPoint(String content, BiConsumer<String, String> lambda) {
+    public static List<Pair<String, String>> getCountryEntryPoint(String content) {
+        List<Pair<String, String>> result = new ArrayList<>();
         Gson gson = new GsonBuilder().create();
         JsonObject contentJson = gson.fromJson(content, JsonObject.class);
         contentJson.getAsJsonArray(P_CODE).forEach(item -> {
             if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
                 String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
                 String countryName = ((JsonObject) item).get(P_NAME).getAsString();
-                lambda.accept(countryCode, countryName);
+                result.add(new Pair<>(countryCode, countryName));
             }
         });
+        return result;
     }
 
-    public static String toJsonString(List<Record> records, String country, Crypto crypto, BiConsumer<String, String> lambda)
+    public static String toJsonString(List<Record> records, Crypto crypto)
             throws StorageCryptoException {
         JsonArray array = new JsonArray();
         for (Record record : records) {
-            lambda.accept(country, record.getKey());
             array.add(toJson(record, crypto));
         }
         JsonObject obj = new JsonObject();

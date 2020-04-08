@@ -1,31 +1,46 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
-import java.io.IOException;
-
 public class FakeHttpAgent implements HttpAgent {
-    private String response;
+
     private String callEndpoint;
+    private String callMethod;
     private String callBody;
+    private boolean callAllowNone;
+    private String response;
 
     public FakeHttpAgent(String response) {
         this.response = response;
     }
 
-    public String getCallBody() {
-        return callBody;
+    @Override
+    public String request(String endpoint, String method, String body, boolean allowNone) {
+        this.callEndpoint = endpoint;
+        this.callMethod = method;
+        this.callBody = body;
+        this.callAllowNone = allowNone;
+
+        return response;
     }
 
     public String getCallEndpoint() {
         return callEndpoint;
     }
 
-    @Override
-    public String request(String endpoint, String method, String body, boolean allowNone) throws IOException, StorageServerException {
-        callBody = body;
-        callEndpoint = endpoint;
+    public String getCallMethod() {
+        return callMethod;
+    }
+
+    public String getCallBody() {
+        return callBody;
+    }
+
+    public boolean isCallAllowNone() {
+        return callAllowNone;
+    }
+
+    public String getResponse() {
         return response;
     }
 }
