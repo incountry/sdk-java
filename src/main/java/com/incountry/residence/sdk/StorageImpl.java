@@ -10,12 +10,10 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
-import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Basic implementation
@@ -39,7 +37,6 @@ public class StorageImpl implements Storage {
     private String apiKey;
 
     private Crypto crypto;
-    private Map<String, POP> popMap;
     private Dao dao;
     private boolean isEncrypted;
 
@@ -80,16 +77,6 @@ public class StorageImpl implements Storage {
             crypto = new CryptoImpl(environmentID);
         }
         dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
-        loadCountryEndpoints();
-    }
-
-    /**
-     * Load endpoint from server
-     *
-     * @throws StorageServerException if server connection failed or server response error
-     */
-    private void loadCountryEndpoints() throws StorageServerException {
-        popMap = dao.loadCounties();
     }
 
     private void checkParameters(String country, String key) {
@@ -109,14 +96,14 @@ public class StorageImpl implements Storage {
     public Record create(Record record) throws StorageServerException, StorageCryptoException {
         String country = record.getCountry().toLowerCase();
         checkParameters(country, record.getKey());
-        dao.createRecord(country, popMap.get(country), record, crypto);
+        dao.createRecord(country, record, crypto);
         return record;
     }
 
 
     public Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
         checkParameters(country, recordKey);
-        Record record = dao.read(country, popMap.get(country), recordKey, crypto);
+        Record record = dao.read(country, recordKey, crypto);
         if (record != null) {
             record.setCountry(country);
         }
@@ -141,14 +128,14 @@ public class StorageImpl implements Storage {
                 checkParameters(country, one.getKey());
             }
             country = country.toLowerCase();
-            dao.createBatch(records, country, popMap.get(country), crypto);
+            dao.createBatch(records, country, crypto);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
     public boolean delete(String country, String recordKey) throws StorageServerException {
         checkParameters(country, recordKey);
-        dao.delete(country, popMap.get(country), recordKey, crypto);
+        dao.delete(country, recordKey, crypto);
         return true;
     }
 
@@ -160,7 +147,7 @@ public class StorageImpl implements Storage {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
         country = country.toLowerCase();
-        return dao.find(country, popMap.get(country), builder, crypto);
+        return dao.find(country, builder, crypto);
     }
 
     /**

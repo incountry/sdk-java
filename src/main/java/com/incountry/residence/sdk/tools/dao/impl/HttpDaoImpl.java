@@ -35,42 +35,36 @@ public class HttpDaoImpl implements Dao {
     private static final String MSG_ERR_GET_COUNTRIES = "Unable to retrieve available countries list";
     private static final String MSG_SERVER_ERROR = "Server request error";
 
+    private Map<String, POP> popMap;
     private HttpAgent agent;
     private String endPoint;
     private boolean defaultEndpoint = false;
 
-    public HttpDaoImpl(String apiKey, String environmentId, String endPoint) {
-        if (endPoint == null) {
-            endPoint = DEFAULT_ENDPOINT;
-            this.defaultEndpoint = true;
-        }
-        this.endPoint = endPoint;
-        agent = new HttpAgentImpl(apiKey, environmentId, Charset.defaultCharset());
+    public HttpDaoImpl(String apiKey, String environmentId, String endPoint) throws StorageServerException {
+        this(endPoint, new HttpAgentImpl(apiKey, environmentId, Charset.defaultCharset()));
     }
 
-    public HttpDaoImpl(String endPoint, HttpAgent agent) {
+    public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {
         if (endPoint == null) {
             endPoint = DEFAULT_ENDPOINT;
             this.defaultEndpoint = true;
         }
         this.endPoint = endPoint;
         this.agent = agent;
+        loadCounties();
     }
 
-    @Override
-    public Map<String, POP> loadCounties() throws StorageServerException {
+    private void loadCounties() throws StorageServerException {
         String content;
         try {
             content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
         } catch (IOException e) {
             throw new StorageServerException(MSG_ERR_GET_COUNTRIES, e);
         }
-        Map<String, POP> result = new HashMap<>();
+        popMap = new HashMap<>();
         for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
-            result.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
+            popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
         }
-
-        return result;
     }
 
     private String getEndpoint(String path, POP pop) {
@@ -89,8 +83,8 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void createRecord(String country, POP pop, Record record, Crypto crypto) throws StorageCryptoException, StorageServerException {
-        String url = getEndpoint(STORAGE_URL + country, pop);
+    public void createRecord(String country, Record record, Crypto crypto) throws StorageCryptoException, StorageServerException {
+        String url = getEndpoint(STORAGE_URL + country, popMap.get(country));
         try {
             agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), false);
         } catch (IOException e) {
@@ -99,9 +93,9 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void createBatch(List<Record> records, String country, POP pop, Crypto crypto) throws StorageServerException, StorageCryptoException {
+    public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
-        String url = getEndpoint(STORAGE_URL + country + URI_DELIMITER + "batchWrite", pop);
+        String url = getEndpoint(STORAGE_URL + country + URI_DELIMITER + "batchWrite", popMap.get(country));
         try {
             agent.request(url, URI_POST, recListJson, false);
         } catch (IOException e) {
@@ -110,9 +104,9 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public Record read(String country, POP pop, String recordKey, Crypto crypto) throws StorageServerException, StorageCryptoException {
+    public Record read(String country, String recordKey, Crypto crypto) throws StorageServerException, StorageCryptoException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
-        String url = createUrl(country, key, pop);
+        String url = createUrl(country, key, popMap.get(country));
         String response;
         try {
             response = agent.request(url, URI_GET, null, true);
@@ -127,9 +121,9 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void delete(String country, POP pop, String recordKey, Crypto crypto) throws StorageServerException {
+    public void delete(String country, String recordKey, Crypto crypto) throws StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
-        String url = createUrl(country, key, pop);
+        String url = createUrl(country, key, popMap.get(country));
         try {
             agent.request(url, URI_DELETE, null, false);
         } catch (IOException e) {
@@ -138,8 +132,8 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public BatchRecord find(String country, POP pop, FindFilterBuilder builder, Crypto crypto) throws StorageServerException {
-        String url = getEndpoint(STORAGE_URL + country + URI_DELIMITER + URI_FIND, pop);
+    public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageServerException {
+        String url = getEndpoint(STORAGE_URL + country + URI_DELIMITER + URI_FIND, popMap.get(country));
         String postData = JsonUtils.toJsonString(builder.build(), crypto);
         String content;
         try {

@@ -9,6 +9,7 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -270,14 +272,28 @@ public class StorageSingleTests {
     @Test
     public void testErrorReadInsufficientArgs() {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setDao(new HttpDaoImpl(null, agent));
+        Dao dao = null;
+        try {
+            dao = new HttpDaoImpl(null, agent);
+        } catch (StorageServerException ex) {
+            assertNull(ex);
+        }
+        assertNotNull(dao);
+        storage.setDao(dao);
         assertThrows(IllegalArgumentException.class, () -> storage.read(null, null));
     }
 
     @Test
     public void testErrorDeleteInsufficientArgs() {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setDao(new HttpDaoImpl(null, agent));
+        Dao dao = null;
+        try {
+            dao = new HttpDaoImpl(null, agent);
+        } catch (StorageServerException ex) {
+            assertNull(ex);
+        }
+        assertNotNull(dao);
+        storage.setDao(dao);
         assertThrows(IllegalArgumentException.class, () -> storage.delete(null, null));
     }
 
