@@ -11,7 +11,6 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
-import org.javatuples.Pair;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -67,8 +66,8 @@ public class HttpDaoImpl implements Dao {
             throw new StorageServerException(MSG_ERR_GET_COUNTRIES, e);
         }
         Map<String, POP> result = new HashMap<>();
-        for (Pair<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
-            result.put(pair.getValue1(), new POP(URI_HTTPS + pair.getValue0() + URI_ENDPOINT_PART, pair.getValue1()));
+        for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
+            result.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
         }
 
         return result;

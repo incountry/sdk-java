@@ -14,10 +14,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Base64;
-
-import org.javatuples.Pair;
+import java.util.Map;
 
 import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.generateRandomBytes;
 import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.generateStrongPasswordHash;
@@ -52,10 +52,10 @@ public class CryptoImpl implements Crypto {
         this.envId = envId;
     }
 
-    public Pair<String, Integer> encrypt(String plainText) throws StorageCryptoException {
+    public Map.Entry<String, Integer> encrypt(String plainText) throws StorageCryptoException {
         if (isUsingPTEncryption) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(charset));
-            return new Pair<>(PT_ENC_VERSION + ":" + new String(ptEncoded, charset), null);
+            return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, charset), null);
         }
 
         byte[] clean = plainText.getBytes(charset);
@@ -88,7 +88,7 @@ public class CryptoImpl implements Crypto {
 
         byte[] encoded = Base64.getEncoder().encode(resultByteArray);
 
-        return new Pair<>(VERSION + ":" + new String(encoded, charset), secretKeyObj.getVersion());
+        return new AbstractMap.SimpleEntry<>(VERSION + ":" + new String(encoded, charset), secretKeyObj.getVersion());
     }
 
     private byte[] getKey(byte[] salt, SecretKey secretKeyObj) throws StorageCryptoException {

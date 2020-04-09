@@ -136,7 +136,7 @@ public class StorageImpl implements Storage {
     }
 
     public BatchRecord createBatch(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
-        if (records != null && records.isEmpty()) {
+        if (records != null && !records.isEmpty()) {
             for (Record one : records) {
                 checkParameters(country, one.getKey());
             }

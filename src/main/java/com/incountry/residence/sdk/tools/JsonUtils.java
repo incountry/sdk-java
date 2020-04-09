@@ -15,8 +15,8 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import org.javatuples.Pair;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -218,15 +218,15 @@ public class JsonUtils {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
-    public static List<Pair<String, String>> getCountryEntryPoint(String content) {
-        List<Pair<String, String>> result = new ArrayList<>();
+    public static List<Map.Entry<String, String>> getCountryEntryPoint(String content) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
         Gson gson = new GsonBuilder().create();
         JsonObject contentJson = gson.fromJson(content, JsonObject.class);
         contentJson.getAsJsonArray(P_CODE).forEach(item -> {
             if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
                 String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
                 String countryName = ((JsonObject) item).get(P_NAME).getAsString();
-                result.add(new Pair<>(countryCode, countryName));
+                result.add(new AbstractMap.SimpleEntry<>(countryCode, countryName));
             }
         });
         return result;
@@ -285,9 +285,9 @@ public class JsonUtils {
             setProfileKey(crypto.createKeyHash(record.getProfileKey()));
             setRangeKey(record.getRangeKey());
 
-            Pair<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
-            setBody(encBodyAndVersion.getValue0());
-            setVersion(encBodyAndVersion.getValue1() != null ? encBodyAndVersion.getValue1() : 0);
+            Map.Entry<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
+            setBody(encBodyAndVersion.getKey());
+            setVersion(encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
         }
 
         public Integer getVersion() {
