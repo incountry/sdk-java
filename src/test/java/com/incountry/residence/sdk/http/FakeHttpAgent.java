@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.http;
 
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
