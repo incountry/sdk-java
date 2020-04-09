@@ -3,6 +3,7 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageTest {
@@ -37,7 +39,7 @@ public class StorageTest {
     private int currentVersion = 0;
 
     @BeforeEach
-    public void init() throws Exception {
+    public void init() throws StorageServerException {
         SecretKey secretKey = new SecretKey();
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKey.setSecret(secret);
@@ -49,9 +51,12 @@ public class StorageTest {
         secretKeysData.setCurrentVersion(currentVersion);
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
+        //replace parameters in next row to test your credentials for integration
         storage = new StorageImpl(
                 "envId",
                 "apiKey",
+                null,
+                true,
                 secretKeyAccessor
         );
     }
@@ -131,8 +136,8 @@ public class StorageTest {
         // Cannot read deleted record
         Record writeMethodRecord = storage.read(country, writeRecordKey);
         Record batchWriteMethodRecord = storage.read(country, batchWriteRecordKey);
-        assertEquals(null, writeMethodRecord);
-        assertEquals(null, batchWriteMethodRecord);
+        assertNull(writeMethodRecord);
+        assertNull(batchWriteMethodRecord);
 
     }
 }

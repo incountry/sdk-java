@@ -5,11 +5,11 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
-import org.javatuples.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -53,8 +53,8 @@ public class CryptoTest {
         };
 
         for (String plainText : plainTexts) {
-            Pair<String, Integer> encrypted = crypto.encrypt(plainText);
-            String decrypted = crypto.decrypt(encrypted.getValue0(), encrypted.getValue1());
+            Map.Entry<String, Integer> encrypted = crypto.encrypt(plainText);
+            String decrypted = crypto.decrypt(encrypted.getKey(), encrypted.getValue());
             assertEquals(plainText, decrypted);
             assertNotEquals(plainText, encrypted);
         }
@@ -76,10 +76,10 @@ public class CryptoTest {
         String expectedVersion = "pt";
 
         for (String plainText : plainTexts) {
-            Pair<String, Integer> encrypted = crypto.encrypt(plainText);
-            String decrypted = crypto.decrypt(encrypted.getValue0(), encrypted.getValue1());
+            Map.Entry<String, Integer> encrypted = crypto.encrypt(plainText);
+            String decrypted = crypto.decrypt(encrypted.getKey(), encrypted.getValue());
 
-            String actualVersion = encrypted.getValue0().split(":")[0];
+            String actualVersion = encrypted.getKey().split(":")[0];
 
             assertEquals(expectedVersion, actualVersion);
             assertEquals(plainText, decrypted);

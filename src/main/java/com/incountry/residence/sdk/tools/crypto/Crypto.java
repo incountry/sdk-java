@@ -1,10 +1,11 @@
 package com.incountry.residence.sdk.tools.crypto;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import org.javatuples.Pair;
+
+import java.util.Map;
 
 public interface Crypto {
-    Pair<String, Integer> encrypt(String plainText) throws StorageCryptoException;
+    Map.Entry<String, Integer> encrypt(String plainText) throws StorageCryptoException;
 
     String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException;
 

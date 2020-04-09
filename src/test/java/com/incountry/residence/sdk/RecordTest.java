@@ -43,6 +43,20 @@ public class RecordTest {
         rangeKey = 1;
     }
 
+    @Test
+    public void testSimpleMerge() {
+        String newKey = "newKey";
+        String newBody = "newBody";
+
+        Record baseRecord = new Record(country, key, body);
+        Record mergedRecord = new Record(null, newKey, newBody);
+        Record resultRecord = Record.merge(baseRecord, mergedRecord);
+
+        assertEquals(country, resultRecord.getCountry());
+        assertEquals(newKey, resultRecord.getKey());
+        assertEquals(newBody, resultRecord.getBody());
+    }
+
 
     @Test
     public void testMerge() {
@@ -106,7 +120,7 @@ public class RecordTest {
      * as Record (orders of fields are different). Then test fuction of serialize/deserialize
      * to JSON and compare objects
      *
-     * @throws StorageCryptoException
+     * @throws StorageCryptoException when problem with encryption
      */
     @Test
     public void testToJsonString() throws StorageCryptoException {

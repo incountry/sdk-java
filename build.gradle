@@ -65,7 +65,6 @@ dependencies {
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile group: 'org.json', name: 'json', version: "${jsonVersion}"
     implementation "com.google.code.gson:gson:${gsonVersion}"
-    compile group: 'org.javatuples', name: 'javatuples', version: "${javatuples}"
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
 }
 

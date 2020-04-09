@@ -12,14 +12,15 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 public class HttpAgentImpl implements HttpAgent {
-    private static Charset charset = Charset.defaultCharset();
 
     private String apiKey;
     private String environmentId;
+    private Charset charset;
 
-    public HttpAgentImpl(String apiKey, String environmentId) {
+    public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
         this.apiKey = apiKey;
         this.environmentId = environmentId;
+        this.charset = charset;
     }
 
     @Override
@@ -33,7 +34,7 @@ public class HttpAgentImpl implements HttpAgent {
         if (body != null) {
             con.setDoOutput(true);
             OutputStream os = con.getOutputStream();
-            os.write(body.getBytes(Charset.defaultCharset()));
+            os.write(body.getBytes(charset));
             os.flush();
             os.close();
         }

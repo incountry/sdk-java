@@ -15,14 +15,13 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import org.javatuples.Pair;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class JsonUtils {
@@ -219,23 +218,32 @@ public class JsonUtils {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
-    public static void getCountryEntryPoint(String content, BiConsumer<String, String> lambda) {
-        Gson gson = new GsonBuilder().create();
-        JsonObject contentJson = gson.fromJson(content, JsonObject.class);
-        contentJson.getAsJsonArray(P_CODE).forEach(item -> {
-            if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
-                String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
-                String countryName = ((JsonObject) item).get(P_NAME).getAsString();
-                lambda.accept(countryCode, countryName);
+    public static List<Map.Entry<String, String>> getCountryEntryPoint(String content) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+        if (content != null && !content.isEmpty()) {
+            Gson gson = new GsonBuilder().create();
+            JsonObject contentJson = gson.fromJson(content, JsonObject.class);
+            if (contentJson != null) {
+                JsonArray array = contentJson.getAsJsonArray(P_CODE);
+                if (array != null) {
+                    array.forEach(item -> {
+                        if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
+                            String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
+                            String countryName = ((JsonObject) item).get(P_NAME).getAsString();
+                            result.add(new AbstractMap.SimpleEntry<>(countryCode, countryName));
+                        }
+                    });
+                }
+
             }
-        });
+        }
+        return result;
     }
 
-    public static String toJsonString(List<Record> records, String country, Crypto crypto, BiConsumer<String, String> lambda)
+    public static String toJsonString(List<Record> records, Crypto crypto)
             throws StorageCryptoException {
         JsonArray array = new JsonArray();
         for (Record record : records) {
-            lambda.accept(country, record.getKey());
             array.add(toJson(record, crypto));
         }
         JsonObject obj = new JsonObject();
@@ -285,9 +293,9 @@ public class JsonUtils {
             setProfileKey(crypto.createKeyHash(record.getProfileKey()));
             setRangeKey(record.getRangeKey());
 
-            Pair<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
-            setBody(encBodyAndVersion.getValue0());
-            setVersion(encBodyAndVersion.getValue1() != null ? encBodyAndVersion.getValue1() : 0);
+            Map.Entry<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
+            setBody(encBodyAndVersion.getKey());
+            setVersion(encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
         }
 
         public Integer getVersion() {
