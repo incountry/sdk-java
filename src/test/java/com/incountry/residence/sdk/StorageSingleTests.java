@@ -71,7 +71,7 @@ public class StorageSingleTests {
 
     @Test
     public void migrateTest() throws StorageException {
-        Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         storage.setDao(new HttpDaoImpl(null, new FakeHttpAgent(content)));
@@ -90,7 +90,7 @@ public class StorageSingleTests {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
                 .profileKeyEq(profileKey);
-        Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setDao(new HttpDaoImpl(null, agent));
@@ -110,8 +110,8 @@ public class StorageSingleTests {
         StorageImpl storage = new StorageImpl(environmentId, apiKey, endpoint, true, secretKeyAccessor);
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setDao(new HttpDaoImpl(endpoint, agent));
-        Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        storage.create(record);
+        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+        storage.write(country, record);
 
         String expectedURL = endpoint + "/v2/storage/records/" + country;
 
@@ -126,7 +126,7 @@ public class StorageSingleTests {
                 .limitAndOffset(1, 0)
                 .profileKeyEq(profileKey);
 
-        Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setDao(new HttpDaoImpl(null, agent));
@@ -151,7 +151,7 @@ public class StorageSingleTests {
                 .limitAndOffset(1, 0)
                 .profileKeyEq(profileKey);
 
-        Record rec = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setDao(new HttpDaoImpl(null, agent));
@@ -178,8 +178,8 @@ public class StorageSingleTests {
                 .limitAndOffset(2, 0)
                 .profileKeyEq(profileKey);
 
-        Record recOtherEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        Record recEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record recOtherEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record recEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encryptedRecOther = JsonUtils.toJsonString(recOtherEnc, cryptoOther);
         String encryptedRec = JsonUtils.toJsonString(recEnc, crypto);
 
@@ -208,8 +208,8 @@ public class StorageSingleTests {
                 .limitAndOffset(2, 0)
                 .profileKeyEq(profileKey);
 
-        Record recWithEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        Record recWithPTEnc = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record recWithEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record recWithPTEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
 
@@ -253,7 +253,7 @@ public class StorageSingleTests {
 
     @Test
     public void testErrorFindOneInsufficientArgs() throws StorageException {
-        Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(record, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         storage.setDao(new HttpDaoImpl(null, agent));

@@ -104,8 +104,8 @@ public class HttpDaoImplTests {
 
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setDao(new HttpDaoImpl(null, agent));
-        Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        storage.create(record);
+        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+        storage.write(country, record);
 
         String received = agent.getCallBody();
         String callPath = new URL(agent.getCallEndpoint()).getPath();
@@ -145,7 +145,7 @@ public class HttpDaoImplTests {
 
         StorageImpl storage = initializeStorage(isKey, encrypt);
 
-        Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         String keyHash = crypto.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
@@ -200,8 +200,8 @@ public class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("");
         storage.setDao(new HttpDaoImpl(null, agent));
         List<Record> records = new ArrayList<>();
-        records.add(new Record(country, key, body, profileKey, rangeKey, key2, key3));
-        storage.createBatch(country, records);
+        records.add(new Record(key, body, profileKey, rangeKey, key2, key3));
+        storage.batchWrite(country, records);
 
         String encrypted = agent.getCallBody();
         String keyHash = crypto.createKeyHash(key);

@@ -65,15 +65,15 @@ public class StorageTest {
     @Order(1)
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
-        records.add(new Record(country, batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
-        storage.createBatch(country, records);
+        records.add(new Record(batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
+        storage.batchWrite(country, records);
     }
 
     @Test
     @Order(2)
     public void writeTest() throws StorageException {
-        Record record = new Record(country, writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
-        storage.create(record);
+        Record record = new Record(writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
+        storage.write(country, record);
     }
 
     @Test
