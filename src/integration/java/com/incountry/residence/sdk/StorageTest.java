@@ -22,8 +22,15 @@ import static org.junit.Assert.assertNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageTest {
+
+    private static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
+    private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
+    private static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
+    private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
+
+
     private Storage storage;
-    private String country = "US";
+    private String country = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
     private String batchWriteRecordKey = "batch_write_key";
     private String writeRecordKey = "write_key";
     private String profileKey = "profileKey";
@@ -38,6 +45,10 @@ public class StorageTest {
     private boolean isKey = true;
     private int currentVersion = 0;
 
+    private static String loadFromEnv(String key) {
+        return System.getenv(key);
+    }
+
     @BeforeEach
     public void init() throws StorageServerException {
         SecretKey secretKey = new SecretKey();
@@ -51,14 +62,12 @@ public class StorageTest {
         secretKeysData.setCurrentVersion(currentVersion);
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
-        //replace parameters in next row to test your credentials for integration
-        storage = new StorageImpl(
-                "envId",
-                "apiKey",
-                null,
+
+        storage = new StorageImpl(loadFromEnv(INTEGR_ENV_KEY_ENVID),
+                loadFromEnv(INTEGR_ENV_KEY_APIKEY),
+                loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
                 true,
-                secretKeyAccessor
-        );
+                secretKeyAccessor);
     }
 
     @Test
