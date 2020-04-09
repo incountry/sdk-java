@@ -220,15 +220,23 @@ public class JsonUtils {
 
     public static List<Map.Entry<String, String>> getCountryEntryPoint(String content) {
         List<Map.Entry<String, String>> result = new ArrayList<>();
-        Gson gson = new GsonBuilder().create();
-        JsonObject contentJson = gson.fromJson(content, JsonObject.class);
-        contentJson.getAsJsonArray(P_CODE).forEach(item -> {
-            if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
-                String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
-                String countryName = ((JsonObject) item).get(P_NAME).getAsString();
-                result.add(new AbstractMap.SimpleEntry<>(countryCode, countryName));
+        if (content != null && !content.isEmpty()) {
+            Gson gson = new GsonBuilder().create();
+            JsonObject contentJson = gson.fromJson(content, JsonObject.class);
+            if (contentJson != null) {
+                JsonArray array = contentJson.getAsJsonArray(P_CODE);
+                if (array != null) {
+                    array.forEach(item -> {
+                        if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
+                            String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
+                            String countryName = ((JsonObject) item).get(P_NAME).getAsString();
+                            result.add(new AbstractMap.SimpleEntry<>(countryCode, countryName));
+                        }
+                    });
+                }
+
             }
-        });
+        }
         return result;
     }
 

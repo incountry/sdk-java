@@ -93,5 +93,5 @@ public interface Storage {
      */
     MigrateResult migrate(String country, int limit) throws StorageException;
 
-    void setDao(Dao agent);
+    void setDao(Dao dao);
 }
