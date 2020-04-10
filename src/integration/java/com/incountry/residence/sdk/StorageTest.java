@@ -121,24 +121,6 @@ public class StorageTest {
 
     @Test
     @Order(6)
-    public void updateOneTest() throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
-                .key2Eq(key2)
-                .rangeKeyEq(writeRangeKey);
-        String newBody = "{\"hello\":\"world\"}";
-        String newKey2 = "newKey2";
-        Record incomingRecord = storage.read(country, writeRecordKey);
-        incomingRecord.setBody(newBody);
-        incomingRecord.setKey2(newKey2);
-        storage.updateOne(country, builder, incomingRecord);
-        Record updatedRecord = storage.read(country, writeRecordKey);
-        assertEquals(writeRecordKey, updatedRecord.getKey());
-        assertEquals(newBody, updatedRecord.getBody());
-        assertEquals(newKey2, updatedRecord.getKey2());
-    }
-
-    @Test
-    @Order(7)
     public void deleteTest() throws StorageException {
         storage.delete(country, writeRecordKey);
         storage.delete(country, batchWriteRecordKey);
@@ -147,6 +129,5 @@ public class StorageTest {
         Record batchWriteMethodRecord = storage.read(country, batchWriteRecordKey);
         assertNull(writeMethodRecord);
         assertNull(batchWriteMethodRecord);
-
     }
 }
