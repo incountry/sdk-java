@@ -115,7 +115,7 @@ public class RecordTest {
      * as Record (orders of fields are different). Then test fuction of serialize/deserialize
      * to JSON and compare objects
      *
-     * @throws StorageCryptoException when problem with encrtiption
+     * @throws StorageCryptoException when problem with encryption
      */
     @Test
     public void testToJsonString() throws StorageCryptoException {

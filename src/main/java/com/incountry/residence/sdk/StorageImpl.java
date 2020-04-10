@@ -94,7 +94,6 @@ public class StorageImpl implements Storage {
 
 
     public Record write(String country, Record record) throws StorageServerException, StorageCryptoException {
-        country = country.toLowerCase();
         checkParameters(country, record.getKey());
         dao.createRecord(country, record, crypto);
         return record;
@@ -123,7 +122,6 @@ public class StorageImpl implements Storage {
             for (Record one : records) {
                 checkParameters(country, one.getKey());
             }
-            country = country.toLowerCase();
             dao.createBatch(records, country, crypto);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
@@ -142,7 +140,6 @@ public class StorageImpl implements Storage {
         if (builder == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
-        country = country.toLowerCase();
         return dao.find(country, builder, crypto);
     }
 
