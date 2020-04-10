@@ -3,7 +3,6 @@ package com.incountry.residence.sdk.dto;
 import java.util.Objects;
 
 public class Record {
-    private String country;
     private String key;
     private String key2;
     private String key3;
@@ -15,14 +14,28 @@ public class Record {
     public Record() {
     }
 
-    public Record(String country, String key, String body) {
-        this.country = country;
+    /**
+     * Short constructor
+     *
+     * @param key  key
+     * @param body data to be stored and encrypted
+     */
+    public Record(String key, String body) {
         this.key = key;
         this.body = body;
     }
 
-    public Record(String country, String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
-        this.country = country;
+    /**
+     * Full constructor
+     *
+     * @param key        key
+     * @param body       data to be stored and encrypted
+     * @param profileKey profile key
+     * @param rangeKey   range key for sorting in pagination
+     * @param key2       key2
+     * @param key3       key3
+     */
+    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
         this.key = key;
         this.body = body;
         this.profileKey = profileKey;
@@ -38,12 +51,11 @@ public class Record {
     /**
      * merge records. Notnull field values from @merged replaces old ones in @base
      *
-     * @param base base record
+     * @param base   base record
      * @param merged new records, null fileds are ignored
      * @return new record with merged fileds
      */
     public static Record merge(Record base, Record merged) {
-        String country = mergeKeys(base.getCountry(), merged.getCountry());
         String mergedKey = mergeKeys(base.getKey(), merged.getKey());
         String mergedBody = mergeKeys(base.getBody(), merged.getBody());
         String mergedProfileKey = mergeKeys(base.getProfileKey(), merged.getProfileKey());
@@ -51,15 +63,7 @@ public class Record {
         String mergedKey2 = mergeKeys(base.getKey2(), merged.getKey2());
         String mergedKey3 = mergeKeys(base.getKey3(), merged.getKey3());
 
-        return new Record(country, mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
+        return new Record(mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
     }
 
     public String getKey() {
@@ -113,8 +117,7 @@ public class Record {
     @Override
     public String toString() {
         return "Record{" +
-                "country='" + country + '\'' +
-                ", key='" + key + '\'' +
+                "key='" + key + '\'' +
                 ", key2='" + key2 + '\'' +
                 ", key3='" + key3 + '\'' +
                 ", profileKey='" + profileKey + '\'' +
@@ -132,8 +135,7 @@ public class Record {
             return false;
         }
         Record record = (Record) obj;
-        return Objects.equals(country, record.country) &&
-                Objects.equals(key, record.key) &&
+        return Objects.equals(key, record.key) &&
                 Objects.equals(key2, record.key2) &&
                 Objects.equals(key3, record.key3) &&
                 Objects.equals(profileKey, record.profileKey) &&
@@ -143,6 +145,6 @@ public class Record {
 
     @Override
     public int hashCode() {
-        return Objects.hash(country, key, key2, key3, profileKey, rangeKey, body);
+        return Objects.hash(key, key2, key3, profileKey, rangeKey, body);
     }
 }

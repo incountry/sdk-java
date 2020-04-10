@@ -319,7 +319,6 @@ public class JsonUtils {
             rec.setBody(getBody());
             rec.setRangeKey(getRangeKey());
             rec.setProfileKey(getProfileKey());
-            rec.setCountry(getCountry());
             return rec;
         }
 

@@ -15,8 +15,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RecordTest {
-    @Expose(serialize = false, deserialize = false)
-    public String country;
     @Expose
     public String key;
     @Expose
@@ -34,7 +32,6 @@ public class RecordTest {
 
     @BeforeEach
     public void init() {
-        country = "US";
         key = "key1";
         body = "body";
         key2 = "key2";
@@ -48,11 +45,10 @@ public class RecordTest {
         String newKey = "newKey";
         String newBody = "newBody";
 
-        Record baseRecord = new Record(country, key, body);
-        Record mergedRecord = new Record(null, newKey, newBody);
+        Record baseRecord = new Record(key, body);
+        Record mergedRecord = new Record(newKey, newBody);
         Record resultRecord = Record.merge(baseRecord, mergedRecord);
 
-        assertEquals(country, resultRecord.getCountry());
         assertEquals(newKey, resultRecord.getKey());
         assertEquals(newBody, resultRecord.getBody());
     }
@@ -65,11 +61,10 @@ public class RecordTest {
         String newProfileKey = "newProfileKey";
         String newKey2 = "newKey2";
 
-        Record baseRecord = new Record(country, key, body, profileKey, rangeKey, key2, key3);
-        Record mergedRecord = new Record(null, newKey, newBody, newProfileKey, null, newKey2, null);
+        Record baseRecord = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record mergedRecord = new Record(newKey, newBody, newProfileKey, null, newKey2, null);
         Record resultRecord = Record.merge(baseRecord, mergedRecord);
 
-        assertEquals(country, resultRecord.getCountry());
         assertEquals(newKey, resultRecord.getKey());
         assertEquals(newBody, resultRecord.getBody());
         assertEquals(newProfileKey, resultRecord.getProfileKey());
@@ -104,7 +99,7 @@ public class RecordTest {
     public void testToJsonObject() throws StorageCryptoException {
         JsonElement jsonElement = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJsonTree(this);
         JsonObject jsonObject = (JsonObject) jsonElement;
-        Record record = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         JsonObject recordJsonObject = JsonUtils.toJson(record, null);
 
         assertEquals(jsonObject.get("key"), recordJsonObject.get("key"));
@@ -125,7 +120,7 @@ public class RecordTest {
     @Test
     public void testToJsonString() throws StorageCryptoException {
         String quaziJsonString = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
-        Record nativeRecord = new Record(country, key, body, profileKey, rangeKey, key2, key3);
+        Record nativeRecord = new Record(key, body, profileKey, rangeKey, key2, key3);
         String nativeRecordJson = JsonUtils.toJsonString(nativeRecord, null);
         Record recordFromQuazy = JsonUtils.recordFromString(quaziJsonString, null);
         Record recordFromNative = JsonUtils.recordFromString(nativeRecordJson, null);

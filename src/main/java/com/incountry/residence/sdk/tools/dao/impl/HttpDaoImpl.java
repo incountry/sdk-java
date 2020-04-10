@@ -28,12 +28,14 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_POST = "POST";
     private static final String URI_GET = "GET";
     private static final String URI_DELETE = "DELETE";
-    private static final String URI_FIND = "find";
+    private static final String URI_FIND = "/find";
+    private static final String URI_BATCH_WRITE = "/batchWrite";
     private static final String URI_DELIMITER = "/";
 
     //error messages
     private static final String MSG_ERR_GET_COUNTRIES = "Unable to retrieve available countries list";
     private static final String MSG_SERVER_ERROR = "Server request error";
+
 
     private Map<String, POP> popMap;
     private HttpAgent agent;
@@ -67,24 +69,24 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String getEndpoint(String path, POP pop) {
+    private String getEndpoint(String path, String country) {
         if (!path.startsWith(URI_DELIMITER)) {
             path = URI_DELIMITER + path;
         }
+        POP pop = popMap.get(country.toLowerCase());
         if (defaultEndpoint && pop != null) {
             return pop.getHost() + path;
         }
         return endPoint + path;
     }
 
-    private String createUrl(String country, String recordKeyHash, POP pop) {
-        country = country.toLowerCase();
-        return getEndpoint(STORAGE_URL + country + URI_DELIMITER + recordKeyHash, pop);
+    private String createUrl(String country, String recordKeyHash) {
+        return getEndpoint(concatUrl(country, URI_DELIMITER, recordKeyHash), country);
     }
 
     @Override
     public void createRecord(String country, Record record, Crypto crypto) throws StorageCryptoException, StorageServerException {
-        String url = getEndpoint(STORAGE_URL + country, popMap.get(country));
+        String url = getEndpoint(concatUrl(country), country);
         try {
             agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), false);
         } catch (IOException e) {
@@ -95,7 +97,7 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
-        String url = getEndpoint(STORAGE_URL + country + URI_DELIMITER + "batchWrite", popMap.get(country));
+        String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
         try {
             agent.request(url, URI_POST, recListJson, false);
         } catch (IOException e) {
@@ -106,7 +108,7 @@ public class HttpDaoImpl implements Dao {
     @Override
     public Record read(String country, String recordKey, Crypto crypto) throws StorageServerException, StorageCryptoException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
-        String url = createUrl(country, key, popMap.get(country));
+        String url = createUrl(country, key);
         String response;
         try {
             response = agent.request(url, URI_GET, null, true);
@@ -123,7 +125,7 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void delete(String country, String recordKey, Crypto crypto) throws StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
-        String url = createUrl(country, key, popMap.get(country));
+        String url = createUrl(country, key);
         try {
             agent.request(url, URI_DELETE, null, false);
         } catch (IOException e) {
@@ -133,7 +135,7 @@ public class HttpDaoImpl implements Dao {
 
     @Override
     public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageServerException {
-        String url = getEndpoint(STORAGE_URL + country + URI_DELIMITER + URI_FIND, popMap.get(country));
+        String url = getEndpoint(concatUrl(country, URI_FIND), country);
         String postData = JsonUtils.toJsonString(builder.build(), crypto);
         String content;
         try {
@@ -145,5 +147,16 @@ public class HttpDaoImpl implements Dao {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
         return JsonUtils.batchRecordFromString(content, crypto);
+    }
+
+    private String concatUrl(String country, String... other) {
+        StringBuilder builder = new StringBuilder(STORAGE_URL);
+        builder.append(country.toLowerCase());
+        if (other != null) {
+            for (String one : other) {
+                builder.append(one);
+            }
+        }
+        return builder.toString();
     }
 }

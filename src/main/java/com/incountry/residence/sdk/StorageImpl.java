@@ -93,8 +93,7 @@ public class StorageImpl implements Storage {
     }
 
 
-    public Record create(Record record) throws StorageServerException, StorageCryptoException {
-        String country = record.getCountry().toLowerCase();
+    public Record write(String country, Record record) throws StorageServerException, StorageCryptoException {
         checkParameters(country, record.getKey());
         dao.createRecord(country, record, crypto);
         return record;
@@ -103,11 +102,7 @@ public class StorageImpl implements Storage {
 
     public Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
         checkParameters(country, recordKey);
-        Record record = dao.read(country, recordKey, crypto);
-        if (record != null) {
-            record.setCountry(country);
-        }
-        return record;
+        return dao.read(country, recordKey, crypto);
     }
 
     public MigrateResult migrate(String country, int limit) throws StorageException {
@@ -118,16 +113,15 @@ public class StorageImpl implements Storage {
                 .limitAndOffset(limit, 0)
                 .versionNotEq(String.valueOf(crypto.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
-        createBatch(country, batchRecord.getRecords());
+        batchWrite(country, batchRecord.getRecords());
         return new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
     }
 
-    public BatchRecord createBatch(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
+    public BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
         if (records != null && !records.isEmpty()) {
             for (Record one : records) {
                 checkParameters(country, one.getKey());
             }
-            country = country.toLowerCase();
             dao.createBatch(records, country, crypto);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
@@ -146,7 +140,6 @@ public class StorageImpl implements Storage {
         if (builder == null) {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
-        country = country.toLowerCase();
         return dao.find(country, builder, crypto);
     }
 
@@ -177,6 +170,6 @@ public class StorageImpl implements Storage {
         }
         Record foundRecord = existingRecords.getRecords().get(0);
         Record updatedRecord = Record.merge(foundRecord, recordForMerging);
-        return create(updatedRecord);
+        return write(country, updatedRecord);
     }
 }
