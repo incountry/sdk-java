@@ -91,7 +91,6 @@ public class HttpAgentImpl implements HttpAgent {
                 throw new StorageServerException(error);
             }
             return content.toString();
-
         } catch (IOException ex) {
             throw new StorageServerException(MSG_SERVER_ERROR + method, ex);
         }
