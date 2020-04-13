@@ -115,18 +115,6 @@ public class Record {
     }
 
     @Override
-    public String toString() {
-        return "Record{" +
-                "key='" + key + '\'' +
-                ", key2='" + key2 + '\'' +
-                ", key3='" + key3 + '\'' +
-                ", profileKey='" + profileKey + '\'' +
-                ", rangeKey=" + rangeKey +
-                ", body='" + body + '\'' +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

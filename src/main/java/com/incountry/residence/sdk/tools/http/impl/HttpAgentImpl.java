@@ -24,8 +24,8 @@ public class HttpAgentImpl implements HttpAgent {
     public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("HttpAgentImpl constructor params (apiKey={} , environmentId={} , charset={})",
-                    apiKey != null ? "[SECURE[" + apiKey.length() + "chars]]" : null,
-                    environmentId != null ? "[SECURE[" + environmentId.length() + "chars]]" : null,
+                    apiKey != null ? "[SECURE[" + apiKey.hashCode() + "]]" : null,
+                    environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null,
                     charset);
         }
         this.apiKey = apiKey;
@@ -41,7 +41,7 @@ public class HttpAgentImpl implements HttpAgent {
             LOG.debug("HTTP request start");
         }
         if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params [endpoint={} , method={} , body={} , allowNone={}]",
+            LOG.trace("HTTP request params (endpoint={} , method={} , body={} , allowNone={})",
                     endpoint,
                     method,
                     body,
@@ -78,7 +78,7 @@ public class HttpAgentImpl implements HttpAgent {
             LOG.debug("HTTP request finish, latency in ms={}", currentTime);
         }
         if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request results [status={} , content={}]", status, content.toString().replaceAll("[\r\n]", ""));
+            LOG.trace("HTTP request results (status={} , content={})", status, content.toString().replaceAll("[\r\n]", ""));
         }
         if (allowNone && status == 404) {
             return null;

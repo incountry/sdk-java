@@ -20,22 +20,20 @@ public interface Storage {
      *
      * @param country country identifier
      * @param record  object which encapsulate data which must be written in storage
-     * @return recorded record
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    Record write(String country, Record record) throws StorageServerException, StorageCryptoException;
+    void write(String country, Record record) throws StorageServerException, StorageCryptoException;
 
     /**
      * Write multiple records at once in remote storage
      *
      * @param country country identifier
      * @param records record list
-     * @return BatchRecord object which contains list of recorded records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if record encryption failed
      */
-    BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
+    void batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
 
     /**
      * Read data from remote storage

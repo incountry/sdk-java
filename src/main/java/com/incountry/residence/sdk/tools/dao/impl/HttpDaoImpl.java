@@ -11,6 +11,8 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -20,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 public class HttpDaoImpl implements Dao {
+
+    private static final Logger LOG = LoggerFactory.getLogger(HttpDaoImpl.class);
+
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
@@ -66,6 +71,9 @@ public class HttpDaoImpl implements Dao {
         popMap = new HashMap<>();
         for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
             popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Loaded county list: {}", popMap.keySet());
         }
     }
 

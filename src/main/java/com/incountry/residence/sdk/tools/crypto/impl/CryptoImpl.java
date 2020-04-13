@@ -6,7 +6,9 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
@@ -14,13 +16,13 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
-
-import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.generateRandomBytes;
-import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.generateStrongPasswordHash;
 
 public class CryptoImpl implements Crypto {
     private SecretKeysData secretKeysData;
@@ -183,5 +185,28 @@ public class CryptoImpl implements Crypto {
     private String decryptVPT(String cipherText) {
         byte[] ptBytes = Base64.getDecoder().decode(cipherText);
         return new String(ptBytes, charset);
+    }
+
+    private static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
+        char[] chars = password.toCharArray();
+        PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
+        byte[] strongPasswordHash;
+        try {
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+            strongPasswordHash = skf.generateSecret(spec).getEncoded();
+        } catch (NoSuchAlgorithmException e) {
+            throw new StorageCryptoException("Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration", e);
+        } catch (InvalidKeySpecException e) {
+            throw new StorageCryptoException("Secret generation exception", e);
+        }
+
+        return strongPasswordHash;
+    }
+
+    private static byte[] generateRandomBytes(int length) {
+        SecureRandom randomSecureRandom = new SecureRandom();
+        byte[] randomBytes = new byte[length];
+        randomSecureRandom.nextBytes(randomBytes);
+        return randomBytes;
     }
 }
