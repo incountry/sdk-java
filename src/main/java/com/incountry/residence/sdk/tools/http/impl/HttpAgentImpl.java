@@ -2,6 +2,8 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,11 +15,19 @@ import java.nio.charset.Charset;
 
 public class HttpAgentImpl implements HttpAgent {
 
+    private static final Logger LOG = LoggerFactory.getLogger(HttpAgentImpl.class);
+
     private String apiKey;
     private String environmentId;
     private Charset charset;
 
     public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("HttpAgentImpl constructor params [apiKey={} , environmentId={} , charset={}]",
+                    apiKey != null ? "[secure " + apiKey.length() + "symbols]" : null,
+                    environmentId != null ? "[secure " + environmentId.length() + "symbols]" : null,
+                    charset);
+        }
         this.apiKey = apiKey;
         this.environmentId = environmentId;
         this.charset = charset;
@@ -25,6 +35,18 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String endpoint, String method, String body, boolean allowNone) throws IOException, StorageServerException {
+        long currentTime = 0;
+        if (LOG.isDebugEnabled()) {
+            currentTime = System.currentTimeMillis();
+            LOG.debug("HTTP request start");
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("HTTP request params [endpoint={} , method={} , body={} , allowNone={}]",
+                    endpoint,
+                    method,
+                    body,
+                    allowNone);
+        }
         URL url = new URL(endpoint);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
@@ -39,24 +61,34 @@ public class HttpAgentImpl implements HttpAgent {
             os.close();
         }
         int status = con.getResponseCode();
-        BufferedReader in;
+        BufferedReader reader;
         if (status < 400) {
-            in = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
+            reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
         } else {
-            in = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
+            reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
         }
         String inputLine;
         StringBuilder content = new StringBuilder();
-        while ((inputLine = in.readLine()) != null) {
+        while ((inputLine = reader.readLine()) != null) {
             content.append(inputLine);
         }
-        in.close();
-
+        reader.close();
+        if (LOG.isDebugEnabled()) {
+            currentTime = System.currentTimeMillis() - currentTime;
+            LOG.debug("HTTP request finish, latency in ms={}", currentTime);
+        }
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("HTTP request results [status={} , content={}]", status, content.toString().replaceAll("[\r\n]", ""));
+        }
         if (allowNone && status == 404) {
             return null;
         }
         if (status >= 400) {
-            throw new StorageServerException(status + " " + endpoint + " - " + content);
+            String error = status + " " + endpoint + " - " + content;
+            if (LOG.isErrorEnabled()) {
+                LOG.error(error.replaceAll("[\r\n]", ""));
+            }
+            throw new StorageServerException(error);
         }
         return content.toString();
     }
