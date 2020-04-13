@@ -1,5 +1,8 @@
 package com.incountry.residence.sdk.dto.search;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GT;
@@ -9,6 +12,8 @@ import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_LTE;
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_NOT;
 
 public class FilterNumberParam {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FilterNumberParam.class);
 
     private static final String ERR_NULL_VALUE = "FilterNumberParam values can't be null";
     private static final String ERR_OPER1_RESTR = String.format("Operator1 in range filter can by only %s or %s", OPER_GT, OPER_GTE);
@@ -26,6 +31,7 @@ public class FilterNumberParam {
 
     public FilterNumberParam(int[] values) {
         if (values == null || values.length == 0) {
+            LOG.error(ERR_NULL_VALUE);
             throw new IllegalArgumentException(ERR_NULL_VALUE);
         }
         this.values = Arrays.copyOf(values, values.length);
@@ -37,6 +43,7 @@ public class FilterNumberParam {
 
     public FilterNumberParam(String operator, int value) {
         if (operator == null || notIn(operator, OPER_GT, OPER_GTE, OPER_NOT, OPER_LT, OPER_LTE)) {
+            LOG.error(ERR_CONDITION_RESTR);
             throw new IllegalArgumentException(ERR_CONDITION_RESTR);
         }
         this.values = new int[]{value};
@@ -45,12 +52,15 @@ public class FilterNumberParam {
 
     public FilterNumberParam(String operator1, int value1, String operator2, int value2) {
         if (operator1 == null || notIn(operator1, OPER_GT, OPER_GTE)) {
+            LOG.error(ERR_OPER1_RESTR);
             throw new IllegalArgumentException(ERR_OPER1_RESTR);
         }
         if (operator2 == null || (!OPER_LT.equals(operator2)) && !OPER_LTE.equals(operator2)) {
+            LOG.error(ERR_OPER2_RESTR);
             throw new IllegalArgumentException(ERR_OPER2_RESTR);
         }
         if (value1 > value2) {
+            LOG.error(ERR_RANGE_RESTR);
             throw new IllegalArgumentException(ERR_RANGE_RESTR);
         }
         this.values = new int[]{value1, value2};

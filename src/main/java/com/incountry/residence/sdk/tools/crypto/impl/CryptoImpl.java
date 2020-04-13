@@ -4,6 +4,8 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
@@ -25,19 +27,25 @@ import java.util.Base64;
 import java.util.Map;
 
 public class CryptoImpl implements Crypto {
-    private SecretKeysData secretKeysData;
-    private String envId;
-    private boolean isUsingPTEncryption = false;
+    private static final Logger LOG = LoggerFactory.getLogger(CryptoImpl.class);
+    private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
+    private static final String MSG_ERROR = "SecretKeyGenerator returns data in which there is no current version of the key";
+    private static final String MSG_ERR_DECR = "Decryption error: Illegal decryption version";
+    private static Charset charset = Charset.defaultCharset();
+    private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
     private static final int SALT_LENGTH = 64;
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
     private static final String VERSION = "2";
-    public static final String PT_ENC_VERSION = "pt";
-    private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
 
-    private static Charset charset = Charset.defaultCharset();
+    public static final String PT_ENC_VERSION = "pt";
+
+
+    private SecretKeysData secretKeysData;
+    private String envId;
+    private boolean isUsingPTEncryption = false;
 
     public CryptoImpl(SecretKeysData secret) {
         this.secretKeysData = secret;
@@ -134,7 +142,8 @@ public class CryptoImpl implements Crypto {
             }
         }
         if (secret == null) {
-            throw new IllegalArgumentException("SecretKeyGenerator returns data in which there is no current version of the key");
+            LOG.error(MSG_ERROR);
+            throw new IllegalArgumentException(MSG_ERROR);
         }
         return secret;
     }
@@ -160,7 +169,9 @@ public class CryptoImpl implements Crypto {
             return decryptVPT(parts[1]);
         }
         if (isUsingPTEncryption) {
-            throw new StorageCryptoException("No secret provided. Cannot decrypt record: " + cipherText);
+            String message = MSG_ERR_NO_SECRET + cipherText;
+            LOG.error(message);
+            throw new StorageCryptoException(message);
         }
         switch (parts[0]) {
             case "1":
@@ -168,8 +179,14 @@ public class CryptoImpl implements Crypto {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                throw new StorageCryptoException("Decryption error: Illegal decryption version");
+                throwAndLogException(MSG_ERR_DECR);
         }
+        return null;
+    }
+
+    private String throwAndLogException(String message) throws StorageCryptoException {
+        LOG.error(message);
+        throw new StorageCryptoException(message);
     }
 
     private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
