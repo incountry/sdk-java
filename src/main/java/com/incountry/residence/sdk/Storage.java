@@ -49,8 +49,6 @@ public interface Storage {
      */
     Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException;
 
-    Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException;
-
     /**
      * Delete record from remote storage
      *
