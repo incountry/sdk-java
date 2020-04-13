@@ -12,7 +12,6 @@ import java.security.GeneralSecurityException;
 public class FullMigration {
 
     public void startMigration() throws StorageException, GeneralSecurityException, FindOptionsException {
-
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator<String>() {
             @Override
             public String generate() {
@@ -33,9 +32,10 @@ public class FullMigration {
 
         );
 
+        String country="US";
         boolean migrationComplete = false;
         while (!migrationComplete) {
-            MigrateResult migrationResult = storage.migrate(co, 50);
+            MigrateResult migrationResult = storage.migrate(country, 50);
             if (migrationResult.getTotalLeft() == 0) {
                 migrationComplete = true;
             }

@@ -121,7 +121,7 @@ public class StorageImpl implements Storage {
         }
     }
 
-    public void write(String country, Record record) throws StorageServerException, StorageCryptoException {
+    public Record write(String country, Record record) throws StorageServerException, StorageCryptoException {
         long currentTime = 0;
         if (LOG.isDebugEnabled()) {
             currentTime = System.currentTimeMillis();
@@ -142,6 +142,7 @@ public class StorageImpl implements Storage {
             currentTime = System.currentTimeMillis() - currentTime;
             LOG.debug("write, latency in ms={}", currentTime);
         }
+        return record;
     }
 
 
@@ -199,7 +200,7 @@ public class StorageImpl implements Storage {
         return result;
     }
 
-    public void batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
+    public BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
         long currentTime = 0;
         if (LOG.isDebugEnabled()) {
             currentTime = System.currentTimeMillis();
@@ -220,6 +221,7 @@ public class StorageImpl implements Storage {
             currentTime = System.currentTimeMillis() - currentTime;
             LOG.debug("batchWrite, latency in ms={}", currentTime);
         }
+        return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
     public boolean delete(String country, String recordKey) throws StorageServerException {
