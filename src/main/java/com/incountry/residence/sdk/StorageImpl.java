@@ -65,10 +65,12 @@ public class StorageImpl implements Storage {
             throws StorageServerException {
         envID = environmentID;
         if (envID == null) {
+            LOG.error(MSG_ENV_EXCEPTION);
             throw new IllegalArgumentException(MSG_ENV_EXCEPTION);
         }
         this.apiKey = apiKey;
         if (this.apiKey == null) {
+            LOG.error(MSG_PASS_API_KEY);
             throw new IllegalArgumentException(MSG_PASS_API_KEY);
         }
         isEncrypted = encrypt;
