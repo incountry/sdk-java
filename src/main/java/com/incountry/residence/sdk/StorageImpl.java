@@ -32,8 +32,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_NULL_KEY = "Key cannot be null";
     private static final String MSG_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
-    private static final String MSG_MULTIPLE_FOUND = "Multiple records found";
-    private static final String MSG_RECORD_NOT_FOUND = "Record not found";
     private static final String MSG_ERROR_NULL_FILTERS = "Filters cannot be null";
 
     private String envID;
@@ -166,18 +164,5 @@ public class StorageImpl implements Storage {
             return null;
         }
         return records.get(0);
-    }
-
-    public Record updateOne(String country, FindFilterBuilder builder, Record recordForMerging) throws StorageServerException, StorageCryptoException {
-        BatchRecord existingRecords = find(country, builder);
-        if (existingRecords.getTotal() > 1) {
-            throw new StorageServerException(MSG_MULTIPLE_FOUND);
-        }
-        if (existingRecords.getTotal() <= 0) {
-            throw new StorageServerException(MSG_RECORD_NOT_FOUND);
-        }
-        Record foundRecord = existingRecords.getRecords().get(0);
-        Record updatedRecord = Record.merge(foundRecord, recordForMerging);
-        return write(country, updatedRecord);
     }
 }
