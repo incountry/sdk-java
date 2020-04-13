@@ -12,6 +12,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -19,6 +21,7 @@ import java.util.List;
  * Basic implementation
  */
 public class StorageImpl implements Storage {
+    private static final Logger LOG = LoggerFactory.getLogger(StorageImpl.class);
     //params from OS env
     private static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
     private static final String PARAM_API_KEY = "INC_API_KEY";
@@ -81,9 +84,11 @@ public class StorageImpl implements Storage {
 
     private void checkParameters(String country, String key) {
         if (country == null) {
+            LOG.error(MSG_ENV_EXCEPTION);
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
         }
         if (key == null) {
+            LOG.error(MSG_NULL_KEY);
             throw new IllegalArgumentException(MSG_NULL_KEY);
         }
     }
@@ -107,6 +112,7 @@ public class StorageImpl implements Storage {
 
     public MigrateResult migrate(String country, int limit) throws StorageException {
         if (!isEncrypted) {
+            LOG.error(MSG_MIGR_NOT_SUPPORT);
             throw new StorageException(MSG_MIGR_NOT_SUPPORT);
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
@@ -135,9 +141,11 @@ public class StorageImpl implements Storage {
 
     public BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException {
         if (country == null) {
+            LOG.error(MSG_ERROR_NULL_COUNTRY);
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
         }
         if (builder == null) {
+            LOG.error(MSG_ERROR_NULL_FILTERS);
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
         return dao.find(country, builder, crypto);
