@@ -32,28 +32,36 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class HttpDaoImplTests {
 
-    private Crypto crypto;
-
     private String secret = "passwordpasswordpasswordpassword";
     private int version = 0;
     private int currentVersion = 0;
 
-    public StorageImpl initializeStorage(boolean isKey, boolean encrypt) throws StorageServerException {
+    private StorageImpl initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageServerException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         StorageImpl storage;
         if (encrypt) {
-            storage = new StorageImpl(
-                    "envId",
-                    "apiKey",
-                    secretKeyAccessor
-            );
-            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            storage = new StorageImpl("envId", secretKeyAccessor, dao);
+
         } else {
-            storage = new StorageImpl("envId", "apiKey", null);
-            crypto = new CryptoImpl("envId");
+            storage = new StorageImpl("envId", null, dao);
+
         }
         return storage;
     }
+
+    private Crypto initCrypto(boolean isKey, boolean encrypt) {
+        Crypto crypto = null;
+        SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
+        StorageImpl storage;
+        if (encrypt) {
+            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+        } else {
+
+            crypto = new CryptoImpl("envId");
+        }
+        return crypto;
+    }
+
 
     private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) {
         SecretKey secretKey = new SecretKey();
@@ -98,12 +106,10 @@ public class HttpDaoImplTests {
                           Integer rangeKey,
                           boolean isKey,
                           boolean encrypt) throws StorageException, MalformedURLException {
-        StorageImpl storage = initializeStorage(isKey, encrypt);
-
+        FakeHttpAgent agent = new FakeHttpAgent("");
+        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
-        FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setDao(new HttpDaoImpl(null, agent));
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         storage.write(country, record);
 
@@ -143,14 +149,13 @@ public class HttpDaoImplTests {
                          boolean isKey,
                          boolean encrypt) throws StorageException, MalformedURLException {
 
-        StorageImpl storage = initializeStorage(isKey, encrypt);
-
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Crypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
         FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, crypto));
-        storage.setDao(new HttpDaoImpl(null, agent));
+        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
 
         Record fetched = storage.read(country, key);
         assertEquals(expectedPath, new URL(agent.getCallEndpoint()).getPath());
@@ -174,10 +179,10 @@ public class HttpDaoImplTests {
                            boolean isKey,
                            boolean encrypt) throws StorageException, IOException {
 
-        StorageImpl storage = initializeStorage(isKey, encrypt);
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setDao(new HttpDaoImpl(null, agent));
+        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
         storage.delete(country, key);
+        Crypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
         String callPath = new URL(agent.getCallEndpoint()).getPath();
@@ -196,14 +201,15 @@ public class HttpDaoImplTests {
                                boolean isKey,
                                boolean encrypt) throws StorageException {
 
-        StorageImpl storage = initializeStorage(isKey, encrypt);
         FakeHttpAgent agent = new FakeHttpAgent("");
-        storage.setDao(new HttpDaoImpl(null, agent));
+        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+
         List<Record> records = new ArrayList<>();
         records.add(new Record(key, body, profileKey, rangeKey, key2, key3));
         storage.batchWrite(country, records);
 
         String encrypted = agent.getCallBody();
+        Crypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
         JsonArray responseList = new Gson().fromJson(encrypted, JsonObject.class).getAsJsonArray("records");
         for (JsonElement response : responseList) {

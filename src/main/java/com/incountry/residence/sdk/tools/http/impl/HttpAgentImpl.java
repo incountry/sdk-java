@@ -23,9 +23,9 @@ public class HttpAgentImpl implements HttpAgent {
 
     public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HttpAgentImpl constructor params [apiKey={} , environmentId={} , charset={}]",
-                    apiKey != null ? "[secure " + apiKey.length() + "symbols]" : null,
-                    environmentId != null ? "[secure " + environmentId.length() + "symbols]" : null,
+            LOG.debug("HttpAgentImpl constructor params (apiKey={} , environmentId={} , charset={})",
+                    apiKey != null ? "[SECURE[" + apiKey.length() + "chars]]" : null,
+                    environmentId != null ? "[SECURE[" + environmentId.length() + "chars]]" : null,
                     charset);
         }
         this.apiKey = apiKey;

@@ -66,7 +66,6 @@ public class StorageTest {
         storage = new StorageImpl(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
-                true,
                 secretKeyAccessor);
     }
 

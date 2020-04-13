@@ -46,7 +46,6 @@ public class CryptoImpl implements Crypto {
         this.isUsingPTEncryption = true;
     }
 
-
     public CryptoImpl(SecretKeysData secret, String envId) {
         this.secretKeysData = secret;
         this.envId = envId;

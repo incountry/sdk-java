@@ -27,15 +27,14 @@ public class StorageImpl implements Storage {
     private static final String PARAM_API_KEY = "INC_API_KEY";
     private static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     //error messages
-    private static final String MSG_ENV_EXCEPTION = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
+    private static final String MSG_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
+    private static final String MSG_PASS_DAO = "Please pass dao param";
+    private static final String MSG_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERROR_NULL_COUNTRY = "Country cannot be null";
     private static final String MSG_NULL_KEY = "Key cannot be null";
-    private static final String MSG_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERROR_NULL_FILTERS = "Filters cannot be null";
 
-    private String envID;
-    private String apiKey;
 
     private Crypto crypto;
     private Dao dao;
@@ -53,38 +52,48 @@ public class StorageImpl implements Storage {
         this(loadFromEnv(PARAM_ENV_ID),
                 loadFromEnv(PARAM_API_KEY),
                 loadFromEnv(PARAM_ENDPOINT),
-                secretKeyAccessor != null,
                 secretKeyAccessor);
     }
 
-    public StorageImpl(String environmentID, String apiKey, SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
-        this(environmentID, apiKey, null, secretKeyAccessor != null, secretKeyAccessor);
-    }
-
-    public StorageImpl(String environmentID, String apiKey, String endpoint, boolean encrypt, SecretKeyAccessor secretKeyAccessor)
+    public StorageImpl(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageServerException {
-        envID = environmentID;
-        if (envID == null) {
-            LOG.error(MSG_ENV_EXCEPTION);
-            throw new IllegalArgumentException(MSG_ENV_EXCEPTION);
-        }
-        this.apiKey = apiKey;
-        if (this.apiKey == null) {
+        checkEnvironment(environmentID);
+        if (apiKey == null) {
             LOG.error(MSG_PASS_API_KEY);
             throw new IllegalArgumentException(MSG_PASS_API_KEY);
         }
-        isEncrypted = encrypt;
-        if (encrypt) {
+        createCrypto(secretKeyAccessor, environmentID);
+        dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+    }
+
+    public StorageImpl(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) {
+        checkEnvironment(environmentID);
+        createCrypto(secretKeyAccessor, environmentID);
+        if (dao == null) {
+            throw new IllegalArgumentException(MSG_PASS_DAO);
+        }
+        this.dao = dao;
+    }
+
+    private void checkEnvironment(String environmentID) {
+        if (environmentID == null) {
+            LOG.error(MSG_PASS_ENV);
+            throw new IllegalArgumentException(MSG_PASS_ENV);
+        }
+    }
+
+    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID) {
+        isEncrypted = secretKeyAccessor != null;
+        if (isEncrypted) {
             crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentID);
         } else {
             crypto = new CryptoImpl(environmentID);
         }
-        dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
     }
 
     private void checkParameters(String country, String key) {
         if (country == null) {
-            LOG.error(MSG_ENV_EXCEPTION);
+            LOG.error(MSG_PASS_ENV);
             throw new IllegalArgumentException(MSG_ERROR_NULL_COUNTRY);
         }
         if (key == null) {
@@ -92,11 +101,6 @@ public class StorageImpl implements Storage {
             throw new IllegalArgumentException(MSG_NULL_KEY);
         }
     }
-
-    public void setDao(Dao dao) {
-        this.dao = dao;
-    }
-
 
     public Record write(String country, Record record) throws StorageServerException, StorageCryptoException {
         checkParameters(country, record.getKey());
