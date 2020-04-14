@@ -12,13 +12,10 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
+import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
 import java.util.List;
 
 /**
@@ -84,7 +81,7 @@ public class StorageImpl implements Storage {
         StorageImpl instance = new StorageImpl();
         instance.createCrypto(secretKeyAccessor, environmentID);
         instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
-        return createProxyForLogging(instance);
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
     public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) {
@@ -103,35 +100,7 @@ public class StorageImpl implements Storage {
         StorageImpl instance = new StorageImpl();
         instance.createCrypto(secretKeyAccessor, environmentID);
         instance.dao = dao;
-        return createProxyForLogging(instance);
-    }
-
-    private static Storage createProxyForLogging(StorageImpl storage) {
-        InvocationHandler handler = (proxy, method, args) -> {
-            long currentTime = 0;
-            boolean isLogged = Modifier.isPublic(method.getModifiers());
-            if (isLogged && LOG.isDebugEnabled()) {
-                currentTime = System.currentTimeMillis();
-                LOG.debug("{} start", method.getName());
-            }
-            Object result;
-            try {
-                result = method.invoke(storage, args);
-            } catch (InvocationTargetException ex) {
-                throw ex.getTargetException();
-            } catch (Exception ex) {
-                throw ex;
-            } finally {
-                if (isLogged && LOG.isDebugEnabled()) {
-                    currentTime = System.currentTimeMillis() - currentTime;
-                    LOG.debug("{} finish, latency in ms={}", method.getName(), currentTime);
-                }
-            }
-            return result;
-        };
-        return (Storage) Proxy.newProxyInstance(storage.getClass().getClassLoader(),
-                StorageImpl.class.getInterfaces(), handler);
-
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
     private static void checkEnvironment(String environmentID) {

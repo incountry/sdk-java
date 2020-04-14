@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
+import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,8 @@ public class HttpDaoImpl implements Dao {
     private boolean defaultEndpoint = false;
 
     public HttpDaoImpl(String apiKey, String environmentId, String endPoint) throws StorageServerException {
-        this(endPoint, new HttpAgentImpl(apiKey, environmentId, Charset.defaultCharset()));
+        this(endPoint, ProxyUtils.createLoggingProxyForPublicMethods(
+                new HttpAgentImpl(apiKey, environmentId, Charset.defaultCharset())));
     }
 
     public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {

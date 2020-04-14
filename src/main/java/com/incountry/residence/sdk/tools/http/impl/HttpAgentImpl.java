@@ -38,11 +38,6 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String endpoint, String method, String body, boolean allowNone) throws StorageServerException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("HTTP request start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , allowNone={})",
                     endpoint,
@@ -76,10 +71,6 @@ public class HttpAgentImpl implements HttpAgent {
                 content.append(inputLine);
             }
             reader.close();
-            if (LOG.isDebugEnabled()) {
-                currentTime = System.currentTimeMillis() - currentTime;
-                LOG.debug("HTTP request finish, status={} ,latency in ms={}", status, currentTime);
-            }
             if (allowNone && status == 404) {
                 return null;
             }
