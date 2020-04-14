@@ -140,4 +140,17 @@ public class CryptoTest {
         assertThrows(StorageCryptoException.class, () -> crypto.decrypt(encrypted, keyVersion));
     }
 
+    @Test
+    public void testSecretKeyWithNegativeVersion() {
+        SecretKey secretKey = new SecretKey();
+        assertThrows(IllegalArgumentException.class, () -> secretKey.setVersion(-1));
+        assertThrows(IllegalArgumentException.class, () -> new SecretKey("secret", -2, true));
+    }
+
+    @Test
+    public void testSecreKeyDatatWithNegativeVersion() {
+        SecretKeysData data = new SecretKeysData();
+        assertThrows(IllegalArgumentException.class, () -> data.setCurrentVersion(-1));
+        assertThrows(IllegalArgumentException.class, () -> new SecretKeysData(new ArrayList<>(), -2));
+    }
 }

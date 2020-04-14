@@ -1,6 +1,11 @@
 package com.incountry.residence.sdk.tools.keyaccessor.key;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SecretKey {
+    private static final Logger LOG = LoggerFactory.getLogger(SecretKey.class);
+
     private String secret;
     private int version;
     private Boolean isKey;
@@ -9,8 +14,8 @@ public class SecretKey {
     }
 
     public SecretKey(String secret, int version, Boolean isKey) {
+        setVersion(version);
         this.secret = secret;
-        this.version = version;
         this.isKey = isKey;
     }
 
@@ -27,6 +32,11 @@ public class SecretKey {
     }
 
     public void setVersion(int version) {
+        if (version < 0) {
+            String message = "Version must be >= 0";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
+        }
         this.version = version;
     }
 
