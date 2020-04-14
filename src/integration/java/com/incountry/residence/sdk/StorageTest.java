@@ -63,7 +63,7 @@ public class StorageTest {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
 
-        storage = new StorageImpl(loadFromEnv(INTEGR_ENV_KEY_ENVID),
+        storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
                 secretKeyAccessor);

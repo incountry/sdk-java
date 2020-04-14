@@ -15,6 +15,10 @@ import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
 import java.util.List;
 
 /**
@@ -47,18 +51,22 @@ public class StorageImpl implements Storage {
         return System.getenv(key);
     }
 
-    public StorageImpl() throws StorageServerException {
-        this(null);
+    private StorageImpl() {
+
     }
 
-    public StorageImpl(SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
-        this(loadFromEnv(PARAM_ENV_ID),
+    public static Storage getInstance() throws StorageServerException {
+        return getInstance(null);
+    }
+
+    public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
+        return getInstance(loadFromEnv(PARAM_ENV_ID),
                 loadFromEnv(PARAM_API_KEY),
                 loadFromEnv(PARAM_ENDPOINT),
                 secretKeyAccessor);
     }
 
-    public StorageImpl(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
+    public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={})",
@@ -73,11 +81,13 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_PASS_API_KEY);
             throw new IllegalArgumentException(MSG_PASS_API_KEY);
         }
-        createCrypto(secretKeyAccessor, environmentID);
-        dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+        StorageImpl instance = new StorageImpl();
+        instance.createCrypto(secretKeyAccessor, environmentID);
+        instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+        return createProxyForLogging(instance);
     }
 
-    public StorageImpl(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) {
+    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
@@ -86,15 +96,45 @@ public class StorageImpl implements Storage {
             );
         }
         checkEnvironment(environmentID);
-        createCrypto(secretKeyAccessor, environmentID);
         if (dao == null) {
             LOG.error(MSG_PASS_DAO);
             throw new IllegalArgumentException(MSG_PASS_DAO);
         }
-        this.dao = dao;
+        StorageImpl instance = new StorageImpl();
+        instance.createCrypto(secretKeyAccessor, environmentID);
+        instance.dao = dao;
+        return createProxyForLogging(instance);
     }
 
-    private void checkEnvironment(String environmentID) {
+    private static Storage createProxyForLogging(StorageImpl storage) {
+        InvocationHandler handler = (proxy, method, args) -> {
+            long currentTime = 0;
+            boolean isLogged = Modifier.isPublic(method.getModifiers());
+            if (isLogged && LOG.isDebugEnabled()) {
+                currentTime = System.currentTimeMillis();
+                LOG.debug("{} start", method.getName());
+            }
+            Object result;
+            try {
+                result = method.invoke(storage, args);
+            } catch (InvocationTargetException ex) {
+                throw ex.getTargetException();
+            } catch (Exception ex) {
+                throw ex;
+            } finally {
+                if (isLogged && LOG.isDebugEnabled()) {
+                    currentTime = System.currentTimeMillis() - currentTime;
+                    LOG.debug("{} finish, latency in ms={}", method.getName(), currentTime);
+                }
+            }
+            return result;
+        };
+        return (Storage) Proxy.newProxyInstance(storage.getClass().getClassLoader(),
+                StorageImpl.class.getInterfaces(), handler);
+
+    }
+
+    private static void checkEnvironment(String environmentID) {
         if (environmentID == null) {
             LOG.error(MSG_PASS_ENV);
             throw new IllegalArgumentException(MSG_PASS_ENV);
@@ -122,11 +162,6 @@ public class StorageImpl implements Storage {
     }
 
     public Record write(String country, Record record) throws StorageServerException, StorageCryptoException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("write start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("write params (country={} , record={})",
                     country,
@@ -138,20 +173,11 @@ public class StorageImpl implements Storage {
         }
         checkParameters(country, record.getKey());
         dao.createRecord(country, record, crypto);
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("write, latency in ms={}", currentTime);
-        }
         return record;
     }
 
 
     public Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("read start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("read params (country={} , recordKey={})",
                     country,
@@ -159,10 +185,6 @@ public class StorageImpl implements Storage {
         }
         checkParameters(country, recordKey);
         Record record = dao.read(country, recordKey, crypto);
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("read, latency in ms={}", currentTime);
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
         }
@@ -170,11 +192,6 @@ public class StorageImpl implements Storage {
     }
 
     public MigrateResult migrate(String country, int limit) throws StorageException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("migrate start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("migrate params (country={} , limit={})",
                     country,
@@ -189,10 +206,6 @@ public class StorageImpl implements Storage {
                 .versionNotEq(String.valueOf(crypto.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
         batchWrite(country, batchRecord.getRecords());
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("batchWrite, latency in ms={}", currentTime);
-        }
         MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
         if (LOG.isTraceEnabled()) {
             LOG.trace("batchWrite results={}", result);
@@ -201,11 +214,6 @@ public class StorageImpl implements Storage {
     }
 
     public BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("batchWrite start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("batchWrite params (country={} , records={})",
                     country,
@@ -217,19 +225,10 @@ public class StorageImpl implements Storage {
             }
             dao.createBatch(records, country, crypto);
         }
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("batchWrite, latency in ms={}", currentTime);
-        }
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
     public boolean delete(String country, String recordKey) throws StorageServerException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("delete start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("delete params (country={} , recordKey={})",
                     country,
@@ -237,19 +236,10 @@ public class StorageImpl implements Storage {
         }
         checkParameters(country, recordKey);
         dao.delete(country, recordKey, crypto);
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("delete, latency in ms={}", currentTime);
-        }
         return true;
     }
 
     public BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("find start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("find params (country={} , builder={})",
                     country,
@@ -265,10 +255,6 @@ public class StorageImpl implements Storage {
         }
 
         BatchRecord batchRecord = dao.find(country, builder, crypto);
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("find, latency in ms={}", currentTime);
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
         }
@@ -284,11 +270,6 @@ public class StorageImpl implements Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     public Record findOne(String country, FindFilterBuilder builder) throws StorageServerException {
-        long currentTime = 0;
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis();
-            LOG.debug("findOne start");
-        }
         if (LOG.isTraceEnabled()) {
             LOG.trace("findOne params (country={} , builder={})",
                     country,
@@ -296,10 +277,6 @@ public class StorageImpl implements Storage {
         }
         BatchRecord findResults = find(country, builder);
         List<Record> records = findResults.getRecords();
-        if (LOG.isDebugEnabled()) {
-            currentTime = System.currentTimeMillis() - currentTime;
-            LOG.debug("findOne, latency in ms={}", currentTime);
-        }
         if (records.isEmpty()) {
             LOG.warn(MSG_FOUND_NOTHING);
             return null;

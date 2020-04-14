@@ -36,27 +36,23 @@ public class HttpDaoImplTests {
     private int version = 0;
     private int currentVersion = 0;
 
-    private StorageImpl initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageServerException {
+    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        StorageImpl storage;
+        Storage storage;
         if (encrypt) {
-            storage = new StorageImpl("envId", secretKeyAccessor, dao);
-
+            storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao);
         } else {
-            storage = new StorageImpl("envId", null, dao);
-
+            storage = StorageImpl.getInstance("envId", null, dao);
         }
         return storage;
     }
 
     private Crypto initCrypto(boolean isKey, boolean encrypt) {
-        Crypto crypto = null;
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        StorageImpl storage;
+        Crypto crypto;
         if (encrypt) {
             crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
         } else {
-
             crypto = new CryptoImpl("envId");
         }
         return crypto;
@@ -107,7 +103,7 @@ public class HttpDaoImplTests {
                           boolean isKey,
                           boolean encrypt) throws StorageException, MalformedURLException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
@@ -155,7 +151,7 @@ public class HttpDaoImplTests {
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
         FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, crypto));
-        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
 
         Record fetched = storage.read(country, key);
         assertEquals(expectedPath, new URL(agent.getCallEndpoint()).getPath());
@@ -180,7 +176,7 @@ public class HttpDaoImplTests {
                            boolean encrypt) throws StorageException, IOException {
 
         FakeHttpAgent agent = new FakeHttpAgent("");
-        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
         storage.delete(country, key);
         Crypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
@@ -202,7 +198,7 @@ public class HttpDaoImplTests {
                                boolean encrypt) throws StorageException {
 
         FakeHttpAgent agent = new FakeHttpAgent("");
-        StorageImpl storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
 
         List<Record> records = new ArrayList<>();
         records.add(new Record(key, body, profileKey, rangeKey, key2, key3));
