@@ -23,4 +23,4 @@ before_install:
 script:
   - gradle build --rerun-tasks
   - gradle sonarqube
-  - gradle integrationTest
+  - gradle integrationTest --rerun-tasks
