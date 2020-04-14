@@ -51,11 +51,8 @@ public class StorageTest {
 
     @BeforeEach
     public void init() throws StorageServerException {
-        SecretKey secretKey = new SecretKey();
+        SecretKey secretKey = new SecretKey(secret, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKey.setSecret(secret);
-        secretKey.setVersion(version);
-        secretKey.setIsKey(isKey);
         secretKeyList.add(secretKey);
         SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeyList);

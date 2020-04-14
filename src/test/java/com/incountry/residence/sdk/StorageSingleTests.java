@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,10 +51,7 @@ public class StorageSingleTests {
 
     @BeforeEach
     public void initializeAccessorAndCrypto() {
-        SecretKey secretKey = new SecretKey();
-        secretKey.setSecret(secret);
-        secretKey.setVersion(version);
-        secretKey.setIsKey(true);
+        SecretKey secretKey = new SecretKey(secret, version, true);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretKeysData secretKeysData = new SecretKeysData();
@@ -250,7 +248,10 @@ public class StorageSingleTests {
 
     @Test
     public void testInitErrorOnInsufficientArgs() {
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(SecretKeysData::new);
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() ->
+                new SecretKeysData(Arrays.asList(new SecretKey("secret", 1, false)), 1)
+        );
+
         assertThrows(IllegalArgumentException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
     }
 

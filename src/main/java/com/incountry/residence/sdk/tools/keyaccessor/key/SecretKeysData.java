@@ -32,12 +32,16 @@ public class SecretKeysData {
     }
 
     public void setCurrentVersion(int currentVersion) {
+        validateVersion(currentVersion);
+        this.currentVersion = currentVersion;
+    }
+
+    public void validateVersion(int currentVersion) {
         if (currentVersion < 0) {
             String message = "Current version must be >= 0";
             LOG.error(message);
             throw new IllegalArgumentException(message);
         }
-        this.currentVersion = currentVersion;
     }
 
     @Override

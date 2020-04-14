@@ -5,16 +5,15 @@ import org.slf4j.LoggerFactory;
 
 public class SecretKey {
     private static final Logger LOG = LoggerFactory.getLogger(SecretKey.class);
+    private static final int KEY_LENGTH = 32;
 
     private String secret;
     private int version;
-    private Boolean isKey;
+    private boolean isKey;
 
-    public SecretKey() {
-    }
-
-    public SecretKey(String secret, int version, Boolean isKey) {
-        setVersion(version);
+    public SecretKey(String secret, int version, boolean isKey) {
+        validateSecretKey(secret, version, isKey);
+        this.version = version;
         this.secret = secret;
         this.isKey = isKey;
     }
@@ -23,28 +22,29 @@ public class SecretKey {
         return secret;
     }
 
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
     public int getVersion() {
         return version;
-    }
-
-    public void setVersion(int version) {
-        if (version < 0) {
-            String message = "Version must be >= 0";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
-        }
-        this.version = version;
     }
 
     public Boolean getIsKey() {
         return isKey;
     }
 
-    public void setIsKey(Boolean key) {
-        isKey = key;
+    public static void validateSecretKey(String secret, int version, boolean isKey) {
+        if (version < 0) {
+            String message = "Version must be >= 0";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
+        }
+        if (secret == null || secret.isEmpty()) {
+            String message = "Secret can't be null";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
+        }
+        if (isKey && secret.length() != KEY_LENGTH) {
+            String message = "Wrong default key length. Should be " + KEY_LENGTH + " characters ‘utf8’ encoded string";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
+        }
     }
 }

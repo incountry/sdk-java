@@ -27,9 +27,7 @@ public class CryptoTest {
         keyVersion = 0;
 
         secretKeysData = new SecretKeysData();
-        SecretKey secretKey = new SecretKey();
-        secretKey.setSecret(secret);
-        secretKey.setVersion(keyVersion);
+        SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretKeysData.setSecrets(new ArrayList<SecretKey>() {
             {
                 add(secretKey);
@@ -125,9 +123,7 @@ public class CryptoTest {
         keyVersion = 0;
 
         secretKeysData = new SecretKeysData();
-        SecretKey secretKey = new SecretKey();
-        secretKey.setSecret(secret);
-        secretKey.setVersion(keyVersion);
+        SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretKeysData.setSecrets(new ArrayList<SecretKey>() {
             {
                 add(secretKey);
@@ -142,9 +138,7 @@ public class CryptoTest {
 
     @Test
     public void testSecretKeyWithNegativeVersion() {
-        SecretKey secretKey = new SecretKey();
-        assertThrows(IllegalArgumentException.class, () -> secretKey.setVersion(-1));
-        assertThrows(IllegalArgumentException.class, () -> new SecretKey("secret", -2, true));
+        assertThrows(IllegalArgumentException.class, () -> new SecretKey(secret, -1, false));
     }
 
     @Test

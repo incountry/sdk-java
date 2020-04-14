@@ -1,15 +1,17 @@
 package com.incountry.residence.sdk.tools.keyaccessor.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
+import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SecretKeyUtils {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SecretKeyUtils.class);
 
     public static final int DEFAULT_VERSION = 0;
 
@@ -22,29 +24,30 @@ public class SecretKeyUtils {
      * @param secretKeyString simple string or json
      * @return SecretKeyData object which contain secret keys and there versions
      */
-    public static SecretKeysData convertStringToSecretKeyData(String secretKeyString) {
-
-        if (isJson(secretKeyString)) {
-            Gson gson = new Gson();
-            return gson.fromJson(secretKeyString, SecretKeysData.class);
+    public static SecretKeysData getSecretKeyDataFromString(String secretKeyString) {
+        SecretKeysData data = JsonUtils.getSecretKeysDataFromJson(secretKeyString);
+        if (data != null) {
+            validateSecretKeysData(data);
+            return data;
         }
-        SecretKey secretKey = new SecretKey();
-        secretKey.setSecret(secretKeyString);
+        SecretKey secretKey = new SecretKey(secretKeyString, DEFAULT_VERSION, false);
         List<SecretKey> secretKeys = new ArrayList<>();
         secretKeys.add(secretKey);
         SecretKeysData secretKeysData = new SecretKeysData();
         secretKeysData.setSecrets(secretKeys);
         secretKeysData.setCurrentVersion(DEFAULT_VERSION);
-
         return secretKeysData;
     }
 
-    public static boolean isJson(String string) {
-        try {
-            new Gson().fromJson(string, JsonObject.class);
-            return true;
-        } catch (JsonSyntaxException e) {
-            return false;
+    public static void validateSecretKeysData(SecretKeysData data) {
+        data.validateVersion(data.getCurrentVersion());
+        if (data.getSecrets() == null || data.getSecrets().isEmpty()) {
+            String message = "Secrets in SecretKeysData are null";
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
         }
+        data.getSecrets().forEach(one ->
+                SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.getIsKey())
+        );
     }
 }

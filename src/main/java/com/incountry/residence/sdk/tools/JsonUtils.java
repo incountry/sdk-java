@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterNumberParam;
@@ -15,6 +16,9 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -25,6 +29,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class JsonUtils {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JsonUtils.class);
+
     private static final String P_COUNTRY = "country";
     private static final String P_BODY = "body";
     private static final String P_KEY = "key";
@@ -278,6 +285,18 @@ public class JsonUtils {
         List<String> values = (crypto != null ? hashValue(param, crypto) : param.getValue());
         values.forEach(array::add);
         return array;
+    }
+
+    public static SecretKeysData getSecretKeysDataFromJson(String string) {
+        SecretKeysData result = null;
+        try {
+            result = new Gson().fromJson(string, SecretKeysData.class);
+        } catch (JsonSyntaxException e) {
+            if (LOG.isInfoEnabled()) {
+                LOG.warn("String is not JSON with {}", SecretKeysData.class.getSimpleName());
+            }
+        }
+        return result;
     }
 
     /**

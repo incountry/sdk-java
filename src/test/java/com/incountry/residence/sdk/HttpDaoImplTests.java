@@ -59,10 +59,7 @@ public class HttpDaoImplTests {
 
 
     private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) {
-        SecretKey secretKey = new SecretKey();
-        secretKey.setSecret(secret);
-        secretKey.setVersion(version);
-        secretKey.setIsKey(isKey);
+        SecretKey secretKey = new SecretKey(secret, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretKeysData secretKeysData = new SecretKeysData();
