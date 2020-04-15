@@ -38,7 +38,7 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_DELIMITER = "/";
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
 
-    private Map<String, POP> popMap;
+    private final Map<String, POP> popMap = new HashMap<>();
     private HttpAgent agent;
     private String endPoint;
     private boolean defaultEndpoint = false;
@@ -61,17 +61,20 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private synchronized void loadCounties() throws StorageServerException {
+    private void loadCounties() throws StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Start loading country list");
         }
         String content;
-        popMap = new HashMap<>();
-        content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
-        for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
-            popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
+
+        synchronized (popMap) {
+            popMap.clear();
+            content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
+            for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
+                popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
+            }
+            lastLoadedTime = System.currentTimeMillis();
         }
-        lastLoadedTime = System.currentTimeMillis();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded county list: {}", popMap.keySet());
         }
@@ -83,13 +86,18 @@ public class HttpDaoImpl implements Dao {
         }
         if (defaultEndpoint) {
             //update country list cache every 1 min
-            if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
-                loadCounties();
+            POP pop;
+            synchronized (popMap) {
+                if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
+                    loadCounties();
+                }
+                pop = popMap.get(country.toLowerCase());
             }
-            POP pop = popMap.get(country.toLowerCase());
             if (pop == null) {
                 loadCounties();
-                pop = popMap.get(country.toLowerCase());
+                synchronized (popMap) {
+                    pop = popMap.get(country.toLowerCase());
+                }
             }
             if (pop == null) {
                 String message = "Country " + country + " has no POP API";
