@@ -54,10 +54,10 @@ public class HttpDaoImpl implements Dao {
         }
         this.endPoint = endPoint;
         this.agent = agent;
-        loadCounties();
+        loadCountries();
     }
 
-    private void loadCounties() throws StorageServerException {
+    private void loadCountries() throws StorageServerException {
         String content;
         content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
         popMap = new HashMap<>();
