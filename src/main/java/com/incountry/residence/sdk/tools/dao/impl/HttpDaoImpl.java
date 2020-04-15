@@ -36,11 +36,13 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_FIND = "/find";
     private static final String URI_BATCH_WRITE = "/batchWrite";
     private static final String URI_DELIMITER = "/";
+    private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
 
     private Map<String, POP> popMap;
     private HttpAgent agent;
     private String endPoint;
     private boolean defaultEndpoint = false;
+    private long lastLoadedTime;
 
     public HttpDaoImpl(String apiKey, String environmentId, String endPoint) throws StorageServerException {
         this(endPoint, ProxyUtils.createLoggingProxyForPublicMethods(
@@ -54,33 +56,53 @@ public class HttpDaoImpl implements Dao {
         }
         this.endPoint = endPoint;
         this.agent = agent;
-        loadCounties();
+        if (defaultEndpoint) {
+            loadCounties();
+        }
     }
 
-    private void loadCounties() throws StorageServerException {
+    private synchronized void loadCounties() throws StorageServerException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Start loading country list");
+        }
         String content;
-        content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
         popMap = new HashMap<>();
+        content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
         for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
             popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
         }
+        lastLoadedTime = System.currentTimeMillis();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded county list: {}", popMap.keySet());
         }
     }
 
-    private String getEndpoint(String path, String country) {
+    private String getEndpoint(String path, String country) throws StorageServerException {
         if (!path.startsWith(URI_DELIMITER)) {
             path = URI_DELIMITER + path;
         }
-        POP pop = popMap.get(country.toLowerCase());
-        if (defaultEndpoint && pop != null) {
+        if (defaultEndpoint) {
+            //update country list cache every 1 min
+            if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
+                loadCounties();
+            }
+            POP pop = popMap.get(country.toLowerCase());
+            if (pop == null) {
+                loadCounties();
+                pop = popMap.get(country.toLowerCase());
+            }
+            if (pop == null) {
+                String message = "Country " + country + " has no POP API";
+                LOG.error(message);
+                throw new IllegalArgumentException(message);
+            }
             return pop.getHost() + path;
+        } else {
+            return endPoint + path;
         }
-        return endPoint + path;
     }
 
-    private String createUrl(String country, String recordKeyHash) {
+    private String createUrl(String country, String recordKeyHash) throws StorageServerException {
         return getEndpoint(concatUrl(country, URI_DELIMITER, recordKeyHash), country);
     }
 
