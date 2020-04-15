@@ -164,7 +164,7 @@ jar {
     manifest {
         attributes("Implementation-Title": "${rootProject.group}:${rootProject.name}",
                 "Implementation-Version": version,
-                "Implementation-Vendor": "InCounty INC")
+                "Implementation-Vendor": "InCountry INC")
     }
 }
 

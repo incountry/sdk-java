@@ -65,7 +65,7 @@ public class HttpDaoImpl implements Dao {
             popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded county list: {}", popMap.keySet());
+            LOG.debug("Loaded country list: {}", popMap.keySet());
         }
     }
 

@@ -1,4 +1,4 @@
-package com.incounty;
+package com.incountry;
 
 import com.incountry.MigrateResult;
 import com.incountry.Storage;
