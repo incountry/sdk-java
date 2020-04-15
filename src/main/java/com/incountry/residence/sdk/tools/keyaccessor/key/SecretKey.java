@@ -1,10 +1,10 @@
 package com.incountry.residence.sdk.tools.keyaccessor.key;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class SecretKey {
-    private static final Logger LOG = LoggerFactory.getLogger(SecretKey.class);
+    private static final Logger LOG = LogManager.getLogger(SecretKey.class);
     private static final int KEY_LENGTH = 32;
 
     private String secret;

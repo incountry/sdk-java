@@ -17,8 +17,8 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 public class JsonUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JsonUtils.class);
+    private static final Logger LOG = LogManager.getLogger(JsonUtils.class);
 
     private static final String P_COUNTRY = "country";
     private static final String P_BODY = "body";
@@ -375,17 +375,17 @@ public class JsonUtils {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
+        public boolean equals(Object object) {
+            if (this == object) {
                 return true;
             }
-            if (obj == null || getClass() != obj.getClass()) {
+            if (object == null || getClass() != object.getClass()) {
                 return false;
             }
-            if (!super.equals(obj)) {
+            if (!super.equals(object)) {
                 return false;
             }
-            EncryptedRecord that = (EncryptedRecord) obj;
+            EncryptedRecord that = (EncryptedRecord) object;
             return Objects.equals(version, that.version);
         }
 

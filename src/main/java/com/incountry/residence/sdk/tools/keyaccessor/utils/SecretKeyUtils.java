@@ -3,15 +3,15 @@ package com.incountry.residence.sdk.tools.keyaccessor.utils;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SecretKeyUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SecretKeyUtils.class);
+    private static final Logger LOG = LogManager.getLogger(SecretKeyUtils.class);
 
     public static final int DEFAULT_VERSION = 0;
 
