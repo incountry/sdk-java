@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.dto.search;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.Arrays;
 
@@ -13,7 +13,7 @@ import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_NOT;
 
 public class FilterNumberParam {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FilterNumberParam.class);
+    private static final Logger LOG = LogManager.getLogger(FilterNumberParam.class);
 
     private static final String ERR_NULL_VALUE = "FilterNumberParam values can't be null";
     private static final String ERR_OPER1_RESTR = String.format("Operator1 in range filter can by only %s or %s", OPER_GT, OPER_GTE);

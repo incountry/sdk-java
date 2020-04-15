@@ -2,8 +2,8 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 
 public class HttpAgentImpl implements HttpAgent {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpAgentImpl.class);
+    private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error";
 
 

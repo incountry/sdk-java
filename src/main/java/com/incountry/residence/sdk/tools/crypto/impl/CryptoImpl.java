@@ -4,8 +4,8 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
@@ -27,7 +27,7 @@ import java.util.Base64;
 import java.util.Map;
 
 public class CryptoImpl implements Crypto {
-    private static final Logger LOG = LoggerFactory.getLogger(CryptoImpl.class);
+    private static final Logger LOG = LogManager.getLogger(CryptoImpl.class);
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
     private static final String MSG_ERROR = "SecretKeyGenerator returns data in which there is no current version of the key";
     private static final String MSG_ERR_DECR = "Decryption error: Illegal decryption version";

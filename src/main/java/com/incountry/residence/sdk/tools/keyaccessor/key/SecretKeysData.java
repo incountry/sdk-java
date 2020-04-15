@@ -1,12 +1,12 @@
 package com.incountry.residence.sdk.tools.keyaccessor.key;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
 
 public class SecretKeysData {
-    private static final Logger LOG = LoggerFactory.getLogger(SecretKeysData.class);
+    private static final Logger LOG = LogManager.getLogger(SecretKeysData.class);
 
     private List<SecretKey> secrets;
     private int currentVersion;
