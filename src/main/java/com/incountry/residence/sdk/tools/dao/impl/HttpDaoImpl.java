@@ -12,8 +12,8 @@ import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class HttpDaoImpl implements Dao {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpDaoImpl.class);
+    private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
 
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
