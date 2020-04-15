@@ -13,16 +13,15 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.List;
 
 /**
  * Basic implementation
  */
 public class StorageImpl implements Storage {
-    private static final Logger LOG = LoggerFactory.getLogger(StorageImpl.class);
+    private static final Logger LOG = LogManager.getLogger(StorageImpl.class);
     //params from OS env
     private static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
     private static final String PARAM_API_KEY = "INC_API_KEY";

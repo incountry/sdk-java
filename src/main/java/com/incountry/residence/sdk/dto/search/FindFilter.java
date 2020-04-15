@@ -1,13 +1,13 @@
 package com.incountry.residence.sdk.dto.search;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Container for filters to searching of stored data by param values
  */
 public class FindFilter {
-    private static final Logger LOG = LoggerFactory.getLogger(FindFilter.class);
+    private static final Logger LOG = LogManager.getLogger(FindFilter.class);
 
     private static final int MAX_LIMIT = 100;
     private static final String MSG_MAX_LIMIT = "Max limit is %l. Use offset to populate more";

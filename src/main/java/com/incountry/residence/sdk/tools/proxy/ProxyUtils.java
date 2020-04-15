@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.tools.proxy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +14,7 @@ public class ProxyUtils {
     }
 
     public static <T, R> R createLoggingProxyForPublicMethods(T object) {
-        Logger log = LoggerFactory.getLogger(object.getClass());
+        Logger log = LogManager.getLogger(object.getClass());
         InvocationHandler handler = (proxy, method, args) -> {
             long currentTime = 0;
             boolean isLogged = Modifier.isPublic(method.getModifiers());

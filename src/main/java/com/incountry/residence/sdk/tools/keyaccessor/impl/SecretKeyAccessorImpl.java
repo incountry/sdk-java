@@ -4,12 +4,12 @@ import com.incountry.residence.sdk.tools.keyaccessor.generator.SecretKeyGenerato
 import com.incountry.residence.sdk.tools.keyaccessor.utils.SecretKeyUtils;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class SecretKeyAccessorImpl implements SecretKeyAccessor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SecretKeyAccessorImpl.class);
+    private static final Logger LOG = LogManager.getLogger(SecretKeyAccessorImpl.class);
     private static final String MSG_ERROR = "SecretKeyGenerator returns invalid type. Type must be String or SecretKeysData";
     private static final String MSG_NULL_GENETATOR = "SecretKeyGenerator is null";
     private static final String MSG_NULL_KEY = "SecretKeyGenerator returns null key";

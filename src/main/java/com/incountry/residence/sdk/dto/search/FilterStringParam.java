@@ -1,14 +1,14 @@
 package com.incountry.residence.sdk.dto.search;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FilterStringParam {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FilterStringParam.class);
+    private static final Logger LOG = LogManager.getLogger(FilterStringParam.class);
     private static final String MSG_NULL_FILTER = "FilterStringParam value can't be null";
     private static final String MSG_NULL_FILTERS = "FilterStringParam values can't be null";
 
