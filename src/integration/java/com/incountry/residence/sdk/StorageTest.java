@@ -6,7 +6,7 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -54,10 +54,10 @@ public class StorageTest {
         SecretKey secretKey = new SecretKey(secret, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
-        SecretKeysData secretKeysData = new SecretKeysData();
-        secretKeysData.setSecrets(secretKeyList);
-        secretKeysData.setCurrentVersion(currentVersion);
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
+        SecretsData secretsData = new SecretsData();
+        secretsData.setSecrets(secretKeyList);
+        secretsData.setCurrentVersion(currentVersion);
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
 
 
         storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),

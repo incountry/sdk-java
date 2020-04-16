@@ -1,47 +1,47 @@
 package com.incountry.residence.sdk.tools.keyaccessor.utils;
 
 import com.incountry.residence.sdk.tools.JsonUtils;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SecretKeyUtils {
+public class SecretsDataUtils {
 
-    private static final Logger LOG = LogManager.getLogger(SecretKeyUtils.class);
+    private static final Logger LOG = LogManager.getLogger(SecretsDataUtils.class);
 
-    private static final String MSG_ERR_NULL_SECRETS = "Secrets in SecretKeysData are null";
+    private static final String MSG_ERR_NULL_SECRETS = "Secrets in SecretData are null";
 
     public static final int DEFAULT_VERSION = 0;
 
-    private SecretKeyUtils() {
+    private SecretsDataUtils() {
     }
 
     /**
-     * Convert string to SecretKeyData object
+     * Convert string to SecretsData object
      *
      * @param secretKeyString simple string or json
-     * @return SecretKeyData object which contain secret keys and there versions
+     * @return SecretsData object which contain secret keys and there versions
      */
-    public static SecretKeysData getSecretKeyDataFromString(String secretKeyString) {
-        SecretKeysData data = JsonUtils.getSecretKeysDataFromJson(secretKeyString);
+    public static SecretsData getSecretsDataFromString(String secretKeyString) {
+        SecretsData data = JsonUtils.getSecretsDataFromJson(secretKeyString);
         if (data != null) {
-            validateSecretKeysData(data);
+            validateSecretsData(data);
             return data;
         }
         SecretKey secretKey = new SecretKey(secretKeyString, DEFAULT_VERSION, false);
         List<SecretKey> secretKeys = new ArrayList<>();
         secretKeys.add(secretKey);
-        SecretKeysData secretKeysData = new SecretKeysData();
-        secretKeysData.setSecrets(secretKeys);
-        secretKeysData.setCurrentVersion(DEFAULT_VERSION);
-        return secretKeysData;
+        SecretsData secretsData = new SecretsData();
+        secretsData.setSecrets(secretKeys);
+        secretsData.setCurrentVersion(DEFAULT_VERSION);
+        return secretsData;
     }
 
-    public static void validateSecretKeysData(SecretKeysData data) {
+    public static void validateSecretsData(SecretsData data) {
         data.validateVersion(data.getCurrentVersion());
         if (data.getSecrets() == null || data.getSecrets().isEmpty()) {
             LOG.error(MSG_ERR_NULL_SECRETS);
