@@ -13,6 +13,8 @@ public class SecretKeyUtils {
 
     private static final Logger LOG = LogManager.getLogger(SecretKeyUtils.class);
 
+    private static final String MSG_ERR_NULL_SECRETS = "Secrets in SecretKeysData are null";
+
     public static final int DEFAULT_VERSION = 0;
 
     private SecretKeyUtils() {
@@ -42,9 +44,8 @@ public class SecretKeyUtils {
     public static void validateSecretKeysData(SecretKeysData data) {
         data.validateVersion(data.getCurrentVersion());
         if (data.getSecrets() == null || data.getSecrets().isEmpty()) {
-            String message = "Secrets in SecretKeysData are null";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
+            LOG.error(MSG_ERR_NULL_SECRETS);
+            throw new IllegalArgumentException(MSG_ERR_NULL_SECRETS);
         }
         data.getSecrets().forEach(one ->
                 SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.getIsKey())
