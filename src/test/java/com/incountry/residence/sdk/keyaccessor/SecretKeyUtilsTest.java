@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class SecretKeyUtilsTest {
 
     @Test
-    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsJson() {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
@@ -44,7 +44,7 @@ public class SecretKeyUtilsTest {
     }
 
     @Test
-    public void testConvertStringToSecretKeyDataWhenSecretKeyStringIsNotJson() {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
@@ -58,14 +58,14 @@ public class SecretKeyUtilsTest {
 
     @Test
     public void testIsJson() {
-        JsonObject jsonWithoutSecretKeyDataFields = new JsonObject();
-        jsonWithoutSecretKeyDataFields.addProperty("body", "test");
-        jsonWithoutSecretKeyDataFields.addProperty("key", "write_key");
-        jsonWithoutSecretKeyDataFields.addProperty("key2", "key2");
-        jsonWithoutSecretKeyDataFields.addProperty("profile_key", "profileKey");
-        jsonWithoutSecretKeyDataFields.addProperty("range_key", 1);
-        jsonWithoutSecretKeyDataFields.addProperty("version", 2);
-        String jsonString = new Gson().toJson(jsonWithoutSecretKeyDataFields);
+        JsonObject jsonWithoutSecretsDataFields = new JsonObject();
+        jsonWithoutSecretsDataFields.addProperty("body", "test");
+        jsonWithoutSecretsDataFields.addProperty("key", "write_key");
+        jsonWithoutSecretsDataFields.addProperty("key2", "key2");
+        jsonWithoutSecretsDataFields.addProperty("profile_key", "profileKey");
+        jsonWithoutSecretsDataFields.addProperty("range_key", 1);
+        jsonWithoutSecretsDataFields.addProperty("version", 2);
+        String jsonString = new Gson().toJson(jsonWithoutSecretsDataFields);
 
         assertNotNull(JsonUtils.getSecretKeysDataFromJson(jsonString));
         assertEquals(0, JsonUtils.getSecretKeysDataFromJson(jsonString).getCurrentVersion());
@@ -78,10 +78,10 @@ public class SecretKeyUtilsTest {
         jsonWithSecret.addProperty("version", "1");
         JsonArray array = new JsonArray();
         array.add(jsonWithSecret);
-        JsonObject jsonWithSecretKeyDataFields = new JsonObject();
-        jsonWithSecretKeyDataFields.addProperty("currentVersion", "1");
-        jsonWithSecretKeyDataFields.add("secrets", array);
-        jsonString = new Gson().toJson(jsonWithSecretKeyDataFields);
+        JsonObject jsonWithSecretsDataFields = new JsonObject();
+        jsonWithSecretsDataFields.addProperty("currentVersion", "1");
+        jsonWithSecretsDataFields.add("secrets", array);
+        jsonString = new Gson().toJson(jsonWithSecretsDataFields);
         SecretsData data = JsonUtils.getSecretKeysDataFromJson(jsonString);
 
         assertNotNull(data);

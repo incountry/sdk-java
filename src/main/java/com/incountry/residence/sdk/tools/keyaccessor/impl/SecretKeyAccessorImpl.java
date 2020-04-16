@@ -11,9 +11,9 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
 
     private static final Logger LOG = LogManager.getLogger(SecretKeyAccessorImpl.class);
 
-    private static final String MSG_ERROR = "SecretKeyGenerator returns invalid type. Type must be String or SecretKeysData";
-    private static final String MSG_NULL_GENETATOR = "SecretKeyGenerator is null";
-    private static final String MSG_NULL_KEY = "SecretKeyGenerator returns null key";
+    private static final String MSG_ERROR = "SecretsDataGenerator returns invalid type. Type must be String or SecretKeysData";
+    private static final String MSG_NULL_GENETATOR = "SecretsDataGenerator is null";
+    private static final String MSG_NULL_KEY = "SecretsDataGenerator returns null key";
 
     private SecretsData secretsData;
 
@@ -43,7 +43,7 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
     }
 
     @Override
-    public SecretsData getKey() {
+    public SecretsData getSecretsData() {
         return secretsData;
     }
 }

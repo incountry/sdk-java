@@ -50,7 +50,7 @@ private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
 }
 ```
 
-2. As an object implementing `SecretKeyGenerator` interface. SecretKeyGenerator's `generate` method should return `SecretKeysData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretKeysData`)
+2. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretKeysData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretKeysData`)
 
 ```
 /* secretsData JSON object */
@@ -67,7 +67,7 @@ private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
 ...
 
 
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <String>() {
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator <String>() {
     @Override
     public String generate() {
         String secretsDataJsonString = dataSource.methodReturningJsonString();
@@ -77,7 +77,7 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKe
         
 ...
 
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator <SecretKeysData>() {
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator <SecretKeysData>() {
     @Override
     public SecretKeysData generate() {
         SecretKey secretKey = new SecretKey();

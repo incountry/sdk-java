@@ -21,10 +21,10 @@ public class SecretKeyUtils {
     }
 
     /**
-     * Convert string to SecretKeyData object
+     * Convert string to SecretsData object
      *
      * @param secretKeyString simple string or json
-     * @return SecretKeyData object which contain secret keys and there versions
+     * @return SecretsData object which contain secret keys and there versions
      */
     public static SecretsData getSecretsDataFromString(String secretKeyString) {
         SecretsData data = JsonUtils.getSecretKeysDataFromJson(secretKeyString);

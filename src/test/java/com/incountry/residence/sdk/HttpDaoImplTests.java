@@ -50,7 +50,7 @@ public class HttpDaoImplTests {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         Crypto crypto;
         if (encrypt) {
-            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), "envId");
         } else {
             crypto = new CryptoImpl("envId");
         }

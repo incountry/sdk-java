@@ -6,7 +6,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 public interface SecretKeyAccessor {
 
-    SecretsData getKey();
+    SecretsData getSecretsData();
 
     static SecretKeyAccessorImpl getAccessor(String secretsDataString) {
         return new SecretKeyAccessorImpl(secretsDataString);

@@ -58,7 +58,7 @@ public class StorageSingleTests {
         secretsData.setSecrets(secretKeyList);
         secretsData.setCurrentVersion(currentVersion);
         secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
-        crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentId);
+        crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), environmentId);
     }
 
     @Test
@@ -158,7 +158,7 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithEncByMultipleSecrets() throws StorageException {
-        Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getKey(), environmentId);
+        Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getSecretsData(), environmentId);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
@@ -188,7 +188,7 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithoutEncWithEncryptedData() throws StorageException {
-        Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getKey(), environmentId);
+        Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getSecretsData(), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
