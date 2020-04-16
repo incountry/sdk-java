@@ -52,8 +52,24 @@ public class BatchRecord {
                 ", limit=" + limit +
                 ", offset=" + offset +
                 ", total=" + total +
-                ", records=" + records +
+                ", records=" + toString(records) +
                 ", errors=" + errors +
                 '}';
+    }
+
+    public static String toString(List<Record> records) {
+        if (records == null || records.isEmpty()) {
+            return "[]";
+        }
+        StringBuilder result = new StringBuilder("[");
+        records.forEach(one -> {
+            if (result.length() > 1) {
+                result.append(", ");
+            }
+            result.append("SECURE[")
+                    .append(one.hashCode())
+                    .append("]");
+        });
+        return result.append("]").toString();
     }
 }

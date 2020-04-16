@@ -17,8 +17,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageTest {
@@ -63,10 +63,9 @@ public class StorageTest {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
 
 
-        storage = new StorageImpl(loadFromEnv(INTEGR_ENV_KEY_ENVID),
+        storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
-                true,
                 secretKeyAccessor);
     }
 

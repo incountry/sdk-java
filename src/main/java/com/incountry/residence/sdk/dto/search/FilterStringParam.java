@@ -1,9 +1,16 @@
 package com.incountry.residence.sdk.dto.search;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class FilterStringParam {
+
+    private static final Logger LOG = LogManager.getLogger(FilterStringParam.class);
+    private static final String MSG_NULL_FILTER = "FilterStringParam value can't be null";
+    private static final String MSG_NULL_FILTERS = "FilterStringParam values can't be null";
 
     private List<String> value;
     private boolean notCondition;
@@ -18,7 +25,8 @@ public class FilterStringParam {
 
     public FilterStringParam(String filterValue, boolean notConditionValue) {
         if (filterValue == null) {
-            throw new IllegalArgumentException("FilterStringParam value can't be null");
+            LOG.error(MSG_NULL_FILTER);
+            throw new IllegalArgumentException(MSG_NULL_FILTER);
         }
         this.value = new ArrayList<>();
         value.add(filterValue);
@@ -27,7 +35,8 @@ public class FilterStringParam {
 
     public FilterStringParam(List<String> values, boolean notConditionValue) {
         if (values == null || values.isEmpty()) {
-            throw new IllegalArgumentException("FilterStringParam values can't be null");
+            LOG.error(MSG_NULL_FILTERS);
+            throw new IllegalArgumentException(MSG_NULL_FILTERS);
         }
         this.value = values;
         this.notCondition = notConditionValue;

@@ -1,9 +1,14 @@
 package com.incountry.residence.sdk.dto.search;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 /**
  * Container for filters to searching of stored data by param values
  */
 public class FindFilter {
+    private static final Logger LOG = LogManager.getLogger(FindFilter.class);
+
     private static final int MAX_LIMIT = 100;
     private static final String MSG_MAX_LIMIT = "Max limit is %l. Use offset to populate more";
     private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
@@ -33,17 +38,21 @@ public class FindFilter {
 
     public void setLimit(int limit) {
         if (limit > MAX_LIMIT) {
-            throw new IllegalArgumentException(String.format(MSG_MAX_LIMIT, MAX_LIMIT));
+            String message = String.format(MSG_MAX_LIMIT, MAX_LIMIT);
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
         }
         if (limit < 1) {
-            throw new IllegalArgumentException(String.format(MSG_NEG_LIMIT));
+            LOG.error(MSG_NEG_LIMIT);
+            throw new IllegalArgumentException(MSG_NEG_LIMIT);
         }
         this.limit = limit;
     }
 
     public void setOffset(int offset) {
         if (offset < 0) {
-            throw new IllegalArgumentException(String.format(MSG_NEG_OFFSET));
+            LOG.error(MSG_NEG_OFFSET);
+            throw new IllegalArgumentException(MSG_NEG_OFFSET);
         }
         this.offset = offset;
     }
