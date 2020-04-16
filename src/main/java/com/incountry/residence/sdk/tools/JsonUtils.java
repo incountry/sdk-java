@@ -292,7 +292,7 @@ public class JsonUtils {
         try {
             result = new Gson().fromJson(string, SecretKeysData.class);
         } catch (JsonSyntaxException e) {
-            if (LOG.isInfoEnabled()) {
+            if (LOG.isWarnEnabled()) {
                 LOG.warn("String is not JSON with {}", SecretKeysData.class.getSimpleName());
             }
         }
