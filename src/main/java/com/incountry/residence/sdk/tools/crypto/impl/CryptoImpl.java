@@ -28,11 +28,17 @@ import java.util.Map;
 
 public class CryptoImpl implements Crypto {
     private static final Logger LOG = LogManager.getLogger(CryptoImpl.class);
+
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
-    private static final String MSG_ERROR = "SecretKeyGenerator returns data in which there is no current version of the key";
-    private static final String MSG_ERR_DECR = "Decryption error: Illegal decryption version";
-    private static Charset charset = Charset.defaultCharset();
+    private static final String MSG_ERR_VERSION = "Secret not found for version ";
+    private static final String MSG_ERR_DECRYPTION = "Decryption error: Illegal decryption version";
+    private static final String MSG_ERR_GEN_SECRET = "Secret generation exception";
+    private static final String MSG_ERR_NO_ALGORITHM = "Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration";
+    private static final String MSG_ERR_ENCRYPTION = "Data encryption error";
+    private static final String MSG_ERR_ALG_EXCEPTION = "AES/GCM/NoPadding algorithm exception";
+
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
+    private static final Charset CHARSET = Charset.defaultCharset();
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
@@ -41,7 +47,6 @@ public class CryptoImpl implements Crypto {
     private static final String VERSION = "2";
 
     public static final String PT_ENC_VERSION = "pt";
-
 
     private SecretKeysData secretKeysData;
     private String envId;
@@ -63,11 +68,11 @@ public class CryptoImpl implements Crypto {
 
     public Map.Entry<String, Integer> encrypt(String plainText) throws StorageCryptoException {
         if (isUsingPTEncryption) {
-            byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(charset));
-            return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, charset), null);
+            byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(CHARSET));
+            return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, CHARSET), null);
         }
 
-        byte[] clean = plainText.getBytes(charset);
+        byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
         SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
         byte[] key = getKey(salt, secretKeyObj);
@@ -76,28 +81,27 @@ public class CryptoImpl implements Crypto {
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AUTH_TAG_LENGTH * 8, iv);
 
-        byte[] encrypted;
+        byte[] encrypted = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
             encrypted = cipher.doFinal(clean);
         } catch (GeneralSecurityException e) {
-            throw new StorageCryptoException(ENCRYPTION_ALGORITHM + " algorithm exception", e);
+            throwStorageCryptoException(MSG_ERR_ALG_EXCEPTION, e);
         }
 
-        byte[] resultByteArray;
+        byte[] resultByteArray = null;
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(salt);
             outputStream.write(iv);
             outputStream.write(encrypted);
             resultByteArray = outputStream.toByteArray();
         } catch (IOException e) {
-            throw new StorageCryptoException("Data encryption error", e);
+            throwStorageCryptoException(MSG_ERR_ENCRYPTION, e);
         }
 
         byte[] encoded = Base64.getEncoder().encode(resultByteArray);
-
-        return new AbstractMap.SimpleEntry<>(VERSION + ":" + new String(encoded, charset), secretKeyObj.getVersion());
+        return new AbstractMap.SimpleEntry<>(VERSION + ":" + new String(encoded, CHARSET), secretKeyObj.getVersion());
     }
 
     private byte[] getKey(byte[] salt, SecretKey secretKeyObj) throws StorageCryptoException {
@@ -116,7 +120,7 @@ public class CryptoImpl implements Crypto {
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
 
-        byte[] decryptedText;
+        byte[] decryptedText = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
             byte[] key = getKey(salt, getSecret(decryptKeyVersion));
@@ -127,10 +131,9 @@ public class CryptoImpl implements Crypto {
             cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
             decryptedText = cipher.doFinal(encrypted);
         } catch (GeneralSecurityException e) {
-            throw new StorageCryptoException("Data encryption error", e);
+            throwStorageCryptoException(MSG_ERR_ENCRYPTION, e);
         }
-
-        return new String(decryptedText, charset);
+        return new String(decryptedText, CHARSET);
     }
 
     private SecretKey getSecret(Integer version) {
@@ -142,8 +145,9 @@ public class CryptoImpl implements Crypto {
             }
         }
         if (secret == null) {
-            LOG.error(MSG_ERROR);
-            throw new IllegalArgumentException(MSG_ERROR);
+            String message = MSG_ERR_VERSION + version;
+            LOG.error(message);
+            throw new IllegalArgumentException(message);
         }
         return secret;
     }
@@ -170,8 +174,7 @@ public class CryptoImpl implements Crypto {
         }
         if (isUsingPTEncryption) {
             String message = MSG_ERR_NO_SECRET + cipherText;
-            LOG.error(message);
-            throw new StorageCryptoException(message);
+            throwStorageCryptoException(message, null);
         }
         switch (parts[0]) {
             case "1":
@@ -179,14 +182,20 @@ public class CryptoImpl implements Crypto {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                throwAndLogException(MSG_ERR_DECR);
+                throwStorageCryptoException(MSG_ERR_DECRYPTION, null);
         }
         return null;
     }
 
-    private String throwAndLogException(String message) throws StorageCryptoException {
-        LOG.error(message);
-        throw new StorageCryptoException(message);
+    private static String throwStorageCryptoException(String message, Exception ex) throws StorageCryptoException {
+        if (ex == null) {
+            LOG.error(message);
+            throw new StorageCryptoException(message);
+        } else {
+            LOG.error(message, ex);
+            throw new StorageCryptoException(message, ex);
+        }
+
     }
 
     private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
@@ -201,22 +210,21 @@ public class CryptoImpl implements Crypto {
 
     private String decryptVPT(String cipherText) {
         byte[] ptBytes = Base64.getDecoder().decode(cipherText);
-        return new String(ptBytes, charset);
+        return new String(ptBytes, CHARSET);
     }
 
     private static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
         char[] chars = password.toCharArray();
         PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
-        byte[] strongPasswordHash;
+        byte[] strongPasswordHash = null;
         try {
             SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
             strongPasswordHash = skf.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException e) {
-            throw new StorageCryptoException("Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration", e);
+            throwStorageCryptoException(MSG_ERR_NO_ALGORITHM, e);
         } catch (InvalidKeySpecException e) {
-            throw new StorageCryptoException("Secret generation exception", e);
+            throwStorageCryptoException(MSG_ERR_GEN_SECRET, e);
         }
-
         return strongPasswordHash;
     }
 
