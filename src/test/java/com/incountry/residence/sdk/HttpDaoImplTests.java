@@ -127,7 +127,7 @@ public class HttpDaoImplTests {
         if (rangeKey != null) {
             assertEquals(rangeKey, receivedRecord.getRangeKey());
         }
-
+        checkEmptyHttpFields(received, record);
     }
 
     @ParameterizedTest
@@ -198,22 +198,34 @@ public class HttpDaoImplTests {
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
 
         List<Record> records = new ArrayList<>();
-        records.add(new Record(key, body, profileKey, rangeKey, key2, key3));
+        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+        records.add(record);
         storage.batchWrite(country, records);
 
-        String encrypted = agent.getCallBody();
+        String encryptedHttpBody = agent.getCallBody();
         Crypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
-        JsonArray responseList = new Gson().fromJson(encrypted, JsonObject.class).getAsJsonArray("records");
-        for (JsonElement response : responseList) {
-            String keyFromResponse = ((JsonObject) response).get("key").getAsString();
-            String encryptedBody = ((JsonObject) response).get("body").getAsString();
+        JsonArray responseList = new Gson().fromJson(encryptedHttpBody, JsonObject.class).getAsJsonArray("records");
+        for (JsonElement oneJsonRecord : responseList) {
+            String keyFromResponse = ((JsonObject) oneJsonRecord).get("key").getAsString();
+            String encryptedBody = ((JsonObject) oneJsonRecord).get("body").getAsString();
             String actualBodyStr = crypto.decrypt(encryptedBody, 0);
             JsonObject bodyJsonObj = (JsonObject) JsonParser.parseString(actualBodyStr);
             String actualBody = body != null ? bodyJsonObj.get("payload").getAsString() : null;
-
             assertEquals(keyHash, keyFromResponse);
             assertEquals(body, actualBody);
+            checkEmptyHttpFields(oneJsonRecord.toString(), record);
         }
+        JsonObject batchJson=new Gson().fromJson(encryptedHttpBody, JsonObject.class);
+    }
+
+    private void checkEmptyHttpFields(String received, Record record) {
+        JsonObject jsonObject = new Gson().fromJson(received, JsonObject.class);
+        assertEquals(record.getKey() == null, jsonObject.get("key") == null);
+        assertEquals(record.getKey2() == null, jsonObject.get("key2") == null);
+        assertEquals(record.getKey3() == null, jsonObject.get("key3") == null);
+        assertEquals(record.getRangeKey() == null, jsonObject.get("range_key") == null);
+        assertEquals(record.getProfileKey() == null, jsonObject.get("profile_key") == null);
+        //key1 & body aren't checked because it's always not null
     }
 }
