@@ -16,7 +16,7 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -287,13 +287,13 @@ public class JsonUtils {
         return array;
     }
 
-    public static SecretKeysData getSecretKeysDataFromJson(String string) {
-        SecretKeysData result = null;
+    public static SecretsData getSecretKeysDataFromJson(String string) {
+        SecretsData result = null;
         try {
-            result = new Gson().fromJson(string, SecretKeysData.class);
+            result = new Gson().fromJson(string, SecretsData.class);
         } catch (JsonSyntaxException e) {
             if (LOG.isWarnEnabled()) {
-                LOG.warn("String is not JSON with {}", SecretKeysData.class.getSimpleName());
+                LOG.warn("Provided SecretsData string is not a JSON");
             }
         }
         return result;

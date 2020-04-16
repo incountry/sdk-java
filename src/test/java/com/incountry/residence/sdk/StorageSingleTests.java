@@ -12,8 +12,8 @@ import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -54,10 +54,10 @@ public class StorageSingleTests {
         SecretKey secretKey = new SecretKey(secret, version, true);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
-        SecretKeysData secretKeysData = new SecretKeysData();
-        secretKeysData.setSecrets(secretKeyList);
-        secretKeysData.setCurrentVersion(currentVersion);
-        secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretKeysData);
+        SecretsData secretsData = new SecretsData();
+        secretsData.setSecrets(secretKeyList);
+        secretsData.setCurrentVersion(currentVersion);
+        secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
         crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentId);
     }
 
@@ -249,7 +249,7 @@ public class StorageSingleTests {
     @Test
     public void testInitErrorOnInsufficientArgs() {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() ->
-                new SecretKeysData(Arrays.asList(new SecretKey("secret", 1, false)), 1)
+                new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1)
         );
 
         assertThrows(IllegalArgumentException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));

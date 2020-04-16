@@ -1,9 +1,9 @@
 package com.incountry.residence.sdk.tools.keyaccessor.impl;
 
-import com.incountry.residence.sdk.tools.keyaccessor.generator.SecretKeyGenerator;
+import com.incountry.residence.sdk.tools.keyaccessor.generator.SecretsDataGenerator;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.utils.SecretKeyUtils;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -15,27 +15,27 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
     private static final String MSG_NULL_GENETATOR = "SecretKeyGenerator is null";
     private static final String MSG_NULL_KEY = "SecretKeyGenerator returns null key";
 
-    private SecretKeysData secretKeysData;
+    private SecretsData secretsData;
 
     public SecretKeyAccessorImpl(String secret) {
-        secretKeysData = SecretKeyUtils.getSecretKeyDataFromString(secret);
+        secretsData = SecretKeyUtils.getSecretsDataFromString(secret);
     }
 
-    public SecretKeyAccessorImpl(SecretKeyGenerator secretKeyGenerator) {
-        if (secretKeyGenerator == null) {
+    public SecretKeyAccessorImpl(SecretsDataGenerator secretsDataGenerator) {
+        if (secretsDataGenerator == null) {
             LOG.error(MSG_NULL_GENETATOR);
             throw new IllegalArgumentException(MSG_NULL_GENETATOR);
         }
-        Object secretKey = secretKeyGenerator.generate();
+        Object secretKey = secretsDataGenerator.generate();
         if (secretKey == null) {
             LOG.error(MSG_NULL_KEY);
             throw new IllegalArgumentException(MSG_NULL_KEY);
         } else if (secretKey instanceof String) {
-            secretKeysData = SecretKeyUtils.getSecretKeyDataFromString((String) secretKey);
-        } else if (secretKey instanceof SecretKeysData) {
-            SecretKeysData temp = (SecretKeysData) secretKey;
+            secretsData = SecretKeyUtils.getSecretsDataFromString((String) secretKey);
+        } else if (secretKey instanceof SecretsData) {
+            SecretsData temp = (SecretsData) secretKey;
             SecretKeyUtils.validateSecretKeysData(temp);
-            secretKeysData = temp;
+            secretsData = temp;
         } else {
             LOG.error(MSG_ERROR);
             throw new IllegalArgumentException(MSG_ERROR);
@@ -43,7 +43,7 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
     }
 
     @Override
-    public SecretKeysData getKey() {
-        return secretKeysData;
+    public SecretsData getKey() {
+        return secretsData;
     }
 }

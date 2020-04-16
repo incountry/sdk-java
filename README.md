@@ -88,10 +88,10 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKe
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
 
-        SecretKeysData secretKeysData = new SecretKeysData();
-        secretKeysData.setSecrets(secretKeyList);
-        secretKeysData.setCurrentVersion(0);
-        return secretKeysData;
+        SecretKeysData secretsData = new SecretKeysData();
+        secretsData.setSecrets(secretKeyList);
+        secretsData.setCurrentVersion(0);
+        return secretsData;
     }
 }
         

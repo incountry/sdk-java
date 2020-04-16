@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.tools.crypto.impl;
 
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import org.apache.logging.log4j.Logger;
@@ -48,12 +48,12 @@ public class CryptoImpl implements Crypto {
 
     public static final String PT_ENC_VERSION = "pt";
 
-    private SecretKeysData secretKeysData;
+    private SecretsData secretsData;
     private String envId;
     private boolean isUsingPTEncryption = false;
 
-    public CryptoImpl(SecretKeysData secret) {
-        this.secretKeysData = secret;
+    public CryptoImpl(SecretsData secret) {
+        this.secretsData = secret;
     }
 
     public CryptoImpl(String envId) {
@@ -61,8 +61,8 @@ public class CryptoImpl implements Crypto {
         this.isUsingPTEncryption = true;
     }
 
-    public CryptoImpl(SecretKeysData secret, String envId) {
-        this.secretKeysData = secret;
+    public CryptoImpl(SecretsData secret, String envId) {
+        this.secretsData = secret;
         this.envId = envId;
     }
 
@@ -74,7 +74,7 @@ public class CryptoImpl implements Crypto {
 
         byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
-        SecretKey secretKeyObj = getSecret(secretKeysData.getCurrentVersion());
+        SecretKey secretKeyObj = getSecret(secretsData.getCurrentVersion());
         byte[] key = getKey(salt, secretKeyObj);
         byte[] iv = generateRandomBytes(IV_LENGTH);
 
@@ -138,7 +138,7 @@ public class CryptoImpl implements Crypto {
 
     private SecretKey getSecret(Integer version) {
         SecretKey secret = null;
-        for (SecretKey item : secretKeysData.getSecrets()) {
+        for (SecretKey item : secretsData.getSecrets()) {
             if (item.getVersion() == version) {
                 secret = item;
                 break;
@@ -153,7 +153,7 @@ public class CryptoImpl implements Crypto {
     }
 
     public int getCurrentSecretVersion() {
-        return secretKeysData.getCurrentVersion();
+        return secretsData.getCurrentVersion();
     }
 
     public String createKeyHash(String key) {
