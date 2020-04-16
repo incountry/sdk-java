@@ -26,14 +26,14 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
             LOG.error(MSG_NULL_GENETATOR);
             throw new IllegalArgumentException(MSG_NULL_GENETATOR);
         }
-        Object secretKey = secretsDataGenerator.generate();
-        if (secretKey == null) {
+        Object someSecret = secretsDataGenerator.generate();
+        if (someSecret == null) {
             LOG.error(MSG_NULL_KEY);
             throw new IllegalArgumentException(MSG_NULL_KEY);
-        } else if (secretKey instanceof String) {
-            secretsData = SecretsDataUtils.getSecretsDataFromString((String) secretKey);
-        } else if (secretKey instanceof SecretsData) {
-            SecretsData temp = (SecretsData) secretKey;
+        } else if (someSecret instanceof String) {
+            secretsData = SecretsDataUtils.getSecretsDataFromString((String) someSecret);
+        } else if (someSecret instanceof SecretsData) {
+            SecretsData temp = (SecretsData) someSecret;
             SecretsDataUtils.validateSecretsData(temp);
             secretsData = temp;
         } else {
