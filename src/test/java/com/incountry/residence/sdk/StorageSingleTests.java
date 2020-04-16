@@ -79,6 +79,12 @@ public class StorageSingleTests {
     }
 
     @Test
+    public void migrateNegativeTest() throws StorageException {
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")));
+        assertThrows(IllegalArgumentException.class, () -> storage.migrate("us", 0));
+    }
+
+    @Test
     public void findTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)

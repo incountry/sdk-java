@@ -32,7 +32,6 @@ public class JsonUtils {
 
     private static final Logger LOG = LogManager.getLogger(JsonUtils.class);
 
-    private static final String P_COUNTRY = "country";
     private static final String P_BODY = "body";
     private static final String P_KEY = "key";
     private static final String P_KEY_2 = "key2";
@@ -70,7 +69,6 @@ public class JsonUtils {
     public static JsonObject toJson(Record record, Crypto crypto) throws StorageCryptoException {
         Gson gson = getGson4Records();
         JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
-        jsonObject.remove(P_COUNTRY);
         if (crypto == null) {
             return jsonObject;
         }

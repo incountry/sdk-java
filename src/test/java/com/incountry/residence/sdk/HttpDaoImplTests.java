@@ -216,7 +216,6 @@ public class HttpDaoImplTests {
             assertEquals(body, actualBody);
             checkEmptyHttpFields(oneJsonRecord.toString(), record);
         }
-        JsonObject batchJson=new Gson().fromJson(encryptedHttpBody, JsonObject.class);
     }
 
     private void checkEmptyHttpFields(String received, Record record) {

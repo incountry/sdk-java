@@ -15,6 +15,7 @@ import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+
 import java.util.List;
 
 /**
@@ -36,6 +37,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERROR_NULL_FILTERS = "Filters cannot be null";
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_NULL_RECORD = "Can't write null record";
+    private static final String MSG_MIGR_ERROR_LIMIT = "Limit can't be < 1";
     private static final String LOG_SECURE = "[SECURE]";
     private static final String LOG_SECURE2 = "[SECURE[";
 
@@ -168,6 +170,10 @@ public class StorageImpl implements Storage {
         if (!isEncrypted) {
             LOG.error(MSG_MIGR_NOT_SUPPORT);
             throw new StorageException(MSG_MIGR_NOT_SUPPORT);
+        }
+        if (limit < 1) {
+            LOG.error(MSG_MIGR_ERROR_LIMIT);
+            throw new IllegalArgumentException(MSG_MIGR_ERROR_LIMIT);
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
