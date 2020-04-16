@@ -47,7 +47,7 @@ public class SecretsData {
 
     @Override
     public String toString() {
-        return "SecretKeysData{" +
+        return "SecretsData{" +
                 "secrets=" + secrets +
                 ", currentVersion=" + currentVersion +
                 '}';

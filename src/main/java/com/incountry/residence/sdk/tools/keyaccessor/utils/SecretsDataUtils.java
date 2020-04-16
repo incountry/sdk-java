@@ -9,15 +9,15 @@ import org.apache.logging.log4j.LogManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SecretKeyUtils {
+public class SecretsDataUtils {
 
-    private static final Logger LOG = LogManager.getLogger(SecretKeyUtils.class);
+    private static final Logger LOG = LogManager.getLogger(SecretsDataUtils.class);
 
     private static final String MSG_ERR_NULL_SECRETS = "Secrets in SecretData are null";
 
     public static final int DEFAULT_VERSION = 0;
 
-    private SecretKeyUtils() {
+    private SecretsDataUtils() {
     }
 
     /**
@@ -27,9 +27,9 @@ public class SecretKeyUtils {
      * @return SecretsData object which contain secret keys and there versions
      */
     public static SecretsData getSecretsDataFromString(String secretKeyString) {
-        SecretsData data = JsonUtils.getSecretKeysDataFromJson(secretKeyString);
+        SecretsData data = JsonUtils.getSecretsDataFromJson(secretKeyString);
         if (data != null) {
-            validateSecretKeysData(data);
+            validateSecretsData(data);
             return data;
         }
         SecretKey secretKey = new SecretKey(secretKeyString, DEFAULT_VERSION, false);
@@ -41,7 +41,7 @@ public class SecretKeyUtils {
         return secretsData;
     }
 
-    public static void validateSecretKeysData(SecretsData data) {
+    public static void validateSecretsData(SecretsData data) {
         data.validateVersion(data.getCurrentVersion());
         if (data.getSecrets() == null || data.getSecrets().isEmpty()) {
             LOG.error(MSG_ERR_NULL_SECRETS);

@@ -287,7 +287,7 @@ public class JsonUtils {
         return array;
     }
 
-    public static SecretsData getSecretKeysDataFromJson(String string) {
+    public static SecretsData getSecretsDataFromJson(String string) {
         SecretsData result = null;
         try {
             result = new Gson().fromJson(string, SecretsData.class);

@@ -50,7 +50,7 @@ private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
 }
 ```
 
-2. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretKeysData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretKeysData`)
+2. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretsData`)
 
 ```
 /* secretsData JSON object */
@@ -77,9 +77,9 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsD
         
 ...
 
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator <SecretKeysData>() {
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator <SecretsData>() {
     @Override
-    public SecretKeysData generate() {
+    public SecretsData generate() {
         SecretKey secretKey = new SecretKey();
         secretKey.setSecret("your_secret_goes_here");
         secretKey.setVersion(0);
@@ -88,7 +88,7 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsD
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
 
-        SecretKeysData secretsData = new SecretKeysData();
+        SecretsData secretsData = new SecretsData();
         secretsData.setSecrets(secretKeyList);
         secretsData.setCurrentVersion(0);
         return secretsData;
@@ -97,15 +97,15 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsD
         
 ```
 
-Both JSON string and `SecretKeysData` allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
-Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or `SecretKeysData`.
+Both JSON string and `SecretsData` allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
+Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or `SecretsData`.
 
 This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
 SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret.
 For details please see migrate method.
 
-SDK allows you to use custom encryption keys, instead of secrets. To do so, use `isKey` param in secretsData JSON object or in SecretKey object which is a part of `SecretKeysData`.
+SDK allows you to use custom encryption keys, instead of secrets. To do so, use `isKey` param in secretsData JSON object or in SecretKey object which is a part of `SecretsData`.
 Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
@@ -142,7 +142,7 @@ public BatchRecord batchWrite(String country, List<Record> records) throws Stora
 
 ## Data Migration and Key Rotation support
 
-Using `SecretKeyAccessor` that provides `SecretKeysData` object enables key rotation and data migration support.
+Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
 
 SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException` 
 method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
