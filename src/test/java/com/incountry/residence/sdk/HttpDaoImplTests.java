@@ -13,8 +13,8 @@ import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -50,7 +50,7 @@ public class HttpDaoImplTests {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         Crypto crypto;
         if (encrypt) {
-            crypto = new CryptoImpl(secretKeyAccessor.getKey(), "envId");
+            crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), "envId");
         } else {
             crypto = new CryptoImpl("envId");
         }
@@ -59,17 +59,14 @@ public class HttpDaoImplTests {
 
 
     private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) {
-        SecretKey secretKey = new SecretKey();
-        secretKey.setSecret(secret);
-        secretKey.setVersion(version);
-        secretKey.setIsKey(isKey);
+        SecretKey secretKey = new SecretKey(secret, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
-        SecretKeysData secretKeysData = new SecretKeysData();
-        secretKeysData.setSecrets(secretKeyList);
-        secretKeysData.setCurrentVersion(currentVersion);
+        SecretsData secretsData = new SecretsData();
+        secretsData.setSecrets(secretKeyList);
+        secretsData.setCurrentVersion(currentVersion);
 
-        return SecretKeyAccessor.getAccessor(() -> secretKeysData);
+        return SecretKeyAccessor.getAccessor(() -> secretsData);
     }
 
     private static Stream<Arguments> recordArgs() {

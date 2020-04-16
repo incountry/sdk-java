@@ -6,15 +6,20 @@ import org.apache.logging.log4j.LogManager;
 public class SecretKey {
     private static final Logger LOG = LogManager.getLogger(SecretKey.class);
 
+    private static final int KEY_LENGTH = 32;
+
+    private static final String MSG_ERR_VERSION = "Version must be >= 0";
+    private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
+    private static final String MSG_ERR_KEY_LEN = "Wrong default key length. Should be "
+            + KEY_LENGTH + " characters ‘utf8’ encoded string";
+
     private String secret;
     private int version;
-    private Boolean isKey;
+    private boolean isKey;
 
-    public SecretKey() {
-    }
-
-    public SecretKey(String secret, int version, Boolean isKey) {
-        setVersion(version);
+    public SecretKey(String secret, int version, boolean isKey) {
+        validateSecretKey(secret, version, isKey);
+        this.version = version;
         this.secret = secret;
         this.isKey = isKey;
     }
@@ -23,28 +28,26 @@ public class SecretKey {
         return secret;
     }
 
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
     public int getVersion() {
         return version;
-    }
-
-    public void setVersion(int version) {
-        if (version < 0) {
-            String message = "Version must be >= 0";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
-        }
-        this.version = version;
     }
 
     public Boolean getIsKey() {
         return isKey;
     }
 
-    public void setIsKey(Boolean key) {
-        isKey = key;
+    public static void validateSecretKey(String secret, int version, boolean isKey) {
+        if (version < 0) {
+            LOG.error(MSG_ERR_VERSION);
+            throw new IllegalArgumentException(MSG_ERR_VERSION);
+        }
+        if (secret == null || secret.isEmpty()) {
+            LOG.error(MSG_ERR_NULL_SECRET);
+            throw new IllegalArgumentException(MSG_ERR_NULL_SECRET);
+        }
+        if (isKey && secret.length() != KEY_LENGTH) {
+            LOG.error(MSG_ERR_KEY_LEN);
+            throw new IllegalArgumentException(MSG_ERR_KEY_LEN);
+        }
     }
 }

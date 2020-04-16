@@ -5,14 +5,14 @@ import com.incountry.Storage;
 import com.incountry.exceptions.FindOptionsException;
 import com.incountry.exceptions.StorageException;
 import com.incountry.keyaccessor.SecretKeyAccessor;
-import com.incountry.keyaccessor.generator.SecretKeyGenerator;
+import com.incountry.keyaccessor.generator.SecretsDataGenerator;
 
 import java.security.GeneralSecurityException;
 
 public class FullMigration {
 
     public void startMigration() throws StorageException, GeneralSecurityException, FindOptionsException {
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretKeyGenerator<String>() {
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator<String>() {
             @Override
             public String generate() {
                 return  "{\n" +

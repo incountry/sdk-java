@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterNumberParam;
@@ -15,6 +16,9 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -25,6 +29,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class JsonUtils {
+
+    private static final Logger LOG = LogManager.getLogger(JsonUtils.class);
+
     private static final String P_COUNTRY = "country";
     private static final String P_BODY = "body";
     private static final String P_KEY = "key";
@@ -280,6 +287,18 @@ public class JsonUtils {
         return array;
     }
 
+    public static SecretsData getSecretsDataFromJson(String string) {
+        SecretsData result = null;
+        try {
+            result = new Gson().fromJson(string, SecretsData.class);
+        } catch (JsonSyntaxException e) {
+            if (LOG.isWarnEnabled()) {
+                LOG.warn("Provided SecretsData string is not a JSON");
+            }
+        }
+        return result;
+    }
+
     /**
      * inner class for cosy encryption and serialization of {@link Record} instances
      */
@@ -356,17 +375,17 @@ public class JsonUtils {
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
+        public boolean equals(Object object) {
+            if (this == object) {
                 return true;
             }
-            if (obj == null || getClass() != obj.getClass()) {
+            if (object == null || getClass() != object.getClass()) {
                 return false;
             }
-            if (!super.equals(obj)) {
+            if (!super.equals(object)) {
                 return false;
             }
-            EncryptedRecord that = (EncryptedRecord) obj;
+            EncryptedRecord that = (EncryptedRecord) object;
             return Objects.equals(version, that.version);
         }
 

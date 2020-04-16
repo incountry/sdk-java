@@ -1,5 +1,5 @@
 package com.incountry.residence.sdk.tools.keyaccessor.generator;
 
-public interface SecretKeyGenerator {
+public interface SecretsDataGenerator {
     Object generate();
 }

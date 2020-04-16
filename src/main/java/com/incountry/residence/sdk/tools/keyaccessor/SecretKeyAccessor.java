@@ -1,18 +1,18 @@
 package com.incountry.residence.sdk.tools.keyaccessor;
 
-import com.incountry.residence.sdk.tools.keyaccessor.generator.SecretKeyGenerator;
+import com.incountry.residence.sdk.tools.keyaccessor.generator.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKeysData;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 public interface SecretKeyAccessor {
 
-    SecretKeysData getKey();
+    SecretsData getSecretsData();
 
-    static SecretKeyAccessorImpl getAccessor(String secretKeysData) {
-        return new SecretKeyAccessorImpl(secretKeysData);
+    static SecretKeyAccessorImpl getAccessor(String secretsDataString) {
+        return new SecretKeyAccessorImpl(secretsDataString);
     }
 
-    static SecretKeyAccessorImpl getAccessor(SecretKeyGenerator secretKeyGenerator) {
-        return new SecretKeyAccessorImpl(secretKeyGenerator);
+    static SecretKeyAccessorImpl getAccessor(SecretsDataGenerator secretsDataGenerator) {
+        return new SecretKeyAccessorImpl(secretsDataGenerator);
     }
 }

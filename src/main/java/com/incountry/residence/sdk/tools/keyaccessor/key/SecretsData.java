@@ -5,16 +5,18 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
 
-public class SecretKeysData {
-    private static final Logger LOG = LogManager.getLogger(SecretKeysData.class);
+public class SecretsData {
+    private static final Logger LOG = LogManager.getLogger(SecretsData.class);
+
+    private static final String MSG_ERR_VERSION = "Current version must be >= 0";
 
     private List<SecretKey> secrets;
     private int currentVersion;
 
-    public SecretKeysData() {
+    public SecretsData() {
     }
 
-    public SecretKeysData(List<SecretKey> secrets, int currentVersion) {
+    public SecretsData(List<SecretKey> secrets, int currentVersion) {
         setCurrentVersion(currentVersion);
         this.secrets = secrets;
     }
@@ -32,17 +34,20 @@ public class SecretKeysData {
     }
 
     public void setCurrentVersion(int currentVersion) {
-        if (currentVersion < 0) {
-            String message = "Current version must be >= 0";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
-        }
+        validateVersion(currentVersion);
         this.currentVersion = currentVersion;
+    }
+
+    public void validateVersion(int currentVersion) {
+        if (currentVersion < 0) {
+            LOG.error(MSG_ERR_VERSION);
+            throw new IllegalArgumentException(MSG_ERR_VERSION);
+        }
     }
 
     @Override
     public String toString() {
-        return "SecretKeysData{" +
+        return "SecretsData{" +
                 "secrets=" + secrets +
                 ", currentVersion=" + currentVersion +
                 '}';
