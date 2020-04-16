@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 public class SecretKeyAccessorImpl implements SecretKeyAccessor {
 
     private static final Logger LOG = LogManager.getLogger(SecretKeyAccessorImpl.class);
+
     private static final String MSG_ERROR = "SecretKeyGenerator returns invalid type. Type must be String or SecretKeysData";
     private static final String MSG_NULL_GENETATOR = "SecretKeyGenerator is null";
     private static final String MSG_NULL_KEY = "SecretKeyGenerator returns null key";
