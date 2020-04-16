@@ -30,7 +30,7 @@ public class CryptoImpl implements Crypto {
     private static final Logger LOG = LogManager.getLogger(CryptoImpl.class);
 
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
-    private static final String MSG_ERR_VERSION = "SecretKeyGenerator has no secret with requested version ";
+    private static final String MSG_ERR_VERSION = "Secret not found for version ";
     private static final String MSG_ERR_DECRYPTION = "Decryption error: Illegal decryption version";
     private static final String MSG_ERR_GEN_SECRET = "Secret generation exception";
     private static final String MSG_ERR_NO_ALGORITHM = "Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration";
