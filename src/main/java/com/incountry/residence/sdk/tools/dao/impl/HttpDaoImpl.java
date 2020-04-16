@@ -57,11 +57,11 @@ public class HttpDaoImpl implements Dao {
         this.endPoint = endPoint;
         this.agent = agent;
         if (defaultEndpoint) {
-            loadCounties();
+            loadCountries();
         }
     }
 
-    private void loadCounties() throws StorageServerException {
+    private void loadCountries() throws StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Start loading country list");
         }
@@ -76,7 +76,7 @@ public class HttpDaoImpl implements Dao {
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded county list: {}", popMap.keySet());
+            LOG.debug("Loaded country list: {}", popMap.keySet());
         }
     }
 
@@ -89,12 +89,12 @@ public class HttpDaoImpl implements Dao {
             POP pop;
             synchronized (popMap) {
                 if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
-                    loadCounties();
+                    loadCountries();
                 }
                 pop = popMap.get(country.toLowerCase());
             }
             if (pop == null) {
-                loadCounties();
+                loadCountries();
                 synchronized (popMap) {
                     pop = popMap.get(country.toLowerCase());
                 }

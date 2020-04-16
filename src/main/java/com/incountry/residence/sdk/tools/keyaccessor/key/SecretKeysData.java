@@ -8,6 +8,8 @@ import java.util.List;
 public class SecretKeysData {
     private static final Logger LOG = LogManager.getLogger(SecretKeysData.class);
 
+    private static final String MSG_ERR_VERSION = "Current version must be >= 0";
+
     private List<SecretKey> secrets;
     private int currentVersion;
 
@@ -38,9 +40,8 @@ public class SecretKeysData {
 
     public void validateVersion(int currentVersion) {
         if (currentVersion < 0) {
-            String message = "Current version must be >= 0";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
+            LOG.error(MSG_ERR_VERSION);
+            throw new IllegalArgumentException(MSG_ERR_VERSION);
         }
     }
 

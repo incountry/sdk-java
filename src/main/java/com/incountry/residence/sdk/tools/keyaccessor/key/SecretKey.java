@@ -5,7 +5,13 @@ import org.apache.logging.log4j.LogManager;
 
 public class SecretKey {
     private static final Logger LOG = LogManager.getLogger(SecretKey.class);
+
     private static final int KEY_LENGTH = 32;
+
+    private static final String MSG_ERR_VERSION = "Version must be >= 0";
+    private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
+    private static final String MSG_ERR_KEY_LEN = "Wrong default key length. Should be "
+            + KEY_LENGTH + " characters ‘utf8’ encoded string";
 
     private String secret;
     private int version;
@@ -32,19 +38,16 @@ public class SecretKey {
 
     public static void validateSecretKey(String secret, int version, boolean isKey) {
         if (version < 0) {
-            String message = "Version must be >= 0";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
+            LOG.error(MSG_ERR_VERSION);
+            throw new IllegalArgumentException(MSG_ERR_VERSION);
         }
         if (secret == null || secret.isEmpty()) {
-            String message = "Secret can't be null";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
+            LOG.error(MSG_ERR_NULL_SECRET);
+            throw new IllegalArgumentException(MSG_ERR_NULL_SECRET);
         }
         if (isKey && secret.length() != KEY_LENGTH) {
-            String message = "Wrong default key length. Should be " + KEY_LENGTH + " characters ‘utf8’ encoded string";
-            LOG.error(message);
-            throw new IllegalArgumentException(message);
+            LOG.error(MSG_ERR_KEY_LEN);
+            throw new IllegalArgumentException(MSG_ERR_KEY_LEN);
         }
     }
 }
