@@ -54,10 +54,10 @@ public class HttpDaoImpl implements Dao {
         }
         this.endPoint = endPoint;
         this.agent = agent;
-        loadCounties();
+        loadCountries();
     }
 
-    private void loadCounties() throws StorageServerException {
+    private void loadCountries() throws StorageServerException {
         String content;
         content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
         popMap = new HashMap<>();
@@ -65,7 +65,7 @@ public class HttpDaoImpl implements Dao {
             popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Loaded county list: {}", popMap.keySet());
+            LOG.debug("Loaded country list: {}", popMap.keySet());
         }
     }
 
