@@ -280,4 +280,4 @@ InCountry Java SDK throws following Exceptions:
 `StorageCryptoException` - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
 `StorageException` - general exception. Inherited by all other exceptions
 
-Note: `StorageCryptoException` and `StorageServerException` extends `StorageException`, that's why you need to catch them at first
+Note: `StorageCryptoException` and `StorageServerException` extend `StorageException`, so catch them at first
