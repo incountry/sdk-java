@@ -3,8 +3,10 @@ InCountry Storage SDK
 
 Installation
 -----
+Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level - 8.
+
 For Maven users please add this section to your dependencies list
-```
+```xml
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
@@ -12,7 +14,7 @@ For Maven users please add this section to your dependencies list
 </dependency>
 ```
 For Gradle users plase add this line to your dependencies list
-```
+```groovy
 compile "com.incountry:incountry-java-client:2.0.0"
 ```
 
@@ -20,21 +22,22 @@ Countries List
 ----
 For a full list of supported countries and their codes please [follow this link](countries.md).
 
-
 Usage
 -----
-To access your data in InCountry using Java SDK, you need to create an implementation of `Storage` interface.
-Use 'StorageImpl' for it 
-```
-Storage storage=StorageImpl.getInstance(
-    String environmentID,                   // Required to be passed in, or as environment variable INC_API_KEY
-    String apiKey,                          // Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-    String endpoint,                        // Optional. Defines API URL
-    SecretKeyAccessor secretKeyAccessor     // Instance of SecretKeyAccessor class. Used to fetch encryption secret. 
-)
+To access your data in InCountry using Java SDK, you need to create an implementation of `Storage` interface. Use 'StorageImpl' for it 
+
+```java
+public class StorageImpl implements Storage {        
+        public static Storage getInstance(String environmentID,                  // Required to be passed in, or as environment variable INC_API_KEY 
+                                          String apiKey,                         // Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+                                          String endpoint,                       // Optional. Defines API URL. Default endpoint will be used if this param is null
+                                          SecretKeyAccessor secretKeyAccessor)   // Instance of SecretKeyAccessor class. Used to fetch encryption secret
+            throws StorageServerException {...}                          
+//...
+}
 ```
 
-`apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
+Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
 
 `endpoint` defines API URL and is used to override default one.
 
@@ -44,34 +47,81 @@ You can turn off encryption (not recommended). For it use `null` value for param
 
 The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 
+Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
+
+`SecretKeyAccessor` allows you to pass a function that should return representing your secret in `SecretsData` class instance:
+
+```java
+public interface SecretKeyAccessor {    
+    SecretsData getSecretsData();
+
+    static SecretKeyAccessorImpl getAccessor(String secretsDataString) {...}
+
+    static SecretKeyAccessorImpl getAccessor(SecretsDataGenerator secretsDataGenerator) {...}     
+}
+
+public class SecretsData {        
+    private List<SecretKey> secrets;    
+    private int currentVersion;         // Should be a non-negative integer
+
+    public SecretsData(List<SecretKey> secrets, int currentVersion) {...}            
+    //...
+}
+
+public class SecretKey {
+    private String secret;
+    private int version;        // Should be a non-negative integer
+    private boolean isKey;      // Should be True only for user-defined encryption keys
+
+    public SecretKey(String secret, int version, boolean isKey) {...}
+//...
+}
+```
+
+`SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object.
+
+This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see `migrate` method.
+
+SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
+
 `SecretKeyAccessor` introduces `getAccessor` static method which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
 
 1. As a string
 
-```
-private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
-    return SecretKeyAccessor.getAccessor("your_secret_goes_here");
+```java
+class YourClass {
+    private SecretKeyAccessor getSecretKeyAccessorWithString() {
+        String yourKey = "SomePassword";
+        return new SecretKeyAccessorImpl(yourKey);
+    }
 }
 ```
 
 2. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretsData`)
 
+```java
+public interface SecretsDataGenerator {
+    Object generate();
+}
 ```
-/* secretsData JSON object */
+
+
+secretsData JSON object
+```json
 {
   "secrets": [{
-       "secret": <string>,   
-       "version": <int>,     // Should be a non-negative integer
-       "isKey": <boolean>    // Should be True only for user-defined encryption keys
+       "secret": "someSecret", //string   
+       "version": "0",         // Should be a non-negative integer
+       "isKey": "true"         // Boolean, should be 'true' only for user-defined encryption keys
     }
-  }, ....],
-  "currentVersion": <int>,   // Should be a non-negative integer
+  //, {...}
+  ],
+  "currentVersion": "0"        // Should be a non-negative integer
 }
+```
 
-...
-
-
+```java
 SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator () {
     @Override
     public String generate() {
