@@ -114,7 +114,7 @@ public class StorageImpl implements Storage {
     private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID) {
         isEncrypted = secretKeyAccessor != null;
         if (isEncrypted) {
-            crypto = new CryptoImpl(secretKeyAccessor.getKey(), environmentID);
+            crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), environmentID);
         } else {
             crypto = new CryptoImpl(environmentID);
         }
