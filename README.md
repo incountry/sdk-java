@@ -16,15 +16,20 @@ For Gradle users plase add this line to your dependencies list
 compile "com.incountry:incountry-java-client:1.1.0"
 ```
 
+Countries List
+----
+For a full list of supported countries and their codes please [follow this link](countries.md).
+
+
 Usage
 -----
 To access your data in InCountry using Java SDK, you need to create an instance of `Storage` class.
 ```
 Storage(
-    String environmentID, 
-    String apiKey, 
-    String endpoint, 
-    boolean encrypt, 
+    String environmentID,
+    String apiKey,
+    String endpoint,
+    boolean encrypt,
     SecretKeyAccessor secretKeyAccessor
 )
 ```
@@ -57,12 +62,12 @@ private static SecretKeyAccessor initializeSecretKeyAccessorWithString() {
 {
   "secrets": [{
        "secret": <string>,
-       "version": <int>,     // Should be a positive integer
+       "version": <int>,     // Should be a non-negative integer
        "isKey": <boolean>    // Should be True only for user-defined encryption keys
     }
   }, ....],
   "currentVersion": <int>,
-} 
+}
 
 ...
 
@@ -74,7 +79,7 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsD
         return secretsDataJsonString;
     }
 });
-        
+
 ...
 
 SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator <SecretsData>() {
@@ -94,7 +99,6 @@ SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsD
         return secretsData;
     }
 }
-        
 ```
 
 Both JSON string and `SecretsData` allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
@@ -144,10 +148,10 @@ public BatchRecord batchWrite(String country, List<Record> records) throws Stora
 
 Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
 
-SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException` 
-method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in 
-and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the 
-amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with 
+SDK introduces `public MigrateResult migrate(String country, int limit) throws StorageServerException, StorageCryptoException`
+method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the
+amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with
 version different from `currentVersion` provided by `SecretKeyAccessor`)
 
 ```
@@ -199,9 +203,9 @@ It is possible to search by random keys using `find` method.
 ```
 public BatchRecord find(String country, FindFilter filter, FindOptions options) throws StorageServerException, StorageCryptoException
 ```
-Parameters:  
-`country` - country code,  
-`filter` - a filter object (see below),  
+Parameters:
+`country` - country code,
+`filter` - a filter object (see below),
 `options` - an object containing search options.
 
 `FindFilter` has the following constructor:
@@ -230,7 +234,7 @@ Here is the example of how `find` method can be used:
 FindFilter filter = new FindFilter(
     null,
     null,
-    null, 
+    null,
     new FilterStringParam("kitty"),
     new FilterStringParam(new ArrayList<>())
 );
@@ -270,7 +274,7 @@ FilterRangeParam rangeParam = new FilterRangeParam(1000);
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
 `BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about
- records that failed to be processed correctly during `find` request. 
+ records that failed to be processed correctly during `find` request.
 
 ### Find one record matching filter
 
