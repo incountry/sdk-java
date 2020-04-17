@@ -2,6 +2,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -18,10 +19,10 @@ public class HttpAgentImpl implements HttpAgent {
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error";
 
-
     private String apiKey;
     private String environmentId;
     private Charset charset;
+    private String userAgent;
 
 
     public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
@@ -34,10 +35,12 @@ public class HttpAgentImpl implements HttpAgent {
         this.apiKey = apiKey;
         this.environmentId = environmentId;
         this.charset = charset;
+        userAgent = "SDK-Java/" + Version.BUILD_VERSION;
     }
 
     @Override
-    public String request(String endpoint, String method, String body, boolean allowNone) throws StorageServerException {
+    public String request(String endpoint, String method, String body, boolean allowNone) throws
+            StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , allowNone={})",
                     endpoint,
@@ -51,6 +54,7 @@ public class HttpAgentImpl implements HttpAgent {
             con.setRequestProperty("Authorization", "Bearer " + apiKey);
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("User-Agent", userAgent);
             if (body != null) {
                 con.setDoOutput(true);
                 OutputStream os = con.getOutputStream();

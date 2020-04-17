@@ -163,7 +163,7 @@ test {
 jar {
     manifest {
         attributes("Implementation-Title": "${rootProject.group}:${rootProject.name}",
-                "Implementation-Version": version,
+                "Implementation-Version": project.version,
                 "Implementation-Vendor": "InCountry INC")
     }
 }
@@ -236,3 +236,11 @@ tasks.withType(Test) {
         }
     }
 }
+
+
+task generateVersionClass(type: Copy) {
+    from "${projectDir}/config/template"
+    into "${projectDir}/src/main/java/com/incountry/residence/sdk/version/"
+    filter { line -> line.replaceAll('DEV-SNAPSHOT', "${project.version}") }
+}
+compileJava.dependsOn generateVersionClass
