@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,14 +27,8 @@ public class CryptoTest {
         secret = "password";
         keyVersion = 0;
 
-        secretsData = new SecretsData();
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
-        secretsData.setSecrets(new ArrayList<SecretKey>() {
-            {
-                add(secretKey);
-            }
-        });
-        secretsData.setCurrentVersion(keyVersion);
+        secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
     }
 
     @Test
@@ -122,14 +117,8 @@ public class CryptoTest {
         secret = "otherpassword";
         keyVersion = 0;
 
-        secretsData = new SecretsData();
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
-        secretsData.setSecrets(new ArrayList<SecretKey>() {
-            {
-                add(secretKey);
-            }
-        });
-        secretsData.setCurrentVersion(keyVersion);
+        secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
 
         CryptoImpl crypto = new CryptoImpl(secretsData);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
@@ -143,8 +132,6 @@ public class CryptoTest {
 
     @Test
     public void testSecreKeyDatatWithNegativeVersion() {
-        SecretsData data = new SecretsData();
-        assertThrows(IllegalArgumentException.class, () -> data.setCurrentVersion(-1));
         assertThrows(IllegalArgumentException.class, () -> new SecretsData(new ArrayList<>(), -2));
     }
 }

@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_BATCH_WRITE = "/batchWrite";
     private static final String URI_DELIMITER = "/";
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final Map<String, POP> popMap = new HashMap<>();
     private HttpAgent agent;
@@ -46,7 +48,7 @@ public class HttpDaoImpl implements Dao {
 
     public HttpDaoImpl(String apiKey, String environmentId, String endPoint) throws StorageServerException {
         this(endPoint, ProxyUtils.createLoggingProxyForPublicMethods(
-                new HttpAgentImpl(apiKey, environmentId, Charset.defaultCharset())));
+                new HttpAgentImpl(apiKey, environmentId, CHARSET)));
     }
 
     public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {

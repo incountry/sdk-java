@@ -55,9 +55,7 @@ public class StorageSingleTests {
         SecretKey secretKey = new SecretKey(secret, version, true);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
-        SecretsData secretsData = new SecretsData();
-        secretsData.setSecrets(secretKeyList);
-        secretsData.setCurrentVersion(currentVersion);
+        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
         crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), environmentId);
     }
