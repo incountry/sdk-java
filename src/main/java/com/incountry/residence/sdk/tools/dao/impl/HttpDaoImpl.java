@@ -40,8 +40,8 @@ public class HttpDaoImpl implements Dao {
 
     private final Map<String, POP> popMap = new HashMap<>();
     private HttpAgent agent;
-    private String endPoint;
-    private boolean defaultEndpoint = false;
+    private String endPoint = DEFAULT_ENDPOINT;
+    private boolean defaultEndpoint = true;
     private long lastLoadedTime;
 
     public HttpDaoImpl(String apiKey, String environmentId, String endPoint) throws StorageServerException {
@@ -50,11 +50,10 @@ public class HttpDaoImpl implements Dao {
     }
 
     public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {
-        if (endPoint == null) {
-            endPoint = DEFAULT_ENDPOINT;
-            this.defaultEndpoint = true;
+        if (endPoint != null) {
+            this.endPoint = endPoint;
+            this.defaultEndpoint = false;
         }
-        this.endPoint = endPoint;
         this.agent = agent;
         if (defaultEndpoint) {
             loadCountries();
