@@ -39,8 +39,7 @@ public class HttpAgentImpl implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, boolean allowNone) throws
-            StorageServerException {
+    public String request(String endpoint, String method, String body, boolean allowNone) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , allowNone={})",
                     endpoint,

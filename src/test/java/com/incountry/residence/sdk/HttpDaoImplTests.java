@@ -34,6 +34,7 @@ public class HttpDaoImplTests {
     private String secret = "passwordpasswordpasswordpassword";
     private int version = 0;
     private int currentVersion = 0;
+    private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
     private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
@@ -99,7 +100,7 @@ public class HttpDaoImplTests {
                           boolean isKey,
                           boolean encrypt) throws StorageException, MalformedURLException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
@@ -147,7 +148,7 @@ public class HttpDaoImplTests {
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
         FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, crypto));
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
 
         Record fetched = storage.read(country, key);
         assertEquals(expectedPath, new URL(agent.getCallEndpoint()).getPath());
@@ -172,7 +173,7 @@ public class HttpDaoImplTests {
                            boolean encrypt) throws StorageException, IOException {
 
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
         storage.delete(country, key);
         Crypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
@@ -194,7 +195,7 @@ public class HttpDaoImplTests {
                                boolean encrypt) throws StorageException {
 
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
 
         List<Record> records = new ArrayList<>();
         records.add(new Record(key, body, profileKey, rangeKey, key2, key3));
