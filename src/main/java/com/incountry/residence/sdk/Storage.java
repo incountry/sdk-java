@@ -51,8 +51,8 @@ public interface Storage {
     /**
      * Delete record from remote storage
      *
-     * @param country   country identifier
-     * @param recordKey record unique identifier
+     * @param country country code of the record
+     * @param recordKey the record's key
      * @return TRUE when record was deleted
      * @throws StorageServerException if server connection failed
      */

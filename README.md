@@ -285,7 +285,7 @@ public interface Storage {
  }
  ```
  
-## Data Migration and Key Rotation support
+### Data Migration and Key Rotation support
 
 Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
 
@@ -322,11 +322,20 @@ For a detailed example of a migration please [see example](/src/integration/java
 ### Reading stored data
 
 Stored record can be read by `key` using `read` method.
+```java
+public interface Storage {
+         /**
+          * Make batched key-rotation-migration of records
+          *
+          * @param country country identifier
+          * @param limit   batch-limit parameter
+          * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
+          * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+          */
+         MigrateResult migrate(String country, int limit) throws StorageException;
+    ...
+}
 ```
-Record read(String country, String recordKey) throws StorageServerException, StorageCryptoException;
-```
-`country` is a country code of the record
-`recordKey` is a record key
 
 This method returns `Record` object.
 
@@ -334,10 +343,22 @@ This method returns `Record` object.
 
 These properties can be accessed using getters, for example:
 
-```
+```java
 String key2 = record.getKey2();
 String body = record.getBody();
 ```
+
+Below is the example of how you may use `batchWrite` method
+ ```java
+ public class ReadExample {
+     public void testRead () throws StorageException {
+         String recordKey = "user_1";                 
+         Storage storage = initStorage();
+         Record record = storage.read ("us", recordKey);
+         String decryptedBody = record.getBody();
+     }    
+ }
+ ```
 
 ### Find records
 
@@ -412,20 +433,62 @@ If you need to find the first record matching filter, you can use the  method:
 It works the same way as `find` but returns the first record or `null` if no matching records.
 
 ### Delete records
+
 Use `delete` method in order to delete a record from InCountry storage. It is only possible using `key` field.
-```
-boolean delete(String country, String recordKey) throws StorageServerException;
+```java
+public interface Storage {
+         /**
+          * Delete record from remote storage
+          *
+          * @param country   country code of the record
+          * @param recordKey the record's key
+          * @return TRUE when record was deleted
+          * @throws StorageServerException if server connection failed
+          */
+         boolean delete(String country, String recordKey) throws StorageServerException;
+    ...
+}
 ```
 Here
 `country` - country code of the record,
 `recordKey` - the record's key
 
+Below is the example of how you may use `delete` method
+ ```java
+ public class DeleteExample {
+     public void testDelete () throws StorageException {
+         String recordKey = "user_1";                 
+         Storage storage = initStorage();
+         storage.delete ("us", recordKey);         
+     }    
+ }
+ ```
+
 ### Error Handling
 InCountry Java SDK throws following Exceptions:
-`IllegalArgumentException` - used for various input validation errors. Can be thrown by all public methods.
-`RecordException` - thrown if Record decryption fails in batches.
+`StorageClientException` - used for various input validation errors. Can be thrown by all public methods.
 `StorageServerException` - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
 `StorageCryptoException` - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
 `StorageException` - general exception. Inherited by all other exceptions
 
-Note: `StorageCryptoException` and `StorageServerException` extend `StorageException`, so catch them at first
+We suggest gracefully handling all the possible exceptions:
+
+```java
+public class ExceptionHandlingExample {
+    public void test () {
+        try {
+            // use InCountry Storage instance here
+        } catch (StorageClientException e) {
+            // some input validation error
+        } catch (StorageServerException e) {
+            // some server error
+        } catch (StorageCryptoException e) {
+            // some encryption error
+        } catch (StorageException e) {
+            // some input validation error
+        } catch (Exception e) {
+            // something else happened not related to InCountry SDK
+        }                                         
+    }   
+}
+```
