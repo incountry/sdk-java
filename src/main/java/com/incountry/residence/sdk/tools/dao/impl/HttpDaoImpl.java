@@ -52,7 +52,7 @@ public class HttpDaoImpl implements Dao {
     }
 
     public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {
-        if (endPoint != null) {
+        if (endPoint != null && !endPoint.equals(DEFAULT_ENDPOINT)) {
             this.endPoint = endPoint;
             this.defaultEndpoint = false;
         }
