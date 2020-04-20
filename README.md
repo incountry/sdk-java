@@ -32,7 +32,7 @@ public class StorageImpl implements Storage {
                                           String apiKey,                         // Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
                                           String endpoint,                       // Optional. Defines API URL. Default endpoint will be used if this param is null
                                           SecretKeyAccessor secretKeyAccessor)   // Instance of SecretKeyAccessor class. Used to fetch encryption secret
-            throws StorageServerException {...}                          
+            throws StorageServerException                           
 //...
 }
 ```
@@ -45,7 +45,6 @@ You can turn off encryption (not recommended). For it use `null` value for param
 
 Below is an example how to create a storage instance:
 ```java
-public class StorageCreationExample {
     public Storage initStorage() throws StorageException {        
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("somePassword");
         String endPoint = "https://us.api.incountry.io";        
@@ -53,7 +52,6 @@ public class StorageCreationExample {
         String apiKey = "someApiKey";
         return StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);        
     }
-}
 ```
 
 ### Encryption key/secret
@@ -70,6 +68,7 @@ public interface SecretKeyAccessor {
     static SecretKeyAccessorImpl getAccessor(SecretsDataGenerator secretsDataGenerator) {...}     
 }
 
+
 public class SecretsData {        
     private List<SecretKey> secrets;    // Non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
     private int currentVersion;         // Should be a non-negative integer
@@ -78,13 +77,14 @@ public class SecretsData {
     //...
 }
 
+
 public class SecretKey {
     private String secret;
     private int version;        // Should be a non-negative integer
     private boolean isKey;      // Should be True only for user-defined encryption keys
 
     public SecretKey(String secret, int version, boolean isKey) {...}
-//...
+    //...
 }
 ```
 
@@ -93,15 +93,12 @@ Secrets/keys can be passed in multiple ways:
 
 1. As a constant string
 ```java
-class SecretKeyAccessorExample1 {    
     private SecretKeyAccessor getAccessor() {        
         return SecretKeyAccessor.getAccessor("somePassword");
     }
-}
 ```
 2. As an implementation of `SecretKeyAccessor` interface. SecretKeyAccessor's `getSecretsData` method should return `SecretsData` object
 ```java
-class SecretKeyAccessorExample2 {
     private SecretKeyAccessor getAccessorWithCustomImlementation() {
          return new SecretKeyAccessor() {
             @Override
@@ -131,7 +128,6 @@ SecretsData JSON object
 }
 ```
 ```java
-class SecretKeyAccessorExample3 {
     //using implementation of SecretsDataGenerator with key as String
     private SecretKeyAccessor getAccessorWithGenerator1() {
          return SecretKeyAccessor.getAccessor(new SecretsDataGenerator() {
@@ -173,7 +169,6 @@ class SecretKeyAccessorExample3 {
             }
          });
     }
-}
 ```
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 
@@ -219,12 +214,12 @@ public class Record {
      * @param key3       Optional, key3
      */
     public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {...}
+    //...
 }
 ```
 
 Below is the example of how you may use `write` method
 ```java
-public class WriteExample {
     public void testWrite () throws StorageException {         
         key="user_1";
         body="some PII data";
@@ -236,7 +231,6 @@ public class WriteExample {
         Storage storage=initStorage();
         storage.write("us", record);
     }    
-}
 ```
 
 #### Encryption
@@ -250,6 +244,7 @@ public class Record {
     private Integer range_key;   // plain
     private String key2;         // hashed
     private String key3;         // hashed
+    //...
 }
 ```
 
@@ -268,13 +263,12 @@ public interface Storage {
       * @throws StorageCryptoException if record encryption failed
       */
      BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
-    ...
+     //...
 }
 ```
  
  Below is the example of how you may use `batchWrite` method
- ```java
- public class BatchWriteExample {
+ ```java 
      public void testWriteBatch () throws StorageException {         
          List<Record> list = new ArrayList<>();
          list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
@@ -282,7 +276,6 @@ public interface Storage {
          Storage storage = initStorage();
          storage.batchWrite ("us", list);
      }    
- }
  ```
  
 ### Data Migration and Key Rotation support
@@ -292,7 +285,7 @@ Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotatio
 SDK introduces method `migrate`
 ```java
 public interface Storage {
-     /**
+         /**
           * Make batched key-rotation-migration of records
           *
           * @param country country identifier
@@ -301,7 +294,7 @@ public interface Storage {
           * @throws StorageException if encryption is off/failed, if server connection failed or server response error
           */
          MigrateResult migrate(String country, int limit) throws StorageException;
-    ...
+         //...
 }
 ```
 
@@ -314,6 +307,7 @@ version different from `currentVersion` provided by `SecretKeyAccessor`)
 public class MigrateResult {
     private int migrated;
     private int totalLeft;
+    //...
 }
 ```
 
@@ -333,7 +327,7 @@ public interface Storage {
           * @throws StorageException if encryption is off/failed, if server connection failed or server response error
           */
          MigrateResult migrate(String country, int limit) throws StorageException;
-    ...
+         //...
 }
 ```
 
@@ -350,28 +344,38 @@ String body = record.getBody();
 
 Below is the example of how you may use `batchWrite` method
  ```java
- public class ReadExample {
      public void testRead () throws StorageException {
          String recordKey = "user_1";                 
          Storage storage = initStorage();
          Record record = storage.read ("us", recordKey);
          String decryptedBody = record.getBody();
      }    
- }
  ```
 
 ### Find records
 
 It is possible to search by random keys using `find` method.
-```
-BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
+```java
+public interface Storage {
+             /**
+              * Find records in remote storage according to filters
+              *
+              * @param country country identifier
+              * @param builder object representing find filters and search options
+              * @return BatchRecord object which contains required records
+              * @throws StorageServerException if server connection failed or server response error
+              * @throws StorageCryptoException if decryption failed
+              */
+             BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
+             //...
+}
 ```
 Parameters:
 `country` - country code,
 `builder` - object representing find filters and search options
 
 Usage of `FindFilterBuilder` :
-```
+```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq("someKeyValueToFilter")
                 .rangeKeyEq(someRnageKey)
@@ -380,15 +384,22 @@ FindFilterBuilder builder = FindFilterBuilder.create()
 
 Here is the example of how `find` method can be used:
 
-```
+```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("kitty")
                 .key3NotIn(Arrays.asList("bow-wow","сock-a-doodle-do"))
                 .rangeKeyBetween(123, 456);                                
 
-BatchRecord records = storage.find("us", builder);
+BatchRecord founded = storage.find("us", builder);
+if (founded.getCount>0) {
+    Record record = founded.getRecords().get(0);
+    //...
+}
 ```
+
 This call returns all records with `key2` equals `kitty` AND (`key3` not in `bow-wow' , 'сock-a-doodle-do`) AND (123 < = `rangeKey` < = 456)
+Filter conditions on each field of `Record` class are union with predicate `AND` 
+
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
 ```
 FindFilterBuilder builder = FindFilterBuilder.create()
@@ -396,6 +407,7 @@ FindFilterBuilder builder = FindFilterBuilder.create()
                   .limitAndOffset(20, 80);        
 BatchRecord records = storage.find("us", builder);
 ```
+
 Next predicate types are available for each field of class `Record` via individaul methods of `FindFilterBuilder`:
 EQUALS         (`FindFilterBuilder::keyEq`)
 NOT EQUALS     (`FindFilterBuilder::keyNotEq`)
@@ -410,16 +422,20 @@ LESS OR EQUALS      (`FindFilterBuilder::rangeKeyLTE`)
 BETWEEN             (`FindFilterBuilder::rangeKeyBetween`)
 
 Method `find` returns `BatchRecord` object which contains an list of `Record` and some metadata:
+```java
+class BatchRecord {
+    private int count;
+    private int limit;
+    private int offset;
+    private int total;
+    private List<Record> records;
+//...
+}
 ```
-int count;
-int limit;
-int offset;
-int total;
-List<Record> records;
-```
+
 These fields can be accessed using getters, for example:
 
-```
+```java
 int limit = records.getTotal();
 ```
 
