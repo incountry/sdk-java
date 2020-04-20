@@ -46,12 +46,12 @@ You can turn off encryption (not recommended). For it use `null` value for param
 Below is an example how to create a storage instance:
 ```java
 public class StorageCreationExample {
-    public static void main (String ... args) throws StorageException {        
+    public Storage initStorage() throws StorageException {        
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("somePassword");
         String endPoint = "https://us.api.incountry.io";        
         String envId = "someEnvironmentId";
         String apiKey = "someApiKey";
-        Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);        
+        return StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);        
     }
 }
 ```
@@ -191,7 +191,7 @@ Note: even though SDK uses PBKDF2 to generate a cryptographically strong encrypt
 Use `write` method in order to create a record.
 ```java
 public interface Storage {
- /**
+    /**
      * Write data to remote storage
      *
      * @param country country identifier
@@ -208,7 +208,7 @@ public interface Storage {
 Here is how you initialize a record object:
 ```java
 public class Record {
-/**
+    /**
      * Full constructor
      *
      * @param key        Required, record key
@@ -225,7 +225,7 @@ public class Record {
 Below is the example of how you may use `write` method
 ```java
 public class WriteExample {
-    public static void main (String ... args) throws StorageException {         
+    public void testWrite () throws StorageException {         
         key="user_1";
         body="some PII data";
         profile_key="customer";
@@ -256,24 +256,61 @@ public class Record {
 #### Batches
 
 Use the `batchWrite` method to write multiple records to the storage in a single request.
-
+```java
+public interface Storage {
+     /**
+      * Write multiple records at once in remote storage
+      *
+      * @param country country identifier
+      * @param records record list
+      * @return BatchRecord object which contains list of recorded records
+      * @throws StorageServerException if server connection failed or server response error
+      * @throws StorageCryptoException if record encryption failed
+      */
+     BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
+    ...
+}
 ```
-BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
-
-// `batchWrite` returns `BatchRecord` object
-```
+ 
+ Below is the example of how you may use `batchWrite` method
+ ```java
+ public class BatchWriteExample {
+     public void testWriteBatch () throws StorageException {         
+         List<Record> list = new ArrayList<>();
+         list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
+         list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
+         Storage storage = initStorage();
+         storage.batchWrite ("us", list);
+     }    
+ }
+ ```
  
 ## Data Migration and Key Rotation support
 
 Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
 
-SDK introduces `MigrateResult migrate(String country, int limit) throws StorageException;`
-method which allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
+SDK introduces method `migrate`
+```java
+public interface Storage {
+     /**
+          * Make batched key-rotation-migration of records
+          *
+          * @param country country identifier
+          * @param limit   batch-limit parameter
+          * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
+          * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+          */
+         MigrateResult migrate(String country, int limit) throws StorageException;
+    ...
+}
+```
+
+It allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
 and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the
 amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with
 version different from `currentVersion` provided by `SecretKeyAccessor`)
 
-```
+```java
 public class MigrateResult {
     private int migrated;
     private int totalLeft;
@@ -282,21 +319,6 @@ public class MigrateResult {
 
 For a detailed example of a migration please [see example](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java). 
 
-#### Encryption
-InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
-Here is how data is transformed and stored in InCountry database:
-
-```
-Record
-{
-    key,           // hashed
-    body,          // encrypted
-    profile_key,   // hashed
-    range_key,     // plain
-    key2,          // hashed
-    key3           // hashed
-}
-```
 ### Reading stored data
 
 Stored record can be read by `key` using `read` method.
