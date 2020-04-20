@@ -101,7 +101,7 @@ public class HttpDaoImpl implements Dao {
                 }
             }
             if (pop == null) {
-                String message = "Country " + country + " has no POP API";
+                String message = "Country " + country + " has no PoPAPI";
                 LOG.error(message);
                 throw new IllegalArgumentException(message);
             }

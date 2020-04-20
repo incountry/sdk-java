@@ -18,7 +18,7 @@ public class FullMigrationExample {
         String endPoint = "https://us.api.incountry.example";
         String country = "US";
         String envId = "someEnvironmentId";
-        String apiKey = "someApyKey";
+        String apiKey = "someApiKey";
         Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
         boolean migrationComplete = false;
         while (!migrationComplete) {
