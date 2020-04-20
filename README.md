@@ -13,6 +13,7 @@ For Maven users please add this section to your dependencies list
   <version>2.0.0</version>
 </dependency>
 ```
+
 For Gradle users plase add this line to your dependencies list
 ```groovy
 compile "com.incountry:incountry-java-client:2.0.0"
@@ -25,7 +26,6 @@ For a full list of supported countries and their codes please [follow this link]
 Usage
 -----
 To access your data in InCountry using Java SDK, you need to create an implementation of `Storage` interface. Use 'StorageImpl' for it 
-
 ```java
 public class StorageImpl implements Storage {        
         public static Storage getInstance(String environmentID,                  // Required to be passed in, or as environment variable INC_API_KEY 
@@ -43,14 +43,26 @@ Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `I
 
 You can turn off encryption (not recommended). For it use `null` value for parameter `secretKeyAccessor`.
 
-#### Encryption key
+Below is an example how to create a storage instance:
+```java
+public class StorageCreationExample {
+    public static void main (String ... args) throws StorageException {        
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("somePassword");
+        String endPoint = "https://us.api.incountry.io";        
+        String envId = "someEnvironmentId";
+        String apiKey = "someApiKey";
+        Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);        
+    }
+}
+```
+
+#### Encryption key/secret
 
 The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
 `SecretKeyAccessor` allows you to pass a function that should return representing your secret in `SecretsData` class instance:
-
 ```java
 public interface SecretKeyAccessor {    
     SecretsData getSecretsData();
@@ -61,7 +73,7 @@ public interface SecretKeyAccessor {
 }
 
 public class SecretsData {        
-    private List<SecretKey> secrets;    
+    private List<SecretKey> secrets;    // Non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
     private int currentVersion;         // Should be a non-negative integer
 
     public SecretsData(List<SecretKey> secrets, int currentVersion) {...}            
@@ -79,68 +91,94 @@ public class SecretKey {
 ```
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object.
-
 This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see `migrate` method.
 
 SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
 
-`SecretKeyAccessor` introduces `getAccessor` static method which allows you to pass your secrets/keys to the SDK.
+You can implement `SecretKeyAccessor` interface or use static method `getAccessor` which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
 
-1. As a string
-
+1. As a constant string
 ```java
-class YourClass {
-    private SecretKeyAccessor getSecretKeyAccessorWithString() {
-        String yourKey = "SomePassword";
-        return new SecretKeyAccessorImpl(yourKey);
+class SecretKeyAccessorExample1 {    
+    private SecretKeyAccessor getAccessor() {        
+        return SecretKeyAccessor.getAccessor("somePassword");;
     }
 }
 ```
-
-2. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or a valid JSON string, representing the following schema (or secretsData object as we call it) (this JSON string will then be parsed as a `SecretsData`)
-
+2. As an implementation of `SecretKeyAccessor` interface. SecretKeyAccessor's `getSecretsData` method should return `SecretsData` object
 ```java
-public interface SecretsDataGenerator {
-    Object generate();
+class SecretKeyAccessorExample2 {
+    private SecretKeyAccessor getAccessorWithCustomImlementation() {
+         return new SecretKeyAccessor() {
+            @Override
+            public SecretsData getSecretsData() {
+                int currentVersion = 0;
+                SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);                 
+                List<SecretKey> secretKeyList = new ArrayList<>();
+                secretKeyList.add(secretKey1);                
+                return new SecretsData(secretKeyList, currentVersion);
+            }
+         };
+    }
 }
 ```
-
-
-secretsData JSON object
+3. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or String. String can be simple key or a valid JSON string. This JSON string will then be parsed as a `SecretsData`
+SecretsData JSON object
 ```json
 {
   "secrets": [{
-       "secret": "someSecret", //string   
+       "secret": "someSecret", // String   
        "version": "0",         // Should be a non-negative integer
        "isKey": "true"         // Boolean, should be 'true' only for user-defined encryption keys
     }
-  //, {...}
+  //  , {...}
   ],
-  "currentVersion": "0"        // Should be a non-negative integer
+  "currentVersion": "0"        // Should be a non-negative integer. One of the secrets must have same version as currentVersion in SecretsData
 }
 ```
-
 ```java
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator () {
-    @Override
-    public String generate() {
-        String secretsDataJsonString = dataSource.methodReturningJsonString();
-        return secretsDataJsonString;
+class SecretKeyAccessorExample3 {
+    //using implementation of SecretsDataGenerator with key as String
+    private SecretKeyAccessor getAccessorWithGenerator1() {
+         return SecretKeyAccessor.getAccessor(new SecretsDataGenerator() {
+            @Override
+            public Object generate() {
+                return "somePassword";
+            }
+         });
     }
-});
 
-...
+    //using implementation of SecretsDataGenerator with key as String in lambda-style
+    private SecretKeyAccessor getAccessorWithGenerator1lambdaStyle() {
+         return SecretKeyAccessor.getAccessor(() -> "somePassword");                     
+    }
 
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(new SecretsDataGenerator () {
-    @Override
-    public SecretsData generate() {
-        int version = 0;
-        String secret = "your_secret_goes_here";         
-        SecretKey secretKey = new SecretKey(secret, version, true);        
-        List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(secretKey);                        
-        return new SecretsData(secretKeyList, version);;
+    String secretsDataInJson = "{\n" +
+                    "    \"currentVersion\": 1,\n" +
+                    "    \"secrets\": [\n" +
+                    "        {\"secret\": \"password0\", \"version\": 0},\n" +
+                    "        {\"secret\": \"password1\", \"version\": 1}, \"isKey\": \"true\"\n" +
+                    "    ],\n" +
+                    "}";
+
+    //using implementation of SecretsDataGenerator with SecretsData as JSON String
+    private SecretKeyAccessor getAccessorWithGenerator2() {
+         return SecretKeyAccessor.getAccessor(() -> secretsDataInJson);
+    }
+
+    //using implementation of SecretsDataGenerator with SecretsData
+    private SecretKeyAccessor getAccessorWithGenerator3() {
+         return SecretKeyAccessor.getAccessor(new SecretsDataGenerator() {
+            @Override
+            public Object generate() {
+                int currentVersion = 0;
+                SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);                 
+                List<SecretKey> secretKeyList = new ArrayList<>();
+                secretKeyList.add(secretKey1);                
+                return new SecretsData(secretKeyList, currentVersion);
+            }
+         });
     }
 }
 ```
