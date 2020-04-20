@@ -79,6 +79,12 @@ public class StorageSingleTests {
     }
 
     @Test
+    public void migrateNegativeTest() throws StorageException {
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")));
+        assertThrows(IllegalArgumentException.class, () -> storage.migrate("us", 0));
+    }
+
+    @Test
     public void findTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
@@ -188,6 +194,62 @@ public class StorageSingleTests {
     }
 
     @Test
+    public void testFindNullFilterSending() throws StorageException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq("SomeValue");
+        FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        storage.find(country, builder);
+        String body = agent.getCallBody();
+        JsonObject json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
+        assertNotNull(json.get("key"));
+        assertNull(json.get("key2"));
+        assertNull(json.get("key3"));
+        assertNull(json.get("range_key"));
+        assertNull(json.get("profile_key"));
+
+        builder.clear().key2Eq("SomeValue");
+        storage.find(country, builder);
+        body = agent.getCallBody();
+        json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
+        assertNull(json.get("key"));
+        assertNotNull(json.get("key2"));
+        assertNull(json.get("key3"));
+        assertNull(json.get("range_key"));
+        assertNull(json.get("profile_key"));
+
+        builder.clear().key3Eq("SomeValue");
+        storage.find(country, builder);
+        body = agent.getCallBody();
+        json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
+        assertNull(json.get("key"));
+        assertNull(json.get("key2"));
+        assertNotNull(json.get("key3"));
+        assertNull(json.get("range_key"));
+        assertNull(json.get("profile_key"));
+
+        builder.clear().rangeKeyEq(123321);
+        storage.find(country, builder);
+        body = agent.getCallBody();
+        json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
+        assertNull(json.get("key"));
+        assertNull(json.get("key2"));
+        assertNull(json.get("key3"));
+        assertNotNull(json.get("range_key"));
+        assertNull(json.get("profile_key"));
+
+        builder.clear().profileKeyEq("SomeValue");
+        storage.find(country, builder);
+        body = agent.getCallBody();
+        json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
+        assertNull(json.get("key"));
+        assertNull(json.get("key2"));
+        assertNull(json.get("key3"));
+        assertNull(json.get("range_key"));
+        assertNotNull(json.get("profile_key"));
+    }
+
+    @Test
     public void testFindWithoutEncWithEncryptedData() throws StorageException {
         Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getSecretsData(), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
@@ -252,7 +314,6 @@ public class StorageSingleTests {
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() ->
                 new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1)
         );
-
         assertThrows(IllegalArgumentException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
     }
 
