@@ -28,12 +28,12 @@ public class Record {
     /**
      * Full constructor
      *
-     * @param key        key
-     * @param body       data to be stored and encrypted
-     * @param profileKey profile key
-     * @param rangeKey   range key for sorting in pagination
-     * @param key2       key2
-     * @param key3       key3
+     * @param key        Required, record key
+     * @param body       Optional, data to be stored and encrypted
+     * @param profileKey Optional, profile key
+     * @param rangeKey   Optional, range key for sorting in pagination
+     * @param key2       Optional, key2
+     * @param key3       Optional, key3
      */
     public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
         this.key = key;

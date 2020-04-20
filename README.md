@@ -60,8 +60,6 @@ public class StorageCreationExample {
 
 The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 
-Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
-
 `SecretKeyAccessor` allows you to pass a function that should return representing your secret in `SecretsData` class instance:
 ```java
 public interface SecretKeyAccessor {    
@@ -90,11 +88,6 @@ public class SecretKey {
 }
 ```
 
-`SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object.
-This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see `migrate` method.
-
-SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
-
 You can implement `SecretKeyAccessor` interface or use static method `getAccessor` which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
 
@@ -102,7 +95,7 @@ Secrets/keys can be passed in multiple ways:
 ```java
 class SecretKeyAccessorExample1 {    
     private SecretKeyAccessor getAccessor() {        
-        return SecretKeyAccessor.getAccessor("somePassword");;
+        return SecretKeyAccessor.getAccessor("somePassword");
     }
 }
 ```
@@ -183,38 +176,83 @@ class SecretKeyAccessorExample3 {
 }
 ```
 
-Both JSON string and `SecretsData` allow you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
-Meanwhile SDK will encrypt only using key/secret that matches currentVersion provided in JSON or `SecretsData`.
+`SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 
+Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object.
+This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. 
+SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. 
+SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see [migrate](#Data-Migration-and-Key-Rotation-support) method.
 
-This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
-SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
-SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret.
-For details please see migrate method.
-
-SDK allows you to use custom encryption keys, instead of secrets. To do so, use `isKey` param in secretsData JSON object or in SecretKey object which is a part of `SecretsData`.
-Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
+SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
 ### Writing data to Storage
 
 Use `write` method in order to create a record.
-```
-Record write(String country, Record record) throws StorageServerException, StorageCryptoException;
+```java
+public interface Storage {
+ /**
+     * Write data to remote storage
+     *
+     * @param country country identifier
+     * @param record  object which encapsulate data which must be written in storage
+     * @return recorded record
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if encryption failed
+     */
+    Record write(String country, Record record) throws StorageServerException, StorageCryptoException;
+    ...
+}
 ```
 
 Here is how you initialize a record object:
+```java
+public class Record {
+/**
+     * Full constructor
+     *
+     * @param key        Required, record key
+     * @param body       Optional, data to be stored and encrypted
+     * @param profileKey Optional, profile key
+     * @param rangeKey   Optional, range key for sorting in pagination
+     * @param key2       Optional, key2
+     * @param key3       Optional, key3
+     */
+    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {...}
+}
+```
 
+Below is the example of how you may use `write` method
+```java
+public class WriteExample {
+    public static void main (String ... args) throws StorageException {         
+        key="user_1";
+        body="some PII data";
+        profile_key="customer";
+        range_key=10000;
+        key2="english";
+        key3="rolls-royce";        
+        Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
+        Storage storage=initStorage();
+        storage.write("us", record);
+    }    
+}
 ```
-public Record(
-    String key,               // Required record key
-    String body,              // Optional payload
-    String profileKey,        // Optional
-    Integer rangeKey,         // Optional
-    String key2,              // Optional
-    String key3               // Optional
-)
+
+#### Encryption
+InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
+Here is how data is transformed and stored in InCountry database:
+```java
+public class Record {
+    private String key;          // hashed
+    private String body;         // encrypted
+    private String profile_key;  // hashed
+    private Integer range_key;   // plain
+    private String key2;         // hashed
+    private String key3;         // hashed
+}
 ```
+
 #### Batches
 
 Use the `batchWrite` method to write multiple records to the storage in a single request.
@@ -224,7 +262,7 @@ BatchRecord batchWrite(String country, List<Record> records) throws StorageServe
 
 // `batchWrite` returns `BatchRecord` object
 ```
-
+ 
 ## Data Migration and Key Rotation support
 
 Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
