@@ -56,7 +56,7 @@ public class StorageCreationExample {
 }
 ```
 
-#### Encryption key/secret
+### Encryption key/secret
 
 The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 
@@ -253,7 +253,7 @@ public class Record {
 }
 ```
 
-#### Batches
+### Batches
 
 Use the `batchWrite` method to write multiple records to the storage in a single request.
 ```java
