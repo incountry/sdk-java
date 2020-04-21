@@ -120,11 +120,11 @@ SecretsData JSON object
 {
   "secrets": [{
        "secret": "someSecret",  // String   
-       "version": "0",          // Should be a non-negative integer
-       "isKey": "true"          // Boolean, should be 'true' only for user-defined encryption keys
+       "version": 0,            // Should be a non-negative integer
+       "isKey": true            // Boolean, should be 'true' only for user-defined encryption keys
     }
   ],
-  "currentVersion": "0"         // Should be a non-negative integer. One of the secrets must have same version as currentVersion in SecretsData
+  "currentVersion": 0           // Should be a non-negative integer. One of the secrets must have same version as currentVersion in SecretsData
 }
 ```
 ```java
@@ -209,7 +209,7 @@ public class Record {
      * @param key        Required, record key
      * @param body       Optional, data to be stored and encrypted
      * @param profileKey Optional, profile key
-     * @param rangeKey   Optional, range key for sorting in pagination
+     * @param rangeKey   Optional, range key
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */
@@ -386,7 +386,7 @@ Here is the example of how `find` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("kitty")
-                .key3NotIn(Arrays.asList("bow-wow","сock-a-doodle-do"))
+                .key3NotIn(Arrays.asList("firstExcludeValue","secondExclude"))
                 .rangeKeyBetween(123, 456);                                
 
 BatchRecord founded = storage.find("us", builder);
@@ -396,7 +396,7 @@ if (founded.getCount>0) {
 }
 ```
 
-This call returns all records with `key2` equals `kitty` AND (`key3` not in `bow-wow' , 'сock-a-doodle-do`) AND (123 < = `rangeKey` < = 456)
+This call returns all records with `key2` equals `kitty` AND (`key3` not in `firstExcludeValue' , 'secondExclude`) AND (123 < = `rangeKey` < = 456)
 Filter conditions on each field of `Record` class are union with predicate `AND` 
 
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
@@ -526,7 +526,7 @@ public void test () {
     } catch (StorageCryptoException e) {
         // some encryption error
     } catch (StorageException e) {
-        // some input validation error
+        // general error
     } catch (Exception e) {
         // something else happened not related to InCountry SDK
     }                                         
