@@ -53,7 +53,7 @@ public class StorageImpl implements Storage {
     }
 
     /**
-     * creating Storage instance with ENV variables without encryption (for debugging)
+     * creating Storage instance with ENV variables without encryption at SDK
      *
      * @return instance of Storage
      * @throws StorageServerException when configuration is invalid
