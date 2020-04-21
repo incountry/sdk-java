@@ -32,7 +32,7 @@ public class StorageImpl implements Storage {
                                       String apiKey,                         // Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
                                       String endpoint,                       // Optional. Defines API URL. Default endpoint will be used if this param is null
                                       SecretKeyAccessor secretKeyAccessor)   // Instance of SecretKeyAccessor class. Used to fetch encryption secret
-            throws StorageServerException {...}                           
+            throws StorageClientException, StorageServerException  {...}                           
 //...
 }
 ```
@@ -45,7 +45,7 @@ You can turn off encryption (not recommended) by providing `null` value for para
 
 Below is an example how to create a storage instance:
 ```java
-public Storage initStorage() throws StorageException {        
+public Storage initStorage() throws StorageClientException, StorageServerException  {        
     SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("somePassword");
     String endPoint = "https://us.api.incountry.io";        
     String envId = "someEnvironmentId";
@@ -63,9 +63,9 @@ The SDK has a `SecretKeyAccessor` interface which allows you to pass your own se
 public interface SecretKeyAccessor {    
     SecretsData getSecretsData();
 
-    static SecretKeyAccessorImpl getAccessor(String secretsDataString) {...}
+    static SecretKeyAccessorImpl getAccessor(String secretsDataString) throws StorageClientException {...}
 
-    static SecretKeyAccessorImpl getAccessor(SecretsDataGenerator secretsDataGenerator) {...}     
+    static SecretKeyAccessorImpl getAccessor(SecretsDataGenerator secretsDataGenerator) throws StorageClientException {...}     
 }
 
 
@@ -73,7 +73,7 @@ public class SecretsData {
     private List<SecretKey> secrets;    // Non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
     private int currentVersion;         // Should be a non-negative integer
 
-    public SecretsData(List<SecretKey> secrets, int currentVersion) {...}            
+    public SecretsData(List<SecretKey> secrets, int currentVersion) throws StorageClientException {...}            
     //...
 }
 
@@ -83,7 +83,7 @@ public class SecretKey {
     private int version;        // Should be a non-negative integer
     private boolean isKey;      // Should be True only for user-defined encryption keys
 
-    public SecretKey(String secret, int version, boolean isKey) {...}
+    public SecretKey(String secret, int version, boolean isKey) throws StorageClientException {...}
     //...
 }
 ```
@@ -92,26 +92,28 @@ You can implement `SecretKeyAccessor` interface or use static method `getAccesso
 Secrets/keys can be passed in multiple ways:
 
 1. As a constant string
-```java
-private SecretKeyAccessor getAccessor() {        
-    return SecretKeyAccessor.getAccessor("somePassword");
-}
+```java        
+SecretKeyAccessor accessor = SecretKeyAccessor.getAccessor("somePassword");
 ```
 
 2. As an implementation of `SecretKeyAccessor` interface. SecretKeyAccessor's `getSecretsData` method should return `SecretsData` object
 ```java
-private SecretKeyAccessor getAccessorWithCustomImlementation() {
-    return new SecretKeyAccessor() {
-        @Override
-        public SecretsData getSecretsData() {
-            int currentVersion = 0;
-            SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);                 
+SecretKeyAccessor accessor = new SecretKeyAccessor() {
+    @Override
+    public SecretsData getSecretsData() {
+        int currentVersion = 0;
+        SecretsData secretsData = null;
+        try {
+            SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);
             List<SecretKey> secretKeyList = new ArrayList<>();
-            secretKeyList.add(secretKey1);                
-            return new SecretsData(secretKeyList, currentVersion);
+            secretKeyList.add(secretKey1);
+            secretsData = new SecretsData(secretKeyList, currentVersion);
+        } catch (StorageClientException ex) {
+            //...
         }
-    };
-}
+        return secretsData;
+    }
+};
 ```
 
 3. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or String. String can be simple key or a valid JSON string. This JSON string will then be parsed as a `SecretsData`
@@ -129,7 +131,7 @@ SecretsData JSON object
 ```
 ```java
 //using implementation of SecretsDataGenerator with key as String
-private SecretKeyAccessor getAccessorWithGenerator1() {
+private SecretKeyAccessor getAccessorWithGenerator1() throws StorageClientException {
     return SecretKeyAccessor.getAccessor(new SecretsDataGenerator() {
         @Override
         public Object generate() {
@@ -139,7 +141,7 @@ private SecretKeyAccessor getAccessorWithGenerator1() {
 }
 
 //using implementation of SecretsDataGenerator with key as String in lambda-style
-private SecretKeyAccessor getAccessorWithGenerator1lambdaStyle() {
+private SecretKeyAccessor getAccessorWithGenerator1lambdaStyle() throws StorageClientException {
     return SecretKeyAccessor.getAccessor(() -> "somePassword");                     
 }
 
@@ -152,22 +154,19 @@ private String secretsDataInJson = "{\n" +
                     "}";
 
 //using implementation of SecretsDataGenerator with SecretsData as JSON String
-private SecretKeyAccessor getAccessorWithGenerator2() {
+private SecretKeyAccessor getAccessorWithGenerator2() throws StorageClientException {
     return SecretKeyAccessor.getAccessor(() -> secretsDataInJson);
 }
 
 //using implementation of SecretsDataGenerator with SecretsData
-private SecretKeyAccessor getAccessorWithGenerator3() {
-    return SecretKeyAccessor.getAccessor(new SecretsDataGenerator() {
-        @Override
-        public Object generate() {
-            int currentVersion = 0;
-            SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);                 
-            List<SecretKey> secretKeyList = new ArrayList<>();
-            secretKeyList.add(secretKey1);                
-            return new SecretsData(secretKeyList, currentVersion);
-        }
-    });
+private SecretKeyAccessor getAccessorWithGenerator3() throws StorageClientException {
+    int currentVersion = 0;
+    SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);
+    List<SecretKey> secretKeyList = new ArrayList<>();
+    secretKeyList.add(secretKey1);
+    SecretsData data = new SecretsData(secretKeyList, currentVersion);
+
+    return SecretKeyAccessor.getAccessor(() -> data);
 }
 ```
 
@@ -192,10 +191,11 @@ public interface Storage {
      * @param country country identifier
      * @param record  object which encapsulate data which must be written in storage
      * @return recorded record
+     * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    Record write(String country, Record record) throws StorageServerException, StorageCryptoException;
+    Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
@@ -219,8 +219,7 @@ public class Record {
 ```
 
 Below is the example of how you may use `write` method
-```java
-public void testWrite () throws StorageException {         
+```java      
     key="user_1";
     body="some PII data";
     profile_key="customer";
@@ -230,7 +229,6 @@ public void testWrite () throws StorageException {
     Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
     Storage storage=initStorage();
     storage.write("us", record);
-}    
 ```
 
 #### Encryption
@@ -259,23 +257,22 @@ public interface Storage {
       * @param country country identifier
       * @param records record list
       * @return BatchRecord object which contains list of recorded records
+      * @throws StorageClientException if validation finished with errors
       * @throws StorageServerException if server connection failed or server response error
       * @throws StorageCryptoException if record encryption failed
       */
-     BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
+     BatchRecord batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException;
      //...
 }
 ```
  
  Below is the example of how you may use `batchWrite` method
 ```java
-public void testWriteBatch () throws StorageException {         
-    List<Record> list = new ArrayList<>();
-    list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
-    list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
-    Storage storage = initStorage();
-    storage.batchWrite ("us", list);
-}    
+List<Record> list = new ArrayList<>();
+list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
+list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
+Storage storage = initStorage();
+storage.batchWrite ("us", list);
 ```
  
 ### Data Migration and Key Rotation support
@@ -291,9 +288,11 @@ public interface Storage {
     * @param country country identifier
     * @param limit   batch-limit parameter
     * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-    * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+    * @throws StorageClientException if validation finished with errors
+    * @throws StorageServerException if server connection failed or server response error
+    * @throws StorageCryptoException if decryption failed
     */
-    MigrateResult migrate(String country, int limit) throws StorageException;
+    MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
@@ -319,14 +318,16 @@ Stored record can be read by `key` using `read` method.
 ```java
 public interface Storage {
    /**
-    * Make batched key-rotation-migration of records
+    * Read data from remote storage
     *
-    * @param country country identifier
-    * @param limit   batch-limit parameter
-    * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-    * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+    * @param country   country identifier
+    * @param recordKey record unique identifier
+    * @return Record object which contains required data
+    * @throws StorageClientException if validation finished with errors
+    * @throws StorageServerException if server connection failed or server response error
+    * @throws StorageCryptoException if decryption failed
     */
-    MigrateResult migrate(String country, int limit) throws StorageException;
+    Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
@@ -344,12 +345,10 @@ String body = record.getBody();
 
 Below is the example of how you may use `batchWrite` method
  ```java
-public void testRead () throws StorageException {
-    String recordKey = "user_1";                 
-    Storage storage = initStorage();
-    Record record = storage.read ("us", recordKey);
-    String decryptedBody = record.getBody();
-}    
+String recordKey = "user_1";                 
+Storage storage = initStorage();
+Record record = storage.read ("us", recordKey);
+String decryptedBody = record.getBody();
  ```
 
 ### Find records
@@ -363,10 +362,11 @@ public interface Storage {
     * @param country country identifier
     * @param builder object representing find filters and search options
     * @return BatchRecord object which contains required records
+    * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
+    BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
@@ -456,10 +456,11 @@ public interface Storage {
     * @param country country identifier
     * @param builder object representing find filters
     * @return founded record or null
+    * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record findOne(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
@@ -487,9 +488,10 @@ public interface Storage {
     * @param country   country code of the record
     * @param recordKey the record's key
     * @return TRUE when record was deleted
+    * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
-    boolean delete(String country, String recordKey) throws StorageServerException;
+    boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException;
     //...
 }
 ```
@@ -499,11 +501,9 @@ Here
 
 Below is the example of how you may use `delete` method
  ```java
-public void testDelete () throws StorageException {
-    String recordKey = "user_1";                 
-    Storage storage = initStorage();
-    storage.delete ("us", recordKey);         
-}    
+String recordKey = "user_1";
+Storage storage = initStorage();
+storage.delete ("us", recordKey);
  ```
 
 ### Error Handling
@@ -530,5 +530,5 @@ public void test () {
     } catch (Exception e) {
         // something else happened not related to InCountry SDK
     }                                         
-}   
+}
 ```
