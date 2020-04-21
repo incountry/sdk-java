@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.dto.search;
 
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -10,7 +11,7 @@ public class FindFilter {
     private static final Logger LOG = LogManager.getLogger(FindFilter.class);
 
     private static final int MAX_LIMIT = 100;
-    private static final String MSG_MAX_LIMIT = "Max limit is %l. Use offset to populate more";
+    private static final String MSG_MAX_LIMIT = "Max limit is %d. Use offset to populate more";
     private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
     private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
 
@@ -36,23 +37,23 @@ public class FindFilter {
         this.versionFilter = versionFilter;
     }
 
-    public void setLimit(int limit) {
+    public void setLimit(int limit) throws StorageClientException {
         if (limit > MAX_LIMIT) {
             String message = String.format(MSG_MAX_LIMIT, MAX_LIMIT);
             LOG.error(message);
-            throw new IllegalArgumentException(message);
+            throw new StorageClientException(message);
         }
         if (limit < 1) {
             LOG.error(MSG_NEG_LIMIT);
-            throw new IllegalArgumentException(MSG_NEG_LIMIT);
+            throw new StorageClientException(MSG_NEG_LIMIT);
         }
         this.limit = limit;
     }
 
-    public void setOffset(int offset) {
+    public void setOffset(int offset) throws StorageClientException {
         if (offset < 0) {
             LOG.error(MSG_NEG_OFFSET);
-            throw new IllegalArgumentException(MSG_NEG_OFFSET);
+            throw new StorageClientException(MSG_NEG_OFFSET);
         }
         this.offset = offset;
     }
@@ -114,15 +115,20 @@ public class FindFilter {
     }
 
     public FindFilter copy() {
-        FindFilter clone = new FindFilter();
-        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
-        clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
-        clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
-        clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().copy() : null);
-        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
-        clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().copy() : null);
-        clone.setOffset(getOffset());
-        clone.setLimit(getLimit());
+        FindFilter clone = null;
+        try {
+            clone = new FindFilter();
+            clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
+            clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
+            clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
+            clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().copy() : null);
+            clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
+            clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().copy() : null);
+            clone.setOffset(getOffset());
+            clone.setLimit(getLimit());
+        } catch (StorageClientException ex) {
+            LOG.error(ex);
+        }
         return clone;
     }
 

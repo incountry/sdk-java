@@ -508,7 +508,7 @@ public void testDelete () throws StorageException {
 
 ### Error Handling
 InCountry Java SDK throws following Exceptions:
-`StorageClientException` - used for various input validation errors. Can be thrown by all public methods.
+`StorageClientException` - used for various input validation errors
 `StorageServerException` - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
 `StorageCryptoException` - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
 `StorageException` - general exception. Inherited by all other exceptions

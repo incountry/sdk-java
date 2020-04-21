@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.tools.JsonUtils;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -26,20 +27,24 @@ public class SecretsDataUtilsTest {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
-        SecretKey secretKey = new SecretKey(secret, version, isKey);
-        List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(secretKey);
-        int currentVersion = 1;
-        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-        String secretKeyString = new Gson().toJson(secretsData);
+        try {
+            SecretKey secretKey = new SecretKey(secret, version, isKey);
+            List<SecretKey> secretKeyList = new ArrayList<>();
+            secretKeyList.add(secretKey);
+            int currentVersion = 1;
+            SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
+            String secretKeyString = new Gson().toJson(secretsData);
 
 
-        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
-        SecretsData resultSecretsData = accessor.getSecretsData();
-        assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-        assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
-        assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertEquals(isKey, resultSecretsData.getSecrets().get(0).getIsKey());
+            SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
+            SecretsData resultSecretsData = accessor.getSecretsData();
+            assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
+            assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
+            assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
+            assertEquals(isKey, resultSecretsData.getSecrets().get(0).getIsKey());
+        } catch (StorageClientException e) {
+            assertNull(e);
+        }
     }
 
     @Test
@@ -48,12 +53,16 @@ public class SecretsDataUtilsTest {
         int version = 0;
         int currentVersion = 0;
 
-        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
-        SecretsData resultSecretsData = accessor.getSecretsData();
-        assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-        assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
-        assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertFalse(resultSecretsData.getSecrets().get(0).getIsKey());
+        try {
+            SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
+            SecretsData resultSecretsData = accessor.getSecretsData();
+            assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
+            assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
+            assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
+            assertFalse(resultSecretsData.getSecrets().get(0).getIsKey());
+        } catch (StorageClientException e) {
+            assertNull(e);
+        }
     }
 
     @Test
@@ -105,8 +114,6 @@ public class SecretsDataUtilsTest {
                 "  \"currentVersion\": 1\n" +
                 "}";
 
-        assertThrows(IllegalArgumentException.class,
-                () -> SecretKeyAccessor.getAccessor(() -> secretDataWrongJson));
+        assertThrows(StorageClientException.class, () -> SecretKeyAccessor.getAccessor(() -> secretDataWrongJson));
     }
-
 }

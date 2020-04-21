@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.tools.crypto.impl;
 
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
@@ -66,7 +67,7 @@ public class CryptoImpl implements Crypto {
         this.envId = envId;
     }
 
-    public Map.Entry<String, Integer> encrypt(String plainText) throws StorageCryptoException {
+    public Map.Entry<String, Integer> encrypt(String plainText) throws StorageClientException, StorageCryptoException {
         if (isUsingPTEncryption) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(CHARSET));
             return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, CHARSET), null);
@@ -115,7 +116,7 @@ public class CryptoImpl implements Crypto {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException {
+    private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
@@ -136,7 +137,7 @@ public class CryptoImpl implements Crypto {
         return new String(decryptedText, CHARSET);
     }
 
-    private SecretKey getSecret(Integer version) {
+    private SecretKey getSecret(Integer version) throws StorageClientException {
         SecretKey secret = null;
         for (SecretKey item : secretsData.getSecrets()) {
             if (item.getVersion() == version) {
@@ -147,7 +148,7 @@ public class CryptoImpl implements Crypto {
         if (secret == null) {
             String message = MSG_ERR_VERSION + version;
             LOG.error(message);
-            throw new IllegalArgumentException(message);
+            throw new StorageClientException(message);
         }
         return secret;
     }
@@ -164,7 +165,7 @@ public class CryptoImpl implements Crypto {
         return createHash(stringToHash);
     }
 
-    public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
+    public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
         if (cipherText == null) {
             return null;
         }
@@ -198,12 +199,12 @@ public class CryptoImpl implements Crypto {
 
     }
 
-    private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
+    private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
         byte[] parts = Base64.getDecoder().decode(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }
 
-    private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageCryptoException {
+    private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
         byte[] parts = DatatypeConverter.parseHexBinary(cipherText);
         return this.decryptUnpacked(parts, decryptKeyVersion);
     }

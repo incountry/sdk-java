@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class HttpDaoImplTests {
 
@@ -37,17 +39,21 @@ public class HttpDaoImplTests {
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
     private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) {
-        SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        Storage storage;
-        if (encrypt) {
-            storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao);
-        } else {
-            storage = StorageImpl.getInstance("envId", null, dao);
+        Storage storage = null;
+        try {
+            SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
+            if (encrypt) {
+                storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao);
+            } else {
+                storage = StorageImpl.getInstance("envId", null, dao);
+            }
+        } catch (StorageClientException e) {
+            assertNull(e);
         }
         return storage;
     }
 
-    private Crypto initCrypto(boolean isKey, boolean encrypt) {
+    private Crypto initCrypto(boolean isKey, boolean encrypt) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         Crypto crypto;
         if (encrypt) {
@@ -59,7 +65,7 @@ public class HttpDaoImplTests {
     }
 
 
-    private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) {
+    private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) throws StorageClientException {
         SecretKey secretKey = new SecretKey(secret, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
