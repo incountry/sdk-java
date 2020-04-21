@@ -25,14 +25,23 @@ For a full list of supported countries and their codes please [follow this link]
 
 Usage
 -----
-To access your data in InCountry using Java SDK, you need to create an implementation of `Storage` interface. Use 'StorageImpl' for it 
+To access your data in InCountry using Java SDK, you need to create an implementation of `Storage` interface. 
+Use `StorageImpl` for it 
 ```java
 public class StorageImpl implements Storage {        
-    public static Storage getInstance(String environmentID,                  // Required to be passed in, or as environment variable INC_API_KEY 
-                                      String apiKey,                         // Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-                                      String endpoint,                       // Optional. Defines API URL. Default endpoint will be used if this param is null
-                                      SecretKeyAccessor secretKeyAccessor)   // Instance of SecretKeyAccessor class. Used to fetch encryption secret
-            throws StorageServerException {...}                           
+  /**
+  * creating Storage instance
+  *
+  * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
+  * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+  * @param endpoint          Optional. Defines API URL. 
+  *                          Default endpoint will be used if this param is null
+  * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+  * @return instance of Storage
+  * @throws StorageServerException if server connection failed or server response error
+  */
+  public static Storage getInstance(String environmentID, String apiKey, String endpoint,
+                            SecretKeyAccessor secretKeyAccessor) throws StorageServerException {...} 
 //...
 }
 ```
@@ -70,8 +79,11 @@ public interface SecretKeyAccessor {
 
 
 public class SecretsData {        
-    private List<SecretKey> secrets;    // Non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
-    private int currentVersion;         // Should be a non-negative integer
+    /** Non-empty list of secrets. One of the secrets must have 
+        same version as currentVersion in SecretsData */
+    private List<SecretKey> secrets;
+    /** Should be a non-negative integer */ 
+    private int currentVersion; 
 
     public SecretsData(List<SecretKey> secrets, int currentVersion) {...}            
     //...
@@ -116,7 +128,7 @@ private SecretKeyAccessor getAccessorWithCustomImlementation() {
 
 3. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or String. String can be simple key or a valid JSON string. This JSON string will then be parsed as a `SecretsData`
 SecretsData JSON object
-```json
+```javascript
 {
   "secrets": [{
        "secret": "someSecret",  // String   
@@ -124,7 +136,8 @@ SecretsData JSON object
        "isKey": true            // Boolean, should be 'true' only for user-defined encryption keys
     }
   ],
-  "currentVersion": 0           // Should be a non-negative integer. One of the secrets must have same version as currentVersion in SecretsData
+  "currentVersion": 0           // Should be a non-negative integer. One of the secrets
+                                // must have same version as currentVersion in SecretsData
 }
 ```
 ```java
@@ -213,7 +226,7 @@ public class Record {
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */
-    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {...}
+    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3)
     //...
 }
 ```
@@ -262,7 +275,8 @@ public interface Storage {
       * @throws StorageServerException if server connection failed or server response error
       * @throws StorageCryptoException if record encryption failed
       */
-     BatchRecord batchWrite(String country, List<Record> records) throws StorageServerException, StorageCryptoException;
+     BatchRecord batchWrite(String country, List<Record> records) 
+                        throws StorageServerException, StorageCryptoException {...}
      //...
 }
 ```
@@ -290,8 +304,10 @@ public interface Storage {
     *
     * @param country country identifier
     * @param limit   batch-limit parameter
-    * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-    * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+    * @return MigrateResult object which contain total records 
+    *         left to migrate and total amount of migrated records
+    * @throws StorageException if encryption is off/failed, if server 
+    *                          connection failed or server response error
     */
     MigrateResult migrate(String country, int limit) throws StorageException;
     //...
@@ -323,8 +339,10 @@ public interface Storage {
     *
     * @param country country identifier
     * @param limit   batch-limit parameter
-    * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-    * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+    * @return MigrateResult object which contain total records left to migrate 
+    *         and total amount of migrated records
+    * @throws StorageException if encryption is off/failed, if server connection 
+    *                          failed or server response error
     */
     MigrateResult migrate(String country, int limit) throws StorageException;
     //...
@@ -366,7 +384,8 @@ public interface Storage {
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    BatchRecord find(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
+    BatchRecord find(String country, FindFilterBuilder builder) 
+                     throws StorageServerException, StorageCryptoException;
     //...
 }
 ```
@@ -459,7 +478,8 @@ public interface Storage {
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record findOne(String country, FindFilterBuilder builder) throws StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilterBuilder builder) 
+                   throws StorageServerException, StorageCryptoException;
     //...
 }
 ```
