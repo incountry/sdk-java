@@ -52,17 +52,13 @@ public class StorageSingleTests {
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
     @BeforeEach
-    public void initializeAccessorAndCrypto() {
-        try {
-            SecretKey secretKey = new SecretKey(secret, version, true);
-            List<SecretKey> secretKeyList = new ArrayList<>();
-            secretKeyList.add(secretKey);
-            SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-            secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
-            crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), environmentId);
-        } catch (StorageClientException e) {
-            assertNull(e);
-        }
+    public void initializeAccessorAndCrypto() throws StorageClientException {
+        SecretKey secretKey = new SecretKey(secret, version, true);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(secretKey);
+        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
+        secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
+        crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), environmentId);
     }
 
     @Test
@@ -328,21 +324,12 @@ public class StorageSingleTests {
     }
 
     @Test
-    public void testErrorDeleteInsufficientArgs() {
+    public void testErrorDeleteInsufficientArgs() throws StorageClientException, StorageServerException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = null;
-        try {
-            dao = new HttpDaoImpl(null, agent);
-        } catch (StorageServerException ex) {
-            assertNull(ex);
-        }
+        Dao dao = new HttpDaoImpl(null, agent);
         assertNotNull(dao);
-        try {
-            Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
-            assertThrows(StorageClientException.class, () -> storage.delete(null, null));
-        } catch (StorageClientException e) {
-            assertNull(e);
-        }
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
+        assertThrows(StorageClientException.class, () -> storage.delete(null, null));
     }
 
     @Test

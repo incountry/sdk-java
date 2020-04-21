@@ -8,7 +8,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FindFilterTest {
@@ -18,24 +17,20 @@ public class FindFilterTest {
     public String profileKey = "profileKey";
 
     @Test
-    public void testToJsonObject() {
-        try {
-            FilterStringParam versionFilterParam = new FilterStringParam(Integer.toString(version), true);
-            FilterStringParam keyFilterParam = new FilterStringParam(key, true);
-            FilterStringParam profileKeyFilterParam = new FilterStringParam(profileKey);
+    public void testToJsonObject() throws StorageClientException {
+        FilterStringParam versionFilterParam = new FilterStringParam(Integer.toString(version), true);
+        FilterStringParam keyFilterParam = new FilterStringParam(key, true);
+        FilterStringParam profileKeyFilterParam = new FilterStringParam(profileKey);
 
-            FindFilter findFilter = new FindFilter();
-            findFilter.setVersionFilter(versionFilterParam);
-            findFilter.setKeyFilter(keyFilterParam);
-            findFilter.setProfileKeyFilter(profileKeyFilterParam);
-            JsonObject jsonObject = JsonUtils.toJson(findFilter, null);
+        FindFilter findFilter = new FindFilter();
+        findFilter.setVersionFilter(versionFilterParam);
+        findFilter.setKeyFilter(keyFilterParam);
+        findFilter.setProfileKeyFilter(profileKeyFilterParam);
+        JsonObject jsonObject = JsonUtils.toJson(findFilter, null);
 
-            assertEquals(String.format("{\"$not\":[%d]}", version), jsonObject.get("version").toString());
-            assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
-            assertEquals(String.format("[\"%s\"]", profileKey), jsonObject.get("profile_key").toString());
-        } catch (StorageClientException e) {
-            assertNull(e);
-        }
+        assertEquals(String.format("{\"$not\":[%d]}", version), jsonObject.get("version").toString());
+        assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
+        assertEquals(String.format("[\"%s\"]", profileKey), jsonObject.get("profile_key").toString());
     }
 
 

@@ -18,6 +18,14 @@ public class SecretKey {
     private int version;
     private boolean isKey;
 
+    /**
+     * Constructor
+     *
+     * @param secret  secret/key
+     * @param version secret version, should be a non-negative integer
+     * @param isKey   should be True only for user-defined encryption keys
+     * @throws StorageClientException when parameter validation fails
+     */
     public SecretKey(String secret, int version, boolean isKey) throws StorageClientException {
         validateSecretKey(secret, version, isKey);
         this.version = version;

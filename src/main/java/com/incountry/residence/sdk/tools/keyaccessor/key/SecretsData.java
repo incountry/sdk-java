@@ -15,6 +15,12 @@ public class SecretsData {
     private List<SecretKey> secrets;
     private int currentVersion;
 
+    /**
+     *
+     * @param secrets non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
+     * @param currentVersion Should be a non-negative integer
+     * @throws StorageClientException when parameter validation fails
+     */
     public SecretsData(List<SecretKey> secrets, int currentVersion) throws StorageClientException {
         validate(secrets, currentVersion);
         this.currentVersion = currentVersion;

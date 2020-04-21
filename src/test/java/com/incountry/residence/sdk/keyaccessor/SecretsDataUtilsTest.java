@@ -23,46 +23,36 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class SecretsDataUtilsTest {
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws StorageClientException {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
-        try {
-            SecretKey secretKey = new SecretKey(secret, version, isKey);
-            List<SecretKey> secretKeyList = new ArrayList<>();
-            secretKeyList.add(secretKey);
-            int currentVersion = 1;
-            SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-            String secretKeyString = new Gson().toJson(secretsData);
+        SecretKey secretKey = new SecretKey(secret, version, isKey);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(secretKey);
+        int currentVersion = 1;
+        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
+        String secretKeyString = new Gson().toJson(secretsData);
 
-
-            SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
-            SecretsData resultSecretsData = accessor.getSecretsData();
-            assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-            assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
-            assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-            assertEquals(isKey, resultSecretsData.getSecrets().get(0).getIsKey());
-        } catch (StorageClientException e) {
-            assertNull(e);
-        }
+        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
+        SecretsData resultSecretsData = accessor.getSecretsData();
+        assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
+        assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
+        assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
+        assertEquals(isKey, resultSecretsData.getSecrets().get(0).getIsKey());
     }
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws StorageClientException {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
-
-        try {
-            SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
-            SecretsData resultSecretsData = accessor.getSecretsData();
-            assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-            assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
-            assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-            assertFalse(resultSecretsData.getSecrets().get(0).getIsKey());
-        } catch (StorageClientException e) {
-            assertNull(e);
-        }
+        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
+        SecretsData resultSecretsData = accessor.getSecretsData();
+        assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
+        assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
+        assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
+        assertFalse(resultSecretsData.getSecrets().get(0).getIsKey());
     }
 
     @Test

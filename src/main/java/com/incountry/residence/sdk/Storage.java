@@ -6,7 +6,6 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 
 import java.util.List;
@@ -93,7 +92,9 @@ public interface Storage {
      * @param country country identifier
      * @param limit   batch-limit parameter
      * @return MigrateResult object which contain total records left to migrate and total amount of migrated records
-     * @throws StorageException if encryption is off/failed, if server connection failed or server response error
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     * @throws StorageCryptoException if decryption failed
      */
-    MigrateResult migrate(String country, int limit) throws StorageException;
+    MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException;
 }

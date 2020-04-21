@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class HttpDaoImplTests {
 
@@ -38,17 +37,13 @@ public class HttpDaoImplTests {
     private int currentVersion = 0;
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
-    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) {
-        Storage storage = null;
-        try {
-            SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-            if (encrypt) {
-                storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao);
-            } else {
-                storage = StorageImpl.getInstance("envId", null, dao);
-            }
-        } catch (StorageClientException e) {
-            assertNull(e);
+    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
+        Storage storage;
+        SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
+        if (encrypt) {
+            storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao);
+        } else {
+            storage = StorageImpl.getInstance("envId", null, dao);
         }
         return storage;
     }

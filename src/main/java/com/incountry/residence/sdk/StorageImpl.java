@@ -8,7 +8,6 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
@@ -187,7 +186,7 @@ public class StorageImpl implements Storage {
         return record;
     }
 
-    public MigrateResult migrate(String country, int limit) throws StorageException {
+    public MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("migrate params (country={} , limit={})",
                     country,
@@ -195,7 +194,7 @@ public class StorageImpl implements Storage {
         }
         if (!isEncrypted) {
             LOG.error(MSG_MIGR_NOT_SUPPORT);
-            throw new StorageException(MSG_MIGR_NOT_SUPPORT);
+            throw new StorageClientException(MSG_MIGR_NOT_SUPPORT);
         }
         if (limit < 1) {
             LOG.error(MSG_MIGR_ERROR_LIMIT);

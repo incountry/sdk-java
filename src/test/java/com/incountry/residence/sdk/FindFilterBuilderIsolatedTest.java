@@ -11,7 +11,6 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,21 +32,16 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void toStringPositiveTest() {
-        String string = null;
-        try {
-            string = FindFilterBuilder.create()
-                    .limitAndOffset(1, 2)
-                    .keyNotIn(Arrays.asList("3", "4"))
-                    .key2NotIn(Arrays.asList("5", "6"))
-                    .key3NotIn(Arrays.asList("7", "8"))
-                    .profileKeyNotIn(Arrays.asList("9", "10"))
-                    .versionNotIn(Arrays.asList("11", "12"))
-                    .rangeKeyNotIn(new int[]{13, 14})
-                    .build().toString();
-        } catch (StorageClientException e) {
-            assertNull(e);
-        }
+    public void toStringPositiveTest() throws StorageClientException {
+        String string = FindFilterBuilder.create()
+                .limitAndOffset(1, 2)
+                .keyNotIn(Arrays.asList("3", "4"))
+                .key2NotIn(Arrays.asList("5", "6"))
+                .key3NotIn(Arrays.asList("7", "8"))
+                .profileKeyNotIn(Arrays.asList("9", "10"))
+                .versionNotIn(Arrays.asList("11", "12"))
+                .rangeKeyNotIn(new int[]{13, 14})
+                .build().toString();
         assertNotNull(string);
         assertTrue(string.contains("limit=1"));
         assertTrue(string.contains("offset=2"));
