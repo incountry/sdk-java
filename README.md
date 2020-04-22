@@ -8,12 +8,12 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 For Gradle users plase add this line to your dependencies list
 ```
-compile "com.incountry:incountry-java-client:1.1.0"
+compile "com.incountry:incountry-java-client:1.1.1"
 ```
 
 Countries List
