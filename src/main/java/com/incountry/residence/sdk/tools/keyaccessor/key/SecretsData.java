@@ -16,8 +16,9 @@ public class SecretsData {
     private int currentVersion;
 
     /**
+     * creates a container with secrets
      *
-     * @param secrets non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
+     * @param secrets        non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
      * @param currentVersion Should be a non-negative integer
      * @throws StorageClientException when parameter validation fails
      */

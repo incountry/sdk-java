@@ -31,7 +31,7 @@ public class Record {
      * @param key        Required, record key
      * @param body       Optional, data to be stored and encrypted
      * @param profileKey Optional, profile key
-     * @param rangeKey   Optional, range key for sorting in pagination
+     * @param rangeKey   Optional, range key
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */

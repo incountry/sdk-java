@@ -19,7 +19,7 @@ public class SecretKey {
     private boolean isKey;
 
     /**
-     * Constructor
+     * Creates a secret key
      *
      * @param secret  secret/key
      * @param version secret version, should be a non-negative integer
