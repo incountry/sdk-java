@@ -72,7 +72,7 @@ public class HttpDaoImpl implements Dao {
             popMap.clear();
             content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
             for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
-                popMap.put(pair.getValue(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
+                popMap.put(pair.getKey(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
             }
             lastLoadedTime = System.currentTimeMillis();
         }
