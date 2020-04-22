@@ -23,6 +23,10 @@ public class FindFilterBuilder {
         filter = new FindFilter();
     }
 
+    private FindFilterBuilder(FindFilter filter) {
+        this.filter = filter;
+    }
+
     public FindFilter build() {
         return filter.copy();
     }
@@ -201,5 +205,9 @@ public class FindFilterBuilder {
         return "FindFilterBuilder{" +
                 "filter=" + filter +
                 '}';
+    }
+
+    public FindFilterBuilder copy() {
+        return new FindFilterBuilder(this.filter.copy());
     }
 }

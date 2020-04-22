@@ -250,7 +250,7 @@ public class StorageImpl implements Storage {
             throw new IllegalArgumentException(MSG_ERROR_NULL_FILTERS);
         }
 
-        BatchRecord batchRecord = dao.find(country, builder, crypto);
+        BatchRecord batchRecord = dao.find(country, builder.copy(), crypto);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
         }
@@ -271,7 +271,7 @@ public class StorageImpl implements Storage {
                     country,
                     builder);
         }
-        BatchRecord findResults = find(country, builder);
+        BatchRecord findResults = find(country, builder.copy().limitAndOffset(1, 0));
         List<Record> records = findResults.getRecords();
         if (records.isEmpty()) {
             LOG.warn(MSG_FOUND_NOTHING);
