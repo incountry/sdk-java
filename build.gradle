@@ -59,6 +59,9 @@ dependencies {
     implementation "com.google.code.gson:gson:${gsonVersion}"
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+//    compile group: "com.github.java-json-tools", name: "json-schema-validator", version: "2.2.12"
+    compile group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.10.0"
+
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
 }
 
