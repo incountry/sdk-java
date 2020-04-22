@@ -34,7 +34,8 @@ public class StorageImpl implements Storage {
    *
    * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
    * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-   * @param endpoint          Optional. Defines API URL. Default endpoint will be used if this param is null
+   * @param endpoint          Optional. Defines API URL. 
+   *                          Default endpoint will be used if this param is null
    * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
    * @return instance of Storage
    * @throws StorageClientException if configuration validation finished with errors
