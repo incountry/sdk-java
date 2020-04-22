@@ -8,13 +8,18 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 For Gradle users plase add this line to your dependencies list
 ```
-compile "com.incountry:incountry-java-client:1.1.0"
+compile "com.incountry:incountry-java-client:1.1.1"
 ```
+
+Countries List
+----
+For a full list of supported countries and their codes please [follow this link](countries.md).
+
 
 Usage
 -----
@@ -183,7 +188,7 @@ FilterRangeParam rangeParam = new FilterRangeParam(1000);
 Available request options for `FilterRangeParam`: `$lt`, `$lte`, `$gt`, `$gte`.
 
 `BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about
- records that failed to be processed correctly during `find` request. 
+ records that failed to be processed correctly during `find` request.
 
 ### Find one record matching filter
 
