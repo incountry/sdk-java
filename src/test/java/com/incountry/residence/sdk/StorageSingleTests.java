@@ -48,7 +48,6 @@ public class StorageSingleTests {
     private String body = "body";
 
     private String environmentId = "envId";
-    private String apiKey = "apiKey";
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
     @BeforeEach
@@ -334,12 +333,10 @@ public class StorageSingleTests {
 
     @Test
     public void testErrorMigrateWhenEncryptionOff() throws StorageException {
-        Storage storage = StorageImpl.getInstance(
-                environmentId,
-                apiKey,
-                null,
-                null
-        );
-        assertThrows(StorageException.class, () -> storage.migrate(null, 100));
+        FakeHttpAgent agent = new FakeHttpAgent("");
+        Dao dao = new HttpDaoImpl(fakeEndpoint, agent);
+        assertNotNull(dao);
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
+        assertThrows(StorageClientException.class, () -> storage.migrate(null, 100));
     }
 }

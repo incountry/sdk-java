@@ -1,6 +1,5 @@
 package com.incountry.residence.sdk.tools;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,7 +23,6 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -396,13 +394,6 @@ public class JsonUtils {
         @Override
         public int hashCode() {
             return Objects.hash(super.hashCode(), version);
-        }
-    }
-
-    class TestJackson{
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-        public Date getCurrentDate() {
-            return new Date();
         }
     }
 }

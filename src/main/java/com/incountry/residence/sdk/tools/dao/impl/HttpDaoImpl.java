@@ -40,7 +40,6 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_DELIMITER = "/";
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
     private static final Charset CHARSET = StandardCharsets.UTF_8;
-
     private final Map<String, POP> popMap = new HashMap<>();
     private HttpAgent agent;
     private String endPoint = DEFAULT_ENDPOINT;
@@ -71,7 +70,7 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
+            content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY);
             for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
                 popMap.put(pair.getKey(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
             }
@@ -119,21 +118,21 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createRecord(String country, Record record, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
-        agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), false);
+        agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE);
     }
 
     @Override
     public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
-        agent.request(url, URI_POST, recListJson, false);
+        agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE);
     }
 
     @Override
     public Record read(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        String response = agent.request(url, URI_GET, null, true);
+        String response = agent.request(url, URI_GET, null, ApiResponse.READ);
         if (response == null) {
             return null;
         } else {
@@ -145,14 +144,14 @@ public class HttpDaoImpl implements Dao {
     public void delete(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        agent.request(url, URI_DELETE, null, false);
+        agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
     }
 
     @Override
     public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageClientException, StorageServerException {
         String url = getEndpoint(concatUrl(country, URI_FIND), country);
         String postData = JsonUtils.toJsonString(builder.build(), crypto);
-        String content = agent.request(url, URI_POST, postData, false);
+        String content = agent.request(url, URI_POST, postData, ApiResponse.FIND);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }

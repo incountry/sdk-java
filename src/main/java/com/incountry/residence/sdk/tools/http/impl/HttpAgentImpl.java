@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
+import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.version.Version;
@@ -13,6 +14,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 public class HttpAgentImpl implements HttpAgent {
 
@@ -39,12 +41,12 @@ public class HttpAgentImpl implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, boolean allowNone) throws StorageServerException {
+    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (endpoint={} , method={} , allowNone={})",
+            LOG.trace("HTTP request params (endpoint={} , method={} , codeMap={})",
                     endpoint,
                     method,
-                    allowNone);
+                    codeMap);
         }
         try {
             URL url = new URL(endpoint);
@@ -62,11 +64,12 @@ public class HttpAgentImpl implements HttpAgent {
                 os.close();
             }
             int status = con.getResponseCode();
+            ApiResponse params = codeMap.get(status);
             BufferedReader reader;
-            if (status < 400) {
-                reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
-            } else {
+            if (params == null || params.isError()) {
                 reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
             }
             String inputLine;
             StringBuilder content = new StringBuilder();
@@ -74,10 +77,10 @@ public class HttpAgentImpl implements HttpAgent {
                 content.append(inputLine);
             }
             reader.close();
-            if (allowNone && status == 404) {
+            if (params != null && params.isIgnored()) {
                 return null;
             }
-            if (status >= 400) {
+            if (params == null || params.isError()) {
                 String error = status + " " + endpoint + " - " + content;
                 if (LOG.isErrorEnabled()) {
                     LOG.error(error.replaceAll("[\r\n]", ""));
