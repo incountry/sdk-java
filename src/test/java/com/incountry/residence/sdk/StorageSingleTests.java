@@ -123,8 +123,8 @@ public class StorageSingleTests {
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
         BatchRecord batchRecord = storage.find(country, builder);
         String callBody = agent.getCallBody();
-        String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
-        assertEquals(new Gson().fromJson(expected, JsonObject.class), new Gson().fromJson(callBody, JsonObject.class));
+        String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"limit\":1,\"offset\":0}}";
+        assertEquals(expected, callBody);
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
@@ -150,8 +150,8 @@ public class StorageSingleTests {
         Record foundRecord = storage.findOne(country, builder);
 
         String callBody = agent.getCallBody();
-        String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
-        assertEquals(new Gson().fromJson(expected, JsonObject.class), new Gson().fromJson(callBody, JsonObject.class));
+        String expected = "{\"filter\":{\"profile_key\":[\"" + crypto.createKeyHash(profileKey) + "\"]},\"options\":{\"limit\":1,\"offset\":0}}";
+        assertEquals(expected, callBody);
 
         assertEquals(key, foundRecord.getKey());
         assertEquals(body, foundRecord.getBody());
