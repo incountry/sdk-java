@@ -5,9 +5,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.utils.SecretsDataUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -30,13 +30,12 @@ public class SecretsDataUtilsTest {
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         int currentVersion = 1;
-        SecretsData secretsData = new SecretsData();
-        secretsData.setSecrets(secretKeyList);
-        secretsData.setCurrentVersion(currentVersion);
-
+        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         String secretKeyString = new Gson().toJson(secretsData);
 
-        SecretsData resultSecretsData = SecretsDataUtils.getSecretsDataFromString(secretKeyString);
+
+        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
+        SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
@@ -49,7 +48,8 @@ public class SecretsDataUtilsTest {
         int version = 0;
         int currentVersion = 0;
 
-        SecretsData resultSecretsData = SecretsDataUtils.getSecretsDataFromString("user_password");
+        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
+        SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());

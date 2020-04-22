@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.tools.dao;
 
 /**
- * class-container to store host list with POP API
+ * class-container to store host list with PoPAPI
  */
 public class POP {
     private String host;

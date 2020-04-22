@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class StorageTest {
+public class StorageIntegrationTest {
 
     private static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
     private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
@@ -54,11 +54,8 @@ public class StorageTest {
         SecretKey secretKey = new SecretKey(secret, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
-        SecretsData secretsData = new SecretsData();
-        secretsData.setSecrets(secretKeyList);
-        secretsData.setCurrentVersion(currentVersion);
+        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
-
 
         storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),

@@ -38,7 +38,7 @@ public class CryptoImpl implements Crypto {
     private static final String MSG_ERR_ALG_EXCEPTION = "AES/GCM/NoPadding algorithm exception";
 
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
-    private static final Charset CHARSET = Charset.defaultCharset();
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final int AUTH_TAG_LENGTH = 16;
     private static final int IV_LENGTH = 12;
     private static final int KEY_LENGTH = 32;
@@ -106,7 +106,7 @@ public class CryptoImpl implements Crypto {
 
     private byte[] getKey(byte[] salt, SecretKey secretKeyObj) throws StorageCryptoException {
         if (secretKeyObj.getIsKey() != null && secretKeyObj.getIsKey()) {
-            return secretKeyObj.getSecret().getBytes(StandardCharsets.UTF_8);
+            return secretKeyObj.getSecret().getBytes(CHARSET);
         }
         return generateStrongPasswordHash(secretKeyObj.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
     }

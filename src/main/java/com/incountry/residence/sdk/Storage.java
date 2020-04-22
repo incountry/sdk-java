@@ -51,8 +51,8 @@ public interface Storage {
     /**
      * Delete record from remote storage
      *
-     * @param country   country identifier
-     * @param recordKey record unique identifier
+     * @param country country code of the record
+     * @param recordKey the record's key
      * @return TRUE when record was deleted
      * @throws StorageServerException if server connection failed
      */
@@ -62,7 +62,7 @@ public interface Storage {
      * Find records in remote storage according to filters
      *
      * @param country country identifier
-     * @param builder object representing find filters
+     * @param builder object representing find filters and search options
      * @return BatchRecord object which contains required records
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed

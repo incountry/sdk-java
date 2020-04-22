@@ -50,13 +50,25 @@ public class StorageImpl implements Storage {
     }
 
     private StorageImpl() {
-
     }
 
+    /**
+     * creating Storage instance with ENV variables without encryption
+     *
+     * @return instance of Storage
+     * @throws StorageServerException when configuration is invalid
+     */
     public static Storage getInstance() throws StorageServerException {
         return getInstance(null);
     }
 
+    /**
+     * creating Storage instance with ENV variables
+     *
+     * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+     * @return instance of Storage
+     * @throws StorageServerException if server connection failed or server response error
+     */
     public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageServerException {
         return getInstance(loadFromEnv(PARAM_ENV_ID),
                 loadFromEnv(PARAM_API_KEY),
@@ -64,6 +76,16 @@ public class StorageImpl implements Storage {
                 secretKeyAccessor);
     }
 
+    /**
+     * creating Storage instance
+     *
+     * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
+     * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+     * @param endpoint          Optional. Defines API URL. Default endpoint will be used if this param is null
+     * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+     * @return instance of Storage
+     * @throws StorageServerException if server connection failed or server response error
+     */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageServerException {
         if (LOG.isDebugEnabled()) {
