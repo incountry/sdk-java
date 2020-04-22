@@ -15,8 +15,11 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,14 +32,19 @@ public class StorageIntegrationTest {
     private static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
     private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
 
+    private static final String TEMP = new StringBuilder("-javasdk-")
+            .append(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()))
+            .append("-")
+            .append(UUID.randomUUID().toString().replace("-", ""))
+            .toString();
 
     private Storage storage;
     private String country = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
-    private String batchWriteRecordKey = "batch_write_key";
-    private String writeRecordKey = "write_key";
-    private String profileKey = "profileKey";
-    private String key2 = "key2";
-    private String key3 = "key3";
+    private String batchWriteRecordKey = "batch_write_key" + TEMP;
+    private String writeRecordKey = "write_key" + TEMP;
+    private String profileKey = "profileKey" + TEMP;
+    private String key2 = "key2" + TEMP;
+    private String key3 = "key3" + TEMP;
     private Integer batchWriteRangeKey = 2;
     private Integer writeRangeKey = 1;
     private String recordBody = "test";
