@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.keyaccessor.impl;
 
 import com.incountry.residence.sdk.tools.JsonUtils;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.generator.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -23,19 +24,19 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
 
     private SecretsData secretsData;
 
-    public SecretKeyAccessorImpl(String secret) {
+    public SecretKeyAccessorImpl(String secret) throws StorageClientException {
         secretsData = getSecretsDataFromString(secret);
     }
 
-    public SecretKeyAccessorImpl(SecretsDataGenerator secretsDataGenerator) {
+    public SecretKeyAccessorImpl(SecretsDataGenerator secretsDataGenerator) throws StorageClientException {
         if (secretsDataGenerator == null) {
             LOG.error(MSG_NULL_GENETATOR);
-            throw new IllegalArgumentException(MSG_NULL_GENETATOR);
+            throw new StorageClientException(MSG_NULL_GENETATOR);
         }
         Object someSecret = secretsDataGenerator.generate();
         if (someSecret == null) {
             LOG.error(MSG_NULL_KEY);
-            throw new IllegalArgumentException(MSG_NULL_KEY);
+            throw new StorageClientException(MSG_NULL_KEY);
         } else if (someSecret instanceof String) {
             secretsData = getSecretsDataFromString((String) someSecret);
         } else if (someSecret instanceof SecretsData) {
@@ -44,7 +45,7 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
             secretsData = temp;
         } else {
             LOG.error(MSG_ERROR);
-            throw new IllegalArgumentException(MSG_ERROR);
+            throw new StorageClientException(MSG_ERROR);
         }
     }
 
@@ -54,7 +55,7 @@ public class SecretKeyAccessorImpl implements SecretKeyAccessor {
      * @param secretKeyString simple string or json
      * @return SecretsData object which contain secret keys and there versions
      */
-    private static SecretsData getSecretsDataFromString(String secretKeyString) {
+    private static SecretsData getSecretsDataFromString(String secretKeyString) throws StorageClientException {
         SecretsData data = JsonUtils.getSecretsDataFromJson(secretKeyString);
         if (data != null) {
             SecretsData.validate(data.getSecrets(), data.getCurrentVersion());

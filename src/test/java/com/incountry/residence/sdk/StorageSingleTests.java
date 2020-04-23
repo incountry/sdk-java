@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
@@ -51,7 +52,7 @@ public class StorageSingleTests {
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
     @BeforeEach
-    public void initializeAccessorAndCrypto() {
+    public void initializeAccessorAndCrypto() throws StorageClientException {
         SecretKey secretKey = new SecretKey(secret, version, true);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
@@ -79,7 +80,7 @@ public class StorageSingleTests {
     @Test
     public void migrateNegativeTest() throws StorageException {
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")));
-        assertThrows(IllegalArgumentException.class, () -> storage.migrate("us", 0));
+        assertThrows(StorageClientException.class, () -> storage.migrate("us", 0));
     }
 
     @Test
@@ -303,44 +304,32 @@ public class StorageSingleTests {
         String encrypted = JsonUtils.toJsonString(record, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(null, agent));
-        assertThrows(IllegalArgumentException.class, () -> storage.find(null, null));
-        assertThrows(IllegalArgumentException.class, () -> storage.find(country, null));
+        assertThrows(StorageClientException.class, () -> storage.find(null, null));
+        assertThrows(StorageClientException.class, () -> storage.find(country, null));
     }
 
     @Test
-    public void testInitErrorOnInsufficientArgs() {
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() ->
-                new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1)
-        );
-        assertThrows(IllegalArgumentException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
+    public void testInitErrorOnInsufficientArgs() throws StorageClientException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretData);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
     }
 
     @Test
-    public void testErrorReadInsufficientArgs() {
+    public void testErrorReadInsufficientArgs() throws StorageServerException, StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = null;
-        try {
-            dao = new HttpDaoImpl(null, agent);
-        } catch (StorageServerException ex) {
-            assertNull(ex);
-        }
+        Dao dao = new HttpDaoImpl(null, agent);
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
+        assertThrows(StorageClientException.class, () -> storage.read(null, null));
+    }
+
+    @Test
+    public void testErrorDeleteInsufficientArgs() throws StorageClientException, StorageServerException {
+        FakeHttpAgent agent = new FakeHttpAgent("");
+        Dao dao = new HttpDaoImpl(null, agent);
         assertNotNull(dao);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
-        assertThrows(IllegalArgumentException.class, () -> storage.read(null, null));
-    }
-
-    @Test
-    public void testErrorDeleteInsufficientArgs() {
-        FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = null;
-        try {
-            dao = new HttpDaoImpl(null, agent);
-        } catch (StorageServerException ex) {
-            assertNull(ex);
-        }
-        assertNotNull(dao);
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
-        assertThrows(IllegalArgumentException.class, () -> storage.delete(null, null));
+        assertThrows(StorageClientException.class, () -> storage.delete(null, null));
     }
 
     @Test
