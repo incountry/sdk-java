@@ -27,7 +27,7 @@ public class HttpDaoImpl implements Dao {
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
 
-    private static final String MSG_ERROR_RESPONSE = "Incorrect response. Expected 'OK', but recieved: ";
+    private static final String MSG_ERROR_RESPONSE = "Response error: expected 'OK', but recieved: ";
 
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
