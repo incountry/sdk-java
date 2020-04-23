@@ -17,6 +17,7 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +81,7 @@ public class JsonUtils {
         mapBodyMeta.put(P_PAYLOAD, record.getBody());
         mapBodyMeta.put(P_META, jsonObject.toString());
         String packedBody = gson.toJson(mapBodyMeta);
-        EncryptedRecord encRec = new EncryptedRecord(record, crypto, packedBody);
+        TransferRecord encRec = new TransferRecord(record, crypto, packedBody);
         return (JsonObject) gson.toJsonTree(encRec);
     }
 
@@ -115,10 +116,12 @@ public class JsonUtils {
      * @return record objects with data from json
      * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException if decryption failed
+     * @throws StorageServerException if server connection failed or server response error
      */
-    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException {
+    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         Gson gson = getGson4Records();
-        EncryptedRecord verRec = gson.fromJson(jsonString, EncryptedRecord.class);
+        TransferRecord verRec = gson.fromJson(jsonString, TransferRecord.class);
+        verRec.validate();
         if (verRec.getVersion() == null) {
             verRec.setVersion(0);
         }
@@ -304,10 +307,10 @@ public class JsonUtils {
     /**
      * inner class for cosy encryption and serialization of {@link Record} instances
      */
-    private static class EncryptedRecord extends Record {
+    private static class TransferRecord extends Record {
         private Integer version;
 
-        EncryptedRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageClientException, StorageCryptoException {
+        TransferRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageClientException, StorageCryptoException {
             setKey(crypto.createKeyHash(record.getKey()));
             setKey2(crypto.createKeyHash(record.getKey2()));
             setKey3(crypto.createKeyHash(record.getKey3()));
@@ -325,6 +328,20 @@ public class JsonUtils {
 
         public void setVersion(Integer version) {
             this.version = version;
+        }
+
+
+        public void validate() throws StorageServerException {
+            StringBuilder builder = null;
+            if (getKey() == null || getKey().length() == 0) {
+                builder = new StringBuilder("Null required record fields: key");
+            }
+            if (getBody() == null || getBody().length() == 0) {
+                builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
+            }
+            if (builder != null) {
+                throw new StorageServerException(builder.toString());
+            }
         }
 
         /**
@@ -387,7 +404,7 @@ public class JsonUtils {
             if (!super.equals(object)) {
                 return false;
             }
-            EncryptedRecord that = (EncryptedRecord) object;
+            TransferRecord that = (TransferRecord) object;
             return Objects.equals(version, that.version);
         }
 
