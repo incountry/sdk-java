@@ -340,7 +340,9 @@ public class JsonUtils {
                 builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
             }
             if (builder != null) {
-                throw new StorageServerException(builder.toString());
+                String message = builder.toString();
+                LOG.error(message);
+                throw new StorageServerException(message);
             }
         }
 

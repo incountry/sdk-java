@@ -65,7 +65,7 @@ public class StorageSingleTests {
         Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, crypto);
         String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent(content)));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent(Arrays.asList(content, "OK"))));
         BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, crypto);
 
         int migratedRecords = batchRecord.getCount();
@@ -102,7 +102,7 @@ public class StorageSingleTests {
     @Test
     public void testCustomEndpoint() throws StorageException, IOException {
         String endpoint = "https://custom.endpoint.io";
-        FakeHttpAgent agent = new FakeHttpAgent("");
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent));
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         storage.write(country, record);
@@ -282,8 +282,8 @@ public class StorageSingleTests {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
                 .profileKeyEq(profileKey);
-
-        FakeHttpAgent agent = new FakeHttpAgent(null);
+        String string = null;
+        FakeHttpAgent agent = new FakeHttpAgent(string);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
         BatchRecord findResult = storage.find(country, builder);
         assertEquals(0, findResult.getRecords().size());
@@ -291,7 +291,8 @@ public class StorageSingleTests {
 
     @Test
     public void testReadNotFound() throws StorageException {
-        FakeHttpAgent agent = new FakeHttpAgent(null);
+        String string = null;
+        FakeHttpAgent agent = new FakeHttpAgent(string);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
         Record readRecord = storage.read(country, key);
         assertNull(readRecord);

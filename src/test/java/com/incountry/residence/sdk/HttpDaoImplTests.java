@@ -97,7 +97,7 @@ public class HttpDaoImplTests {
                           Integer rangeKey,
                           boolean isKey,
                           boolean encrypt) throws StorageException, MalformedURLException {
-        FakeHttpAgent agent = new FakeHttpAgent("");
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
@@ -170,7 +170,7 @@ public class HttpDaoImplTests {
                            boolean isKey,
                            boolean encrypt) throws StorageException, IOException {
 
-        FakeHttpAgent agent = new FakeHttpAgent("");
+        FakeHttpAgent agent = new FakeHttpAgent("{}");
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
         storage.delete(country, key);
         Crypto crypto = initCrypto(isKey, encrypt);
@@ -192,7 +192,7 @@ public class HttpDaoImplTests {
                                boolean isKey,
                                boolean encrypt) throws StorageException {
 
-        FakeHttpAgent agent = new FakeHttpAgent("");
+        FakeHttpAgent agent = new FakeHttpAgent("ok");
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
 
         List<Record> records = new ArrayList<>();

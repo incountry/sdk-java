@@ -27,6 +27,8 @@ public class HttpDaoImpl implements Dao {
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
 
+    private static final String MSG_ERROR_RESPONSE = "Incorrect response. Expected 'OK', but recieved: ";
+
     private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
@@ -118,14 +120,14 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createRecord(String country, Record record, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
-        agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE);
+        validatePlainTextResponse("ok", agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE));
     }
 
     @Override
     public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
-        agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE);
+        validatePlainTextResponse("ok", agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE));
     }
 
     @Override
@@ -144,7 +146,7 @@ public class HttpDaoImpl implements Dao {
     public void delete(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
+        validatePlainTextResponse("{}", agent.request(url, URI_DELETE, null, ApiResponse.DELETE));
     }
 
     @Override
@@ -167,5 +169,13 @@ public class HttpDaoImpl implements Dao {
             }
         }
         return builder.toString();
+    }
+
+    private void validatePlainTextResponse(String expected, String response) throws StorageServerException {
+        if (response == null || !response.equalsIgnoreCase(expected)) {
+            String message = MSG_ERROR_RESPONSE + response;
+            LOG.error(message);
+            throw new StorageServerException(message);
+        }
     }
 }
