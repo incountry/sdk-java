@@ -303,7 +303,7 @@ public class StorageSingleTests {
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(record, crypto);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(null, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
         assertThrows(StorageClientException.class, () -> storage.find(null, null));
         assertThrows(StorageClientException.class, () -> storage.find(country, null));
     }
@@ -318,7 +318,7 @@ public class StorageSingleTests {
     @Test
     public void testErrorReadInsufficientArgs() throws StorageServerException, StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = new HttpDaoImpl(null, agent);
+        Dao dao = new HttpDaoImpl(fakeEndpoint, agent);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
         assertThrows(StorageClientException.class, () -> storage.read(null, null));
     }
@@ -326,7 +326,7 @@ public class StorageSingleTests {
     @Test
     public void testErrorDeleteInsufficientArgs() throws StorageClientException, StorageServerException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = new HttpDaoImpl(null, agent);
+        Dao dao = new HttpDaoImpl(fakeEndpoint, agent);
         assertNotNull(dao);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
         assertThrows(StorageClientException.class, () -> storage.delete(null, null));

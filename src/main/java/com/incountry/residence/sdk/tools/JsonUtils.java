@@ -13,6 +13,7 @@ import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -21,7 +22,6 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,10 +44,6 @@ public class JsonUtils {
     private static final String P_VERSION = "version";
     private static final String P_LIMIT = "limit";
     private static final String P_OFFSET = "offset";
-    private static final String P_CODE = "countries";
-    private static final String P_DIRECT = "direct";
-    private static final String P_ID = "id";
-    private static final String P_NAME = "name";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
     /*error messages */
@@ -56,6 +52,9 @@ public class JsonUtils {
     private static final String MSG_ERR_NEGATIVE_META = "Response error: negative values in batch metadata";
     private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
     private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then recieved";
+    private static final String MSG_ERR_NULL_POPLIST = "Response error: country list is empty";
+    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty";
+    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty";
 
     private JsonUtils() {
     }
@@ -220,28 +219,6 @@ public class JsonUtils {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
-    public static List<Map.Entry<String, String>> getCountryEntryPoint(String content) {
-        List<Map.Entry<String, String>> result = new ArrayList<>();
-        if (content != null && !content.isEmpty()) {
-            Gson gson = new GsonBuilder().create();
-            JsonObject contentJson = gson.fromJson(content, JsonObject.class);
-            if (contentJson != null) {
-                JsonArray array = contentJson.getAsJsonArray(P_CODE);
-                if (array != null) {
-                    array.forEach(item -> {
-                        if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
-                            String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
-                            String countryName = ((JsonObject) item).get(P_NAME).getAsString();
-                            result.add(new AbstractMap.SimpleEntry<>(countryCode, countryName));
-                        }
-                    });
-                }
-
-            }
-        }
-        return result;
-    }
-
     public static String toJsonString(List<Record> records, Crypto crypto)
             throws StorageClientException, StorageCryptoException {
         JsonArray array = new JsonArray();
@@ -290,6 +267,18 @@ public class JsonUtils {
         } catch (JsonSyntaxException e) {
             if (LOG.isWarnEnabled()) {
                 LOG.warn("Provided SecretsData string is not a JSON");
+            }
+        }
+        return result;
+    }
+
+    public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
+        Map<String, POP> result = new HashMap<>();
+        TransferPopList popList = new Gson().fromJson(response, TransferPopList.class);
+        TransferPopList.validatePopList(popList);
+        for (TransferPop one : popList.countries) {
+            if (one.direct) {
+                result.put(one.getId(), new POP(uriStart + one.getId() + uriEnd, one.name));
             }
         }
         return result;
@@ -428,6 +417,53 @@ public class JsonUtils {
                 throw new StorageServerException(MSG_ERR_INCORRECT_COUNT);
             } else if (meta.getCount() > meta.getTotal()) {
                 throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);
+            }
+        }
+    }
+
+    /**
+     * inner class for cosy serialization loading country List
+     */
+    private static class TransferPop {
+        String name;
+        String id;
+        String status;
+        boolean direct;
+
+        @Override
+        public String toString() {
+            return "TransferPop{" +
+                    "name='" + name + '\'' +
+                    ", id='" + id + '\'' +
+                    ", status='" + status + '\'' +
+                    ", direct=" + direct +
+                    '}';
+        }
+
+        public String getId() {
+            return id.toLowerCase();
+        }
+    }
+
+    private static class TransferPopList {
+        List<TransferPop> countries;
+
+        static void validatePopList(TransferPopList one) throws StorageServerException {
+            if (one == null || one.countries == null || one.countries.isEmpty()) {
+                LOG.error(MSG_ERR_NULL_POPLIST);
+                throw new StorageServerException(MSG_ERR_NULL_POPLIST);
+            }
+            for (TransferPop pop : one.countries) {
+                if (pop.name == null || pop.name.isEmpty()) {
+                    String message = MSG_ERR_NULL_POPNAME + pop.toString();
+                    LOG.error(message);
+                    throw new StorageServerException(message);
+                }
+                if (pop.id == null || pop.id.isEmpty()) {
+                    String message = MSG_ERR_NULL_POPID + pop.toString();
+                    LOG.error(message);
+                    throw new StorageServerException(message);
+                }
             }
         }
     }

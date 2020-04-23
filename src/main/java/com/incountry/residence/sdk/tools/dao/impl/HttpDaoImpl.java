@@ -69,13 +69,10 @@ public class HttpDaoImpl implements Dao {
             LOG.debug("Start loading country list");
         }
         String content;
-
         synchronized (popMap) {
             popMap.clear();
             content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY);
-            for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
-                popMap.put(pair.getKey(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
-            }
+            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {

@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
@@ -12,10 +13,13 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -24,11 +28,14 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HttpDaoImplTests {
 
@@ -224,5 +231,47 @@ public class HttpDaoImplTests {
         assertEquals(record.getRangeKey() == null, jsonObject.get("range_key") == null);
         assertEquals(record.getProfileKey() == null, jsonObject.get("profile_key") == null);
         //key1 & body aren't checked because it's always not null
+    }
+
+    @Test
+    public void testValidateWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok"));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        String country = "US";
+        Record record = new Record("key", "body");
+        Record resRecord = storage.write(country, record); //ok
+        assertNotNull(resRecord);
+        resRecord = storage.write(country, record); //Ok
+        assertNotNull(resRecord);
+        resRecord = storage.write(country, record); //OK
+        assertNotNull(resRecord);
+        assertThrows(StorageServerException.class, () -> storage.write(country, record)); //okokok
+    }
+
+    @Test
+    public void testValidateBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok"));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        String country = "US";
+        List<Record> list = Arrays.asList(new Record("key", "body"));
+        BatchRecord batchRecord = storage.batchWrite(country, list); //ok
+        assertNotNull(batchRecord);
+        batchRecord = storage.batchWrite(country, list); //Ok
+        assertNotNull(batchRecord);
+        batchRecord = storage.batchWrite(country, list); //OK
+        assertNotNull(batchRecord);
+        assertThrows(StorageServerException.class, () -> storage.batchWrite(country, list)); //okokok
+    }
+
+    @Test
+    public void testValidateDeletePopApiResponse() throws StorageClientException, StorageServerException {
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("{}", "", "OK", "{ok}", "{ }"));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        String country = "US";
+        storage.delete(country, "key"); //{}
+        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); // ""
+        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //OK
+        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{ok}
+        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{}
     }
 }
