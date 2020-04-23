@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.tools.JsonUtils;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,8 +17,7 @@ public class FindFilterTest {
     public String profileKey = "profileKey";
 
     @Test
-    public void testToJsonObject() {
-
+    public void testToJsonObject() throws StorageClientException {
         FilterStringParam versionFilterParam = new FilterStringParam(Integer.toString(version), true);
         FilterStringParam keyFilterParam = new FilterStringParam(key, true);
         FilterStringParam profileKeyFilterParam = new FilterStringParam(profileKey);
@@ -37,8 +37,8 @@ public class FindFilterTest {
     @Test
     public void testErrorArgs() {
         FindFilter findFilter = new FindFilter();
-        assertThrows(IllegalArgumentException.class, () -> findFilter.setLimit(0));
-        assertThrows(IllegalArgumentException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
-        assertThrows(IllegalArgumentException.class, () -> findFilter.setOffset(-1));
+        assertThrows(StorageClientException.class, () -> findFilter.setLimit(0));
+        assertThrows(StorageClientException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
+        assertThrows(StorageClientException.class, () -> findFilter.setOffset(-1));
     }
 }

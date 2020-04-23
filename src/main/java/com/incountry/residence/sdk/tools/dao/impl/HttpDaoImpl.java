@@ -5,6 +5,7 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
@@ -81,7 +82,7 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String getEndpoint(String path, String country) throws StorageServerException {
+    private String getEndpoint(String path, String country) throws StorageClientException, StorageServerException {
         if (!path.startsWith(URI_DELIMITER)) {
             path = URI_DELIMITER + path;
         }
@@ -103,7 +104,7 @@ public class HttpDaoImpl implements Dao {
             if (pop == null) {
                 String message = "Country " + country + " has no PoPAPI";
                 LOG.error(message);
-                throw new IllegalArgumentException(message);
+                throw new StorageClientException(message);
             }
             return pop.getHost() + path;
         } else {
@@ -111,25 +112,25 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String createUrl(String country, String recordKeyHash) throws StorageServerException {
+    private String createUrl(String country, String recordKeyHash) throws StorageClientException, StorageServerException {
         return getEndpoint(concatUrl(country, URI_DELIMITER, recordKeyHash), country);
     }
 
     @Override
-    public void createRecord(String country, Record record, Crypto crypto) throws StorageCryptoException, StorageServerException {
+    public void createRecord(String country, Record record, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
         agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), false);
     }
 
     @Override
-    public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageServerException, StorageCryptoException {
+    public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
         agent.request(url, URI_POST, recListJson, false);
     }
 
     @Override
-    public Record read(String country, String recordKey, Crypto crypto) throws StorageServerException, StorageCryptoException {
+    public Record read(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
         String response = agent.request(url, URI_GET, null, true);
@@ -141,14 +142,14 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void delete(String country, String recordKey, Crypto crypto) throws StorageServerException {
+    public void delete(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
         agent.request(url, URI_DELETE, null, false);
     }
 
     @Override
-    public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageServerException {
+    public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageClientException, StorageServerException {
         String url = getEndpoint(concatUrl(country, URI_FIND), country);
         String postData = JsonUtils.toJsonString(builder.build(), crypto);
         String content = agent.request(url, URI_POST, postData, false);

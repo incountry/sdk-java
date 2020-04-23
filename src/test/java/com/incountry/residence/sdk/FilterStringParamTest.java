@@ -5,6 +5,7 @@ import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +14,7 @@ public class FilterStringParamTest {
 
 
     @Test
-    public void toJSONStringTestWithCrypto() {
+    public void toJSONStringTestWithCrypto() throws StorageClientException {
         String filterValue = "filterValue";
         Crypto crypto = new CryptoImpl("envId");
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
@@ -22,7 +23,7 @@ public class FilterStringParamTest {
     }
 
     @Test
-    public void toJSONStringWithCryptoNullTest() {
+    public void toJSONStringWithCryptoNullTest() throws StorageClientException {
         String filterValue = "filterValue";
         FilterStringParam filterStringParam = new FilterStringParam(filterValue);
         JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, null);
@@ -30,7 +31,7 @@ public class FilterStringParamTest {
     }
 
     @Test
-    public void toJSONIntTest() {
+    public void toJSONIntTest() throws StorageClientException {
         int filterValue = 1;
         FilterStringParam filterStringParam = new FilterStringParam(Integer.toString(filterValue));
         JsonArray jsonArray = JsonUtils.toJsonInt(filterStringParam);

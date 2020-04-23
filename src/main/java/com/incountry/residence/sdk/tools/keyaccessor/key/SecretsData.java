@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.tools.keyaccessor.key;
 
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -14,7 +15,14 @@ public class SecretsData {
     private List<SecretKey> secrets;
     private int currentVersion;
 
-    public SecretsData(List<SecretKey> secrets, int currentVersion) {
+    /**
+     * creates a container with secrets
+     *
+     * @param secrets        non-empty list of secrets. One of the secrets must have same version as currentVersion in SecretsData
+     * @param currentVersion Should be a non-negative integer
+     * @throws StorageClientException when parameter validation fails
+     */
+    public SecretsData(List<SecretKey> secrets, int currentVersion) throws StorageClientException {
         validate(secrets, currentVersion);
         this.currentVersion = currentVersion;
         this.secrets = secrets;
@@ -28,18 +36,18 @@ public class SecretsData {
         return currentVersion;
     }
 
-    public static void validate(List<SecretKey> secrets, int currentVersion) {
+    public static void validate(List<SecretKey> secrets, int currentVersion) throws StorageClientException {
         if (secrets == null || secrets.isEmpty()) {
             LOG.error(MSG_ERR_EMPTY_SECRETS);
-            throw new IllegalArgumentException(MSG_ERR_EMPTY_SECRETS);
+            throw new StorageClientException(MSG_ERR_EMPTY_SECRETS);
         }
         if (currentVersion < 0) {
             LOG.error(MSG_ERR_VERSION);
-            throw new IllegalArgumentException(MSG_ERR_VERSION);
+            throw new StorageClientException(MSG_ERR_VERSION);
         }
-        secrets.forEach(one ->
-                SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.getIsKey())
-        );
+        for (SecretKey one : secrets) {
+            SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.getIsKey());
+        }
     }
 
     @Override

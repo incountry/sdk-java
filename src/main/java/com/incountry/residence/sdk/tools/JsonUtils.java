@@ -15,6 +15,7 @@ import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.apache.logging.log4j.Logger;
@@ -64,9 +65,10 @@ public class JsonUtils {
      * @param record data record
      * @param crypto object which is using to encrypt data
      * @return JsonObject with Record data
+     * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException if encryption failed
      */
-    public static JsonObject toJson(Record record, Crypto crypto) throws StorageCryptoException {
+    public static JsonObject toJson(Record record, Crypto crypto) throws StorageClientException, StorageCryptoException {
         Gson gson = getGson4Records();
         JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
         if (crypto == null) {
@@ -111,9 +113,10 @@ public class JsonUtils {
      * @param jsonString json string
      * @param crypto     crypto object
      * @return record objects with data from json
+     * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException if decryption failed
      */
-    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageCryptoException {
+    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException {
         Gson gson = getGson4Records();
         EncryptedRecord verRec = gson.fromJson(jsonString, EncryptedRecord.class);
         if (verRec.getVersion() == null) {
@@ -246,7 +249,7 @@ public class JsonUtils {
     }
 
     public static String toJsonString(List<Record> records, Crypto crypto)
-            throws StorageCryptoException {
+            throws StorageClientException, StorageCryptoException {
         JsonArray array = new JsonArray();
         for (Record record : records) {
             array.add(toJson(record, crypto));
@@ -262,9 +265,10 @@ public class JsonUtils {
      * @param record data for JSON
      * @param crypto object which is using to encrypt data
      * @return String with JSON
+     * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException when there are problems with encryption
      */
-    public static String toJsonString(Record record, Crypto crypto) throws StorageCryptoException {
+    public static String toJsonString(Record record, Crypto crypto) throws StorageClientException, StorageCryptoException {
         return toJson(record, crypto).toString();
     }
 
@@ -303,7 +307,7 @@ public class JsonUtils {
     private static class EncryptedRecord extends Record {
         private Integer version;
 
-        EncryptedRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageCryptoException {
+        EncryptedRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageClientException, StorageCryptoException {
             setKey(crypto.createKeyHash(record.getKey()));
             setKey2(crypto.createKeyHash(record.getKey2()));
             setKey3(crypto.createKeyHash(record.getKey3()));
@@ -339,7 +343,7 @@ public class JsonUtils {
             return rec;
         }
 
-        public void justDecryptKeys(Crypto crypto) throws StorageCryptoException {
+        public void justDecryptKeys(Crypto crypto) throws StorageClientException, StorageCryptoException {
             setKey(crypto.decrypt(getKey(), version));
             setKey2(crypto.decrypt(getKey2(), version));
             setKey3(crypto.decrypt(getKey3(), version));
