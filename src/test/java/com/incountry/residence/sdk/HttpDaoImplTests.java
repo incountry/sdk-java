@@ -234,7 +234,7 @@ public class HttpDaoImplTests {
     }
 
     @Test
-    public void testValidateWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+    public void testWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok"));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
         String country = "US";
@@ -249,7 +249,7 @@ public class HttpDaoImplTests {
     }
 
     @Test
-    public void testValidateBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+    public void testBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok"));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
         String country = "US";
@@ -264,7 +264,7 @@ public class HttpDaoImplTests {
     }
 
     @Test
-    public void testValidateDeletePopApiResponse() throws StorageClientException, StorageServerException {
+    public void testDeletePopApiResponse() throws StorageClientException, StorageServerException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("{}", "", "OK", "{ok}", "{ }"));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
         String country = "US";
@@ -273,6 +273,21 @@ public class HttpDaoImplTests {
         assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //OK
         assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{ok}
         assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{}
+    }
+
+    @Test
+    public void testReadPopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+        String goodReadResponse = "{\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoidGVzdCIsIm1ldGEiOiJ7XCJrZXlcIjpcIndyaXRlX2tleS1qYXZhc2RrLTIwMjAwNDIzMTgyMjE4LWNjM2E0NGI0MjI5ODQyODY4YjBkNjVhNzRlNzc1NTcxXCIsXCJrZXkyXCI6XCJrZXkyLWphdmFzZGstMjAyMDA0MjMxODIyMTgtY2MzYTQ0YjQyMjk4NDI4NjhiMGQ2NWE3NGU3NzU1NzFcIixcImtleTNcIjpcImtleTMtamF2YXNkay0yMDIwMDQyMzE4MjIxOC1jYzNhNDRiNDIyOTg0Mjg2OGIwZDY1YTc0ZTc3NTU3MVwiLFwicHJvZmlsZV9rZXlcIjpcInByb2ZpbGVLZXktamF2YXNkay0yMDIwMDQyMzE4MjIxOC1jYzNhNDRiNDIyOTg0Mjg2OGIwZDY1YTc0ZTc3NTU3MVwiLFwicmFuZ2Vfa2V5XCI6MX0ifQ==\"," +
+                "  \"key\": \"e7a6422dbb2d80201368a36d560970740d9e1946b6e3b55acc8363a725731894\",\n" +
+                "  \"version\": 0\n" +
+                "}";
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReadResponse, "StringNotJson"));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        String country = "US";
+        Record resRecord = storage.read(country, "key");
+        assertNotNull(resRecord);
+        assertThrows(StorageServerException.class, () -> storage.read(country, "key"));
     }
 
     @Test
