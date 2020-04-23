@@ -55,6 +55,7 @@ public class JsonUtils {
     private static final String MSG_ERR_NULL_POPLIST = "Response error: country list is empty";
     private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty";
     private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty";
+    private static final String MSG_ERR_RESPONSE = "Response error";
 
     private JsonUtils() {
     }
@@ -119,7 +120,13 @@ public class JsonUtils {
      */
     public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         Gson gson = getGson4Records();
-        TransferRecord tempRecord = gson.fromJson(jsonString, TransferRecord.class);
+        TransferRecord tempRecord = null;
+        try {
+            tempRecord = gson.fromJson(jsonString, TransferRecord.class);
+        } catch (JsonSyntaxException ex) {
+            LOG.error(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+        }
         tempRecord.validate();
         if (tempRecord.version == null) {
             tempRecord.version = 0;
@@ -155,7 +162,13 @@ public class JsonUtils {
     public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) throws StorageServerException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
-        TransferBatch transferBatch = gson.fromJson(responseString, TransferBatch.class);
+        TransferBatch transferBatch = null;
+        try {
+            transferBatch = gson.fromJson(responseString, TransferBatch.class);
+        } catch (JsonSyntaxException ex) {
+            LOG.error(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+        }
         transferBatch.validate();
         List<Record> records = new ArrayList<>();
         if (transferBatch.meta.getCount() != 0) {
@@ -273,8 +286,14 @@ public class JsonUtils {
     }
 
     public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
+        TransferPopList popList = null;
+        try {
+            popList = new Gson().fromJson(response, TransferPopList.class);
+        } catch (JsonSyntaxException ex) {
+            LOG.error(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+        }
         Map<String, POP> result = new HashMap<>();
-        TransferPopList popList = new Gson().fromJson(response, TransferPopList.class);
         TransferPopList.validatePopList(popList);
         for (TransferPop one : popList.countries) {
             if (one.direct) {
@@ -386,15 +405,20 @@ public class JsonUtils {
             return Objects.hash(super.hashCode(), version);
         }
 
-        public Record decrypt(Crypto crypto) throws StorageClientException, StorageCryptoException {
-            if (crypto != null && getBody() != null) {
-                String[] parts = getBody().split(":");
-                setBody(crypto.decrypt(getBody(), version));
-                if (parts.length != 2) {
-                    justDecryptKeys(crypto);
-                } else {
-                    decryptAllFromBody();
+        public Record decrypt(Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
+            try {
+                if (crypto != null && getBody() != null) {
+                    String[] parts = getBody().split(":");
+                    setBody(crypto.decrypt(getBody(), version));
+                    if (parts.length != 2) {
+                        justDecryptKeys(crypto);
+                    } else {
+                        decryptAllFromBody();
+                    }
                 }
+            } catch (JsonSyntaxException ex) {
+                LOG.error(MSG_ERR_RESPONSE, ex);
+                throw new StorageServerException(MSG_ERR_RESPONSE, ex);
             }
             return toRecord();
         }
