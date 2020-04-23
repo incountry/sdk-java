@@ -190,10 +190,8 @@ public class CryptoImpl implements Crypto {
 
     private static String throwStorageCryptoException(String message, Exception ex) throws StorageCryptoException {
         if (ex == null) {
-            LOG.error(message);
             throw new StorageCryptoException(message);
         } else {
-            LOG.error(message, ex);
             throw new StorageCryptoException(message, ex);
         }
 

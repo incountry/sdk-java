@@ -124,7 +124,6 @@ public class JsonUtils {
         try {
             tempRecord = gson.fromJson(jsonString, TransferRecord.class);
         } catch (JsonSyntaxException ex) {
-            LOG.error(MSG_ERR_RESPONSE, ex);
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
         tempRecord.validate();
@@ -166,7 +165,6 @@ public class JsonUtils {
         try {
             transferBatch = gson.fromJson(responseString, TransferBatch.class);
         } catch (JsonSyntaxException ex) {
-            LOG.error(MSG_ERR_RESPONSE, ex);
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
         transferBatch.validate();
@@ -290,7 +288,6 @@ public class JsonUtils {
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
         } catch (JsonSyntaxException ex) {
-            LOG.error(MSG_ERR_RESPONSE, ex);
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
         Map<String, POP> result = new HashMap<>();
@@ -417,7 +414,6 @@ public class JsonUtils {
                     }
                 }
             } catch (JsonSyntaxException ex) {
-                LOG.error(MSG_ERR_RESPONSE, ex);
                 throw new StorageServerException(MSG_ERR_RESPONSE, ex);
             }
             return toRecord();
