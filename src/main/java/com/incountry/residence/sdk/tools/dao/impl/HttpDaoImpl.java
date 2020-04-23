@@ -25,9 +25,9 @@ import java.util.Map;
 
 public class HttpDaoImpl implements Dao {
 
-    private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
+    public static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
 
-    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
+    private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";

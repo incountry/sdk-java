@@ -12,10 +12,13 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -29,6 +32,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HttpDaoImplTests {
 
@@ -225,4 +229,83 @@ public class HttpDaoImplTests {
         assertEquals(record.getProfileKey() == null, jsonObject.get("profile_key") == null);
         //key1 & body aren't checked because it's always not null
     }
+
+    @Test
+    public void testLoadCountriesInDefaultEndPoint() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("");
+        storage.write("US", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
+        agent.setResponse("");
+        storage.write("us", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
+        agent.setResponse("");
+        storage.write("RU", record);
+        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
+        agent.setResponse("");
+        storage.write("ru", record);
+        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
+        agent.setResponse(countryLoadResponse);
+        assertThrows(StorageClientException.class, () -> storage.write("PU", record));
+        agent.setResponse(countryLoadResponse);
+        assertThrows(StorageClientException.class, () -> storage.write("pu", record));
+    }
+
+    private String countryLoadResponse = "{\n" +
+            "  \"countries\": [\n" +
+            "    {\n" +
+            "      \"direct\": true,\n" +
+            "      \"id\": \"US\",\n" +
+            "      \"latencies\": [\n" +
+            "        {\n" +
+            "          \"country\": \"IN\",\n" +
+            "          \"latency\": 320\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"country\": \"US\",\n" +
+            "          \"latency\": 420\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"latitude\": 37.09024,\n" +
+            "      \"longitude\": -95.712891,\n" +
+            "      \"name\": \"United States\",\n" +
+            "      \"region\": \"AMER\",\n" +
+            "      \"status\": \"active\",\n" +
+            "      \"type\": \"mid\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"direct\": true,\n" +
+            "      \"id\": \"RU\",\n" +
+            "      \"latencies\": [\n" +
+            "        {\n" +
+            "          \"country\": \"IN\",\n" +
+            "          \"latency\": 320\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"country\": \"US\",\n" +
+            "          \"latency\": 420\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"latitude\": 61.52401,\n" +
+            "      \"longitude\": 105.318756,\n" +
+            "      \"name\": \"Russia\",\n" +
+            "      \"region\": \"EMEA\",\n" +
+            "      \"status\": \"active\",\n" +
+            "      \"type\": \"mid\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"direct\": false,\n" +
+            "      \"id\": \"PU\",\n" +
+            "      \"latencies\": [],\n" +
+            "      \"latitude\": null,\n" +
+            "      \"longitude\": null,\n" +
+            "      \"name\": \"Peru\",\n" +
+            "      \"region\": \"AMER\",\n" +
+            "      \"status\": \"active\",\n" +
+            "      \"type\": \"mini\"\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}";
 }
