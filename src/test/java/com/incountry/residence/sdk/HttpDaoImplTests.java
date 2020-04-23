@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -274,4 +273,83 @@ public class HttpDaoImplTests {
         assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{ok}
         assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{}
     }
+
+    @Test
+    public void testLoadCountriesInDefaultEndPoint() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("");
+        storage.write("US", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
+        agent.setResponse("");
+        storage.write("us", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
+        agent.setResponse("");
+        storage.write("RU", record);
+        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
+        agent.setResponse("");
+        storage.write("ru", record);
+        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
+        agent.setResponse(countryLoadResponse);
+        assertThrows(StorageClientException.class, () -> storage.write("PU", record));
+        agent.setResponse(countryLoadResponse);
+        assertThrows(StorageClientException.class, () -> storage.write("pu", record));
+    }
+
+    private String countryLoadResponse = "{\n" +
+            "  \"countries\": [\n" +
+            "    {\n" +
+            "      \"direct\": true,\n" +
+            "      \"id\": \"US\",\n" +
+            "      \"latencies\": [\n" +
+            "        {\n" +
+            "          \"country\": \"IN\",\n" +
+            "          \"latency\": 320\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"country\": \"US\",\n" +
+            "          \"latency\": 420\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"latitude\": 37.09024,\n" +
+            "      \"longitude\": -95.712891,\n" +
+            "      \"name\": \"United States\",\n" +
+            "      \"region\": \"AMER\",\n" +
+            "      \"status\": \"active\",\n" +
+            "      \"type\": \"mid\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"direct\": true,\n" +
+            "      \"id\": \"RU\",\n" +
+            "      \"latencies\": [\n" +
+            "        {\n" +
+            "          \"country\": \"IN\",\n" +
+            "          \"latency\": 320\n" +
+            "        },\n" +
+            "        {\n" +
+            "          \"country\": \"US\",\n" +
+            "          \"latency\": 420\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"latitude\": 61.52401,\n" +
+            "      \"longitude\": 105.318756,\n" +
+            "      \"name\": \"Russia\",\n" +
+            "      \"region\": \"EMEA\",\n" +
+            "      \"status\": \"active\",\n" +
+            "      \"type\": \"mid\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"direct\": false,\n" +
+            "      \"id\": \"PU\",\n" +
+            "      \"latencies\": [],\n" +
+            "      \"latitude\": null,\n" +
+            "      \"longitude\": null,\n" +
+            "      \"name\": \"Peru\",\n" +
+            "      \"region\": \"AMER\",\n" +
+            "      \"status\": \"active\",\n" +
+            "      \"type\": \"mini\"\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}";
 }

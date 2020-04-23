@@ -25,11 +25,10 @@ import java.util.Map;
 
 public class HttpDaoImpl implements Dao {
 
+    public static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
+
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
-
     private static final String MSG_ERROR_RESPONSE = "Response error: expected 'OK', but recieved: ";
-
-    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
@@ -42,6 +41,7 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_DELIMITER = "/";
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
     private static final Charset CHARSET = StandardCharsets.UTF_8;
+
     private final Map<String, POP> popMap = new HashMap<>();
     private HttpAgent agent;
     private String endPoint = DEFAULT_ENDPOINT;
@@ -69,6 +69,7 @@ public class HttpDaoImpl implements Dao {
             LOG.debug("Start loading country list");
         }
         String content;
+
         synchronized (popMap) {
             popMap.clear();
             content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY);

@@ -66,7 +66,7 @@ Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAcce
 
 The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 
-`SecretKeyAccessor` allows you to pass a function that should return representing your secret in `SecretsData` class instance:
+`SecretKeyAccessor` allows you to pass a function that should return your secret (in multiple ways):
 ```java
 public interface SecretKeyAccessor {    
     SecretsData getSecretsData();
@@ -442,16 +442,16 @@ BatchRecord records = storage.find("us", builder);
 
 Next predicate types are available for each field of class `Record` via individaul methods of `FindFilterBuilder`:
 ```java
-EQUALS         (FindFilterBuilder::keyE)
-NOT EQUALS     (FindFilterBuilder::keyNotE)
-IN             (FindFilterBuilder::keyI)
-NOT IN         (FindFilterBuilder::keyNotI)
+EQUALS         (FindFilterBuilder::keyEq)
+NOT EQUALS     (FindFilterBuilder::keyNotEq)
+IN             (FindFilterBuilder::keyIn)
+NOT IN         (FindFilterBuilder::keyNotIn)
 ```
 
 Filtering by `rangeKey` values of class `Record` is providing additional methods of `FindFilterBuilder`:
 ```java
 GREATER             (FindFilterBuilder::rangeKeyGT)
-GREATER OR EQUALS   (FindFilterBuilder::rangeKeyGT)
+GREATER OR EQUALS   (FindFilterBuilder::rangeKeyGTE)
 LESS                (FindFilterBuilder::rangeKeyLT)
 LESS OR EQUALS      (FindFilterBuilder::rangeKeyLTE)
 BETWEEN             (FindFilterBuilder::rangeKeyBetween)
