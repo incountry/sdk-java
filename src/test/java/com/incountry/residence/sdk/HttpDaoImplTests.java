@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -288,6 +289,30 @@ public class HttpDaoImplTests {
         Record resRecord = storage.read(country, "key");
         assertNotNull(resRecord);
         assertThrows(StorageServerException.class, () -> storage.read(country, "key"));
+    }
+
+    @Test
+    public void testSearchPopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+        //todo
+        String goodReadResponse = "{\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoidGVzdCIsIm1ldGEiOiJ7XCJrZXlcIjpcIndyaXRlX2tleS1qYXZhc2RrLTIwMjAwNDIzMTgyMjE4LWNjM2E0NGI0MjI5ODQyODY4YjBkNjVhNzRlNzc1NTcxXCIsXCJrZXkyXCI6XCJrZXkyLWphdmFzZGstMjAyMDA0MjMxODIyMTgtY2MzYTQ0YjQyMjk4NDI4NjhiMGQ2NWE3NGU3NzU1NzFcIixcImtleTNcIjpcImtleTMtamF2YXNkay0yMDIwMDQyMzE4MjIxOC1jYzNhNDRiNDIyOTg0Mjg2OGIwZDY1YTc0ZTc3NTU3MVwiLFwicHJvZmlsZV9rZXlcIjpcInByb2ZpbGVLZXktamF2YXNkay0yMDIwMDQyMzE4MjIxOC1jYzNhNDRiNDIyOTg0Mjg2OGIwZDY1YTc0ZTc3NTU3MVwiLFwicmFuZ2Vfa2V5XCI6MX0ifQ==\"," +
+                "  \"key\": \"e7a6422dbb2d80201368a36d560970740d9e1946b6e3b55acc8363a725731894\",\n" +
+                "  \"version\": 0\n" +
+                "}";
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReadResponse, "StringNotJson"));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        String country = "US";
+        Record resRecord = storage.read(country, "key");
+        assertNotNull(resRecord);
+        assertThrows(StorageServerException.class, () -> storage.read(country, "key"));
+    }
+
+    @Test
+    public void testLoadCountriesPopApiResponse() throws StorageServerException {
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse, "StringNotJson"));
+        Dao dao = new HttpDaoImpl(null, agent);
+        assertNotNull(dao);
+        assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, agent));
     }
 
     @Test
