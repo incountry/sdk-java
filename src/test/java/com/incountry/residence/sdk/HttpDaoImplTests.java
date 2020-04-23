@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -279,16 +280,16 @@ public class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent));
         Record record = new Record("1", "body");
-        agent.setResponse("");
+        agent.setResponse("OK");
         storage.write("US", record);
         assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
-        agent.setResponse("");
+        agent.setResponse("OK");
         storage.write("us", record);
         assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
-        agent.setResponse("");
+        agent.setResponse("OK");
         storage.write("RU", record);
         assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
-        agent.setResponse("");
+        agent.setResponse("OK");
         storage.write("ru", record);
         assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
         agent.setResponse(countryLoadResponse);
