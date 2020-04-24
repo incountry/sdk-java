@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageIntegrationTest {
@@ -72,7 +73,7 @@ public class StorageIntegrationTest {
     }
 
     @Test
-    @Order(1)
+    @Order(100)
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
         records.add(new Record(batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
@@ -80,14 +81,14 @@ public class StorageIntegrationTest {
     }
 
     @Test
-    @Order(2)
+    @Order(200)
     public void writeTest() throws StorageException {
         Record record = new Record(writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
         storage.write(country, record);
     }
 
     @Test
-    @Order(3)
+    @Order(300)
     public void readTest() throws StorageException {
         Record incomingRecord = storage.read(country, writeRecordKey);
         assertEquals(writeRecordKey, incomingRecord.getKey());
@@ -98,19 +99,49 @@ public class StorageIntegrationTest {
     }
 
     @Test
-    @Order(4)
+    @Order(400)
     public void findTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(writeRecordKey)
                 .key2Eq(key2)
+                .key3Eq(key3)
+                .profileKeyEq(profileKey)
                 .rangeKeyEq(writeRangeKey);
         BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
+
+        builder.clear()
+                .keyEq(batchWriteRecordKey)
+                .key2Eq(key2)
+                .key3Eq(key3)
+                .profileKeyEq(profileKey)
+                .rangeKeyEq(batchWriteRangeKey);
+        batchRecord = storage.find(country, builder);
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(1, batchRecord.getRecords().size());
+        assertEquals(batchWriteRecordKey, batchRecord.getRecords().get(0).getKey());
     }
 
     @Test
-    @Order(5)
+    @Order(401)
+    public void findAdvancedTest() throws StorageException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .key2Eq(key2)
+                .rangeKeyIn(new int[]{writeRangeKey, batchWriteRangeKey, writeRangeKey + batchWriteRangeKey + 1});
+        BatchRecord batchRecord = storage.find(country, builder);
+        assertEquals(2, batchRecord.getCount());
+        assertEquals(2, batchRecord.getRecords().size());
+        List<String> resultIdList = new ArrayList<>();
+        resultIdList.add(batchRecord.getRecords().get(0).getKey());
+        resultIdList.add(batchRecord.getRecords().get(1).getKey());
+        assertTrue(resultIdList.contains(writeRecordKey));
+        assertTrue(resultIdList.contains(batchWriteRecordKey));
+    }
+
+    @Test
+    @Order(500)
     public void findOneTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(key2)
@@ -121,7 +152,7 @@ public class StorageIntegrationTest {
     }
 
     @Test
-    @Order(6)
+    @Order(600)
     public void deleteTest() throws StorageException {
         storage.delete(country, writeRecordKey);
         storage.delete(country, batchWriteRecordKey);
