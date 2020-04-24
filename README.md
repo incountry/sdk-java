@@ -55,7 +55,7 @@ You can turn off encryption (not recommended) by providing `null` value for para
 
 Below is an example how to create a storage instance:
 ```java      
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor("somePassword");
+SecretKeyAccessor secretKeyAccessor = SecretKeyAccessorImpl.getInstance("SomePassword-3.14");
 String endPoint = "https://us.api.incountry.io";        
 String envId = "someEnvironmentId";
 String apiKey = "someApiKey";
@@ -68,28 +68,17 @@ The SDK has a `SecretKeyAccessor` interface which allows you to pass your own se
 
 `SecretKeyAccessor` allows you to pass a function that should return your secret (in multiple ways):
 ```java
-public interface SecretKeyAccessor {    
+/**
+ * Accessor to secrets. Used only during initialising of {@link com.incountry.residence.sdk.Storage}
+ */
+public interface SecretKeyAccessor {
+
+    /**
+     * get your container with secrets
+     *
+     * @return SecretsData
+     */
     SecretsData getSecretsData();
-
-    /**
-     * create SecretKeyAccessor from String
-     *
-     * @param secretsDataString simple password or SecretsData in JSON
-     * @return SecretKeyAccessor
-     * @throws StorageClientException when parameter validation fails
-     */
-    static SecretKeyAccessorImpl getAccessor(String secretsDataString) 
-                          throws StorageClientException {...}
-
-    /**
-     * create SecretKeyAccessor with SecretsDataGenerator
-     *
-     * @param secretsDataGenerator non-empty generator of SecretsData
-     * @return SecretKeyAccessor
-     * @throws StorageClientException when parameter validation fails
-     */
-    static SecretKeyAccessorImpl getAccessor(SecretsDataGenerator secretsDataGenerator) 
-                          throws StorageClientException {...}     
 }
 
 
@@ -123,78 +112,41 @@ public class SecretKey {
 }
 ```
 
-You can implement `SecretKeyAccessor` interface or use static method `getAccessor` which allows you to pass your secrets/keys to the SDK.
+You can implement `SecretKeyAccessor` interface or use static methods of `SecretKeyAccessorImpl` which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
 
 1. As a constant string
 ```java     
-SecretKeyAccessor accessor = SecretKeyAccessor.getAccessor("somePassword");
+SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstance("SomePassword-3.14");
 ```
 
 2. As an implementation of `SecretKeyAccessor` interface. SecretKeyAccessor's `getSecretsData` method should return `SecretsData` object
-```java
-int currentVersion = 0;
-SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);                 
-List<SecretKey> secretKeyList = new ArrayList<>();
-secretKeyList.add(secretKey1);                
+```java               
 SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-
 SecretKeyAccessor accessor = () -> secretsData;        
 ```
 
-3. As an object implementing `SecretsDataGenerator` interface. SecretsDataGenerator's `generate` method should return `SecretsData` object or String. String can be simple key or a valid JSON string. This JSON string will then be parsed as a `SecretsData`
-SecretsData JSON object
+3. As an `SecretsData` in JSON string object. 
 ```javascript
 {
-  "secrets": [{
-       "secret": "someSecret",  // String   
+  "secrets": [
+    {
+       "secret": "some-Secret-1961",  // String   
        "version": 0,            // Should be a non-negative integer
-       "isKey": true            // Boolean, should be 'true' only for user-defined encryption keys
+       "isKey": false            // Boolean, should be 'true' only for user-defined encryption keys
+    },
+    {
+       "secret": "another_Secret(2)",     
+       "version": 1,            
+       "isKey": false            
     }
   ],
-  "currentVersion": 0           // Should be a non-negative integer. One of the secrets
+  "currentVersion": 1           // Should be a non-negative integer. One of the secrets
                                 // must have same version as currentVersion in SecretsData
 }
 ```
 ```java
-//using implementation of SecretsDataGenerator with key as String
-private SecretKeyAccessor getAccessorWithGenerator1() throws StorageClientException {
-    return SecretKeyAccessor.getAccessor(new SecretsDataGenerator() {
-        @Override
-        public Object generate() {
-            return "somePassword";
-        }
-    });
-}
-
-//using implementation of SecretsDataGenerator with key as String in lambda-style
-private SecretKeyAccessor getAccessorWithGenerator1lambdaStyle() throws StorageClientException {
-    return SecretKeyAccessor.getAccessor(() -> "somePassword");                     
-}
-
-private String secretsDataInJson = "{\n" +
-                    "    \"currentVersion\": 1,\n" +
-                    "    \"secrets\": [\n" +
-                    "        {\"secret\": \"password0\", \"version\": 0},\n" +
-                    "        {\"secret\": \"password1\", \"version\": 1}, \"isKey\": \"true\"\n" +
-                    "    ],\n" +
-                    "}";
-
-//using implementation of SecretsDataGenerator with SecretsData as JSON String
-private SecretKeyAccessor getAccessorWithGenerator2() throws StorageClientException {
-    return SecretKeyAccessor.getAccessor(() -> secretsDataInJson);
-}
-
-//using implementation of SecretsDataGenerator with SecretsData
-private SecretKeyAccessor getAccessorWithGenerator3() throws StorageClientException {
-    int currentVersion = 0;
-    SecretKey secretKey1 = new SecretKey("yourSecret", currentVersion, true);
-    List<SecretKey> secretKeyList = new ArrayList<>();
-    secretKeyList.add(secretKey1);
-    SecretsData data = new SecretsData(secretKeyList, currentVersion);
-
-    return SecretKeyAccessor.getAccessor(() -> data);
-}
+SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstanceWithJson(secretsDataInJson);
 ```
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 

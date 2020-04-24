@@ -8,7 +8,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 public interface SecretKeyAccessor {
 
     /**
-     * get you secrets
+     * get your container with secrets
      *
      * @return SecretsData
      */
