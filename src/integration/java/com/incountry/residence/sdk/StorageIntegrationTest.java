@@ -129,7 +129,7 @@ public class StorageIntegrationTest {
     public void findAdvancedTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(key2)
-                .rangeKeyIn(new int[]{writeRangeKey, batchWriteRangeKey, writeRangeKey + batchWriteRangeKey + 1});
+                .rangeKeyEq(writeRangeKey, batchWriteRangeKey, writeRangeKey + batchWriteRangeKey + 1);
         BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
