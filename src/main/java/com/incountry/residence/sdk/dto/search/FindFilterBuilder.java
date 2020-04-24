@@ -160,16 +160,6 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder rangeKeyNotEq(int key) throws StorageClientException {
-        filter.setRangeKeyFilter(new FilterNumberParam(OPER_NOT, key));
-        return this;
-    }
-
-    public FindFilterBuilder rangeKeyNotIn(int[] keys) throws StorageClientException {
-        filter.setRangeKeyFilter(FilterNumberParam.createNotFilter(keys));
-        return this;
-    }
-
     public FindFilterBuilder rangeKeyGT(int key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_GT, key));
         return this;

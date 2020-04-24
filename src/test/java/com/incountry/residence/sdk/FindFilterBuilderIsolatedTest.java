@@ -40,7 +40,7 @@ public class FindFilterBuilderIsolatedTest {
                 .key3NotIn(Arrays.asList("7", "8"))
                 .profileKeyNotIn(Arrays.asList("9", "10"))
                 .versionNotIn(Arrays.asList("11", "12"))
-                .rangeKeyNotIn(new int[]{13, 14})
+                .rangeKeyIn(new int[]{13, 14})
                 .build().toString();
         assertNotNull(string);
         assertTrue(string.contains("limit=1"));
@@ -50,7 +50,7 @@ public class FindFilterBuilderIsolatedTest {
         assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=true"));
         assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=true}"));
         assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12]"));
-        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='$not', operator2='null'}"));
+        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='null', operator2='null'}"));
     }
 
 
@@ -94,8 +94,6 @@ public class FindFilterBuilderIsolatedTest {
         //rangeKey
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyIn(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyIn(new int[]{}));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyNotIn(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyNotIn(new int[]{}));
         //limit & offset
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().limitAndOffset(-1, 0));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().limitAndOffset(1, -1));
@@ -162,10 +160,7 @@ public class FindFilterBuilderIsolatedTest {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals(1, builder.rangeKeyEq(1).build().getRangeKeyFilter().getValues()[0]);
         assertEquals(2, builder.rangeKeyIn(new int[]{1, 2}).build().getRangeKeyFilter().getValues()[1]);
-        assertEquals(3, builder.rangeKeyNotEq(3).build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(FindFilterBuilder.OPER_NOT, builder.rangeKeyNotEq(4).build().getRangeKeyFilter().getOperator1());
-        assertEquals(6, builder.rangeKeyNotIn(new int[]{5, 6}).build().getRangeKeyFilter().getValues()[1]);
-        assertEquals(FindFilterBuilder.OPER_NOT, builder.rangeKeyNotIn(new int[]{7, 8}).build().getRangeKeyFilter().getOperator1());
+
         assertEquals(9, builder.rangeKeyGT(9).build().getRangeKeyFilter().getValues()[0]);
         assertEquals(FindFilterBuilder.OPER_GT, builder.rangeKeyGT(10).build().getRangeKeyFilter().getOperator1());
         assertEquals(11, builder.rangeKeyGTE(11).build().getRangeKeyFilter().getValues()[0]);
