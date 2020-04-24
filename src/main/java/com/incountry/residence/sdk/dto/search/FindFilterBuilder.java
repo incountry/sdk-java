@@ -2,8 +2,6 @@ package com.incountry.residence.sdk.dto.search;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 
-import java.util.List;
-
 /**
  * Builder for cosy creation of FindFilter
  */
@@ -45,77 +43,42 @@ public class FindFilterBuilder {
     }
 
     //key2
-    public FindFilterBuilder keyEq(String key) throws StorageClientException {
-        filter.setKeyFilter(new FilterStringParam(key));
-        return this;
-    }
-
-    public FindFilterBuilder keyIn(List<String> keys) throws StorageClientException {
+    public FindFilterBuilder keyEq(String... keys) throws StorageClientException {
         filter.setKeyFilter(new FilterStringParam(keys));
         return this;
     }
 
     //key2
-    public FindFilterBuilder key2Eq(String key) throws StorageClientException {
-        filter.setKey2Filter(new FilterStringParam(key));
-        return this;
-    }
-
-    public FindFilterBuilder key2In(List<String> keys) throws StorageClientException {
+    public FindFilterBuilder key2Eq(String... keys) throws StorageClientException {
         filter.setKey2Filter(new FilterStringParam(keys));
         return this;
     }
 
     //key3
-    public FindFilterBuilder key3Eq(String key) throws StorageClientException {
-        filter.setKey3Filter(new FilterStringParam(key));
-        return this;
-    }
-
-    public FindFilterBuilder key3In(List<String> keys) throws StorageClientException {
+    public FindFilterBuilder key3Eq(String... keys) throws StorageClientException {
         filter.setKey3Filter(new FilterStringParam(keys));
         return this;
     }
 
     //profileKey
-    public FindFilterBuilder profileKeyEq(String key) throws StorageClientException {
-        filter.setProfileKeyFilter(new FilterStringParam(key));
-        return this;
-    }
-
-    public FindFilterBuilder profileKeyIn(List<String> keys) throws StorageClientException {
+    public FindFilterBuilder profileKeyEq(String... keys) throws StorageClientException {
         filter.setProfileKeyFilter(new FilterStringParam(keys));
         return this;
     }
 
     //version
-    public FindFilterBuilder versionEq(String version) throws StorageClientException {
-        filter.setVersionFilter(new FilterStringParam(version));
-        return this;
-    }
-
-    public FindFilterBuilder versionIn(List<String> versions) throws StorageClientException {
+    public FindFilterBuilder versionEq(String... versions) throws StorageClientException {
         filter.setVersionFilter(new FilterStringParam(versions));
         return this;
     }
 
-    public FindFilterBuilder versionNotEq(String version) throws StorageClientException {
-        filter.setVersionFilter(new FilterStringParam(version, true));
-        return this;
-    }
-
-    public FindFilterBuilder versionNotIn(List<String> versions) throws StorageClientException {
+    public FindFilterBuilder versionNotEq(String... versions) throws StorageClientException {
         filter.setVersionFilter(new FilterStringParam(versions, true));
         return this;
     }
 
     //rangeKey
-    public FindFilterBuilder rangeKeyEq(int key) {
-        filter.setRangeKeyFilter(new FilterNumberParam(key));
-        return this;
-    }
-
-    public FindFilterBuilder rangeKeyIn(int[] keys) throws StorageClientException {
+    public FindFilterBuilder rangeKeyEq(Integer... keys) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(keys));
         return this;
     }

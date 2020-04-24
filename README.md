@@ -419,7 +419,7 @@ Here is the example of how `find` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .key2Eq("kitty")
-                  .key3NotIn(Arrays.asList("firstExcludeValue","secondExclude"))
+                  .key3Eq("firstValue","secondValue")
                   .rangeKeyBetween(123, 456);                                
 
 BatchRecord founded = storage.find("us", builder);
@@ -429,7 +429,7 @@ if (founded.getCount>0) {
 }
 ```
 
-This call returns all records with `key2` equals `kitty` AND (`key3` not in `firstExcludeValue' , 'secondExclude`) AND (123 < = `rangeKey` < = 456)
+This call returns all records with `key2` equals `kitty` AND (`key3` in `firstValue' , 'secondValue`) AND (123 < = `rangeKey` < = 456)
 Filter conditions on each field of `Record` class are union with predicate `AND` 
 
 Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
@@ -440,10 +440,12 @@ FindFilterBuilder builder = FindFilterBuilder.create()
 BatchRecord records = storage.find("us", builder);
 ```
 
-Next predicate types are available for each string field of class `Record` via individual methods of `FindFilterBuilder`:
+Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
 EQUALS         (FindFilterBuilder::keyEq)
-IN             (FindFilterBuilder::keyIn)
+               (FindFilterBuilder::key2Eq)
+               (FindFilterBuilder::key3Eq)
+               (FindFilterBuilder::profileKeyEq)
 ```
 
 Filtering by integer `rangeKey` values of class `Record` is providing methods of `FindFilterBuilder`:
@@ -504,7 +506,7 @@ Here is the example of how `find` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("kitty")
-                .key3NotIn(Arrays.asList("bow-wow", "сock-a-doodle-do"))
+                .key3Eq("firstValue","secondValue")
                 .rangeKeyBetween(123, 456);                                
 
 Record record = storage.findOne("us", builder);

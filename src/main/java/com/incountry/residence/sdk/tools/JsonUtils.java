@@ -214,15 +214,15 @@ public class JsonUtils {
     }
 
     private static List<String> hashValue(FilterStringParam param, Crypto crypto) {
-        return param.getValue().stream().map(crypto::createKeyHash).collect(Collectors.toList());
+        return param.getValues().stream().map(crypto::createKeyHash).collect(Collectors.toList());
     }
 
     public static JsonArray toJsonInt(FilterStringParam param) {
-        if (param.getValue() == null) {
+        if (param == null || param.getValues() == null) {
             return null;
         }
         JsonArray array = new JsonArray();
-        param.getValue().stream().map(Integer::parseInt).forEach(array::add);
+        param.getValues().stream().map(Integer::parseInt).forEach(array::add);
         return array;
     }
 
@@ -262,11 +262,11 @@ public class JsonUtils {
     }
 
     public static JsonArray toJsonArray(FilterStringParam param, Crypto crypto) {
-        if (param.getValue() == null) {
+        if (param == null || param.getValues() == null) {
             return null;
         }
         JsonArray array = new JsonArray();
-        List<String> values = (crypto != null ? hashValue(param, crypto) : param.getValue());
+        List<String> values = (crypto != null ? hashValue(param, crypto) : param.getValues());
         values.forEach(array::add);
         return array;
     }
