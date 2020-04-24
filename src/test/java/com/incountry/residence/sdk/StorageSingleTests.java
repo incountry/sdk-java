@@ -13,6 +13,7 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
@@ -56,7 +57,7 @@ public class StorageSingleTests {
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-        secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
+        secretKeyAccessor = () -> secretsData;
         crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), environmentId);
     }
 
@@ -163,7 +164,7 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithEncByMultipleSecrets() throws StorageException {
-        Crypto cryptoOther = new CryptoImpl(SecretKeyAccessor.getAccessor("otherpassword").getSecretsData(), environmentId);
+        Crypto cryptoOther = new CryptoImpl(SecretKeyAccessorImpl.getInstance("otherpassword").getSecretsData(), environmentId);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
@@ -249,7 +250,7 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithoutEncWithEncryptedData() throws StorageException {
-        Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessor.getAccessor("password").getSecretsData(), environmentId);
+        Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessorImpl.getInstance("password").getSecretsData(), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
@@ -311,7 +312,7 @@ public class StorageSingleTests {
     @Test
     public void testInitErrorOnInsufficientArgs() throws StorageClientException {
         SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretData);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
     }
 

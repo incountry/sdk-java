@@ -34,7 +34,7 @@ public class SecretsDataUtilsTest {
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         String secretKeyString = new Gson().toJson(secretsData);
 
-        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
+        SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstanceWithJson(secretKeyString);
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
@@ -47,7 +47,7 @@ public class SecretsDataUtilsTest {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
-        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
+        SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstance("user_password");
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
@@ -56,7 +56,7 @@ public class SecretsDataUtilsTest {
     }
 
     @Test
-    public void testIsJson() {
+    public void testIsJson() throws StorageClientException {
         JsonObject jsonWithoutSecretsDataFields = new JsonObject();
         jsonWithoutSecretsDataFields.addProperty("body", "test");
         jsonWithoutSecretsDataFields.addProperty("key", "write_key");
@@ -69,7 +69,7 @@ public class SecretsDataUtilsTest {
         assertNotNull(JsonUtils.getSecretsDataFromJson(jsonString));
         assertEquals(0, JsonUtils.getSecretsDataFromJson(jsonString).getCurrentVersion());
         assertNull(JsonUtils.getSecretsDataFromJson(jsonString).getSecrets());
-        assertNull(JsonUtils.getSecretsDataFromJson("NotJsonString"));
+        assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson("NotJsonString"));
 
         JsonObject jsonWithSecret = new JsonObject();
         jsonWithSecret.addProperty("secret", "someSecret");
@@ -104,6 +104,6 @@ public class SecretsDataUtilsTest {
                 "  \"currentVersion\": 1\n" +
                 "}";
 
-        assertThrows(StorageClientException.class, () -> SecretKeyAccessor.getAccessor(() -> secretDataWrongJson));
+        assertThrows(StorageClientException.class, () -> SecretKeyAccessorImpl.getInstanceWithJson(secretDataWrongJson));
     }
 }

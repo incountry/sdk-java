@@ -75,7 +75,7 @@ public class HttpDaoImplTests {
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-        return SecretKeyAccessor.getAccessor(() -> secretsData);
+        return () -> secretsData;
     }
 
     private static Stream<Arguments> recordArgs() {

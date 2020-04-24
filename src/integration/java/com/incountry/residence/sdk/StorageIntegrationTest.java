@@ -64,7 +64,7 @@ public class StorageIntegrationTest {
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-        SecretKeyAccessor secretKeyAccessor = SecretKeyAccessor.getAccessor(() -> secretsData);
+        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
