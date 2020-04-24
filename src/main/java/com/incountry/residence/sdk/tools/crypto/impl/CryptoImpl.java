@@ -113,7 +113,7 @@ public class CryptoImpl implements Crypto {
     }
 
     private static String createHash(String stringToHash) {
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash.toLowerCase());
     }
 
     private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
