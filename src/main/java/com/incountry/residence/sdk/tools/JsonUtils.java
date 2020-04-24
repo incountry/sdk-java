@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.BatchRecord;
@@ -14,14 +13,15 @@ import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,17 +44,18 @@ public class JsonUtils {
     private static final String P_VERSION = "version";
     private static final String P_LIMIT = "limit";
     private static final String P_OFFSET = "offset";
-    private static final String P_COUNT = "count";
-    private static final String P_TOTAL = "total";
-    private static final String P_DATA = "data";
-    private static final String P_CODE = "countries";
-    private static final String P_DIRECT = "direct";
-    private static final String P_ID = "id";
-    private static final String P_NAME = "name";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
+    private static final String MSG_ERR_NULL_META = "Response error: Meta is null";
+    private static final String MSG_ERR_NEGATIVE_META = "Response error: negative values in batch metadata";
+    private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
+    private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then recieved";
+    private static final String MSG_ERR_NULL_POPLIST = "Response error: country list is empty";
+    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty";
+    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty";
+    private static final String MSG_ERR_RESPONSE = "Response error";
 
     private JsonUtils() {
     }
@@ -80,7 +81,7 @@ public class JsonUtils {
         mapBodyMeta.put(P_PAYLOAD, record.getBody());
         mapBodyMeta.put(P_META, jsonObject.toString());
         String packedBody = gson.toJson(mapBodyMeta);
-        EncryptedRecord encRec = new EncryptedRecord(record, crypto, packedBody);
+        TransferRecord encRec = new TransferRecord(record, crypto, packedBody);
         return (JsonObject) gson.toJsonTree(encRec);
     }
 
@@ -115,23 +116,21 @@ public class JsonUtils {
      * @return record objects with data from json
      * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException if decryption failed
+     * @throws StorageServerException if server connection failed or server response error
      */
-    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException {
+    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         Gson gson = getGson4Records();
-        EncryptedRecord verRec = gson.fromJson(jsonString, EncryptedRecord.class);
-        if (verRec.getVersion() == null) {
-            verRec.setVersion(0);
+        TransferRecord tempRecord = null;
+        try {
+            tempRecord = gson.fromJson(jsonString, TransferRecord.class);
+        } catch (JsonSyntaxException ex) {
+            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
-        if (crypto != null && verRec.getBody() != null) {
-            String[] parts = verRec.getBody().split(":");
-            verRec.setBody(crypto.decrypt(verRec.getBody(), verRec.getVersion()));
-            if (parts.length != 2) {
-                verRec.justDecryptKeys(crypto);
-            } else {
-                verRec.decryptAllFromBody();
-            }
+        tempRecord.validate();
+        if (tempRecord.version == null) {
+            tempRecord.version = 0;
         }
-        return verRec.toRecord();
+        return tempRecord.decrypt(crypto);
     }
 
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, Crypto crypto) {
@@ -159,27 +158,32 @@ public class JsonUtils {
         return object;
     }
 
-    public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) {
+    public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) throws StorageServerException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
-        JsonObject responseObject = gson.fromJson(responseString, JsonObject.class);
-        JsonObject meta = (JsonObject) responseObject.get(P_META);
-        int count = meta.get(P_COUNT).getAsInt();
-        int limit = meta.get(P_LIMIT).getAsInt();
-        int offset = meta.get(P_OFFSET).getAsInt();
-        int total = meta.get(P_TOTAL).getAsInt();
+        TransferBatch transferBatch = null;
+        try {
+            transferBatch = gson.fromJson(responseString, TransferBatch.class);
+        } catch (JsonSyntaxException ex) {
+            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+        }
+        transferBatch.validate();
         List<Record> records = new ArrayList<>();
-        if (count != 0) {
-            JsonArray data = responseObject.getAsJsonArray(P_DATA);
-            for (JsonElement item : data) {
+        if (transferBatch.meta.getCount() != 0) {
+            for (TransferRecord tempRecord : transferBatch.data) {
                 try {
-                    records.add(JsonUtils.recordFromString(item.toString(), crypto));
+                    tempRecord.validate();
+                    if (tempRecord.version == null) {
+                        tempRecord.version = 0;
+                    }
+                    records.add(tempRecord.decrypt(crypto));
                 } catch (Exception e) {
-                    errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, item.toString(), e));
+                    errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, gson.toJson(tempRecord), e));
                 }
             }
         }
-        return new BatchRecord(records, count, limit, offset, total, errors);
+        return new BatchRecord(records, transferBatch.meta.getCount(), transferBatch.meta.getLimit(),
+                transferBatch.meta.getOffset(), transferBatch.meta.getTotal(), errors);
     }
 
     private static JsonArray valueJSON(FilterNumberParam range) {
@@ -224,28 +228,6 @@ public class JsonUtils {
 
     private static Gson getGson4Records() {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-    }
-
-    public static List<Map.Entry<String, String>> getCountryEntryPoint(String content) {
-        List<Map.Entry<String, String>> result = new ArrayList<>();
-        if (content != null && !content.isEmpty()) {
-            Gson gson = new GsonBuilder().create();
-            JsonObject contentJson = gson.fromJson(content, JsonObject.class);
-            if (contentJson != null) {
-                JsonArray array = contentJson.getAsJsonArray(P_CODE);
-                if (array != null) {
-                    array.forEach(item -> {
-                        if (((JsonObject) item).get(P_DIRECT).getAsBoolean()) {
-                            String countryCode = ((JsonObject) item).get(P_ID).getAsString().toLowerCase();
-                            String countryName = ((JsonObject) item).get(P_NAME).getAsString();
-                            result.add(new AbstractMap.SimpleEntry<>(countryCode, countryName));
-                        }
-                    });
-                }
-
-            }
-        }
-        return result;
     }
 
     public static String toJsonString(List<Record> records, Crypto crypto)
@@ -301,13 +283,30 @@ public class JsonUtils {
         return result;
     }
 
+    public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
+        TransferPopList popList = null;
+        try {
+            popList = new Gson().fromJson(response, TransferPopList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+        }
+        Map<String, POP> result = new HashMap<>();
+        TransferPopList.validatePopList(popList);
+        for (TransferPop one : popList.countries) {
+            if (one.direct) {
+                result.put(one.getId(), new POP(uriStart + one.getId() + uriEnd, one.name));
+            }
+        }
+        return result;
+    }
+
     /**
      * inner class for cosy encryption and serialization of {@link Record} instances
      */
-    private static class EncryptedRecord extends Record {
-        private Integer version;
+    private static class TransferRecord extends Record {
+        Integer version;
 
-        EncryptedRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageClientException, StorageCryptoException {
+        TransferRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageClientException, StorageCryptoException {
             setKey(crypto.createKeyHash(record.getKey()));
             setKey2(crypto.createKeyHash(record.getKey2()));
             setKey3(crypto.createKeyHash(record.getKey3()));
@@ -316,15 +315,22 @@ public class JsonUtils {
 
             Map.Entry<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
             setBody(encBodyAndVersion.getKey());
-            setVersion(encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
+            version = (encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
         }
 
-        public Integer getVersion() {
-            return version;
-        }
-
-        public void setVersion(Integer version) {
-            this.version = version;
+        public void validate() throws StorageServerException {
+            StringBuilder builder = null;
+            if (getKey() == null || getKey().length() == 0) {
+                builder = new StringBuilder("Null required record fields: key");
+            }
+            if (getBody() == null || getBody().length() == 0) {
+                builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
+            }
+            if (builder != null) {
+                String message = builder.toString();
+                LOG.error(message);
+                throw new StorageServerException(message);
+            }
         }
 
         /**
@@ -332,7 +338,7 @@ public class JsonUtils {
          *
          * @return return immutalbe Record
          */
-        public Record toRecord() {
+        private Record toRecord() {
             Record rec = new Record();
             rec.setKey(getKey());
             rec.setKey2(getKey2());
@@ -387,13 +393,98 @@ public class JsonUtils {
             if (!super.equals(object)) {
                 return false;
             }
-            EncryptedRecord that = (EncryptedRecord) object;
+            TransferRecord that = (TransferRecord) object;
             return Objects.equals(version, that.version);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(super.hashCode(), version);
+        }
+
+        public Record decrypt(Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
+            try {
+                if (crypto != null && getBody() != null) {
+                    String[] parts = getBody().split(":");
+                    setBody(crypto.decrypt(getBody(), version));
+                    if (parts.length != 2) {
+                        justDecryptKeys(crypto);
+                    } else {
+                        decryptAllFromBody();
+                    }
+                }
+            } catch (JsonSyntaxException ex) {
+                throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+            }
+            return toRecord();
+        }
+    }
+
+    /**
+     * inner class for cosy serialization of {@link BatchRecord} instances
+     */
+    private static class TransferBatch {
+        BatchRecord meta;
+        List<TransferRecord> data;
+
+        public void validate() throws StorageServerException {
+            if (meta == null) {
+                throw new StorageServerException(MSG_ERR_NULL_META);
+            } else if (meta.getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0) {
+                throw new StorageServerException(MSG_ERR_NEGATIVE_META);
+            } else if (meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount())
+                    || meta.getCount() == 0 && !data.isEmpty()) {
+                throw new StorageServerException(MSG_ERR_INCORRECT_COUNT);
+            } else if (meta.getCount() > meta.getTotal()) {
+                throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);
+            }
+        }
+    }
+
+    /**
+     * inner class for cosy serialization loading country List
+     */
+    private static class TransferPop {
+        String name;
+        String id;
+        String status;
+        boolean direct;
+
+        @Override
+        public String toString() {
+            return "TransferPop{" +
+                    "name='" + name + '\'' +
+                    ", id='" + id + '\'' +
+                    ", status='" + status + '\'' +
+                    ", direct=" + direct +
+                    '}';
+        }
+
+        public String getId() {
+            return id.toLowerCase();
+        }
+    }
+
+    private static class TransferPopList {
+        List<TransferPop> countries;
+
+        static void validatePopList(TransferPopList one) throws StorageServerException {
+            if (one == null || one.countries == null || one.countries.isEmpty()) {
+                LOG.error(MSG_ERR_NULL_POPLIST);
+                throw new StorageServerException(MSG_ERR_NULL_POPLIST);
+            }
+            for (TransferPop pop : one.countries) {
+                if (pop.name == null || pop.name.isEmpty()) {
+                    String message = MSG_ERR_NULL_POPNAME + pop.toString();
+                    LOG.error(message);
+                    throw new StorageServerException(message);
+                }
+                if (pop.id == null || pop.id.isEmpty()) {
+                    String message = MSG_ERR_NULL_POPID + pop.toString();
+                    LOG.error(message);
+                    throw new StorageServerException(message);
+                }
+            }
         }
     }
 }

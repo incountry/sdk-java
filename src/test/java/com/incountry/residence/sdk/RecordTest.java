@@ -10,6 +10,7 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -75,7 +76,7 @@ public class RecordTest {
     }
 
     @Test
-    public void testFromString() throws StorageCryptoException, StorageClientException {
+    public void testFromString() throws StorageCryptoException, StorageClientException, StorageServerException {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("body", "test");
         jsonObject.addProperty("env_id", "5422b4ba-016d-4a3b-aea5-a832083697b1");
@@ -117,7 +118,7 @@ public class RecordTest {
      * @throws StorageCryptoException when problem with encryption
      */
     @Test
-    public void testToJsonString() throws StorageCryptoException, StorageClientException {
+    public void testToJsonString() throws StorageCryptoException, StorageClientException, StorageServerException {
         String quaziJsonString = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
         Record nativeRecord = new Record(key, body, profileKey, rangeKey, key2, key3);
         String nativeRecordJson = JsonUtils.toJsonString(nativeRecord, null);

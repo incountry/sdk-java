@@ -28,6 +28,7 @@ public class HttpDaoImpl implements Dao {
     public static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
+    private static final String MSG_ERROR_RESPONSE = "Response error: expected 'OK', but recieved: ";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
@@ -71,10 +72,8 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, false);
-            for (Map.Entry<String, String> pair : JsonUtils.getCountryEntryPoint(content)) {
-                popMap.put(pair.getKey(), new POP(URI_HTTPS + pair.getKey() + URI_ENDPOINT_PART, pair.getValue()));
-            }
+            content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY);
+            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
@@ -119,21 +118,23 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createRecord(String country, Record record, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
-        agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), false);
+        String response = agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE);
+        validatePlainTextResponse("ok", response);
     }
 
     @Override
     public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
-        agent.request(url, URI_POST, recListJson, false);
+        String response = agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE);
+        validatePlainTextResponse("ok", response);
     }
 
     @Override
     public Record read(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        String response = agent.request(url, URI_GET, null, true);
+        String response = agent.request(url, URI_GET, null, ApiResponse.READ);
         if (response == null) {
             return null;
         } else {
@@ -145,14 +146,15 @@ public class HttpDaoImpl implements Dao {
     public void delete(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        agent.request(url, URI_DELETE, null, false);
+        String response = agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
+        validatePlainTextResponse("{}", response);
     }
 
     @Override
     public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageClientException, StorageServerException {
         String url = getEndpoint(concatUrl(country, URI_FIND), country);
         String postData = JsonUtils.toJsonString(builder.build(), crypto);
-        String content = agent.request(url, URI_POST, postData, false);
+        String content = agent.request(url, URI_POST, postData, ApiResponse.FIND);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
@@ -168,5 +170,13 @@ public class HttpDaoImpl implements Dao {
             }
         }
         return builder.toString();
+    }
+
+    private void validatePlainTextResponse(String expected, String response) throws StorageServerException {
+        if (response == null || !response.equalsIgnoreCase(expected)) {
+            String message = MSG_ERROR_RESPONSE + response;
+            LOG.error(message);
+            throw new StorageServerException(message);
+        }
     }
 }
