@@ -118,14 +118,16 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createRecord(String country, Record record, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
-        validatePlainTextResponse("ok", agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE));
+        String response = agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE);
+        validatePlainTextResponse("ok", response);
     }
 
     @Override
     public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, crypto);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
-        validatePlainTextResponse("ok", agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE));
+        String response = agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE);
+        validatePlainTextResponse("ok", response);
     }
 
     @Override
@@ -144,7 +146,8 @@ public class HttpDaoImpl implements Dao {
     public void delete(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException {
         String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        validatePlainTextResponse("{}", agent.request(url, URI_DELETE, null, ApiResponse.DELETE));
+        String response = agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
+        validatePlainTextResponse("{}", response);
     }
 
     @Override

@@ -20,23 +20,28 @@ public class ApiResponse {
         map.put(200, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
         COUNTRY = Collections.unmodifiableMap(map);
+
         map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(404, new ApiResponse(true, true));
         READ = Collections.unmodifiableMap(map);
+
         map = new HashMap<>();
         map.put(201, new ApiResponse(false, false));
         map.put(404, new ApiResponse(true, false));
         WRITE = Collections.unmodifiableMap(map);
+
         map = new HashMap<>();
         map.put(201, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
         BATCH_WRITE = Collections.unmodifiableMap(map);
+
         map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
         map.put(409, new ApiResponse(true, false));
         FIND = Collections.unmodifiableMap(map);
+
         map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
@@ -57,5 +62,13 @@ public class ApiResponse {
 
     public boolean isIgnored() {
         return ignored;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiResponse{" +
+                "error=" + error +
+                ", ignored=" + ignored +
+                '}';
     }
 }

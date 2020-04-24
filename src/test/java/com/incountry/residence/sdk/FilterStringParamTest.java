@@ -17,7 +17,7 @@ public class FilterStringParamTest {
     public void toJSONStringTestWithCrypto() throws StorageClientException {
         String filterValue = "filterValue";
         Crypto crypto = new CryptoImpl("envId");
-        FilterStringParam filterStringParam = new FilterStringParam(filterValue);
+        FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
         JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, crypto);
         assertEquals(crypto.createKeyHash(filterValue), jsonArray.get(0).getAsString());
     }
@@ -25,7 +25,7 @@ public class FilterStringParamTest {
     @Test
     public void toJSONStringWithCryptoNullTest() throws StorageClientException {
         String filterValue = "filterValue";
-        FilterStringParam filterStringParam = new FilterStringParam(filterValue);
+        FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
         JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, null);
         assertEquals(filterValue, jsonArray.get(0).getAsString());
     }
@@ -33,7 +33,7 @@ public class FilterStringParamTest {
     @Test
     public void toJSONIntTest() throws StorageClientException {
         int filterValue = 1;
-        FilterStringParam filterStringParam = new FilterStringParam(Integer.toString(filterValue));
+        FilterStringParam filterStringParam = new FilterStringParam(new String[]{Integer.toString(filterValue)});
         JsonArray jsonArray = JsonUtils.toJsonInt(filterStringParam);
         assertEquals(filterValue, jsonArray.get(0).getAsInt());
     }
