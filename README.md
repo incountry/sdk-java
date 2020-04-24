@@ -440,7 +440,7 @@ FindFilterBuilder builder = FindFilterBuilder.create()
 BatchRecord records = storage.find("us", builder);
 ```
 
-Next predicate types are available for each field of class `Record` via individaul methods of `FindFilterBuilder`:
+Next predicate types are available for each string field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
 EQUALS         (FindFilterBuilder::keyEq)
 NOT EQUALS     (FindFilterBuilder::keyNotEq)
@@ -448,8 +448,10 @@ IN             (FindFilterBuilder::keyIn)
 NOT IN         (FindFilterBuilder::keyNotIn)
 ```
 
-Filtering by `rangeKey` values of class `Record` is providing additional methods of `FindFilterBuilder`:
+Filtering by integer `rangeKey` values of class `Record` is providing methods of `FindFilterBuilder`:
 ```java
+EQUALS              (FindFilterBuilder::rangeKeyEq)
+IN                  (FindFilterBuilder::rangeKeyIn)
 GREATER             (FindFilterBuilder::rangeKeyGT)
 GREATER OR EQUALS   (FindFilterBuilder::rangeKeyGTE)
 LESS                (FindFilterBuilder::rangeKeyLT)
