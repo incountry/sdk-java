@@ -12,6 +12,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -105,5 +106,14 @@ public class SecretsDataUtilsTest {
                 "}";
 
         assertThrows(StorageClientException.class, () -> SecretKeyAccessorImpl.getInstanceWithJson(secretDataWrongJson));
+    }
+
+    @Test
+    public void testValidationOfSecretsData() throws StorageClientException {
+        SecretKey secretKey1 = new SecretKey("password1", 0, false);
+        SecretKey secretKey2 = new SecretKey("password2", 1, false);
+        SecretKey secretKey3 = new SecretKey("password3", 0, false);
+        assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2, secretKey3), 1));
+        assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), 2));
     }
 }
