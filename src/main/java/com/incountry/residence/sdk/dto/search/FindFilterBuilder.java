@@ -55,16 +55,6 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder keyNotEq(String key) throws StorageClientException {
-        filter.setKeyFilter(new FilterStringParam(key, true));
-        return this;
-    }
-
-    public FindFilterBuilder keyNotIn(List<String> keys) throws StorageClientException {
-        filter.setKeyFilter(new FilterStringParam(keys, true));
-        return this;
-    }
-
     //key2
     public FindFilterBuilder key2Eq(String key) throws StorageClientException {
         filter.setKey2Filter(new FilterStringParam(key));
@@ -73,16 +63,6 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder key2In(List<String> keys) throws StorageClientException {
         filter.setKey2Filter(new FilterStringParam(keys));
-        return this;
-    }
-
-    public FindFilterBuilder key2NotEq(String key) throws StorageClientException {
-        filter.setKey2Filter(new FilterStringParam(key, true));
-        return this;
-    }
-
-    public FindFilterBuilder key2NotIn(List<String> keys) throws StorageClientException {
-        filter.setKey2Filter(new FilterStringParam(keys, true));
         return this;
     }
 
@@ -97,16 +77,6 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder key3NotEq(String key) throws StorageClientException {
-        filter.setKey3Filter(new FilterStringParam(key, true));
-        return this;
-    }
-
-    public FindFilterBuilder key3NotIn(List<String> keys) throws StorageClientException {
-        filter.setKey3Filter(new FilterStringParam(keys, true));
-        return this;
-    }
-
     //profileKey
     public FindFilterBuilder profileKeyEq(String key) throws StorageClientException {
         filter.setProfileKeyFilter(new FilterStringParam(key));
@@ -115,16 +85,6 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder profileKeyIn(List<String> keys) throws StorageClientException {
         filter.setProfileKeyFilter(new FilterStringParam(keys));
-        return this;
-    }
-
-    public FindFilterBuilder profileKeyNotEq(String key) throws StorageClientException {
-        filter.setProfileKeyFilter(new FilterStringParam(key, true));
-        return this;
-    }
-
-    public FindFilterBuilder profileKeyNotIn(List<String> keys) throws StorageClientException {
-        filter.setProfileKeyFilter(new FilterStringParam(keys, true));
         return this;
     }
 

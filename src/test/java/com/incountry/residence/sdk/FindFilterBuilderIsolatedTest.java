@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,21 +36,21 @@ public class FindFilterBuilderIsolatedTest {
     public void toStringPositiveTest() throws StorageClientException {
         String string = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
-                .keyNotIn(Arrays.asList("3", "4"))
-                .key2NotIn(Arrays.asList("5", "6"))
-                .key3NotIn(Arrays.asList("7", "8"))
-                .profileKeyNotIn(Arrays.asList("9", "10"))
+                .keyIn(Arrays.asList("3", "4"))
+                .key2In(Arrays.asList("5", "6"))
+                .key3In(Arrays.asList("7", "8"))
+                .profileKeyIn(Arrays.asList("9", "10"))
                 .versionNotIn(Arrays.asList("11", "12"))
                 .rangeKeyIn(new int[]{13, 14})
                 .build().toString();
         assertNotNull(string);
         assertTrue(string.contains("limit=1"));
         assertTrue(string.contains("offset=2"));
-        assertTrue(string.contains("keyFilter=FilterStringParam{value=[3, 4], notCondition=true}"));
-        assertTrue(string.contains("key2Filter=FilterStringParam{value=[5, 6], notCondition=true"));
-        assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=true"));
-        assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=true}"));
-        assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12]"));
+        assertTrue(string.contains("keyFilter=FilterStringParam{value=[3, 4], notCondition=false}"));
+        assertTrue(string.contains("key2Filter=FilterStringParam{value=[5, 6], notCondition=false"));
+        assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=false"));
+        assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=false}"));
+        assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12], notCondition=true}"));
         assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='null', operator2='null'}"));
     }
 
@@ -60,23 +61,14 @@ public class FindFilterBuilderIsolatedTest {
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyIn(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyIn(new ArrayList<>()));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyNotEq(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyNotIn(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyNotIn(new ArrayList<>()));
         //key2
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2Eq(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2In(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2In(new ArrayList<>()));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2NotEq(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2NotIn(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2NotIn(new ArrayList<>()));
         //key3
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key3Eq(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key3In(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key3In(new ArrayList<>()));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key3NotEq(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key3NotIn(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key3NotIn(new ArrayList<>()));
         //version
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().versionEq(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().versionIn(null));
@@ -88,9 +80,6 @@ public class FindFilterBuilderIsolatedTest {
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().profileKeyEq(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().profileKeyIn(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().profileKeyIn(new ArrayList<>()));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().profileKeyNotEq(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().profileKeyNotIn(null));
-        assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().profileKeyNotIn(new ArrayList<>()));
         //rangeKey
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyIn(null));
         assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyIn(new int[]{}));
@@ -105,10 +94,8 @@ public class FindFilterBuilderIsolatedTest {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.keyEq("1").build().getKeyFilter().getValue().get(0));
         assertEquals("2", builder.keyIn(Arrays.asList("1", "2")).build().getKeyFilter().getValue().get(1));
-        assertEquals("3", builder.keyNotEq("3").build().getKeyFilter().getValue().get(0));
-        assertTrue(builder.keyNotEq("4").build().getKeyFilter().isNotCondition());
-        assertEquals("6", builder.keyNotIn(Arrays.asList("5", "6")).build().getKeyFilter().getValue().get(1));
-        assertTrue(builder.keyNotIn(Arrays.asList("7", "8")).build().getKeyFilter().isNotCondition());
+        assertFalse(builder.keyEq("4").build().getKeyFilter().isNotCondition());
+        assertFalse(builder.keyIn(Arrays.asList("7", "8")).build().getKeyFilter().isNotCondition());
     }
 
     @Test
@@ -116,10 +103,8 @@ public class FindFilterBuilderIsolatedTest {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.key2Eq("1").build().getKey2Filter().getValue().get(0));
         assertEquals("2", builder.key2In(Arrays.asList("1", "2")).build().getKey2Filter().getValue().get(1));
-        assertEquals("3", builder.key2NotEq("3").build().getKey2Filter().getValue().get(0));
-        assertTrue(builder.key2NotEq("4").build().getKey2Filter().isNotCondition());
-        assertEquals("6", builder.key2NotIn(Arrays.asList("5", "6")).build().getKey2Filter().getValue().get(1));
-        assertTrue(builder.key2NotIn(Arrays.asList("7", "8")).build().getKey2Filter().isNotCondition());
+        assertFalse(builder.key2Eq("4").build().getKey2Filter().isNotCondition());
+        assertFalse(builder.key2In(Arrays.asList("7", "8")).build().getKey2Filter().isNotCondition());
     }
 
     @Test
@@ -127,10 +112,8 @@ public class FindFilterBuilderIsolatedTest {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.key3Eq("1").build().getKey3Filter().getValue().get(0));
         assertEquals("2", builder.key3In(Arrays.asList("1", "2")).build().getKey3Filter().getValue().get(1));
-        assertEquals("3", builder.key3NotEq("3").build().getKey3Filter().getValue().get(0));
-        assertTrue(builder.key3NotEq("4").build().getKey3Filter().isNotCondition());
-        assertEquals("6", builder.key3NotIn(Arrays.asList("5", "6")).build().getKey3Filter().getValue().get(1));
-        assertTrue(builder.key3NotIn(Arrays.asList("7", "8")).build().getKey3Filter().isNotCondition());
+        assertFalse(builder.key3Eq("4").build().getKey3Filter().isNotCondition());
+        assertFalse(builder.key3In(Arrays.asList("7", "8")).build().getKey3Filter().isNotCondition());
     }
 
     @Test
@@ -138,10 +121,8 @@ public class FindFilterBuilderIsolatedTest {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.profileKeyEq("1").build().getProfileKeyFilter().getValue().get(0));
         assertEquals("2", builder.profileKeyIn(Arrays.asList("1", "2")).build().getProfileKeyFilter().getValue().get(1));
-        assertEquals("3", builder.profileKeyNotEq("3").build().getProfileKeyFilter().getValue().get(0));
-        assertTrue(builder.profileKeyNotEq("4").build().getProfileKeyFilter().isNotCondition());
-        assertEquals("6", builder.profileKeyNotIn(Arrays.asList("5", "6")).build().getProfileKeyFilter().getValue().get(1));
-        assertTrue(builder.profileKeyNotIn(Arrays.asList("7", "8")).build().getProfileKeyFilter().isNotCondition());
+        assertFalse(builder.profileKeyEq("4").build().getProfileKeyFilter().isNotCondition());
+        assertFalse(builder.profileKeyIn(Arrays.asList("7", "8")).build().getProfileKeyFilter().isNotCondition());
     }
 
     @Test

@@ -443,9 +443,7 @@ BatchRecord records = storage.find("us", builder);
 Next predicate types are available for each string field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
 EQUALS         (FindFilterBuilder::keyEq)
-NOT EQUALS     (FindFilterBuilder::keyNotEq)
 IN             (FindFilterBuilder::keyIn)
-NOT IN         (FindFilterBuilder::keyNotIn)
 ```
 
 Filtering by integer `rangeKey` values of class `Record` is providing methods of `FindFilterBuilder`:
