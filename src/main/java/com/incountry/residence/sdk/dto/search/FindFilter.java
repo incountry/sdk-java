@@ -114,21 +114,16 @@ public class FindFilter {
         this.versionFilter = versionFilter;
     }
 
-    public FindFilter copy() {
-        FindFilter clone = null;
-        try {
-            clone = new FindFilter();
-            clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
-            clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
-            clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
-            clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().copy() : null);
-            clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
-            clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().copy() : null);
-            clone.setOffset(getOffset());
-            clone.setLimit(getLimit());
-        } catch (StorageClientException ex) {
-            LOG.error(ex);
-        }
+    public FindFilter copy() throws StorageClientException {
+        FindFilter clone = new FindFilter();
+        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
+        clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
+        clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
+        clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().copy() : null);
+        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
+        clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().copy() : null);
+        clone.setOffset(getOffset());
+        clone.setLimit(getLimit());
         return clone;
     }
 

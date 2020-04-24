@@ -63,4 +63,12 @@ public class ApiResponse {
     public boolean isIgnored() {
         return ignored;
     }
+
+    @Override
+    public String toString() {
+        return "ApiResponse{" +
+                "error=" + error +
+                ", ignored=" + ignored +
+                '}';
+    }
 }
