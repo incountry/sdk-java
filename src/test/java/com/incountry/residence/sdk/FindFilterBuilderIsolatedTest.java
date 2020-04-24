@@ -17,14 +17,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FindFilterBuilderIsolatedTest {
 
     @Test
-    public void defaultPositiveTest() {
+    public void defaultPositiveTest() throws StorageClientException {
         FindFilter filter = FindFilterBuilder.create().build();
         assertEquals(100, filter.getLimit());
         assertEquals(0, filter.getOffset());
     }
 
     @Test
-    public void clearTest() {
+    public void clearTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         FindFilter filter1 = builder.build();
         FindFilter filter2 = builder.clear().build();

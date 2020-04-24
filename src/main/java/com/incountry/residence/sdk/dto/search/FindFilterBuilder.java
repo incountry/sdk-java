@@ -29,7 +29,7 @@ public class FindFilterBuilder {
         this.filter = filter;
     }
 
-    public FindFilter build() {
+    public FindFilter build() throws StorageClientException {
         return filter.copy();
     }
 
@@ -209,7 +209,7 @@ public class FindFilterBuilder {
                 '}';
     }
 
-    public FindFilterBuilder copy() {
+    public FindFilterBuilder copy() throws StorageClientException {
         return new FindFilterBuilder(this.filter.copy());
     }
 }
