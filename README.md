@@ -19,6 +19,33 @@ For Gradle users plase add this line to your dependencies list
 compile "com.incountry:incountry-java-client:2.0.0"
 ```
 
+Project dependencies
+----
+The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
+
+| **GroupId**              | **ArtifactId** | **Version** | **Type** | **Licenses** |
+| :---:                    | :---:          | :---:       | :---:    | :---: | 
+| javax.xml.bind           | jaxb-api       | 2.2.4       | jar      | 5 |
+| javax.xml.stream         | stax-api       | 1.0-2       | jar      | 5 |
+| javax.activation         | activation     | 1.1         | jar      | 5 |
+| commons-codec            | commons-codec  | 1.14        | jar      | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) |
+| org.apache.logging.log4j | log4j-api      | 2.13.1      | jar      | 5 |
+| org.apache.logging.log4j | log4j-core     | 2.13.1      | jar      | 5 |
+| com.google.code.gson     | gson           | 2.8.6       | jar      | 5 |
+
+#### Dependency Tree
+```
+compileClasspath
++--- javax.xml.bind:jaxb-api:2.2.4
+|    +--- javax.xml.stream:stax-api:1.0-2
+|    \--- javax.activation:activation:1.1
++--- commons-codec:commons-codec:1.14
++--- org.apache.logging.log4j:log4j-api:2.13.1
++--- org.apache.logging.log4j:log4j-core:2.13.1
+|    \--- org.apache.logging.log4j:log4j-api:2.13.1
+\--- com.google.code.gson:gson:2.8.6
+```
+
 Countries List
 ----
 For a full list of supported countries and their codes please [follow this link](countries.md).
