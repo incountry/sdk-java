@@ -13,7 +13,7 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
+import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
@@ -164,7 +164,7 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithEncByMultipleSecrets() throws StorageException {
-        Crypto cryptoOther = new CryptoImpl(SecretKeyAccessorImpl.getInstance("otherpassword"), environmentId);
+        Crypto cryptoOther = new CryptoImpl(() -> SecretsDataGenerator.fromPassword("otherpassword"), environmentId);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
@@ -250,7 +250,7 @@ public class StorageSingleTests {
 
     @Test
     public void testFindWithoutEncWithEncryptedData() throws StorageException {
-        Crypto cryptoWithEnc = new CryptoImpl(SecretKeyAccessorImpl.getInstance("password"), environmentId);
+        Crypto cryptoWithEnc = new CryptoImpl(() -> SecretsDataGenerator.fromPassword("password"), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)

@@ -73,8 +73,7 @@ public class CryptoImpl implements Crypto {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(CHARSET));
             return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, CHARSET), null);
         }
-
-        SecretsData secretsData = keyAccessor.getSecretsData();
+        SecretsData secretsData = getSecretsDataOrException();
         byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
         SecretKey secretKey = getSecret(secretsData, secretsData.getCurrentVersion());
@@ -126,7 +125,7 @@ public class CryptoImpl implements Crypto {
         byte[] decryptedText = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            byte[] key = getKey(salt, getSecret(keyAccessor.getSecretsData(), decryptKeyVersion));
+            byte[] key = getKey(salt, getSecret(getSecretsDataOrException(), decryptKeyVersion));
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -155,14 +154,24 @@ public class CryptoImpl implements Crypto {
         return secret;
     }
 
-    public Integer getCurrentSecretVersion() {
+    public Integer getCurrentSecretVersion() throws StorageClientException {
         if (keyAccessor != null) {
-            SecretsData secretsData = keyAccessor.getSecretsData();
+            SecretsData secretsData = getSecretsDataOrException();
             if (secretsData != null) {
                 return secretsData.getCurrentVersion();
             }
         }
         return null;
+    }
+
+    private SecretsData getSecretsDataOrException() throws StorageClientException {
+        try {
+            return keyAccessor.getSecretsData();
+        } catch (StorageClientException clientEx) {
+            throw clientEx;
+        } catch (Exception ex) {
+            throw new StorageClientException("Unexpected exception", ex);
+        }
     }
 
     public String createKeyHash(String key) {
