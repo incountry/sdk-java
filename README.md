@@ -69,7 +69,8 @@ The SDK has a `SecretKeyAccessor` interface which allows you to pass your own se
 `SecretKeyAccessor` allows you to pass a function that should return your secret (in multiple ways):
 ```java
 /**
- * Accessor to secrets. Used only during initialising of {@link com.incountry.residence.sdk.Storage}
+ * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
+ * You can specify secrets rotation in implementation
  */
 public interface SecretKeyAccessor {
 

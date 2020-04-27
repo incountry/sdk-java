@@ -3,7 +3,8 @@ package com.incountry.residence.sdk.tools.keyaccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 /**
- * Accessor to secrets. Used only during initialising of {@link com.incountry.residence.sdk.Storage}
+ * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
+ * You can specify secrets rotation in implementation
  */
 public interface SecretKeyAccessor {
 
