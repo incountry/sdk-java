@@ -3,7 +3,7 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretsDataGenerator;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 
 public class FullMigrationExample {
 

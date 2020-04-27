@@ -1,15 +1,13 @@
-package com.incountry.residence.sdk.tools.keyaccessor.impl;
+package com.incountry.residence.sdk.tools.keyaccessor.key;
 
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generator for simple {@link com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor} implementations
+ * Generator for {@link com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData}
  */
 public class SecretsDataGenerator {
 

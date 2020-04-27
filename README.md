@@ -78,8 +78,9 @@ public interface SecretKeyAccessor {
      * get your container with secrets
      *
      * @return SecretsData
+     * @throws StorageClientException when something goes wrong during getting secrets
      */
-    SecretsData getSecretsData();
+    SecretsData getSecretsData() throws StorageClientException;
 }
 
 
@@ -113,21 +114,36 @@ public class SecretKey {
 }
 ```
 
-You can implement `SecretKeyAccessor` interface or use static methods of `SecretKeyAccessorImpl` which allows you to pass your secrets/keys to the SDK.
+You can implement `SecretKeyAccessor` interface which allows you to pass your secrets/keys to the SDK.
 Secrets/keys can be passed in multiple ways:
 
-1. As a constant string
-```java     
-SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstance("SomePassword-3.14");
+1. As a constant secrets
+```java
+SecretsData sectetsData = new SecretsData(secretsList, currentVersion);
+SecretKeyAccessor accessor = () -> sectetsData;
 ```
 
-2. As an implementation of `SecretKeyAccessor` interface. SecretKeyAccessor's `getSecretsData` method should return `SecretsData` object
+2. As a function than dynamically generates secrets
+```java
+SecretKeyAccessor accessor = () -> loadSecretsData();
+
+private SecretsData loadSecretsData()  {
+        String url="<your_secret_url>";
+        String responseJson = loadFromUrl(url).asJson();
+        return SecretsDataGenerator.fromJson(responseJson);
+}
+```
+
+You can use `SecretsDataGenerator` for creating `SecretsData` instances:
+A. with String password
 ```java               
-SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-SecretKeyAccessor accessor = () -> secretsData;        
+SecretsData secretsData = SecretsDataGenerator.fromPassword("vEry_String-P@ssw0rd");
 ```
 
-3. As an `SecretsData` in JSON string object. 
+B. with `SecretsData` in JSON string object
+```java               
+SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
+```
 ```javascript
 {
   "secrets": [
@@ -145,9 +161,6 @@ SecretKeyAccessor accessor = () -> secretsData;
   "currentVersion": 1           // Should be a non-negative integer. One of the secrets
                                 // must have same version as currentVersion in SecretsData
 }
-```
-```java
-SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstanceWithJson(secretsDataInJson);
 ```
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 
