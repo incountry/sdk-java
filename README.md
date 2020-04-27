@@ -123,7 +123,7 @@ SecretsData sectetsData = new SecretsData(secretsList, currentVersion);
 SecretKeyAccessor accessor = () -> sectetsData;
 ```
 
-2. As a function than dynamically generates secrets
+2. As a function that dynamically generates secrets
 ```java
 SecretKeyAccessor accessor = () -> loadSecretsData();
 
@@ -135,9 +135,10 @@ private SecretsData loadSecretsData()  {
 ```
 
 You can use `SecretsDataGenerator` for creating `SecretsData` instances:
+
 A. with String password
 ```java               
-SecretsData secretsData = SecretsDataGenerator.fromPassword("vEry_String-P@ssw0rd");
+SecretsData secretsData = SecretsDataGenerator.fromPassword("vEry_Strong-P@ssw0rd");
 ```
 
 B. with `SecretsData` in JSON string object
