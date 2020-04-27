@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.crypto.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
@@ -49,12 +50,12 @@ public class CryptoImpl implements Crypto {
 
     public static final String PT_ENC_VERSION = "pt";
 
-    private SecretsData secretsData;
+    private SecretKeyAccessor keyAccessor;
     private String envId;
     private boolean isUsingPTEncryption = false;
 
-    public CryptoImpl(SecretsData secret) {
-        this.secretsData = secret;
+    public CryptoImpl(SecretKeyAccessor keyAccessor) {
+        this.keyAccessor = keyAccessor;
     }
 
     public CryptoImpl(String envId) {
@@ -62,8 +63,8 @@ public class CryptoImpl implements Crypto {
         this.isUsingPTEncryption = true;
     }
 
-    public CryptoImpl(SecretsData secret, String envId) {
-        this.secretsData = secret;
+    public CryptoImpl(SecretKeyAccessor keyAccessor, String envId) {
+        this.keyAccessor = keyAccessor;
         this.envId = envId;
     }
 
@@ -73,10 +74,11 @@ public class CryptoImpl implements Crypto {
             return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, CHARSET), null);
         }
 
+        SecretsData secretsData = keyAccessor.getSecretsData();
         byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
-        SecretKey secretKeyObj = getSecret(secretsData.getCurrentVersion());
-        byte[] key = getKey(salt, secretKeyObj);
+        SecretKey secretKey = getSecret(secretsData, secretsData.getCurrentVersion());
+        byte[] key = getKey(salt, secretKey);
         byte[] iv = generateRandomBytes(IV_LENGTH);
 
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
@@ -102,14 +104,14 @@ public class CryptoImpl implements Crypto {
         }
 
         byte[] encoded = Base64.getEncoder().encode(resultByteArray);
-        return new AbstractMap.SimpleEntry<>(VERSION + ":" + new String(encoded, CHARSET), secretKeyObj.getVersion());
+        return new AbstractMap.SimpleEntry<>(VERSION + ":" + new String(encoded, CHARSET), secretKey.getVersion());
     }
 
-    private byte[] getKey(byte[] salt, SecretKey secretKeyObj) throws StorageCryptoException {
-        if (secretKeyObj.getIsKey() != null && secretKeyObj.getIsKey()) {
-            return secretKeyObj.getSecret().getBytes(CHARSET);
+    private byte[] getKey(byte[] salt, SecretKey secretKey) throws StorageCryptoException {
+        if (secretKey.getIsKey() != null && secretKey.getIsKey()) {
+            return secretKey.getSecret().getBytes(CHARSET);
         }
-        return generateStrongPasswordHash(secretKeyObj.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
+        return generateStrongPasswordHash(secretKey.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
     }
 
     private static String createHash(String stringToHash) {
@@ -124,7 +126,7 @@ public class CryptoImpl implements Crypto {
         byte[] decryptedText = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            byte[] key = getKey(salt, getSecret(decryptKeyVersion));
+            byte[] key = getKey(salt, getSecret(keyAccessor.getSecretsData(), decryptKeyVersion));
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -137,7 +139,7 @@ public class CryptoImpl implements Crypto {
         return new String(decryptedText, CHARSET);
     }
 
-    private SecretKey getSecret(Integer version) throws StorageClientException {
+    private SecretKey getSecret(SecretsData secretsData, int version) throws StorageClientException {
         SecretKey secret = null;
         for (SecretKey item : secretsData.getSecrets()) {
             if (item.getVersion() == version) {
@@ -153,8 +155,14 @@ public class CryptoImpl implements Crypto {
         return secret;
     }
 
-    public int getCurrentSecretVersion() {
-        return secretsData.getCurrentVersion();
+    public Integer getCurrentSecretVersion() {
+        if (keyAccessor != null) {
+            SecretsData secretsData = keyAccessor.getSecretsData();
+            if (secretsData != null) {
+                return secretsData.getCurrentVersion();
+            }
+        }
+        return null;
     }
 
     public String createKeyHash(String key) {
