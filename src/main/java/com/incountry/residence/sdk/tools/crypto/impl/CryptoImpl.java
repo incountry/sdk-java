@@ -186,7 +186,7 @@ public class CryptoImpl implements Crypto {
         if (cipherText == null) {
             return null;
         }
-        String[] parts = cipherText.split(":", -1);
+        String[] parts = cipherText.split(":", 2);
         if (parts[0].equals(PT_ENC_VERSION)) {
             return decryptVPT(parts[1]);
         }
