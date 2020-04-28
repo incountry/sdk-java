@@ -5,7 +5,6 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 /**
  * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
- * You can specify secrets rotation in implementation
  */
 public interface SecretKeyAccessor {
 

@@ -67,7 +67,6 @@ SDK provides `SecretKeyAccessor` interface which allows you to pass your own sec
 ```java
 /**
  * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
- * You can specify secrets rotation in implementation
  */
 public interface SecretKeyAccessor {
 
