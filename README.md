@@ -316,13 +316,13 @@ public interface Storage {
     * Read data from remote storage
     *
     * @param country   country identifier
-    * @param recordKey record unique identifier
+    * @param key record unique identifier
     * @return Record object which contains required data
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record read(String country, String recordKey)
+    Record read(String country, String key)
         throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -341,9 +341,9 @@ String body = record.getBody();
 
 Below is the example of how you may use `batchWrite` method
  ```java
-String recordKey = "user_1";
+String key = "user_1";
 Storage storage = initStorage();
-Record record = storage.read ("us", recordKey);
+Record record = storage.read ("us", key);
 String decryptedBody = record.getBody();
  ```
 
@@ -484,25 +484,25 @@ public interface Storage {
     * Delete record from remote storage
     *
     * @param country   country code of the record
-    * @param recordKey the record's key
+    * @param key the record's key
     * @return TRUE when record was deleted
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
-    boolean delete(String country, String recordKey)
+    boolean delete(String country, String key)
             throws StorageClientException, StorageServerException;
     //...
 }
 ```
 Here
 `country` - country code of the record,
-`recordKey` - the record's key
+`key` - the record's key
 
 Below is the example of how you may use `delete` method
  ```java
-String recordKey = "user_1";
+String kekeyy = "user_1";
 Storage storage = initStorage();
-storage.delete ("us", recordKey);
+storage.delete ("us", key);
  ```
 
 ### Error Handling
