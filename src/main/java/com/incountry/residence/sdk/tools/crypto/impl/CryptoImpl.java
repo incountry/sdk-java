@@ -73,10 +73,9 @@ public class CryptoImpl implements Crypto {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(CHARSET));
             return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, CHARSET), null);
         }
-        SecretsData secretsData = getSecretsDataOrException();
         byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
-        SecretKey secretKey = getSecret(secretsData, secretsData.getCurrentVersion());
+        SecretKey secretKey = getSecret(null);
         byte[] key = getKey(salt, secretKey);
         byte[] iv = generateRandomBytes(IV_LENGTH);
 
@@ -125,7 +124,7 @@ public class CryptoImpl implements Crypto {
         byte[] decryptedText = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            byte[] key = getKey(salt, getSecret(getSecretsDataOrException(), decryptKeyVersion));
+            byte[] key = getKey(salt, getSecret(decryptKeyVersion));
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -138,7 +137,11 @@ public class CryptoImpl implements Crypto {
         return new String(decryptedText, CHARSET);
     }
 
-    private SecretKey getSecret(SecretsData secretsData, int version) throws StorageClientException {
+    private SecretKey getSecret(Integer version) throws StorageClientException {
+        SecretsData secretsData = getSecretsDataOrException();
+        if (version == null) {
+            version = secretsData.getCurrentVersion();
+        }
         SecretKey secret = null;
         for (SecretKey item : secretsData.getSecrets()) {
             if (item.getVersion() == version) {
