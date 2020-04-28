@@ -25,16 +25,15 @@ For a full list of supported countries and their codes please [follow this link]
 
 Usage
 -----
-To access your data in InCountry using Java SDK, you need to create an implementation of `Storage` interface. 
-Use `StorageImpl` for it 
+Use `StorageImpl` class to access your data in InCountry using Java SDK.
 ```java
-public class StorageImpl implements Storage {        
+public class StorageImpl implements Storage {
   /**
    * creating Storage instance
    *
    * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
    * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-   * @param endpoint          Optional. Defines API URL. 
+   * @param endpoint          Optional. Defines API URL.
    *                          Default endpoint will be used if this param is null
    * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
    * @return instance of Storage
@@ -42,7 +41,7 @@ public class StorageImpl implements Storage {
    * @throws StorageServerException if server connection failed or server response error
    */
   public static Storage getInstance(String environmentID, String apiKey, String endpoint,
-                            SecretKeyAccessor secretKeyAccessor) throws StorageServerException {...} 
+                            SecretKeyAccessor secretKeyAccessor) throws StorageServerException {...}
 //...
 }
 ```
@@ -54,19 +53,17 @@ Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `I
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
 Below is an example how to create a storage instance:
-```java      
-SecretKeyAccessor secretKeyAccessor = SecretKeyAccessorImpl.getInstance("SomePassword-3.14");
-String endPoint = "https://us.api.incountry.io";        
-String envId = "someEnvironmentId";
-String apiKey = "someApiKey";
-Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);        
+```java
+SecretKeyAccessor secretKeyAccessor = () -> SecretsDataGenerator.fromPassword("<password>");
+String endPoint = "https://us.api.incountry.io";
+String envId = "<env_id>";
+String apiKey = "<api_key>";
+Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
 ```
 
 ### Encryption key/secret
 
-The SDK has a `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
-
-`SecretKeyAccessor` allows you to pass a function that should return your secret (in multiple ways):
+SDK provides `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 ```java
 /**
  * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
@@ -84,7 +81,7 @@ public interface SecretKeyAccessor {
 }
 
 
-public class SecretsData {        
+public class SecretsData {
     /**
      * creates a container with secrets
      *
@@ -93,8 +90,8 @@ public class SecretsData {
      * @param currentVersion Should be a non-negative integer
      * @throws StorageClientException when parameter validation fails
      */
-     public SecretsData(List<SecretKey> secrets, int currentVersion) 
-                throws StorageClientException {...}            
+     public SecretsData(List<SecretKey> secrets, int currentVersion)
+                throws StorageClientException {...}
     //...
 }
 
@@ -108,66 +105,66 @@ public class SecretKey {
     * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isKey) 
+    public SecretKey(String secret, int version, boolean isKey)
               throws StorageClientException {...}
     //...
 }
 ```
 
-You can implement `SecretKeyAccessor` interface which allows you to pass your secrets/keys to the SDK.
-Secrets/keys can be passed in multiple ways:
+You can implement `SecretKeyAccessor` interface and pass secrets/keys in multiple ways:
 
-1. As a constant secrets
-```java
-SecretsData sectetsData = new SecretsData(secretsList, currentVersion);
-SecretKeyAccessor accessor = () -> sectetsData;
-```
+1. As a constant SecretsData object
+    ```java
+    SecretsData secretsData = new SecretsData(secretsList, currentVersion);
+    SecretKeyAccessor accessor = () -> secretsData;
+    ```
 
-2. As a function that dynamically generates secrets
-```java
-SecretKeyAccessor accessor = () -> loadSecretsData();
+2. As a function that dynamically fetches secrets
+    ```java
+    SecretKeyAccessor accessor = () -> loadSecretsData();
 
-private SecretsData loadSecretsData()  {
-        String url="<your_secret_url>";
-        String responseJson = loadFromUrl(url).asJson();
-        return SecretsDataGenerator.fromJson(responseJson);
-}
-```
-
-You can use `SecretsDataGenerator` for creating `SecretsData` instances:
-
-A. with String password
-```java               
-SecretsData secretsData = SecretsDataGenerator.fromPassword("vEry_Strong-P@ssw0rd");
-```
-
-B. with `SecretsData` in JSON string object
-```java               
-SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
-```
-```javascript
-{
-  "secrets": [
-    {
-       "secret": "some-Secret-1961",  // String   
-       "version": 0,            // Should be a non-negative integer
-       "isKey": false            // Boolean, should be 'true' only for user-defined encryption keys
-    },
-    {
-       "secret": "another_Secret(2)",     
-       "version": 1,            
-       "isKey": false            
+    private SecretsData loadSecretsData()  {
+            String url="<your_secret_url>";
+            String responseJson = loadFromUrl(url).asJson();
+            return SecretsDataGenerator.fromJson(responseJson);
     }
-  ],
-  "currentVersion": 1           // Should be a non-negative integer. One of the secrets
-                                // must have same version as currentVersion in SecretsData
-}
-```
+    ```
 
-`SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption. 
-Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object.
-This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time. 
-SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets. 
+You can also use `SecretsDataGenerator` class for creating `SecretsData` instances:
+
+1. from a String password
+    ```java
+    SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
+    ```
+
+2. from a JSON string representing SecretsData object
+    ```java
+    SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
+    ```
+
+    ```javascript
+    {
+    "secrets": [
+        {
+        "secret": "secret0",
+        "version": 0,
+        "isKey": false
+        },
+        {
+        "secret": "secret1",
+        "version": 1,
+        "isKey": false
+        }
+    ],
+    "currentVersion": 1
+    }
+    ```
+
+`SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
+
+Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object. This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
+
+SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see [migrate](#Data-Migration-and-Key-Rotation-support) method.
 
 SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
@@ -189,7 +186,7 @@ public interface Storage {
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    Record write(String country, Record record) 
+    Record write(String country, Record record)
           throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -214,13 +211,13 @@ public class Record {
 ```
 
 Below is the example of how you may use `write` method
-```java      
+```java
 key="user_1";
 body="some PII data";
 profile_key="customer";
 range_key=10000;
 key2="english";
-key3="rolls-royce";        
+key3="rolls-royce";
 Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
 Storage storage=initStorage();
 storage.write("us", record);
@@ -256,12 +253,12 @@ public interface Storage {
       * @throws StorageServerException if server connection failed or server response error
       * @throws StorageCryptoException if record encryption failed
       */
-     BatchRecord batchWrite(String country, List<Record> records) 
+     BatchRecord batchWrite(String country, List<Record> records)
           throws StorageClientException, StorageServerException, StorageCryptoException;
      //...
 }
 ```
- 
+
  Below is the example of how you may use `batchWrite` method
 ```java
 List<Record> list = new ArrayList<>();
@@ -270,7 +267,7 @@ list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, sec
 Storage storage = initStorage();
 storage.batchWrite ("us", list);
 ```
- 
+
 ### Data Migration and Key Rotation support
 
 Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
@@ -283,13 +280,13 @@ public interface Storage {
     *
     * @param country country identifier
     * @param limit   batch-limit parameter
-    * @return MigrateResult object which contain total records 
+    * @return MigrateResult object which contain total records
     *         left to migrate and total amount of migrated records
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    MigrateResult migrate(String country, int limit) 
+    MigrateResult migrate(String country, int limit)
            throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -308,7 +305,7 @@ public class MigrateResult {
 }
 ```
 
-For a detailed example of a migration please [see example](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java). 
+For detailed example of a migration script please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
 
 ### Reading stored data
 
@@ -325,7 +322,7 @@ public interface Storage {
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record read(String country, String recordKey) 
+    Record read(String country, String recordKey)
         throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -333,7 +330,7 @@ public interface Storage {
 
 This method returns `Record` object.
 
-`Record` contains the following properties: `country`, `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
+`Record` contains the following properties: `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
 
 These properties can be accessed using getters, for example:
 
@@ -344,7 +341,7 @@ String body = record.getBody();
 
 Below is the example of how you may use `batchWrite` method
  ```java
-String recordKey = "user_1";                 
+String recordKey = "user_1";
 Storage storage = initStorage();
 Record record = storage.read ("us", recordKey);
 String decryptedBody = record.getBody();
@@ -365,7 +362,7 @@ public interface Storage {
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    BatchRecord find(String country, FindFilterBuilder builder) 
+    BatchRecord find(String country, FindFilterBuilder builder)
          throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -374,36 +371,34 @@ Parameters:
 `country` - country code,
 `builder` - object representing find filters and search options
 
-Usage of `FindFilterBuilder` :
-```java
-FindFilterBuilder builder = FindFilterBuilder.create()
-                  .keyEq("someKeyValueToFilter")
-                  .rangeKeyEq(someRnageKey)
-                  .limitAndOffset(50, 0);
-```
+Use `FindFilterBuilder` class to refine your find request.
 
-Here is the example of how `find` method can be used:
+Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .key2Eq("kitty")
                   .key3Eq("firstValue","secondValue")
-                  .rangeKeyBetween(123, 456);                                
+                  .rangeKeyBetween(123, 456);
 
-BatchRecord founded = storage.find("us", builder);
-if (founded.getCount>0) {
-    Record record = founded.getRecords().get(0);
+BatchRecord findResult = storage.find("us", builder);
+if (findResult.getCount() > 0) {
+    Record record = findResult.getRecords().get(0);
     //...
 }
 ```
 
-This call returns all records with `key2` equals `kitty` AND (`key3` in `firstValue' , 'secondValue`) AND (123 < = `rangeKey` < = 456)
-Filter conditions on each field of `Record` class are union with predicate `AND` 
+The request will return records, filtered according to the following pseudo-sql
+```sql
+key2 = 'kitty' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey` < = 456)
+```
 
-Note: SDK returns 100 records at most. Use pagination to iterate over all the records.
+All conditions added via `FindFilterBuilder` are joined using logical `AND`. You may not add multiple conditions for the same key.
+
+SDK returns 100 records at most. Use `limit` and `offset` to iterate through the records.
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                  //...                                
-                  .limitAndOffset(20, 80);        
+                  //...
+                  .limitAndOffset(20, 80);
 BatchRecord records = storage.find("us", builder);
 ```
 
@@ -444,12 +439,11 @@ These fields can be accessed using getters, for example:
 int limit = records.getTotal();
 ```
 
-`BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about
- records that failed to be processed correctly during `find` request.
+`BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
 
 ### Find one record matching filter
 
-If you need to find the first record matching filter, you can use the  method:
+If you need to find the first record matching filter, you can use `findOne` method:
 ```java
 public interface Storage {
    /**
@@ -462,19 +456,20 @@ public interface Storage {
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record findOne(String country, FindFilterBuilder builder) 
+    Record findOne(String country, FindFilterBuilder builder)
            throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
 
-It works the same way as `find` but returns the first record or `null` if no matching records.
-Here is the example of how `find` method can be used:
+It works the same way as `find` but returns the first record or `null` if no records found.
+
+Here is the example of how `findOne` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("kitty")
-                .key3Eq("firstValue","secondValue")
-                .rangeKeyBetween(123, 456);                                
+                .key3Eq("firstValue", "secondValue")
+                .rangeKeyBetween(123, 456);
 
 Record record = storage.findOne("us", builder);
 //...
@@ -494,7 +489,7 @@ public interface Storage {
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
-    boolean delete(String country, String recordKey) 
+    boolean delete(String country, String recordKey)
             throws StorageClientException, StorageServerException;
     //...
 }
@@ -533,7 +528,7 @@ public void test () {
         // general error
     } catch (Exception e) {
         // something else happened not related to InCountry SDK
-    }                                         
+    }
 }
 ```
 
@@ -543,7 +538,7 @@ Project dependencies
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 
 | **GroupId**              | **ArtifactId** | **Version** | **Type** |
-| :---:                    | :---:          | :---:       | :---:    | 
+| :---:                    | :---:          | :---:       | :---:    |
 | javax.xml.bind           | jaxb-api       | 2.2.4       | jar      |
 | javax.xml.stream         | stax-api       | 1.0-2       | jar      |
 | javax.activation         | activation     | 1.1         | jar      |
@@ -567,7 +562,7 @@ compileClasspath
 
 ### Minimal JVM memory options
 ```
--Xms8m 
+-Xms8m
 -Xmx16m
 -XX:MaxMetaspaceSize=32m
 ```
