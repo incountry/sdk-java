@@ -53,7 +53,7 @@ public class SecretsData {
         List<Integer> errorList = new ArrayList<>();
         Set<Integer> versionSet = new HashSet<>();
         for (SecretKey one : secrets) {
-            SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.getIsKey());
+            SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.isForCustomEncryption());
             if (versionSet.contains(one.getVersion())) {
                 errorList.add(one.getVersion());
             } else {

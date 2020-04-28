@@ -1,10 +1,10 @@
 package com.incountry.residence.sdk.tools.crypto.impl;
 
+import com.incountry.residence.sdk.tools.crypto.CustomCrypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -26,10 +26,16 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-public class CryptoImpl implements Crypto {
-    private static final Logger LOG = LogManager.getLogger(CryptoImpl.class);
+/**
+ * Manager of crypto functions and secrets
+ */
+public class CryptoManager {
+    private static final Logger LOG = LogManager.getLogger(CryptoManager.class);
 
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
     private static final String MSG_ERR_VERSION = "Secret not found for version ";
@@ -38,6 +44,15 @@ public class CryptoImpl implements Crypto {
     private static final String MSG_ERR_NO_ALGORITHM = "Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration";
     private static final String MSG_ERR_ENCRYPTION = "Data encryption error";
     private static final String MSG_ERR_ALG_EXCEPTION = "AES/GCM/NoPadding algorithm exception";
+    private static final String MSG_ERR_ENCRYPTION_OFF = "Encryption is turned off, but custom crypto list isn't empty";
+    private static final String MSG_ERR_UNIQ_CRYPTO = "Custom crypto versions are not unique: %s";
+    private static final String MSG_ERR_NULL_CRYPTO = "Custom crypto list contains null";
+    private static final String MSG_ERR_NULL_CRYPTO_VERSION = "Custom crypto has null version";
+    private static final String MSG_ERR_MANY_CURRENT_CRYPTO = "There are more than one custom crypto with mark 'current': %s";
+    private static final String MSG_ERROR_INCORRECT_CUSTOM_CRYPTO = "Custom crypto with version %s is invalid, test encryption is incorrect";
+
+    private static final String TEST_ECRYPTION_TEXT = "This is test message for enc/dec_!@#$%^&*()_+|?.,~//\\=-' "
+            + UUID.randomUUID().toString();
 
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
@@ -48,30 +63,93 @@ public class CryptoImpl implements Crypto {
     private static final int PBKDF2_ITERATIONS_COUNT = 10000;
     private static final String VERSION = "2";
 
-    public static final String PT_ENC_VERSION = "pt";
+    public static final String PREFIX_PLAIN_TEXT_VERSION = "pt";
+    public static final String PREFIX_CUSTOM_ENCRYPTION = "c";
 
     private SecretKeyAccessor keyAccessor;
     private String envId;
-    private boolean isUsingPTEncryption = false;
+    private Map<String, CustomCrypto> cryptoMap;
+    private CustomCrypto currentCrypto;
+    private boolean usePTEncryption = false;
 
-    public CryptoImpl(SecretKeyAccessor keyAccessor) {
-        this.keyAccessor = keyAccessor;
+
+    public CryptoManager(String envId) {
+        this.envId = envId;
+        usePTEncryption = true;
     }
 
-    public CryptoImpl(String envId) {
-        this.envId = envId;
-        this.isUsingPTEncryption = true;
+    public CryptoManager(SecretKeyAccessor keyAccessor, List<CustomCrypto> cryptoList) throws StorageClientException, StorageCryptoException {
+        this(keyAccessor, null, cryptoList);
     }
 
-    public CryptoImpl(SecretKeyAccessor keyAccessor, String envId) {
+    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<CustomCrypto> cryptoList) throws StorageClientException, StorageCryptoException {
+        this.usePTEncryption = keyAccessor == null;
         this.keyAccessor = keyAccessor;
         this.envId = envId;
+        fillCustomCryptoMap(cryptoList);
+    }
+
+    private void fillCustomCryptoMap(List<CustomCrypto> cryptoList) throws StorageClientException, StorageCryptoException {
+        if (usePTEncryption && (cryptoList != null && cryptoList.isEmpty())) {
+            LOG.error(MSG_ERR_ENCRYPTION_OFF);
+            throw new StorageClientException(MSG_ERR_ENCRYPTION_OFF);
+        }
+        Map<String, CustomCrypto> result = new HashMap<>();
+        if (cryptoList != null && !cryptoList.isEmpty()) {
+            SecretsData secretsData = keyAccessor.getSecretsData();
+            for (CustomCrypto one : cryptoList) {
+                validateAndAddOneCypto(one, secretsData, result);
+            }
+        }
+        this.cryptoMap = result;
+    }
+
+    private void validateAndAddOneCypto(CustomCrypto one, SecretsData secretsData, Map<String, CustomCrypto> result) throws StorageClientException, StorageCryptoException {
+        if (one == null) {
+            LOG.error(MSG_ERR_NULL_CRYPTO);
+            throw new StorageClientException(MSG_ERR_NULL_CRYPTO);
+        }
+        if (one.getVersion() == null || one.getVersion().isEmpty()) {
+            LOG.error(MSG_ERR_NULL_CRYPTO_VERSION);
+            throw new StorageClientException(MSG_ERR_NULL_CRYPTO_VERSION);
+        }
+        if (one.isCurrent()) {
+            if (currentCrypto != null && !currentCrypto.equals(one)) {
+                String message = String.format(MSG_ERR_MANY_CURRENT_CRYPTO, one.getVersion());
+                LOG.error(message);
+                throw new StorageClientException(message);
+            }
+            currentCrypto = one;
+        }
+        if (result.get(one.getVersion()) != null) {
+            String message = String.format(MSG_ERR_UNIQ_CRYPTO, one.getVersion());
+            LOG.error(message);
+            throw new StorageClientException(message);
+        }
+        testEncryption(one, secretsData);
+        result.put(one.getVersion(), one);
+    }
+
+    private void testEncryption(CustomCrypto customCrypto, SecretsData secretsData) throws StorageCryptoException, StorageClientException {
+        SecretKey key = secretsData.getSecrets().stream().filter(SecretKey::isForCustomEncryption).findFirst().get();
+        String encryptedText = customCrypto.encrypt(TEST_ECRYPTION_TEXT, key);
+        String decryptedText = customCrypto.decrypt(encryptedText, key);
+        if (!TEST_ECRYPTION_TEXT.equals(decryptedText)) {
+            String message = String.format(MSG_ERROR_INCORRECT_CUSTOM_CRYPTO, customCrypto.getVersion());
+            LOG.error(message);
+            throw new StorageCryptoException(message);
+        }
+
+
     }
 
     public Map.Entry<String, Integer> encrypt(String plainText) throws StorageClientException, StorageCryptoException {
-        if (isUsingPTEncryption) {
+        if (usePTEncryption) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(CHARSET));
-            return new AbstractMap.SimpleEntry<>(PT_ENC_VERSION + ":" + new String(ptEncoded, CHARSET), null);
+            return new AbstractMap.SimpleEntry<>(PREFIX_PLAIN_TEXT_VERSION + ":" + new String(ptEncoded, CHARSET), null);
+        }
+        if (currentCrypto != null) {
+            //todo
         }
         SecretsData secretsData = getSecretsDataOrException();
         byte[] clean = plainText.getBytes(CHARSET);
@@ -107,7 +185,7 @@ public class CryptoImpl implements Crypto {
     }
 
     private byte[] getKey(byte[] salt, SecretKey secretKey) throws StorageCryptoException {
-        if (secretKey.getIsKey() != null && secretKey.getIsKey()) {
+        if (secretKey.isForCustomEncryption() != null && secretKey.isForCustomEncryption()) {
             return secretKey.getSecret().getBytes(CHARSET);
         }
         return generateStrongPasswordHash(secretKey.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
@@ -186,11 +264,10 @@ public class CryptoImpl implements Crypto {
         if (cipherText == null) {
             return null;
         }
-        String[] parts = cipherText.split(":", -1);
-        if (parts[0].equals(PT_ENC_VERSION)) {
+        String[] parts = cipherText.split(":", 2);
+        if (parts[0].equals(PREFIX_PLAIN_TEXT_VERSION)) {
             return decryptVPT(parts[1]);
-        }
-        if (isUsingPTEncryption) {
+        } else if (usePTEncryption) {
             String message = MSG_ERR_NO_SECRET + cipherText;
             throwStorageCryptoException(message, null);
         }
@@ -200,9 +277,13 @@ public class CryptoImpl implements Crypto {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                throwStorageCryptoException(MSG_ERR_DECRYPTION, null);
+                return decryptCustom(parts[1], decryptKeyVersion);
         }
-        return null;
+    }
+
+    private String decryptCustom(String part, Integer decryptKeyVersion) {
+        if (part)
+            return null;
     }
 
     private static String throwStorageCryptoException(String message, Exception ex) throws StorageCryptoException {

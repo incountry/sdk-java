@@ -10,8 +10,8 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.crypto.CustomCrypto;
+import com.incountry.residence.sdk.tools.crypto.impl.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -58,13 +58,13 @@ public class HttpDaoImplTests {
         return storage;
     }
 
-    private Crypto initCrypto(boolean isKey, boolean encrypt) throws StorageClientException {
+    private CustomCrypto initCrypto(boolean isKey, boolean encrypt) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        Crypto crypto;
+        CustomCrypto crypto;
         if (encrypt) {
-            crypto = new CryptoImpl(secretKeyAccessor, "envId");
+            crypto = new CryptoManager(secretKeyAccessor, "envId");
         } else {
-            crypto = new CryptoImpl("envId");
+            crypto = new CryptoManager("envId");
         }
         return crypto;
     }
@@ -151,7 +151,7 @@ public class HttpDaoImplTests {
                          boolean encrypt) throws StorageException, MalformedURLException {
 
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
-        Crypto crypto = initCrypto(isKey, encrypt);
+        CustomCrypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
@@ -183,7 +183,7 @@ public class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("{}");
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
         storage.delete(country, key);
-        Crypto crypto = initCrypto(isKey, encrypt);
+        CustomCrypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
         String callPath = new URL(agent.getCallEndpoint()).getPath();
@@ -211,7 +211,7 @@ public class HttpDaoImplTests {
         storage.batchWrite(country, records);
 
         String encryptedHttpBody = agent.getCallBody();
-        Crypto crypto = initCrypto(isKey, encrypt);
+        CustomCrypto crypto = initCrypto(isKey, encrypt);
         String keyHash = crypto.createKeyHash(key);
         JsonArray responseList = new Gson().fromJson(encryptedHttpBody, JsonObject.class).getAsJsonArray("records");
         for (JsonElement oneJsonRecord : responseList) {

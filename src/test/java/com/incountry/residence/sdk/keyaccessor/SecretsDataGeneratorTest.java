@@ -40,7 +40,7 @@ public class SecretsDataGeneratorTest {
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertEquals(isKey, resultSecretsData.getSecrets().get(0).getIsKey());
+        assertEquals(isKey, resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class SecretsDataGeneratorTest {
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertFalse(resultSecretsData.getSecrets().get(0).getIsKey());
+        assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
@@ -89,7 +89,7 @@ public class SecretsDataGeneratorTest {
         assertEquals(1, data.getSecrets().size());
         assertEquals("someSecret", data.getSecrets().get(0).getSecret());
         assertEquals(1, data.getSecrets().get(0).getVersion());
-        assertFalse(data.getSecrets().get(0).getIsKey());
+        assertFalse(data.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test

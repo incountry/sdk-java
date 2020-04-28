@@ -12,7 +12,7 @@ import com.incountry.residence.sdk.dto.search.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.crypto.impl.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -64,16 +64,16 @@ public class JsonUtils {
     /**
      * Converts a Record object to JsonObject
      *
-     * @param record data record
-     * @param crypto object which is using to encrypt data
+     * @param record        data record
+     * @param cryptoManager object which is using to encrypt data
      * @return JsonObject with Record data
      * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException if encryption failed
      */
-    public static JsonObject toJson(Record record, Crypto crypto) throws StorageClientException, StorageCryptoException {
+    public static JsonObject toJson(Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException {
         Gson gson = getGson4Records();
         JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
-        if (crypto == null) {
+        if (cryptoManager == null) {
             return jsonObject;
         }
         //store keys in new composite body with encription
@@ -82,25 +82,25 @@ public class JsonUtils {
         mapBodyMeta.put(P_PAYLOAD, record.getBody());
         mapBodyMeta.put(P_META, jsonObject.toString());
         String packedBody = gson.toJson(mapBodyMeta);
-        TransferRecord encRec = new TransferRecord(record, crypto, packedBody);
+        TransferRecord encRec = new TransferRecord(record, cryptoManager, packedBody);
         return (JsonObject) gson.toJsonTree(encRec);
     }
 
     /**
      * Creates JsonObject with FindFilter object properties
      *
-     * @param filter FindFilter
-     * @param crypto crypto object
+     * @param filter        FindFilter
+     * @param cryptoManager crypto object
      * @return JsonObject with properties corresponding to FindFilter object properties
      */
-    public static JsonObject toJson(FindFilter filter, Crypto crypto) {
+    public static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject json = new JsonObject();
         if (filter != null) {
-            addToJson(json, P_KEY, filter.getKeyFilter(), crypto);
-            addToJson(json, P_KEY_2, filter.getKey2Filter(), crypto);
-            addToJson(json, P_KEY_3, filter.getKey3Filter(), crypto);
-            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), crypto);
-            addToJson(json, P_VERSION, filter.getVersionFilter(), crypto);
+            addToJson(json, P_KEY, filter.getKeyFilter(), cryptoManager);
+            addToJson(json, P_KEY_2, filter.getKey2Filter(), cryptoManager);
+            addToJson(json, P_KEY_3, filter.getKey3Filter(), cryptoManager);
+            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), cryptoManager);
+            addToJson(json, P_VERSION, filter.getVersionFilter(), cryptoManager);
             FilterNumberParam range = filter.getRangeKeyFilter();
             if (range != null) {
                 json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
@@ -112,14 +112,14 @@ public class JsonUtils {
     /**
      * Create record object from json string
      *
-     * @param jsonString json string
-     * @param crypto     crypto object
+     * @param jsonString    json string
+     * @param cryptoManager crypto object
      * @return record objects with data from json
      * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException if decryption failed
      * @throws StorageServerException if server connection failed or server response error
      */
-    public static Record recordFromString(String jsonString, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
+    public static Record recordFromString(String jsonString, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
         Gson gson = getGson4Records();
         TransferRecord tempRecord = null;
         try {
@@ -131,15 +131,15 @@ public class JsonUtils {
         if (tempRecord.version == null) {
             tempRecord.version = 0;
         }
-        return tempRecord.decrypt(crypto);
+        return tempRecord.decrypt(cryptoManager);
     }
 
-    private static void addToJson(JsonObject json, String paramName, FilterStringParam param, Crypto crypto) {
+    private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
         if (param != null) {
             if (paramName.equals(P_VERSION)) {
                 json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
             } else {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, crypto, true) : toJsonArray(param, crypto));
+                json.add(paramName, param.isNotCondition() ? addNotCondition(param, cryptoManager, true) : toJsonArray(param, cryptoManager));
             }
         }
     }
@@ -147,19 +147,19 @@ public class JsonUtils {
     /**
      * Adds 'not' condition to parameter of FindFilter
      *
-     * @param param       parameter to which the not condition should be added
-     * @param crypto      crypto object
-     * @param isForString the condition must be added for string params
+     * @param param         parameter to which the not condition should be added
+     * @param cryptoManager crypto object
+     * @param isForString   the condition must be added for string params
      * @return JsonObject with added 'not' condition
      */
-    private static JsonObject addNotCondition(FilterStringParam param, Crypto crypto, boolean isForString) {
-        JsonArray arr = isForString ? toJsonArray(param, crypto) : toJsonInt(param);
+    private static JsonObject addNotCondition(FilterStringParam param, CryptoManager cryptoManager, boolean isForString) {
+        JsonArray arr = isForString ? toJsonArray(param, cryptoManager) : toJsonInt(param);
         JsonObject object = new JsonObject();
         object.add(FindFilterBuilder.OPER_NOT, arr);
         return object;
     }
 
-    public static BatchRecord batchRecordFromString(String responseString, Crypto crypto) throws StorageServerException {
+    public static BatchRecord batchRecordFromString(String responseString, CryptoManager cryptoManager) throws StorageServerException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
         TransferBatch transferBatch = null;
@@ -177,7 +177,7 @@ public class JsonUtils {
                     if (tempRecord.version == null) {
                         tempRecord.version = 0;
                     }
-                    records.add(tempRecord.decrypt(crypto));
+                    records.add(tempRecord.decrypt(cryptoManager));
                 } catch (Exception e) {
                     errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, gson.toJson(tempRecord), e));
                 }
@@ -214,8 +214,8 @@ public class JsonUtils {
         return object;
     }
 
-    private static List<String> hashValue(FilterStringParam param, Crypto crypto) {
-        return param.getValues().stream().map(crypto::createKeyHash).collect(Collectors.toList());
+    private static List<String> hashValue(FilterStringParam param, CryptoManager cryptoManager) {
+        return param.getValues().stream().map(cryptoManager::createKeyHash).collect(Collectors.toList());
     }
 
     public static JsonArray toJsonInt(FilterStringParam param) {
@@ -231,11 +231,11 @@ public class JsonUtils {
         return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     }
 
-    public static String toJsonString(List<Record> records, Crypto crypto)
+    public static String toJsonString(List<Record> records, CryptoManager cryptoManager)
             throws StorageClientException, StorageCryptoException {
         JsonArray array = new JsonArray();
         for (Record record : records) {
-            array.add(toJson(record, crypto));
+            array.add(toJson(record, cryptoManager));
         }
         JsonObject obj = new JsonObject();
         obj.add("records", array);
@@ -245,29 +245,29 @@ public class JsonUtils {
     /**
      * Put record into JSON format
      *
-     * @param record data for JSON
-     * @param crypto object which is using to encrypt data
+     * @param record        data for JSON
+     * @param cryptoManager object which is using to encrypt data
      * @return String with JSON
      * @throws StorageClientException if validation of parameters failed
      * @throws StorageCryptoException when there are problems with encryption
      */
-    public static String toJsonString(Record record, Crypto crypto) throws StorageClientException, StorageCryptoException {
-        return toJson(record, crypto).toString();
+    public static String toJsonString(Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException {
+        return toJson(record, cryptoManager).toString();
     }
 
-    public static String toJsonString(FindFilter filter, Crypto crypto) {
+    public static String toJsonString(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject object = new JsonObject();
-        object.add(P_FILTER, JsonUtils.toJson(filter, crypto));
+        object.add(P_FILTER, JsonUtils.toJson(filter, cryptoManager));
         object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()));
         return object.toString();
     }
 
-    public static JsonArray toJsonArray(FilterStringParam param, Crypto crypto) {
+    public static JsonArray toJsonArray(FilterStringParam param, CryptoManager cryptoManager) {
         if (param == null || param.getValues() == null) {
             return null;
         }
         JsonArray array = new JsonArray();
-        List<String> values = (crypto != null ? hashValue(param, crypto) : param.getValues());
+        List<String> values = (cryptoManager != null ? hashValue(param, cryptoManager) : param.getValues());
         values.forEach(array::add);
         return array;
     }
@@ -305,14 +305,14 @@ public class JsonUtils {
     private static class TransferRecord extends Record {
         Integer version;
 
-        TransferRecord(Record record, Crypto crypto, String bodyJsonString) throws StorageClientException, StorageCryptoException {
-            setKey(crypto.createKeyHash(record.getKey()));
-            setKey2(crypto.createKeyHash(record.getKey2()));
-            setKey3(crypto.createKeyHash(record.getKey3()));
-            setProfileKey(crypto.createKeyHash(record.getProfileKey()));
+        TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
+            setKey(cryptoManager.createKeyHash(record.getKey()));
+            setKey2(cryptoManager.createKeyHash(record.getKey2()));
+            setKey3(cryptoManager.createKeyHash(record.getKey3()));
+            setProfileKey(cryptoManager.createKeyHash(record.getProfileKey()));
             setRangeKey(record.getRangeKey());
 
-            Map.Entry<String, Integer> encBodyAndVersion = crypto.encrypt(bodyJsonString);
+            Map.Entry<String, Integer> encBodyAndVersion = cryptoManager.encrypt(bodyJsonString);
             setBody(encBodyAndVersion.getKey());
             version = (encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
         }
@@ -348,11 +348,11 @@ public class JsonUtils {
             return rec;
         }
 
-        public void justDecryptKeys(Crypto crypto) throws StorageClientException, StorageCryptoException {
-            setKey(crypto.decrypt(getKey(), version));
-            setKey2(crypto.decrypt(getKey2(), version));
-            setKey3(crypto.decrypt(getKey3(), version));
-            setProfileKey(crypto.decrypt(getProfileKey(), version));
+        public void justDecryptKeys(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException {
+            setKey(cryptoManager.decrypt(getKey(), version));
+            setKey2(cryptoManager.decrypt(getKey2(), version));
+            setKey3(cryptoManager.decrypt(getKey3(), version));
+            setProfileKey(cryptoManager.decrypt(getProfileKey(), version));
         }
 
         public void decryptAllFromBody() {
@@ -401,13 +401,13 @@ public class JsonUtils {
             return Objects.hash(super.hashCode(), version);
         }
 
-        public Record decrypt(Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
+        public Record decrypt(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
             try {
-                if (crypto != null && getBody() != null) {
+                if (cryptoManager != null && getBody() != null) {
                     String[] parts = getBody().split(":");
-                    setBody(crypto.decrypt(getBody(), version));
+                    setBody(cryptoManager.decrypt(getBody(), version));
                     if (parts.length != 2) {
-                        justDecryptKeys(crypto);
+                        justDecryptKeys(cryptoManager);
                     } else {
                         decryptAllFromBody();
                     }

@@ -4,7 +4,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.JsonUtils;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.crypto.impl.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -116,49 +116,49 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void createRecord(String country, Record record, Crypto crypto) throws StorageClientException, StorageCryptoException, StorageServerException {
+    public void createRecord(String country, Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
-        String response = agent.request(url, URI_POST, JsonUtils.toJsonString(record, crypto), ApiResponse.WRITE);
+        String response = agent.request(url, URI_POST, JsonUtils.toJsonString(record, cryptoManager), ApiResponse.WRITE);
         validatePlainTextResponse("ok", response);
     }
 
     @Override
-    public void createBatch(List<Record> records, String country, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
-        String recListJson = JsonUtils.toJsonString(records, crypto);
+    public void createBatch(List<Record> records, String country, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
+        String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
         String response = agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE);
         validatePlainTextResponse("ok", response);
     }
 
     @Override
-    public Record read(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException {
-        String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
+    public Record read(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
+        String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
         String response = agent.request(url, URI_GET, null, ApiResponse.READ);
         if (response == null) {
             return null;
         } else {
-            return JsonUtils.recordFromString(response, crypto);
+            return JsonUtils.recordFromString(response, cryptoManager);
         }
     }
 
     @Override
-    public void delete(String country, String recordKey, Crypto crypto) throws StorageClientException, StorageServerException {
-        String key = crypto != null ? crypto.createKeyHash(recordKey) : recordKey;
+    public void delete(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
+        String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
         String response = agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
         validatePlainTextResponse("{}", response);
     }
 
     @Override
-    public BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageClientException, StorageServerException {
+    public BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String url = getEndpoint(concatUrl(country, URI_FIND), country);
-        String postData = JsonUtils.toJsonString(builder.build(), crypto);
+        String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
         String content = agent.request(url, URI_POST, postData, ApiResponse.FIND);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
-        return JsonUtils.batchRecordFromString(content, crypto);
+        return JsonUtils.batchRecordFromString(content, cryptoManager);
     }
 
     private String concatUrl(String country, String... other) {

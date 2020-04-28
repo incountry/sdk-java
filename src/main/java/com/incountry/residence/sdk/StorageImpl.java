@@ -4,8 +4,8 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.crypto.CustomCrypto;
+import com.incountry.residence.sdk.tools.crypto.impl.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -41,7 +41,7 @@ public class StorageImpl implements Storage {
     private static final String LOG_SECURE = "[SECURE]";
     private static final String LOG_SECURE2 = "[SECURE[";
 
-    private Crypto crypto;
+    private CryptoManager cryptoManager;
     private Dao dao;
     private boolean isEncrypted;
 
@@ -91,6 +91,24 @@ public class StorageImpl implements Storage {
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException, StorageServerException {
+        return getInstance(environmentID, apiKey, endpoint, secretKeyAccessor, null);
+    }
+
+    /**
+     * creating Storage instance
+     *
+     * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
+     * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+     * @param endpoint          Optional. Defines API URL. Default endpoint will be used if this param is null
+     * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+     * @param cryptoList        List with custom encryption functions
+     * @return instance of Storage
+     * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    public static Storage getInstance(String environmentID, String apiKey, String endpoint,
+                                      SecretKeyAccessor secretKeyAccessor, List<CustomCrypto> cryptoList)
+            throws StorageClientException, StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
@@ -105,12 +123,14 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_PASS_API_KEY);
         }
         StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID);
+        instance.createCrypto(secretKeyAccessor, environmentID, cryptoList);
         instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException {
+
+    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao
+            dao, List<CustomCrypto> cryptoList) throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
@@ -124,7 +144,7 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_PASS_DAO);
         }
         StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID);
+        instance.createCrypto(secretKeyAccessor, environmentID, cryptoList);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
@@ -136,13 +156,9 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID) {
+    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID, List<CustomCrypto> cryptoList) {
         isEncrypted = secretKeyAccessor != null;
-        if (isEncrypted) {
-            crypto = new CryptoImpl(secretKeyAccessor, environmentID);
-        } else {
-            crypto = new CryptoImpl(environmentID);
-        }
+        cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, isEncrypted ? cryptoList : null);
     }
 
     private void checkParameters(String country, String key) throws StorageClientException {
@@ -156,7 +172,8 @@ public class StorageImpl implements Storage {
         }
     }
 
-    public Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public Record write(String country, Record record) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("write params (country={} , record={})",
                     country,
@@ -167,26 +184,28 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_NULL_RECORD);
         }
         checkParameters(country, record.getKey());
-        dao.createRecord(country, record, crypto);
+        dao.createRecord(country, record, cryptoManager);
         return record;
     }
 
 
-    public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public Record read(String country, String recordKey) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("read params (country={} , recordKey={})",
                     country,
                     recordKey != null ? LOG_SECURE : null);
         }
         checkParameters(country, recordKey);
-        Record record = dao.read(country, recordKey, crypto);
+        Record record = dao.read(country, recordKey, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
         }
         return record;
     }
 
-    public MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public MigrateResult migrate(String country, int limit) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("migrate params (country={} , limit={})",
                     country,
@@ -202,7 +221,7 @@ public class StorageImpl implements Storage {
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
-                .versionNotEq(String.valueOf(crypto.getCurrentSecretVersion()));
+                .versionNotEq(String.valueOf(cryptoManager.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
         batchWrite(country, batchRecord.getRecords());
         MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
@@ -212,7 +231,8 @@ public class StorageImpl implements Storage {
         return result;
     }
 
-    public BatchRecord batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public BatchRecord batchWrite(String country, List<Record> records) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("batchWrite params (country={} , records={})",
                     country,
@@ -222,7 +242,7 @@ public class StorageImpl implements Storage {
             for (Record one : records) {
                 checkParameters(country, one.getKey());
             }
-            dao.createBatch(records, country, crypto);
+            dao.createBatch(records, country, cryptoManager);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
@@ -234,11 +254,12 @@ public class StorageImpl implements Storage {
                     recordKey != null ? LOG_SECURE : null);
         }
         checkParameters(country, recordKey);
-        dao.delete(country, recordKey, crypto);
+        dao.delete(country, recordKey, cryptoManager);
         return true;
     }
 
-    public BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException {
+    public BatchRecord find(String country, FindFilterBuilder builder) throws
+            StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("find params (country={} , builder={})",
                     country,
@@ -253,7 +274,7 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERROR_NULL_FILTERS);
         }
 
-        BatchRecord batchRecord = dao.find(country, builder.copy(), crypto);
+        BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
         }
@@ -268,7 +289,8 @@ public class StorageImpl implements Storage {
      * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      */
-    public Record findOne(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException {
+    public Record findOne(String country, FindFilterBuilder builder) throws
+            StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("findOne params (country={} , builder={})",
                     country,

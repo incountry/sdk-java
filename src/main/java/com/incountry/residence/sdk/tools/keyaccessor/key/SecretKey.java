@@ -16,21 +16,21 @@ public class SecretKey {
 
     private String secret;
     private int version;
-    private boolean isKey;
+    private boolean isForCustomEncryption;
 
     /**
      * Creates a secret key
      *
-     * @param secret  secret/key
-     * @param version secret version, should be a non-negative integer
-     * @param isKey   should be True only for user-defined encryption keys
+     * @param secret                secret/key
+     * @param version               secret version, should be a non-negative integer
+     * @param isForCustomEncryption should be True only for user-defined encryption keys
      * @throws StorageClientException when parameter validation fails
      */
-    public SecretKey(String secret, int version, boolean isKey) throws StorageClientException {
-        validateSecretKey(secret, version, isKey);
+    public SecretKey(String secret, int version, boolean isForCustomEncryption) throws StorageClientException {
+        validateSecretKey(secret, version, isForCustomEncryption);
         this.version = version;
         this.secret = secret;
-        this.isKey = isKey;
+        this.isForCustomEncryption = isForCustomEncryption;
     }
 
     public String getSecret() {
@@ -41,8 +41,8 @@ public class SecretKey {
         return version;
     }
 
-    public Boolean getIsKey() {
-        return isKey;
+    public Boolean isForCustomEncryption() {
+        return isForCustomEncryption;
     }
 
     public static void validateSecretKey(String secret, int version, boolean isKey) throws StorageClientException {
