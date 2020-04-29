@@ -66,7 +66,7 @@ Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAcce
 SDK provides `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 ```java
 /**
- * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
+ * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.
  */
 public interface SecretKeyAccessor {
 
