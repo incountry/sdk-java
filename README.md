@@ -531,8 +531,8 @@ The following is a list of compile dependencies for this project. These dependen
 | javax.xml.stream         | stax-api       | 1.0-2       | jar      |
 | javax.activation         | activation     | 1.1         | jar      |
 | commons-codec            | commons-codec  | 1.14        | jar      |
-| org.apache.logging.log4j | log4j-api      | 2.13.1      | jar      |
-| org.apache.logging.log4j | log4j-core     | 2.13.1      | jar      |
+| org.apache.logging.log4j | log4j-api      | 2.13.2      | jar      |
+| org.apache.logging.log4j | log4j-core     | 2.13.2      | jar      |
 | com.google.code.gson     | gson           | 2.8.6       | jar      |
 
 #### Dependency Tree
@@ -542,9 +542,9 @@ compileClasspath
 |    +--- javax.xml.stream:stax-api:1.0-2
 |    \--- javax.activation:activation:1.1
 +--- commons-codec:commons-codec:1.14
-+--- org.apache.logging.log4j:log4j-api:2.13.1
-+--- org.apache.logging.log4j:log4j-core:2.13.1
-|    \--- org.apache.logging.log4j:log4j-api:2.13.1
++--- org.apache.logging.log4j:log4j-api:2.13.2
++--- org.apache.logging.log4j:log4j-core:2.13.2
+|    \--- org.apache.logging.log4j:log4j-api:2.13.2
 \--- com.google.code.gson:gson:2.8.6
 ```
 
