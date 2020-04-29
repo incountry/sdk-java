@@ -139,7 +139,7 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID) {
+    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID) throws StorageClientException {
         isEncrypted = secretKeyAccessor != null;
         if (isEncrypted) {
             crypto = new CryptoImpl(secretKeyAccessor, environmentID);
