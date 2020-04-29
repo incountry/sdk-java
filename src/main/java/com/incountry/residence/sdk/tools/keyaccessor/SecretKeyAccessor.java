@@ -6,6 +6,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 /**
  * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.
  */
+@FunctionalInterface
 public interface SecretKeyAccessor {
 
     /**
