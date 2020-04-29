@@ -56,6 +56,7 @@ public class JsonUtils {
     private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty";
     private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty";
     private static final String MSG_ERR_RESPONSE = "Response error";
+    private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
     private JsonUtils() {
     }
@@ -271,14 +272,12 @@ public class JsonUtils {
         return array;
     }
 
-    public static SecretsData getSecretsDataFromJson(String string) {
+    public static SecretsData getSecretsDataFromJson(String string) throws StorageClientException {
         SecretsData result = null;
         try {
             result = new Gson().fromJson(string, SecretsData.class);
         } catch (JsonSyntaxException e) {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("Provided SecretsData string is not a JSON");
-            }
+            throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }
         return result;
     }

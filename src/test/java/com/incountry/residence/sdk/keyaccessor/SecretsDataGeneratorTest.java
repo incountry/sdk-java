@@ -6,12 +6,13 @@ import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SecretsDataUtilsTest {
+public class SecretsDataGeneratorTest {
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws StorageClientException {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
@@ -34,7 +35,7 @@ public class SecretsDataUtilsTest {
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         String secretKeyString = new Gson().toJson(secretsData);
 
-        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl(secretKeyString);
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyString);
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
@@ -43,11 +44,11 @@ public class SecretsDataUtilsTest {
     }
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws StorageClientException {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
-        SecretKeyAccessorImpl accessor = new SecretKeyAccessorImpl("user_password");
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
@@ -56,7 +57,7 @@ public class SecretsDataUtilsTest {
     }
 
     @Test
-    public void testIsJson() {
+    public void testIsJson() throws StorageClientException {
         JsonObject jsonWithoutSecretsDataFields = new JsonObject();
         jsonWithoutSecretsDataFields.addProperty("body", "test");
         jsonWithoutSecretsDataFields.addProperty("key", "write_key");
@@ -69,7 +70,7 @@ public class SecretsDataUtilsTest {
         assertNotNull(JsonUtils.getSecretsDataFromJson(jsonString));
         assertEquals(0, JsonUtils.getSecretsDataFromJson(jsonString).getCurrentVersion());
         assertNull(JsonUtils.getSecretsDataFromJson(jsonString).getSecrets());
-        assertNull(JsonUtils.getSecretsDataFromJson("NotJsonString"));
+        assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson("NotJsonString"));
 
         JsonObject jsonWithSecret = new JsonObject();
         jsonWithSecret.addProperty("secret", "someSecret");
@@ -104,6 +105,15 @@ public class SecretsDataUtilsTest {
                 "  \"currentVersion\": 1\n" +
                 "}";
 
-        assertThrows(StorageClientException.class, () -> SecretKeyAccessor.getAccessor(() -> secretDataWrongJson));
+        assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretDataWrongJson));
+    }
+
+    @Test
+    public void testValidationOfSecretsData() throws StorageClientException {
+        SecretKey secretKey1 = new SecretKey("password1", 0, false);
+        SecretKey secretKey2 = new SecretKey("password2", 1, false);
+        SecretKey secretKey3 = new SecretKey("password3", 0, false);
+        assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2, secretKey3), 1));
+        assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), 2));
     }
 }

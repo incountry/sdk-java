@@ -4,13 +4,18 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SecretsData {
     private static final Logger LOG = LogManager.getLogger(SecretsData.class);
 
     private static final String MSG_ERR_VERSION = "Current version must be >= 0";
     private static final String MSG_ERR_EMPTY_SECRETS = "Secrets in SecretData are null";
+    private static final String MSG_ERR_UNIQUE_VERSIONS = "SecretKey versions must be unique. Got duplicates for: %s";
+    private static final String MSG_ERR_CURRENT_VERSION = "There is no SecretKey version that matches current version %d";
 
     private List<SecretKey> secrets;
     private int currentVersion;
@@ -45,8 +50,25 @@ public class SecretsData {
             LOG.error(MSG_ERR_VERSION);
             throw new StorageClientException(MSG_ERR_VERSION);
         }
+        List<Integer> errorList = new ArrayList<>();
+        Set<Integer> versionSet = new HashSet<>();
         for (SecretKey one : secrets) {
             SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.getIsKey());
+            if (versionSet.contains(one.getVersion())) {
+                errorList.add(one.getVersion());
+            } else {
+                versionSet.add(one.getVersion());
+            }
+            if (!errorList.isEmpty()) {
+                String message = String.format(MSG_ERR_UNIQUE_VERSIONS, errorList.toString());
+                LOG.error(message);
+                throw new StorageClientException(message);
+            }
+        }
+        if (!versionSet.contains(currentVersion)) {
+            String message = String.format(MSG_ERR_CURRENT_VERSION, currentVersion);
+            LOG.error(message);
+            throw new StorageClientException(message);
         }
     }
 
