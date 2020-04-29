@@ -263,45 +263,6 @@ list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, sec
 storage.batchWrite("us", list);
 ```
 
-### Data Migration and Key Rotation support
-
-Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
-
-SDK introduces method `migrate`
-```java
-public interface Storage {
-   /**
-    * Make batched key-rotation-migration of records
-    *
-    * @param country country identifier
-    * @param limit   batch-limit parameter
-    * @return MigrateResult object which contain total records
-    *         left to migrate and total amount of migrated records
-    * @throws StorageClientException if validation finished with errors
-    * @throws StorageServerException if server connection failed or server response error
-    * @throws StorageCryptoException if decryption failed
-    */
-    MigrateResult migrate(String country, int limit)
-           throws StorageClientException, StorageServerException, StorageCryptoException;
-    //...
-}
-```
-
-It allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
-and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the
-amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with
-version different from `currentVersion` provided by `SecretKeyAccessor`)
-
-```java
-public class MigrateResult {
-    private int migrated;
-    private int totalLeft;
-    //...
-}
-```
-
-For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
-
 ### Reading stored data
 
 Stored record can be read by `key` using `read` method.
@@ -490,7 +451,49 @@ String key = "user_1";
 storage.delete("us", key);
  ```
 
-### Error Handling
+Data Migration and Key Rotation support
+-----
+
+Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
+
+SDK introduces method `migrate`
+```java
+public interface Storage {
+   /**
+    * Make batched key-rotation-migration of records
+    *
+    * @param country country identifier
+    * @param limit   batch-limit parameter
+    * @return MigrateResult object which contain total records
+    *         left to migrate and total amount of migrated records
+    * @throws StorageClientException if validation finished with errors
+    * @throws StorageServerException if server connection failed or server response error
+    * @throws StorageCryptoException if decryption failed
+    */
+    MigrateResult migrate(String country, int limit)
+           throws StorageClientException, StorageServerException, StorageCryptoException;
+    //...
+}
+```
+
+It allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the
+amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with
+version different from `currentVersion` provided by `SecretKeyAccessor`)
+
+```java
+public class MigrateResult {
+    private int migrated;
+    private int totalLeft;
+    //...
+}
+```
+
+For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
+
+Error Handling
+-----
+
 InCountry Java SDK throws following Exceptions:
 - **StorageClientException** - used for various input validation errors
 - **StorageServerException** - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
