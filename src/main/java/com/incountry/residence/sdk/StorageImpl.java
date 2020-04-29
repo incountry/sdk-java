@@ -28,13 +28,18 @@ public class StorageImpl implements Storage {
     private static final String PARAM_API_KEY = "INC_API_KEY";
     private static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     //error messages
-    private static final String MSG_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_PASS_DAO = "Please pass dao param";
-    private static final String MSG_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
-    private static final String MSG_ERROR_NULL_COUNTRY = "Country cannot be null";
-    private static final String MSG_NULL_KEY = "Key cannot be null";
-    private static final String MSG_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
-    private static final String MSG_ERROR_NULL_FILTERS = "Filters cannot be null";
+    private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
+    private static final String MSG_ERR_PASS_DAO = "Please pass dao param";
+    private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
+    private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
+    private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
+    private static final String MSG_ERR_NULL_KEY = "Key can't be null";
+    private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
+    private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
+    private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
+    private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
+
+
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_NULL_RECORD = "Can't write null record";
     private static final String MSG_MIGR_ERROR_LIMIT = "Limit can't be < 1";
@@ -119,8 +124,8 @@ public class StorageImpl implements Storage {
         }
         checkEnvironment(environmentID);
         if (apiKey == null) {
-            LOG.error(MSG_PASS_API_KEY);
-            throw new StorageClientException(MSG_PASS_API_KEY);
+            LOG.error(MSG_ERR_PASS_API_KEY);
+            throw new StorageClientException(MSG_ERR_PASS_API_KEY);
         }
         StorageImpl instance = new StorageImpl();
         instance.createCrypto(secretKeyAccessor, environmentID, cryptoList);
@@ -140,19 +145,19 @@ public class StorageImpl implements Storage {
         }
         checkEnvironment(environmentID);
         if (dao == null) {
-            LOG.error(MSG_PASS_DAO);
-            throw new StorageClientException(MSG_PASS_DAO);
+            LOG.error(MSG_ERR_PASS_DAO);
+            throw new StorageClientException(MSG_ERR_PASS_DAO);
         }
         StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID, cryptoList);
+        instance.createCrypto(secretKeyAccessor, environmentID);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
     private static void checkEnvironment(String environmentID) throws StorageClientException {
         if (environmentID == null) {
-            LOG.error(MSG_PASS_ENV);
-            throw new StorageClientException(MSG_PASS_ENV);
+            LOG.error(MSG_ERR_PASS_ENV);
+            throw new StorageClientException(MSG_ERR_PASS_ENV);
         }
     }
 
@@ -163,12 +168,12 @@ public class StorageImpl implements Storage {
 
     private void checkParameters(String country, String key) throws StorageClientException {
         if (country == null) {
-            LOG.error(MSG_PASS_ENV);
-            throw new StorageClientException(MSG_ERROR_NULL_COUNTRY);
+            LOG.error(MSG_ERR_PASS_ENV);
+            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
         }
         if (key == null) {
-            LOG.error(MSG_NULL_KEY);
-            throw new StorageClientException(MSG_NULL_KEY);
+            LOG.error(MSG_ERR_NULL_KEY);
+            throw new StorageClientException(MSG_ERR_NULL_KEY);
         }
     }
 
@@ -180,8 +185,8 @@ public class StorageImpl implements Storage {
                     record != null ? LOG_SECURE2 + record.hashCode() + "]]" : null);
         }
         if (record == null) {
-            LOG.error(MSG_NULL_RECORD);
-            throw new StorageClientException(MSG_NULL_RECORD);
+            LOG.error(MSG_ERR_NULL_RECORD);
+            throw new StorageClientException(MSG_ERR_NULL_RECORD);
         }
         checkParameters(country, record.getKey());
         dao.createRecord(country, record, cryptoManager);
@@ -211,12 +216,12 @@ public class StorageImpl implements Storage {
                     limit);
         }
         if (!isEncrypted) {
-            LOG.error(MSG_MIGR_NOT_SUPPORT);
-            throw new StorageClientException(MSG_MIGR_NOT_SUPPORT);
+            LOG.error(MSG_ERR_MIGR_NOT_SUPPORT);
+            throw new StorageClientException(MSG_ERR_MIGR_NOT_SUPPORT);
         }
         if (limit < 1) {
-            LOG.error(MSG_MIGR_ERROR_LIMIT);
-            throw new StorageClientException(MSG_MIGR_ERROR_LIMIT);
+            LOG.error(MSG_ERR_MIGR_ERROR_LIMIT);
+            throw new StorageClientException(MSG_ERR_MIGR_ERROR_LIMIT);
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
@@ -237,7 +242,10 @@ public class StorageImpl implements Storage {
                     country,
                     BatchRecord.toString(records));
         }
-        if (records != null && !records.isEmpty()) {
+        if (records == null || records.isEmpty()) {
+            LOG.error(MSG_ERR_NULL_BATCH);
+            throw new StorageClientException(MSG_ERR_NULL_BATCH);
+        } else {
             for (Record one : records) {
                 checkParameters(country, one.getKey());
             }
@@ -265,14 +273,13 @@ public class StorageImpl implements Storage {
                     builder);
         }
         if (country == null) {
-            LOG.error(MSG_ERROR_NULL_COUNTRY);
-            throw new StorageClientException(MSG_ERROR_NULL_COUNTRY);
+            LOG.error(MSG_ERR_NULL_COUNTRY);
+            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
         }
         if (builder == null) {
-            LOG.error(MSG_ERROR_NULL_FILTERS);
-            throw new StorageClientException(MSG_ERROR_NULL_FILTERS);
+            LOG.error(MSG_ERR_NULL_FILTERS);
+            throw new StorageClientException(MSG_ERR_NULL_FILTERS);
         }
-
         BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
@@ -295,7 +302,7 @@ public class StorageImpl implements Storage {
                     country,
                     builder);
         }
-        BatchRecord findResults = find(country, builder.copy().limitAndOffset(1, 0));
+        BatchRecord findResults = find(country, builder != null ? builder.copy().limitAndOffset(1, 0) : null);
         List<Record> records = findResults.getRecords();
         if (records.isEmpty()) {
             LOG.warn(MSG_FOUND_NOTHING);

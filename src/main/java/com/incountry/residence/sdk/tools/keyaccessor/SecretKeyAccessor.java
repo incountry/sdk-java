@@ -4,8 +4,9 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 /**
- * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
+ * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.
  */
+@FunctionalInterface
 public interface SecretKeyAccessor {
 
     /**

@@ -190,6 +190,14 @@ public class HttpDaoImplTests {
         assertEquals(expectedPath, callPath);
     }
 
+    @Test
+    public void batchWriteNullTest() throws StorageServerException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent("");
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
+        assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
+    }
+
     @ParameterizedTest
     @MethodSource("recordArgs")
     public void batchWriteTest(String country,

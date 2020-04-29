@@ -48,8 +48,6 @@ public class StorageImpl implements Storage {
 
 Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
 
-`endpoint` defines API URL and is used to override default one.
-
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
 Below is an example how to create a storage instance:
@@ -66,7 +64,7 @@ Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAcce
 SDK provides `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 ```java
 /**
- * Accessor to secrets. Method {@link SecretKeyAccessor#getSecretsData()} invokes in each encryption/decryption.
+ * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.
  */
 public interface SecretKeyAccessor {
 
@@ -123,9 +121,9 @@ You can implement `SecretKeyAccessor` interface and pass secrets/keys in multipl
     SecretKeyAccessor accessor = () -> loadSecretsData();
 
     private SecretsData loadSecretsData()  {
-            String url="<your_secret_url>";
-            String responseJson = loadFromUrl(url).asJson();
-            return SecretsDataGenerator.fromJson(responseJson);
+       String url = "<your_secret_url>";
+       String responseJson = loadFromUrl(url).asJson();
+       return SecretsDataGenerator.fromJson(responseJson);
     }
     ```
 
@@ -209,16 +207,15 @@ public class Record {
 }
 ```
 
-Below is the example of how you may use `write` method
+Below is the example of how you may use `write` method:
 ```java
-key="user_1";
-body="some PII data";
-profile_key="customer";
-range_key=10000;
-key2="english";
-key3="rolls-royce";
+key = "user_1";
+body = "some PII data";
+profileKey = "customer";
+rangeKey = 10000;
+key2 = "english";
+key3 = "rolls-royce";
 Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
-Storage storage=initStorage();
 storage.write("us", record);
 ```
 
@@ -229,8 +226,8 @@ Here is how data is transformed and stored in InCountry database:
 public class Record {
     private String key;          // hashed
     private String body;         // encrypted
-    private String profile_key;  // hashed
-    private Integer range_key;   // plain
+    private String profileKey;   // hashed
+    private Integer rangeKey;    // plain
     private String key2;         // hashed
     private String key3;         // hashed
     //...
@@ -263,48 +260,8 @@ public interface Storage {
 List<Record> list = new ArrayList<>();
 list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
 list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
-Storage storage = initStorage();
-storage.batchWrite ("us", list);
+storage.batchWrite("us", list);
 ```
-
-### Data Migration and Key Rotation support
-
-Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
-
-SDK introduces method `migrate`
-```java
-public interface Storage {
-   /**
-    * Make batched key-rotation-migration of records
-    *
-    * @param country country identifier
-    * @param limit   batch-limit parameter
-    * @return MigrateResult object which contain total records
-    *         left to migrate and total amount of migrated records
-    * @throws StorageClientException if validation finished with errors
-    * @throws StorageServerException if server connection failed or server response error
-    * @throws StorageCryptoException if decryption failed
-    */
-    MigrateResult migrate(String country, int limit)
-           throws StorageClientException, StorageServerException, StorageCryptoException;
-    //...
-}
-```
-
-It allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
-and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the
-amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with
-version different from `currentVersion` provided by `SecretKeyAccessor`)
-
-```java
-public class MigrateResult {
-    private int migrated;
-    private int totalLeft;
-    //...
-}
-```
-
-For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
 
 ### Reading stored data
 
@@ -327,7 +284,12 @@ public interface Storage {
 }
 ```
 
-This method returns `Record` object.
+Below is the example of how you may use `read` method:
+ ```java
+String key = "user_1";
+Record record = storage.read("us", key);
+String decryptedBody = record.getBody();
+ ```
 
 `Record` contains the following properties: `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
 
@@ -337,14 +299,6 @@ These properties can be accessed using getters, for example:
 String key2 = record.getKey2();
 String body = record.getBody();
 ```
-
-Below is the example of how you may use `batchWrite` method
- ```java
-String key = "user_1";
-Storage storage = initStorage();
-Record record = storage.read ("us", key);
-String decryptedBody = record.getBody();
- ```
 
 ### Find records
 
@@ -366,9 +320,6 @@ public interface Storage {
     //...
 }
 ```
-Parameters:
-`country` - country code,
-`builder` - object representing find filters and search options
 
 Use `FindFilterBuilder` class to refine your find request.
 
@@ -409,7 +360,7 @@ EQUALS         (FindFilterBuilder::keyEq)
                (FindFilterBuilder::profileKeyEq)
 ```
 
-Filtering by integer `rangeKey` values of class `Record` is providing methods of `FindFilterBuilder`:
+You can use the following builder methods for filtering by numerical `rangeKey` field:
 ```java
 EQUALS              (FindFilterBuilder::rangeKeyEq)
 IN                  (FindFilterBuilder::rangeKeyIn)
@@ -420,7 +371,7 @@ LESS OR EQUALS      (FindFilterBuilder::rangeKeyLTE)
 BETWEEN             (FindFilterBuilder::rangeKeyBetween)
 ```
 
-Method `find` returns `BatchRecord` object which contains an list of `Record` and some metadata:
+Method `find` returns `BatchRecord` object which contains a list of `Record` and some metadata:
 ```java
 class BatchRecord {
     private int count;
@@ -484,7 +435,7 @@ public interface Storage {
     *
     * @param country   country code of the record
     * @param key the record's key
-    * @return TRUE when record was deleted
+    * @return true when record was deleted
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
@@ -493,28 +444,66 @@ public interface Storage {
     //...
 }
 ```
-Here
-`country` - country code of the record,
-`key` - the record's key
 
-Below is the example of how you may use `delete` method
+Below is the example of how you may use `delete` method:
  ```java
-String kekeyy = "user_1";
-Storage storage = initStorage();
-storage.delete ("us", key);
+String key = "user_1";
+storage.delete("us", key);
  ```
 
-### Error Handling
+Data Migration and Key Rotation support
+-----
+
+Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
+
+SDK introduces method `migrate`
+```java
+public interface Storage {
+   /**
+    * Make batched key-rotation-migration of records
+    *
+    * @param country country identifier
+    * @param limit   batch-limit parameter
+    * @return MigrateResult object which contain total records
+    *         left to migrate and total amount of migrated records
+    * @throws StorageClientException if validation finished with errors
+    * @throws StorageServerException if server connection failed or server response error
+    * @throws StorageCryptoException if decryption failed
+    */
+    MigrateResult migrate(String country, int limit)
+           throws StorageClientException, StorageServerException, StorageCryptoException;
+    //...
+}
+```
+
+It allows you to re-encrypt data encrypted with old versions of the secret. You should specify `country` you want to conduct migration in
+and `limit` for precise amount of records to migrate. `migrate` returns a `MigrateResult` object which contains some information about the migration - the
+amount of records migrated (`migrated`) and the amount of records left to migrate (`totalLeft`) (which basically means the amount of records with
+version different from `currentVersion` provided by `SecretKeyAccessor`)
+
+```java
+public class MigrateResult {
+    private int migrated;
+    private int totalLeft;
+    //...
+}
+```
+
+For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
+
+Error Handling
+-----
+
 InCountry Java SDK throws following Exceptions:
-`StorageClientException` - used for various input validation errors
-`StorageServerException` - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
-`StorageCryptoException` - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
-`StorageException` - general exception. Inherited by all other exceptions
+- **StorageClientException** - used for various input validation errors
+- **StorageServerException** - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
+- **StorageCryptoException** - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
+- **StorageException** - general exception. Inherited by all other exceptions
 
 We suggest gracefully handling all the possible exceptions:
 
 ```java
-public void test () {
+public void test() {
     try {
         // use InCountry Storage instance here
     } catch (StorageClientException e) {
@@ -542,8 +531,8 @@ The following is a list of compile dependencies for this project. These dependen
 | javax.xml.stream         | stax-api       | 1.0-2       | jar      |
 | javax.activation         | activation     | 1.1         | jar      |
 | commons-codec            | commons-codec  | 1.14        | jar      |
-| org.apache.logging.log4j | log4j-api      | 2.13.1      | jar      |
-| org.apache.logging.log4j | log4j-core     | 2.13.1      | jar      |
+| org.apache.logging.log4j | log4j-api      | 2.13.2      | jar      |
+| org.apache.logging.log4j | log4j-core     | 2.13.2      | jar      |
 | com.google.code.gson     | gson           | 2.8.6       | jar      |
 
 #### Dependency Tree
@@ -553,9 +542,9 @@ compileClasspath
 |    +--- javax.xml.stream:stax-api:1.0-2
 |    \--- javax.activation:activation:1.1
 +--- commons-codec:commons-codec:1.14
-+--- org.apache.logging.log4j:log4j-api:2.13.1
-+--- org.apache.logging.log4j:log4j-core:2.13.1
-|    \--- org.apache.logging.log4j:log4j-api:2.13.1
++--- org.apache.logging.log4j:log4j-api:2.13.2
++--- org.apache.logging.log4j:log4j-core:2.13.2
+|    \--- org.apache.logging.log4j:log4j-api:2.13.2
 \--- com.google.code.gson:gson:2.8.6
 ```
 
