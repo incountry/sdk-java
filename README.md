@@ -211,8 +211,8 @@ Below is the example of how you may use `write` method:
 ```java
 key = "user_1";
 body = "some PII data";
-profile_key = "customer";
-range_key = 10000;
+profileKey = "customer";
+rangeKey = 10000;
 key2 = "english";
 key3 = "rolls-royce";
 Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
@@ -226,8 +226,8 @@ Here is how data is transformed and stored in InCountry database:
 public class Record {
     private String key;          // hashed
     private String body;         // encrypted
-    private String profile_key;  // hashed
-    private Integer range_key;   // plain
+    private String profileKey;   // hashed
+    private Integer rangeKey;    // plain
     private String key2;         // hashed
     private String key3;         // hashed
     //...
