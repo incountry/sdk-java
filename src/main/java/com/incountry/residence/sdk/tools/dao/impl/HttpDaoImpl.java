@@ -111,8 +111,8 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String createUrl(String country, String recordKeyHash) throws StorageClientException, StorageServerException {
-        return getEndpoint(concatUrl(country, URI_DELIMITER, recordKeyHash), country);
+    private String createUrl(String country, String keyHash) throws StorageClientException, StorageServerException {
+        return getEndpoint(concatUrl(country, URI_DELIMITER, keyHash), country);
     }
 
     @Override
@@ -143,9 +143,9 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void delete(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
-        String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
-        String url = createUrl(country, key);
+    public void delete(String country, String key, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
+        String newKey = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
+        String url = createUrl(country, newKey);
         String response = agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
         validatePlainTextResponse("{}", response);
     }

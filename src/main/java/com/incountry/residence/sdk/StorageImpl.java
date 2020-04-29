@@ -189,15 +189,14 @@ public class StorageImpl implements Storage {
     }
 
 
-    public Record read(String country, String recordKey) throws
-            StorageClientException, StorageServerException, StorageCryptoException {
+    public Record read(String country, String key) throws StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("read params (country={} , recordKey={})",
+            LOG.trace("read params (country={} , key={})",
                     country,
-                    recordKey != null ? LOG_SECURE : null);
+                    key != null ? LOG_SECURE : null);
         }
-        checkParameters(country, recordKey);
-        Record record = dao.read(country, recordKey, cryptoManager);
+        checkParameters(country, key);
+        Record record = dao.read(country, key, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
         }
@@ -247,14 +246,14 @@ public class StorageImpl implements Storage {
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
-    public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
+    public boolean delete(String country, String key) throws StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("delete params (country={} , recordKey={})",
+            LOG.trace("delete params (country={} , key={})",
                     country,
-                    recordKey != null ? LOG_SECURE : null);
+                    key != null ? LOG_SECURE : null);
         }
-        checkParameters(country, recordKey);
-        dao.delete(country, recordKey, cryptoManager);
+        checkParameters(country, key);
+        dao.delete(country, key, cryptoManager);
         return true;
     }
 

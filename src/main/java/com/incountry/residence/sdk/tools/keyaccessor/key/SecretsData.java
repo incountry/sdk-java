@@ -14,8 +14,8 @@ public class SecretsData {
 
     private static final String MSG_ERR_VERSION = "Current version must be >= 0";
     private static final String MSG_ERR_EMPTY_SECRETS = "Secrets in SecretData are null";
-    private static final String MSG_ERR_UNIQUE_VERSIONS = "Not unique versions of SecretKeys: ";
-    private static final String MSG_ERR_CURRENT_VERSION = "There is no any SecretKey with current version ";
+    private static final String MSG_ERR_UNIQUE_VERSIONS = "SecretKey versions must be unique. Got duplicates for: %s";
+    private static final String MSG_ERR_CURRENT_VERSION = "There is no SecretKey version that matches current version %d";
 
     private List<SecretKey> secrets;
     private int currentVersion;
@@ -60,13 +60,13 @@ public class SecretsData {
                 versionSet.add(one.getVersion());
             }
             if (!errorList.isEmpty()) {
-                String message = MSG_ERR_UNIQUE_VERSIONS + errorList.toString();
+                String message = String.format(MSG_ERR_UNIQUE_VERSIONS, errorList.toString());
                 LOG.error(message);
                 throw new StorageClientException(message);
             }
         }
         if (!versionSet.contains(currentVersion)) {
-            String message = MSG_ERR_CURRENT_VERSION + currentVersion;
+            String message = String.format(MSG_ERR_CURRENT_VERSION, currentVersion);
             LOG.error(message);
             throw new StorageClientException(message);
         }

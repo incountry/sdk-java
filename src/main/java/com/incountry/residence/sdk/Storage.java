@@ -42,25 +42,25 @@ public interface Storage {
     /**
      * Read data from remote storage
      *
-     * @param country   country identifier
-     * @param recordKey record unique identifier
+     * @param country country identifier
+     * @param key     record unique identifier
      * @return Record object which contains required data
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException;
+    Record read(String country, String key) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Delete record from remote storage
      *
-     * @param country   country code of the record
-     * @param recordKey the record's key
+     * @param country country code of the record
+     * @param key     the record's key
      * @return TRUE when record was deleted
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed
      */
-    boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException;
+    boolean delete(String country, String key) throws StorageClientException, StorageServerException;
 
     /**
      * Find records in remote storage according to filters

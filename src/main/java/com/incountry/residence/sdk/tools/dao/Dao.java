@@ -15,9 +15,9 @@ public interface Dao {
 
     void createBatch(List<Record> records, String country, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException;
 
-    Record read(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException;
+    Record read(String country, String key, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException;
 
-    void delete(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
+    void delete(String country, String key, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
     BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 }
