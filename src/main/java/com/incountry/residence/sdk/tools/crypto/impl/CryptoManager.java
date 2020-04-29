@@ -39,7 +39,8 @@ public class CryptoManager {
 
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
     private static final String MSG_ERR_VERSION = "Secret not found for version ";
-    private static final String MSG_ERR_DECRYPTION = "Decryption error: Illegal decryption version";
+    private static final String MSG_ERR_DECRYPTION_FORMAT = "Unknown cipher format";
+    private static final String MSG_ERR_DECRYPTION = "Unknown decryptor version requested: %s";
     private static final String MSG_ERR_GEN_SECRET = "Secret generation exception";
     private static final String MSG_ERR_NO_ALGORITHM = "Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration";
     private static final String MSG_ERR_ENCRYPTION = "Data encryption error";
@@ -127,7 +128,12 @@ public class CryptoManager {
             throw new StorageClientException(message);
         }
         testEncryption(one, secretsData);
-        result.put(one.getVersion(), one);
+        String key = getHashedEncVersion(one.getVersion());
+        result.put(key, one);
+    }
+
+    private String getHashedEncVersion(String version) {
+        return PREFIX_CUSTOM_ENCRYPTION + new String(Base64.getEncoder().encode(version.getBytes(CHARSET)), CHARSET);
     }
 
     private void testEncryption(CustomCrypto customCrypto, SecretsData secretsData) throws StorageCryptoException, StorageClientException {
@@ -194,7 +200,7 @@ public class CryptoManager {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private String decryptUnpacked(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
+    private String decryptUnpackedDefault(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
         byte[] salt = Arrays.copyOfRange(parts, 0, 64);
         byte[] iv = Arrays.copyOfRange(parts, 64, 76);
         byte[] encrypted = Arrays.copyOfRange(parts, 76, parts.length);
@@ -213,6 +219,11 @@ public class CryptoManager {
             throwStorageCryptoException(MSG_ERR_ENCRYPTION, e);
         }
         return new String(decryptedText, CHARSET);
+    }
+
+    private String decryptUnpackedCustom(byte[] decodedBytes, CustomCrypto crypto, Integer decryptKeyVersion) {
+        //todo
+        return null;
     }
 
     private SecretKey getSecret(Integer version) throws StorageClientException {
@@ -280,13 +291,22 @@ public class CryptoManager {
             case "2":
                 return decryptV2(parts[1], decryptKeyVersion);
             default:
-                return decryptCustom(parts[1], decryptKeyVersion);
+                return decryptCustom(parts[0], parts[1], decryptKeyVersion);
         }
     }
 
-    private String decryptCustom(String part, Integer decryptKeyVersion) {
-        if (part)
-            return null;
+    private String decryptCustom(String decryptorVersion, String cipherText, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
+        if (!decryptorVersion.startsWith(PREFIX_CUSTOM_ENCRYPTION)) {
+            throwStorageCryptoException(MSG_ERR_DECRYPTION_FORMAT, null);
+        }
+        CustomCrypto crypto = cryptoMap.get(cipherText);
+        if (crypto == null) {
+            String version = new String(Base64.getDecoder().decode(decryptorVersion.substring(1).getBytes(CHARSET)), CHARSET);
+            String message = String.format(MSG_ERR_DECRYPTION, version);
+            throwStorageCryptoException(message, null);
+        }
+        byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
+        return decryptUnpackedCustom(decodedBytes, crypto, decryptKeyVersion);
     }
 
     private static String throwStorageCryptoException(String message, Exception ex) throws StorageCryptoException {
@@ -299,18 +319,18 @@ public class CryptoManager {
     }
 
     private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
-        byte[] parts = Base64.getDecoder().decode(cipherText);
-        return this.decryptUnpacked(parts, decryptKeyVersion);
+        byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
+        return this.decryptUnpackedDefault(decodedBytes, decryptKeyVersion);
     }
 
     private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
-        byte[] parts = DatatypeConverter.parseHexBinary(cipherText);
-        return this.decryptUnpacked(parts, decryptKeyVersion);
+        byte[] decodedBytes = DatatypeConverter.parseHexBinary(cipherText);
+        return this.decryptUnpackedDefault(decodedBytes, decryptKeyVersion);
     }
 
     private String decryptVPT(String cipherText) {
-        byte[] ptBytes = Base64.getDecoder().decode(cipherText);
-        return new String(ptBytes, CHARSET);
+        byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
+        return new String(decodedBytes, CHARSET);
     }
 
     private static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
