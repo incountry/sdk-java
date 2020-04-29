@@ -160,6 +160,8 @@ public class StorageSingleTests {
         assertEquals(key3, foundRecord.getKey3());
         assertEquals(profileKey, foundRecord.getProfileKey());
         assertEquals(rangeKey, foundRecord.getRangeKey());
+
+        assertThrows(StorageClientException.class, () -> storage.findOne(country, null));
     }
 
     @Test
