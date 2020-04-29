@@ -323,7 +323,12 @@ public interface Storage {
 }
 ```
 
-This method returns `Record` object.
+Below is the example of how you may use `read` method:
+ ```java
+String key = "user_1";
+Record record = storage.read("us", key);
+String decryptedBody = record.getBody();
+ ```
 
 `Record` contains the following properties: `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
 
@@ -333,13 +338,6 @@ These properties can be accessed using getters, for example:
 String key2 = record.getKey2();
 String body = record.getBody();
 ```
-
-Below is the example of how you may use `batchWrite` method
- ```java
-String key = "user_1";
-Record record = storage.read("us", key);
-String decryptedBody = record.getBody();
- ```
 
 ### Find records
 
@@ -361,6 +359,8 @@ public interface Storage {
     //...
 }
 ```
+
+Use `FindFilterBuilder` class to refine your find request.
 
 Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
