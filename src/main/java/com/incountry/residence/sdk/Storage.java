@@ -56,7 +56,7 @@ public interface Storage {
      *
      * @param country country code of the record
      * @param key     the record's key
-     * @return TRUE when record was deleted
+     * @return true when record was deleted
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed
      */

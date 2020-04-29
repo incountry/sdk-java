@@ -48,8 +48,6 @@ public class StorageImpl implements Storage {
 
 Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
 
-`endpoint` defines API URL and is used to override default one.
-
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
 Below is an example how to create a storage instance:
@@ -123,9 +121,9 @@ You can implement `SecretKeyAccessor` interface and pass secrets/keys in multipl
     SecretKeyAccessor accessor = () -> loadSecretsData();
 
     private SecretsData loadSecretsData()  {
-            String url="<your_secret_url>";
-            String responseJson = loadFromUrl(url).asJson();
-            return SecretsDataGenerator.fromJson(responseJson);
+       String url = "<your_secret_url>";
+       String responseJson = loadFromUrl(url).asJson();
+       return SecretsDataGenerator.fromJson(responseJson);
     }
     ```
 
@@ -209,16 +207,15 @@ public class Record {
 }
 ```
 
-Below is the example of how you may use `write` method
+Below is the example of how you may use `write` method:
 ```java
-key="user_1";
-body="some PII data";
-profile_key="customer";
-range_key=10000;
-key2="english";
-key3="rolls-royce";
+key = "user_1";
+body = "some PII data";
+profile_key = "customer";
+range_key = 10000;
+key2 = "english";
+key3 = "rolls-royce";
 Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
-Storage storage=initStorage();
 storage.write("us", record);
 ```
 
@@ -263,8 +260,7 @@ public interface Storage {
 List<Record> list = new ArrayList<>();
 list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
 list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
-Storage storage = initStorage();
-storage.batchWrite ("us", list);
+storage.batchWrite("us", list);
 ```
 
 ### Data Migration and Key Rotation support
@@ -341,8 +337,7 @@ String body = record.getBody();
 Below is the example of how you may use `batchWrite` method
  ```java
 String key = "user_1";
-Storage storage = initStorage();
-Record record = storage.read ("us", key);
+Record record = storage.read("us", key);
 String decryptedBody = record.getBody();
  ```
 
@@ -366,11 +361,6 @@ public interface Storage {
     //...
 }
 ```
-Parameters:
-`country` - country code,
-`builder` - object representing find filters and search options
-
-Use `FindFilterBuilder` class to refine your find request.
 
 Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
@@ -409,7 +399,7 @@ EQUALS         (FindFilterBuilder::keyEq)
                (FindFilterBuilder::profileKeyEq)
 ```
 
-Filtering by integer `rangeKey` values of class `Record` is providing methods of `FindFilterBuilder`:
+You can use the following builder methods for filtering by numerical `rangeKey` field:
 ```java
 EQUALS              (FindFilterBuilder::rangeKeyEq)
 IN                  (FindFilterBuilder::rangeKeyIn)
@@ -420,7 +410,7 @@ LESS OR EQUALS      (FindFilterBuilder::rangeKeyLTE)
 BETWEEN             (FindFilterBuilder::rangeKeyBetween)
 ```
 
-Method `find` returns `BatchRecord` object which contains an list of `Record` and some metadata:
+Method `find` returns `BatchRecord` object which contains a list of `Record` and some metadata:
 ```java
 class BatchRecord {
     private int count;
@@ -484,7 +474,7 @@ public interface Storage {
     *
     * @param country   country code of the record
     * @param key the record's key
-    * @return TRUE when record was deleted
+    * @return true when record was deleted
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
@@ -493,28 +483,24 @@ public interface Storage {
     //...
 }
 ```
-Here
-`country` - country code of the record,
-`key` - the record's key
 
-Below is the example of how you may use `delete` method
+Below is the example of how you may use `delete` method:
  ```java
-String kekeyy = "user_1";
-Storage storage = initStorage();
-storage.delete ("us", key);
+String key = "user_1";
+storage.delete("us", key);
  ```
 
 ### Error Handling
 InCountry Java SDK throws following Exceptions:
-`StorageClientException` - used for various input validation errors
-`StorageServerException` - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
-`StorageCryptoException` - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
-`StorageException` - general exception. Inherited by all other exceptions
+- **StorageClientException** - used for various input validation errors
+- **StorageServerException** - thrown if SDK failed to communicate with InCountry servers or if server response validation failed.
+- **StorageCryptoException** - thrown during encryption/decryption procedures (both default and custom). This may be a sign of malformed/corrupt data or a wrong encryption key provided to the SDK.
+- **StorageException** - general exception. Inherited by all other exceptions
 
 We suggest gracefully handling all the possible exceptions:
 
 ```java
-public void test () {
+public void test() {
     try {
         // use InCountry Storage instance here
     } catch (StorageClientException e) {
