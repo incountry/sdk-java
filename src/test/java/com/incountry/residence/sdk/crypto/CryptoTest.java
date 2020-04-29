@@ -1,11 +1,16 @@
 package com.incountry.residence.sdk.crypto;
 
+import com.incountry.residence.sdk.Storage;
+import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -131,5 +136,14 @@ public class CryptoTest {
     @Test
     public void testSecreKeyDatatWithNegativeVersion() {
         assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), -2));
+    }
+
+    @Test
+    public void testIncorrectKeyAccessor() {
+        SecretKeyAccessor accessor1 = () -> null;
+        SecretKeyAccessor accessor2 = () -> SecretsDataGenerator.fromPassword("");
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor1));
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor2));
+
     }
 }
