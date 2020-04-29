@@ -391,7 +391,7 @@ The request will return records, filtered according to the following pseudo-sql
 key2 = 'kitty' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey` < = 456)
 ```
 
-All conditions added via `FindFilterBuilder` are joined using logical `AND`. If you add multiple conditions for the one key - only last condition will be used.
+All conditions added via `FindFilterBuilder` are joined using logical `AND`. You may not add multiple conditions for the same key - if you do only the last one will be used.
 
 SDK returns 100 records at most. Use `limit` and `offset` to iterate through the records.
 ```java
