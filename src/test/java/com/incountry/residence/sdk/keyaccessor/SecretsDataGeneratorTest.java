@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.impl.SecretKeyAccessorImpl;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import org.junit.jupiter.api.Test;
@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SecretsDataUtilsTest {
+public class SecretsDataGeneratorTest {
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws StorageClientException {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
@@ -35,7 +35,7 @@ public class SecretsDataUtilsTest {
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         String secretKeyString = new Gson().toJson(secretsData);
 
-        SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstanceWithJson(secretKeyString);
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyString);
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
@@ -44,11 +44,11 @@ public class SecretsDataUtilsTest {
     }
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws StorageClientException {
+    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
-        SecretKeyAccessor accessor = SecretKeyAccessorImpl.getInstance("user_password");
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
@@ -105,7 +105,7 @@ public class SecretsDataUtilsTest {
                 "  \"currentVersion\": 1\n" +
                 "}";
 
-        assertThrows(StorageClientException.class, () -> SecretKeyAccessorImpl.getInstanceWithJson(secretDataWrongJson));
+        assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretDataWrongJson));
     }
 
     @Test

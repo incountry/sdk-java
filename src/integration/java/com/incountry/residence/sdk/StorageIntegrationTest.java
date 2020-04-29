@@ -41,8 +41,8 @@ public class StorageIntegrationTest {
 
     private Storage storage;
     private String country = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
-    private String batchWriteRecordKey = "BatchWriteKey" + TEMP;
-    private String writeRecordKey = "Write_Key" + TEMP;
+    private String batchWriteKey = "BatchWriteKey" + TEMP;
+    private String writeKey = "Write_Key" + TEMP;
     private String profileKey = "ProfileKey" + TEMP;
     private String key2 = "Key2" + TEMP;
     private String key3 = "Key3" + TEMP;
@@ -76,22 +76,22 @@ public class StorageIntegrationTest {
     @Order(100)
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
-        records.add(new Record(batchWriteRecordKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
+        records.add(new Record(batchWriteKey, recordBody, profileKey, batchWriteRangeKey, key2, key3));
         storage.batchWrite(country, records);
     }
 
     @Test
     @Order(200)
     public void writeTest() throws StorageException {
-        Record record = new Record(writeRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
+        Record record = new Record(writeKey, recordBody, profileKey, writeRangeKey, key2, key3);
         storage.write(country, record);
     }
 
     @Test
     @Order(300)
     public void readTest() throws StorageException {
-        Record incomingRecord = storage.read(country, writeRecordKey);
-        assertEquals(writeRecordKey, incomingRecord.getKey());
+        Record incomingRecord = storage.read(country, writeKey);
+        assertEquals(writeKey, incomingRecord.getKey());
         assertEquals(recordBody, incomingRecord.getBody());
         assertEquals(profileKey, incomingRecord.getProfileKey());
         assertEquals(key2, incomingRecord.getKey2());
@@ -101,15 +101,15 @@ public class StorageIntegrationTest {
     @Test
     @Order(301)
     public void readAdvancedTest() throws StorageException {
-        Record incomingRecord = storage.read(country, writeRecordKey.toLowerCase());
-        assertEquals(writeRecordKey, incomingRecord.getKey());
+        Record incomingRecord = storage.read(country, writeKey.toLowerCase());
+        assertEquals(writeKey, incomingRecord.getKey());
         assertEquals(recordBody, incomingRecord.getBody());
         assertEquals(profileKey, incomingRecord.getProfileKey());
         assertEquals(key2, incomingRecord.getKey2());
         assertEquals(key3, incomingRecord.getKey3());
 
-        incomingRecord = storage.read(country, writeRecordKey.toUpperCase());
-        assertEquals(writeRecordKey, incomingRecord.getKey());
+        incomingRecord = storage.read(country, writeKey.toUpperCase());
+        assertEquals(writeKey, incomingRecord.getKey());
         assertEquals(recordBody, incomingRecord.getBody());
         assertEquals(profileKey, incomingRecord.getProfileKey());
         assertEquals(key2, incomingRecord.getKey2());
@@ -120,7 +120,7 @@ public class StorageIntegrationTest {
     @Order(400)
     public void findTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(writeRecordKey)
+                .keyEq(writeKey)
                 .key2Eq(key2)
                 .key3Eq(key3)
                 .profileKeyEq(profileKey)
@@ -128,10 +128,10 @@ public class StorageIntegrationTest {
         BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
+        assertEquals(writeKey, batchRecord.getRecords().get(0).getKey());
 
         builder.clear()
-                .keyEq(batchWriteRecordKey)
+                .keyEq(batchWriteKey)
                 .key2Eq(key2)
                 .key3Eq(key3)
                 .profileKeyEq(profileKey)
@@ -139,7 +139,7 @@ public class StorageIntegrationTest {
         batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(batchWriteRecordKey, batchRecord.getRecords().get(0).getKey());
+        assertEquals(batchWriteKey, batchRecord.getRecords().get(0).getKey());
     }
 
     @Test
@@ -154,15 +154,15 @@ public class StorageIntegrationTest {
         List<String> resultIdList = new ArrayList<>();
         resultIdList.add(batchRecord.getRecords().get(0).getKey());
         resultIdList.add(batchRecord.getRecords().get(1).getKey());
-        assertTrue(resultIdList.contains(writeRecordKey));
-        assertTrue(resultIdList.contains(batchWriteRecordKey));
+        assertTrue(resultIdList.contains(writeKey));
+        assertTrue(resultIdList.contains(batchWriteKey));
     }
 
     @Test
     @Order(402)
     public void findIgnoreCaseTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(writeRecordKey)
+                .keyEq(writeKey)
                 .key2Eq(key2)
                 .key3Eq(key3)
                 .profileKeyEq(profileKey)
@@ -170,10 +170,10 @@ public class StorageIntegrationTest {
         BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
+        assertEquals(writeKey, batchRecord.getRecords().get(0).getKey());
 
         builder = builder.clear()
-                .keyEq(writeRecordKey.toLowerCase())
+                .keyEq(writeKey.toLowerCase())
                 .key2Eq(key2.toLowerCase())
                 .key3Eq(key3.toLowerCase())
                 .profileKeyEq(profileKey.toLowerCase())
@@ -181,10 +181,10 @@ public class StorageIntegrationTest {
         batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
+        assertEquals(writeKey, batchRecord.getRecords().get(0).getKey());
 
         builder = builder.clear()
-                .keyEq(writeRecordKey.toUpperCase())
+                .keyEq(writeKey.toUpperCase())
                 .key2Eq(key2.toUpperCase())
                 .key3Eq(key3.toUpperCase())
                 .profileKeyEq(profileKey.toUpperCase())
@@ -192,7 +192,7 @@ public class StorageIntegrationTest {
         batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(writeRecordKey, batchRecord.getRecords().get(0).getKey());
+        assertEquals(writeKey, batchRecord.getRecords().get(0).getKey());
     }
 
     @Test
@@ -202,18 +202,18 @@ public class StorageIntegrationTest {
                 .key2Eq(key2)
                 .rangeKeyEq(writeRangeKey);
         Record record = storage.findOne(country, builder);
-        assertEquals(writeRecordKey, record.getKey());
+        assertEquals(writeKey, record.getKey());
         assertEquals(recordBody, record.getBody());
     }
 
     @Test
     @Order(600)
     public void deleteTest() throws StorageException {
-        storage.delete(country, writeRecordKey);
-        storage.delete(country, batchWriteRecordKey);
+        storage.delete(country, writeKey);
+        storage.delete(country, batchWriteKey);
         // Cannot read deleted record
-        Record writeMethodRecord = storage.read(country, writeRecordKey);
-        Record batchWriteMethodRecord = storage.read(country, batchWriteRecordKey);
+        Record writeMethodRecord = storage.read(country, writeKey);
+        Record batchWriteMethodRecord = storage.read(country, batchWriteKey);
         assertNull(writeMethodRecord);
         assertNull(batchWriteMethodRecord);
     }

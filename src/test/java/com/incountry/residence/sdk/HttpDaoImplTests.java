@@ -62,7 +62,7 @@ public class HttpDaoImplTests {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         Crypto crypto;
         if (encrypt) {
-            crypto = new CryptoImpl(secretKeyAccessor.getSecretsData(), "envId");
+            crypto = new CryptoImpl(secretKeyAccessor, "envId");
         } else {
             crypto = new CryptoImpl("envId");
         }
@@ -188,6 +188,14 @@ public class HttpDaoImplTests {
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
         String callPath = new URL(agent.getCallEndpoint()).getPath();
         assertEquals(expectedPath, callPath);
+    }
+
+    @Test
+    public void batchWriteNullTest() throws StorageServerException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent("");
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
+        assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
+        assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
     }
 
     @ParameterizedTest

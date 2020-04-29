@@ -12,5 +12,5 @@ public interface Crypto {
 
     String createKeyHash(String key);
 
-    int getCurrentSecretVersion();
+    Integer getCurrentSecretVersion() throws StorageClientException;
 }
