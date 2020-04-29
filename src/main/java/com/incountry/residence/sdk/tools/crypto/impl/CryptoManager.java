@@ -197,7 +197,7 @@ public class CryptoManager {
     }
 
     private static String createHash(String stringToHash) {
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash.toLowerCase());
     }
 
     private String decryptUnpackedDefault(byte[] parts, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {

@@ -132,4 +132,12 @@ public class CustomCryptoTest {
     public void testSecreKeyDatatWithNegativeVersion() {
         assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), -2));
     }
+
+    @Test
+    public void testLowerCasingForKeys() {
+        String someKey = "FilterValue123~!@#$%^&*()_+";
+        Crypto crypto = new CryptoImpl("envId");
+        assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toLowerCase()));
+        assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toUpperCase()));
+    }
 }
