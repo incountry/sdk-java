@@ -54,8 +54,9 @@ public class CryptoImpl implements Crypto {
     private String envId;
     private boolean isUsingPTEncryption = false;
 
-    public CryptoImpl(SecretKeyAccessor keyAccessor) {
+    public CryptoImpl(SecretKeyAccessor keyAccessor) throws StorageClientException {
         this.keyAccessor = keyAccessor;
+        getSecretsDataOrException();
     }
 
     public CryptoImpl(String envId) {
@@ -63,9 +64,10 @@ public class CryptoImpl implements Crypto {
         this.isUsingPTEncryption = true;
     }
 
-    public CryptoImpl(SecretKeyAccessor keyAccessor, String envId) {
+    public CryptoImpl(SecretKeyAccessor keyAccessor, String envId) throws StorageClientException {
         this.keyAccessor = keyAccessor;
         this.envId = envId;
+        getSecretsDataOrException();
     }
 
     public Map.Entry<String, Integer> encrypt(String plainText) throws StorageClientException, StorageCryptoException {
@@ -160,21 +162,24 @@ public class CryptoImpl implements Crypto {
     public Integer getCurrentSecretVersion() throws StorageClientException {
         if (keyAccessor != null) {
             SecretsData secretsData = getSecretsDataOrException();
-            if (secretsData != null) {
-                return secretsData.getCurrentVersion();
-            }
+            return secretsData.getCurrentVersion();
         }
         return null;
     }
 
     private SecretsData getSecretsDataOrException() throws StorageClientException {
+        SecretsData result = null;
         try {
-            return keyAccessor.getSecretsData();
+            result = keyAccessor.getSecretsData();
         } catch (StorageClientException clientEx) {
             throw clientEx;
         } catch (Exception ex) {
             throw new StorageClientException("Unexpected exception", ex);
         }
+        if (result == null) {
+            throw new StorageClientException("SecretKeyAccessor returns null secret");
+        }
+        return result;
     }
 
     public String createKeyHash(String key) {
