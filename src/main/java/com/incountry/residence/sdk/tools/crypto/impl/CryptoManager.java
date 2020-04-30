@@ -89,6 +89,7 @@ public class CryptoManager {
     public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<CustomCrypto> cryptoList) throws StorageClientException, StorageCryptoException {
         this.usePTEncryption = keyAccessor == null;
         this.keyAccessor = keyAccessor;
+        getSecretsDataOrException();
         this.envId = envId;
         fillCustomCryptoMap(cryptoList);
     }
@@ -271,21 +272,24 @@ public class CryptoManager {
     public Integer getCurrentSecretVersion() throws StorageClientException {
         if (keyAccessor != null) {
             SecretsData secretsData = getSecretsDataOrException();
-            if (secretsData != null) {
-                return secretsData.getCurrentVersion();
-            }
+            return secretsData.getCurrentVersion();
         }
         return null;
     }
 
     private SecretsData getSecretsDataOrException() throws StorageClientException {
+        SecretsData result = null;
         try {
-            return keyAccessor.getSecretsData();
+            result = keyAccessor.getSecretsData();
         } catch (StorageClientException clientEx) {
             throw clientEx;
         } catch (Exception ex) {
             throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
         }
+        if (result == null) {
+            throw new StorageClientException("SecretKeyAccessor returns null secret");
+        }
+        return result;
     }
 
     public String createKeyHash(String key) {
