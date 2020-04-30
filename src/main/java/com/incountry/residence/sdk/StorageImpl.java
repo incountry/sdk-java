@@ -246,9 +246,7 @@ public class StorageImpl implements Storage {
 
     public BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("find params (country={} , builder={})",
-                    country,
-                    builder);
+            LOG.trace("find params (country={} , builder={})", country, builder);
         }
         if (country == null) {
             LOG.error(MSG_ERR_NULL_COUNTRY);
