@@ -74,6 +74,7 @@ public class CryptoManager {
     private String envId;
     private Map<String, CustomCrypto> cryptoMap;
     private CustomCrypto currentCrypto;
+    private String currentCryptoVersion;
     private boolean usePTEncryption;
 
 
@@ -82,15 +83,19 @@ public class CryptoManager {
         usePTEncryption = true;
     }
 
-    public CryptoManager(SecretKeyAccessor keyAccessor, List<CustomCrypto> cryptoList) throws StorageClientException, StorageCryptoException {
+    public CryptoManager(SecretKeyAccessor keyAccessor, List<CustomCrypto> cryptoList)
+            throws StorageClientException, StorageCryptoException {
         this(keyAccessor, null, cryptoList);
     }
 
-    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<CustomCrypto> cryptoList) throws StorageClientException, StorageCryptoException {
+    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<CustomCrypto> cryptoList)
+            throws StorageClientException, StorageCryptoException {
         this.usePTEncryption = keyAccessor == null;
         this.keyAccessor = keyAccessor;
-        getSecretsDataOrException();
         this.envId = envId;
+        if (!usePTEncryption) {
+            getSecretsDataOrException();
+        }
         fillCustomCryptoMap(cryptoList);
     }
 
@@ -125,6 +130,7 @@ public class CryptoManager {
                 throw new StorageClientException(message);
             }
             currentCrypto = one;
+            currentCryptoVersion = getHashedEncVersion(one.getVersion());
         }
         if (result.get(one.getVersion()) != null) {
             String message = String.format(MSG_ERR_UNIQ_CRYPTO, one.getVersion());
@@ -167,15 +173,24 @@ public class CryptoManager {
         }
     }
 
-    private Map.Entry<String, Integer> encryptCustom(String plainText) {
-        //todo
-        return null;
+    private Map.Entry<String, Integer> encryptCustom(String text) throws StorageClientException, StorageCryptoException {
+        SecretsData secretsData = getSecretsDataOrException();
+        SecretKey secretKey = getSecret(secretsData.getCurrentVersion(), true, secretsData);
+        try {
+            String cipherText = currentCrypto.encrypt(text, secretKey);
+            return new AbstractMap.SimpleEntry<>(currentCryptoVersion + ":" + cipherText, secretKey.getVersion());
+        } catch (StorageClientException | StorageCryptoException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            LOG.error(MSG_ERR_UNSUPPORTED, ex);
+            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+        }
     }
 
     private Map.Entry<String, Integer> encryptDefault(String plainText) throws StorageCryptoException, StorageClientException {
         byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
-        SecretKey secretKey = getSecret(null, false);
+        SecretKey secretKey = getSecret(null, false, null);
         byte[] key = getKey(salt, secretKey);
         byte[] iv = generateRandomBytes(IV_LENGTH);
 
@@ -224,7 +239,7 @@ public class CryptoManager {
         byte[] decryptedText = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            byte[] key = getKey(salt, getSecret(decryptKeyVersion, false));
+            byte[] key = getKey(salt, getSecret(decryptKeyVersion, false, null));
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -240,7 +255,7 @@ public class CryptoManager {
     private String decryptUnpackedCustom(byte[] decodedBytes, CustomCrypto crypto, Integer decryptKeyVersion)
             throws StorageClientException, StorageCryptoException {
         try {
-            return crypto.decrypt(new String(decodedBytes, CHARSET), getSecret(decryptKeyVersion, true));
+            return crypto.decrypt(new String(decodedBytes, CHARSET), getSecret(decryptKeyVersion, true, null));
         } catch (StorageClientException | StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -249,8 +264,10 @@ public class CryptoManager {
         }
     }
 
-    private SecretKey getSecret(Integer version, boolean isForCustomEncryption) throws StorageClientException {
-        SecretsData secretsData = getSecretsDataOrException();
+    private SecretKey getSecret(Integer version, boolean isForCustomEncryption, SecretsData secretsData) throws StorageClientException {
+        if (secretsData == null) {
+            secretsData = getSecretsDataOrException();
+        }
         if (version == null) {
             version = secretsData.getCurrentVersion();
         }
