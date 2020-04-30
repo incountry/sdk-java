@@ -29,6 +29,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -38,7 +39,7 @@ public class CryptoManager {
     private static final Logger LOG = LogManager.getLogger(CryptoManager.class);
 
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
-    private static final String MSG_ERR_VERSION = "Secret not found for version ";
+    private static final String MSG_ERR_VERSION = "Secret not found for 'version'=%d with 'isForCustomEncryption'=%b";
     private static final String MSG_ERR_DECRYPTION_FORMAT = "Unknown cipher format";
     private static final String MSG_ERR_DECRYPTION = "Unknown decryptor version requested: %s";
     private static final String MSG_ERR_GEN_SECRET = "Secret generation exception";
@@ -51,6 +52,8 @@ public class CryptoManager {
     private static final String MSG_ERR_NULL_CRYPTO_VERSION = "Custom crypto has null version";
     private static final String MSG_ERR_MANY_CURRENT_CRYPTO = "There are more than one custom crypto with mark 'current': %s";
     private static final String MSG_ERROR_INCORRECT_CUSTOM_CRYPTO = "Custom crypto with version %s is invalid, test encryption is incorrect";
+    private static final String MSG_ERR_UNSUPPORTED = "Unexpected exception";
+    private static final String MSG_ERR_NO_CUSTOM_KEY = "There is no any SecretKey for custom encryption";
 
     private static final String TEST_ECRYPTION_TEXT = "This is test message for enc/dec_!@#$%^&*()_+|?.,~//\\=-' "
             + UUID.randomUUID().toString();
@@ -71,7 +74,7 @@ public class CryptoManager {
     private String envId;
     private Map<String, CustomCrypto> cryptoMap;
     private CustomCrypto currentCrypto;
-    private boolean usePTEncryption = false;
+    private boolean usePTEncryption;
 
 
     public CryptoManager(String envId) {
@@ -137,7 +140,12 @@ public class CryptoManager {
     }
 
     private void testEncryption(CustomCrypto customCrypto, SecretsData secretsData) throws StorageCryptoException, StorageClientException {
-        SecretKey key = secretsData.getSecrets().stream().filter(SecretKey::isForCustomEncryption).findFirst().get();
+        Optional<SecretKey> optional = secretsData.getSecrets().stream().filter(SecretKey::isForCustomEncryption).findFirst();
+        if (!optional.isPresent()) {
+            LOG.error(MSG_ERR_NO_CUSTOM_KEY);
+            throw new StorageClientException(MSG_ERR_NO_CUSTOM_KEY);
+        }
+        SecretKey key = optional.get();
         String encryptedText = customCrypto.encrypt(TEST_ECRYPTION_TEXT, key);
         String decryptedText = customCrypto.decrypt(encryptedText, key);
         if (!TEST_ECRYPTION_TEXT.equals(decryptedText)) {
@@ -145,21 +153,28 @@ public class CryptoManager {
             LOG.error(message);
             throw new StorageCryptoException(message);
         }
-
-
     }
 
     public Map.Entry<String, Integer> encrypt(String plainText) throws StorageClientException, StorageCryptoException {
         if (usePTEncryption) {
             byte[] ptEncoded = Base64.getEncoder().encode(plainText.getBytes(CHARSET));
             return new AbstractMap.SimpleEntry<>(PREFIX_PLAIN_TEXT_VERSION + ":" + new String(ptEncoded, CHARSET), null);
+        } else if (currentCrypto != null) {
+            return encryptCustom(plainText);
+        } else {
+            return encryptDefault(plainText);
         }
-        if (currentCrypto != null) {
-            //todo
-        }
+    }
+
+    private Map.Entry<String, Integer> encryptCustom(String plainText) {
+        //todo
+        return null;
+    }
+
+    private Map.Entry<String, Integer> encryptDefault(String plainText) throws StorageCryptoException, StorageClientException {
         byte[] clean = plainText.getBytes(CHARSET);
         byte[] salt = generateRandomBytes(SALT_LENGTH);
-        SecretKey secretKey = getSecret(null);
+        SecretKey secretKey = getSecret(null, false);
         byte[] key = getKey(salt, secretKey);
         byte[] iv = generateRandomBytes(IV_LENGTH);
 
@@ -208,7 +223,7 @@ public class CryptoManager {
         byte[] decryptedText = null;
         try {
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            byte[] key = getKey(salt, getSecret(decryptKeyVersion));
+            byte[] key = getKey(salt, getSecret(decryptKeyVersion, false));
 
             SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(16 * 8, iv);
@@ -221,25 +236,32 @@ public class CryptoManager {
         return new String(decryptedText, CHARSET);
     }
 
-    private String decryptUnpackedCustom(byte[] decodedBytes, CustomCrypto crypto, Integer decryptKeyVersion) {
-        //todo
-        return null;
+    private String decryptUnpackedCustom(byte[] decodedBytes, CustomCrypto crypto, Integer decryptKeyVersion)
+            throws StorageClientException, StorageCryptoException {
+        try {
+            return crypto.decrypt(new String(decodedBytes, CHARSET), getSecret(decryptKeyVersion, true));
+        } catch (StorageClientException | StorageCryptoException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            LOG.error(MSG_ERR_UNSUPPORTED, ex);
+            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+        }
     }
 
-    private SecretKey getSecret(Integer version) throws StorageClientException {
+    private SecretKey getSecret(Integer version, boolean isForCustomEncryption) throws StorageClientException {
         SecretsData secretsData = getSecretsDataOrException();
         if (version == null) {
             version = secretsData.getCurrentVersion();
         }
         SecretKey secret = null;
         for (SecretKey item : secretsData.getSecrets()) {
-            if (item.getVersion() == version) {
+            if (item.getVersion() == version && item.isForCustomEncryption() == isForCustomEncryption) {
                 secret = item;
                 break;
             }
         }
         if (secret == null) {
-            String message = MSG_ERR_VERSION + version;
+            String message = String.format(MSG_ERR_VERSION, version, isForCustomEncryption);
             LOG.error(message);
             throw new StorageClientException(message);
         }
@@ -262,7 +284,7 @@ public class CryptoManager {
         } catch (StorageClientException clientEx) {
             throw clientEx;
         } catch (Exception ex) {
-            throw new StorageClientException("Unexpected exception", ex);
+            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
         }
     }
 
