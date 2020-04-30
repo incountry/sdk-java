@@ -404,7 +404,7 @@ public class JsonUtils {
         public Record decrypt(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
             try {
                 if (cryptoManager != null && getBody() != null) {
-                    String[] parts = getBody().split(":");
+                    String[] parts = getBody().split(":", 2);
                     setBody(cryptoManager.decrypt(getBody(), version));
                     if (parts.length != 2) {
                         justDecryptKeys(cryptoManager);
