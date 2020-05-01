@@ -38,7 +38,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
-    private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String LOG_SECURE = "[SECURE]";
@@ -95,11 +94,16 @@ public class StorageImpl implements Storage {
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException, StorageServerException {
-        try {
-            return getInstance(environmentID, apiKey, endpoint, secretKeyAccessor, null);
-        } catch (StorageCryptoException ex) {
-            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={})",
+                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
+                    apiKey != null ? LOG_SECURE2 + apiKey.hashCode() + "]]" : null,
+                    endpoint,
+                    secretKeyAccessor != null ? LOG_SECURE : null);
         }
+        StorageImpl instance = getInstanceWithoutCrypto(environmentID, apiKey, endpoint, secretKeyAccessor);
+        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
     /**
@@ -127,15 +131,8 @@ public class StorageImpl implements Storage {
                     cryptoList
             );
         }
-        checkEnvironment(environmentID);
-        if (apiKey == null) {
-            LOG.error(MSG_ERR_PASS_API_KEY);
-            throw new StorageClientException(MSG_ERR_PASS_API_KEY);
-        }
-        StorageImpl instance = new StorageImpl();
-        instance.isEncrypted = secretKeyAccessor != null;
+        StorageImpl instance = getInstanceWithoutCrypto(environmentID, apiKey, endpoint, secretKeyAccessor);
         instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, cryptoList);
-        instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
@@ -158,6 +155,19 @@ public class StorageImpl implements Storage {
         instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, cryptoList);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
+    }
+
+    private static StorageImpl getInstanceWithoutCrypto(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
+            throws StorageClientException, StorageServerException {
+        checkEnvironment(environmentID);
+        if (apiKey == null) {
+            LOG.error(MSG_ERR_PASS_API_KEY);
+            throw new StorageClientException(MSG_ERR_PASS_API_KEY);
+        }
+        StorageImpl instance = new StorageImpl();
+        instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+        instance.isEncrypted = secretKeyAccessor != null;
+        return instance;
     }
 
     private static void checkEnvironment(String environmentID) throws StorageClientException {

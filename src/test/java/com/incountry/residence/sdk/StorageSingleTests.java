@@ -62,7 +62,7 @@ public class StorageSingleTests {
     }
 
     @Test
-    public void migrateTest() throws StorageException {
+    public void migratePositiveTest() throws StorageException {
         Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
         String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
@@ -81,6 +81,8 @@ public class StorageSingleTests {
     public void migrateNegativeTest() throws StorageException {
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")), null);
         assertThrows(StorageClientException.class, () -> storage.migrate("us", 0));
+        Storage storage2 = StorageImpl.getInstance(environmentId, null, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")), null);
+        assertThrows(StorageClientException.class, () -> storage2.migrate("us", 1));
     }
 
     @Test
@@ -110,6 +112,23 @@ public class StorageSingleTests {
         String expectedURL = endpoint + "/v2/storage/records/" + country;
         String realURL = new URL(agent.getCallEndpoint()).toString();
         assertEquals(expectedURL, realURL);
+    }
+
+    @Test
+    public void testNegativeWriteNullKey() throws StorageException {
+        String endpoint = "https://custom.endpoint.io";
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent), null);
+        Record record = new Record(null, body, profileKey, rangeKey, key2, key3);
+        assertThrows(StorageClientException.class, () -> storage.write(country, record));
+    }
+
+    @Test
+    public void testNegativeWriteNullRecord() throws StorageException {
+        String endpoint = "https://custom.endpoint.io";
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent), null);
+        assertThrows(StorageClientException.class, () -> storage.write(country, null));
     }
 
     @Test
@@ -160,6 +179,10 @@ public class StorageSingleTests {
         assertEquals(key3, foundRecord.getKey3());
         assertEquals(profileKey, foundRecord.getProfileKey());
         assertEquals(rangeKey, foundRecord.getRangeKey());
+
+        agent.setResponse("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
+        foundRecord = storage.findOne(country, builder);
+        assertNull(foundRecord);
 
         assertThrows(StorageClientException.class, () -> storage.findOne(country, null));
     }
@@ -342,5 +365,38 @@ public class StorageSingleTests {
         assertNotNull(dao);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao, null);
         assertThrows(StorageClientException.class, () -> storage.migrate(null, 100));
+    }
+
+    @Test
+    public void testNegativeWithEmptyConstructor() {
+        assertThrows(StorageClientException.class, StorageImpl::getInstance);
+    }
+
+    @Test
+    public void testPositiveWithConstructor2() throws StorageClientException, StorageServerException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        Storage storage = StorageImpl.getInstance("envId", "apiKey", "http://localhost", secretKeyAccessor);
+        assertNotNull(storage);
+    }
+
+    @Test
+    public void testPositiveWithConstructor3() throws StorageClientException, StorageServerException, StorageCryptoException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        Storage storage = StorageImpl.getInstance("envId", "apiKey", "http://localhost", secretKeyAccessor, null);
+        assertNotNull(storage);
+    }
+
+    @Test
+    public void testNegativeWithConstructor3emptyApikey() throws StorageClientException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", null, "http://localhost", secretKeyAccessor, null));
+    }
+
+    @Test
+    public void testNegativeWithConstructor4nullDao() {
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(environmentId, secretKeyAccessor, null, null));
     }
 }
