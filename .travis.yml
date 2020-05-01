@@ -21,6 +21,7 @@ before_install:
   - gradle -v
 
 script:
-  - git fetch
+  - git fetch origin develop
+  - git fetch origin master
   - gradle build jacocoTestReport sonarqube --info
   - gradle integrationTest
