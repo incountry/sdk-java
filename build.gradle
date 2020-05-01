@@ -67,7 +67,7 @@ dependencyCheck {
     failBuildOnCVSS = 1
 }
 
-//check.dependsOn dependencyCheckAnalyze
+check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
 spotbugs {
