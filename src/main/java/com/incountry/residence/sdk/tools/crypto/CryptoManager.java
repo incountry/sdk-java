@@ -199,7 +199,7 @@ public class CryptoManager {
         }
         SecretKey secret = null;
         for (SecretKey item : secretsData.getSecrets()) {
-            if (item.getVersion() == version && item.isForCustomEncryption() == isForCustomEncryption) {
+            if (item.getVersion() == version && !Boolean.logicalXor(isForCustomEncryption, item.isForCustomEncryption())) {
                 secret = item;
                 break;
             }

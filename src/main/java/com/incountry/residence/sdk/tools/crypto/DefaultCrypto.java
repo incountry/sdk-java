@@ -119,7 +119,7 @@ public class DefaultCrypto implements Crypto {
     }
 
     private byte[] getKey(byte[] salt, SecretKey secretKey) throws StorageCryptoException {
-        if (secretKey.isForCustomEncryption() != null && secretKey.isForCustomEncryption()) {
+        if (secretKey.isForCustomEncryption()) {
             return secretKey.getSecret().getBytes(charset);
         }
         return generateStrongPasswordHash(secretKey.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);

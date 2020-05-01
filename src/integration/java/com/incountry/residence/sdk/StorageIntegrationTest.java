@@ -52,7 +52,7 @@ public class StorageIntegrationTest {
 
     private String secret = "passwordpasswordpasswordpassword";
     private int version = 0;
-    private boolean isKey = true;
+    private boolean isKey = false;
     private int currentVersion = 0;
 
     private static String loadFromEnv(String key) {

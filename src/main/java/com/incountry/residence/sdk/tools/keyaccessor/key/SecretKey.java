@@ -41,7 +41,7 @@ public class SecretKey {
         return version;
     }
 
-    public Boolean isForCustomEncryption() {
+    public boolean isForCustomEncryption() {
         return isForCustomEncryption;
     }
 
