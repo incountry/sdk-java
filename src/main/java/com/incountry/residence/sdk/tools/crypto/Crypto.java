@@ -7,7 +7,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 /**
  * Use it for custom encryption
  */
-public interface CustomCrypto {
+public interface Crypto {
 
     /**
      * encrypts data with secret

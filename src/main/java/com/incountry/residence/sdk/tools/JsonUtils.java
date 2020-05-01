@@ -12,7 +12,7 @@ import com.incountry.residence.sdk.dto.search.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoManager;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -121,7 +121,7 @@ public class JsonUtils {
      */
     public static Record recordFromString(String jsonString, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
         Gson gson = getGson4Records();
-        TransferRecord tempRecord = null;
+        TransferRecord tempRecord;
         try {
             tempRecord = gson.fromJson(jsonString, TransferRecord.class);
         } catch (JsonSyntaxException ex) {
@@ -162,7 +162,7 @@ public class JsonUtils {
     public static BatchRecord batchRecordFromString(String responseString, CryptoManager cryptoManager) throws StorageServerException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
-        TransferBatch transferBatch = null;
+        TransferBatch transferBatch;
         try {
             transferBatch = gson.fromJson(responseString, TransferBatch.class);
         } catch (JsonSyntaxException ex) {
@@ -273,7 +273,7 @@ public class JsonUtils {
     }
 
     public static SecretsData getSecretsDataFromJson(String string) throws StorageClientException {
-        SecretsData result = null;
+        SecretsData result;
         try {
             result = new Gson().fromJson(string, SecretsData.class);
         } catch (JsonSyntaxException e) {
@@ -283,7 +283,7 @@ public class JsonUtils {
     }
 
     public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
-        TransferPopList popList = null;
+        TransferPopList popList;
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
         } catch (JsonSyntaxException ex) {

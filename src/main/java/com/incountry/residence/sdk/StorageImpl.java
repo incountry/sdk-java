@@ -4,8 +4,8 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.crypto.CustomCrypto;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoManager;
+import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -38,13 +38,12 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
-
+    private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
-    private static final String MSG_NULL_RECORD = "Can't write null record";
-    private static final String MSG_MIGR_ERROR_LIMIT = "Limit can't be < 1";
     private static final String LOG_SECURE = "[SECURE]";
     private static final String LOG_SECURE2 = "[SECURE[";
+
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -96,7 +95,11 @@ public class StorageImpl implements Storage {
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException, StorageServerException {
-        return getInstance(environmentID, apiKey, endpoint, secretKeyAccessor, null);
+        try {
+            return getInstance(environmentID, apiKey, endpoint, secretKeyAccessor, null);
+        } catch (StorageCryptoException ex) {
+            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
+        }
     }
 
     /**
@@ -109,17 +112,19 @@ public class StorageImpl implements Storage {
      * @param cryptoList        List with custom encryption functions
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageCryptoException if custom encryption fails during initialization
      * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint,
-                                      SecretKeyAccessor secretKeyAccessor, List<CustomCrypto> cryptoList)
-            throws StorageClientException, StorageServerException {
+                                      SecretKeyAccessor secretKeyAccessor, List<Crypto> cryptoList)
+            throws StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={})",
+            LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={}, cryptoList={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
                     apiKey != null ? LOG_SECURE2 + apiKey.hashCode() + "]]" : null,
                     endpoint,
-                    secretKeyAccessor != null ? LOG_SECURE : null
+                    secretKeyAccessor != null ? LOG_SECURE : null,
+                    cryptoList
             );
         }
         checkEnvironment(environmentID);
@@ -128,14 +133,14 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_PASS_API_KEY);
         }
         StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID, cryptoList);
+        instance.isEncrypted = secretKeyAccessor != null;
+        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, cryptoList);
         instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-
     public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao
-            dao, List<CustomCrypto> cryptoList) throws StorageClientException {
+            dao, List<Crypto> cryptoList) throws StorageClientException, StorageCryptoException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
@@ -149,7 +154,8 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_PASS_DAO);
         }
         StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID);
+        instance.isEncrypted = secretKeyAccessor != null;
+        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, cryptoList);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
@@ -159,11 +165,6 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_PASS_ENV);
             throw new StorageClientException(MSG_ERR_PASS_ENV);
         }
-    }
-
-    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID, List<CustomCrypto> cryptoList) throws StorageClientException {
-        isEncrypted = secretKeyAccessor != null;
-        cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, isEncrypted ? cryptoList : null);
     }
 
     private void checkParameters(String country, String key) throws StorageClientException {
