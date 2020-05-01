@@ -21,7 +21,7 @@ before_install:
   - gradle -v
 
 script:
-  - git fetch origin develop
-  - git fetch origin master
+  - git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/develop:refs/remotes/origin/develop
+  - git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/master:refs/remotes/origin/master
   - gradle build jacocoTestReport sonarqube --info
   - gradle integrationTest
