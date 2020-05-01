@@ -102,29 +102,16 @@ sonarqube {
     properties {
         property "sonar.projectKey", "incountry_sdk-java"
         property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.java.source", "1.8"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.organization", "incountry"
-        property "sonar.junit.reportPaths", "$buildDir/test-results/test"
-        property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.tests", "src/test"
-        property "sonar.java.test.binaries", "build/classes/java/test"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/test/jacocoTestReport.xml"
+        property 'sonar.jacoco.reportPath', "${buildDir}/jacoco/test.exec"
     }
 }
 
 jacoco {
     toolVersion = "${jacocoVersion}"
-    reportsDir = file("$buildDir/jacoco")
 }
 
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        csv.enabled false
-        html.enabled true
-    }
-}
 
 repositories {
     mavenCentral()

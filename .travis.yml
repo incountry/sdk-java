@@ -21,6 +21,6 @@ before_install:
   - gradle -v
 
 script:
-  - gradle build jacocoTestReport
-  - gradle sonarqube --info
+  - gradle build
+  - gradle jacocoTestReport sonarqube --info
   - gradle integrationTest
