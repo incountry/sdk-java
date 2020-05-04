@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SecretsDataGeneratorTest {
+public class SecretsTest {
 
     @Test
     public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
@@ -115,5 +115,30 @@ public class SecretsDataGeneratorTest {
         SecretKey secretKey3 = new SecretKey("password3", 0, false);
         assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2, secretKey3), 1));
         assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), 2));
+    }
+
+    @Test
+    public void secretsDataToStringTest() throws StorageClientException {
+        String expected = "SecretsData{secrets=[SecretKey{secret=HASH[1267537070], version=0, isForCustomEncryption=false}], currentVersion=0}";
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
+        SecretsData secretsData = accessor.getSecretsData();
+        assertEquals(expected, secretsData.toString());
+    }
+
+    @Test
+    public void secretsDataNegativeVersionTest() throws StorageClientException {
+        List<SecretKey> secrets = Arrays.asList(new SecretKey("password", 1, false));
+        assertThrows(StorageClientException.class, () -> new SecretsData(secrets, -1));
+    }
+
+    @Test
+    public void secretsDataEmptySecretsTest() {
+        assertThrows(StorageClientException.class, () -> new SecretsData(null, 1));
+        assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), 1));
+    }
+
+    @Test
+    public void secretsKeyWrongLength() {
+        assertThrows(StorageClientException.class, () -> new SecretKey("123", 1, true));
     }
 }

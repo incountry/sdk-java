@@ -4,6 +4,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.util.Objects;
+
 public class SecretKey {
     private static final Logger LOG = LogManager.getLogger(SecretKey.class);
 
@@ -11,7 +13,7 @@ public class SecretKey {
 
     private static final String MSG_ERR_VERSION = "Version must be >= 0";
     private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
-    private static final String MSG_ERR_KEY_LEN = "Wrong default key length. Should be "
+    private static final String MSG_ERR_KEY_LEN = "Wrong key length for custom encryption. Should be "
             + KEY_LENGTH + " characters ‘utf8’ encoded string";
 
     private String secret;
@@ -45,7 +47,7 @@ public class SecretKey {
         return isForCustomEncryption;
     }
 
-    public static void validateSecretKey(String secret, int version, boolean isKey) throws StorageClientException {
+    public static void validateSecretKey(String secret, int version, boolean isForCustomEncryption) throws StorageClientException {
         if (version < 0) {
             LOG.error(MSG_ERR_VERSION);
             throw new StorageClientException(MSG_ERR_VERSION);
@@ -54,9 +56,18 @@ public class SecretKey {
             LOG.error(MSG_ERR_NULL_SECRET);
             throw new StorageClientException(MSG_ERR_NULL_SECRET);
         }
-        if (isKey && secret.length() != KEY_LENGTH) {
+        if (isForCustomEncryption && secret.length() != KEY_LENGTH) {
             LOG.error(MSG_ERR_KEY_LEN);
             throw new StorageClientException(MSG_ERR_KEY_LEN);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SecretKey{" +
+                "secret=HASH[" + Objects.hash(secret) + ']' +
+                ", version=" + version +
+                ", isForCustomEncryption=" + isForCustomEncryption +
+                '}';
     }
 }
