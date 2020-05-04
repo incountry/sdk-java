@@ -48,7 +48,7 @@ public class PseudoCustomCrypto extends DefaultCrypto {
                 throw new NullPointerException();
             }
         } else {
-            encryptBeforeException--;
+            encryptBeforeException -= 1;
             return super.encrypt(text, secretKey);
         }
     }
@@ -64,7 +64,7 @@ public class PseudoCustomCrypto extends DefaultCrypto {
                 throw new NullPointerException();
             }
         } else {
-            decryptBeforeException--;
+            decryptBeforeException -= 1;
             return super.decrypt(cipherText, secretKey);
         }
     }
