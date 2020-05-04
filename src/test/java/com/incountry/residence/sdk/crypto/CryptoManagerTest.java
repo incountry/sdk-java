@@ -1,7 +1,6 @@
 package com.incountry.residence.sdk.crypto;
 
 import com.incountry.residence.sdk.StorageImpl;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -14,12 +13,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CryptoManagerTest {
@@ -154,24 +151,5 @@ public class CryptoManagerTest {
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor2));
     }
 
-    @Test
-    public void customEncryptionTestPositive() throws StorageClientException, StorageCryptoException {
-        List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true));
-        int keyVersion = 1;
-        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, true);
-        SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
-        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, "envId", cryptoList);
-        assertNotNull(cryptoManager);
-    }
 
-    @Test
-    public void customEncryptionTestNegative() throws StorageClientException {
-        List<Crypto> cryptoList = Arrays.asList(new InvalidCrypto(true));
-        int keyVersion = 1;
-        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, true);
-        SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
-        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        assertThrows(StorageCryptoException.class, () -> new CryptoManager(secretKeyAccessor, "envId", cryptoList));
-    }
 }

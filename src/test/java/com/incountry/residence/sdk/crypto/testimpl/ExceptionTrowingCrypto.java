@@ -1,29 +1,28 @@
-package com.incountry.residence.sdk.crypto;
+package com.incountry.residence.sdk.crypto.testimpl;
 
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 
-public class CryptoStub implements Crypto {
-
+public class ExceptionTrowingCrypto implements Crypto {
     private boolean current;
 
-    public CryptoStub(boolean current) {
+    public ExceptionTrowingCrypto(boolean current) {
         this.current = current;
     }
 
     @Override
     public String encrypt(String text, SecretKey secretKey) {
-        return text != null ? text + ":" + secretKey.getSecret() : secretKey.getSecret();
+        throw new NullPointerException();
     }
 
     @Override
     public String decrypt(String cipherText, SecretKey secretKey) {
-        return cipherText.equals(secretKey.getSecret()) ? null : cipherText.substring(0, cipherText.lastIndexOf(":" + secretKey.getSecret()));
+        throw new NullPointerException();
     }
 
     @Override
     public String getVersion() {
-        return CryptoStub.class.getSimpleName();
+        return ExceptionTrowingCrypto.class.getSimpleName();
     }
 
     @Override

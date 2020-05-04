@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class StorageSingleTests {
+public class StorageTest {
     private CryptoManager cryptoManager;
     private SecretKeyAccessor secretKeyAccessor;
     private String secret = "passwordpasswordpasswordpassword";

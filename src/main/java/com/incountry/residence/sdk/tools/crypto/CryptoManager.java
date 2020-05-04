@@ -28,11 +28,12 @@ public class CryptoManager {
     private static final String MSG_ERR_VERSION = "Secret not found for 'version'=%d with 'isForCustomEncryption'=%b";
     private static final String MSG_ERR_DECRYPTION_FORMAT = "Unknown cipher format";
     private static final String MSG_ERR_DECRYPTION = "Unknown crypto version requested: %s";
+    private static final String MSG_ERR_DECRYPTION_BASE64 = "Unexpected exception while getting crypto version from BASE64: %s";
     private static final String MSG_ERR_ENCRYPTION_OFF = "Encryption is turned off, but custom crypto list isn't empty";
     private static final String MSG_ERR_UNIQ_CRYPTO = "Custom crypto versions are not unique: %s";
     private static final String MSG_ERR_NULL_CRYPTO = "Custom crypto list contains null";
     private static final String MSG_ERR_NULL_CRYPTO_VERSION = "Custom crypto has null version";
-    private static final String MSG_ERR_MANY_CURRENT_CRYPTO = "There are more than one custom crypto with mark 'current': %s";
+    private static final String MSG_ERR_MANY_CURRENT_CRYPTO = "There are more than one custom crypto with mark 'current': [%s , %s]";
     private static final String MSG_ERROR_INCORRECT_CUSTOM_CRYPTO = "Custom crypto with version %s is invalid, test encryption is incorrect";
     private static final String MSG_ERR_UNSUPPORTED = "Unexpected exception";
     private static final String MSG_ERR_NO_CUSTOM_KEY = "There is no any SecretKey for custom encryption";
@@ -50,8 +51,8 @@ public class CryptoManager {
     private Crypto currentCrypto;
     private String currentCryptoVersion;
     private final DefaultCrypto defaultCrypto = new DefaultCrypto(CHARSET);
-    private final String envId;
-    private final boolean usePTEncryption;
+    private String envId;
+    private boolean usePTEncryption;
 
 
     public CryptoManager(String envId) {
@@ -61,22 +62,31 @@ public class CryptoManager {
 
     public CryptoManager(SecretKeyAccessor keyAccessor, String envId)
             throws StorageClientException {
-        this.usePTEncryption = keyAccessor == null;
-        this.keyAccessor = keyAccessor;
-        this.envId = envId;
+        initFields(keyAccessor, envId);
         if (!usePTEncryption) {
-            getSecretsDataOrException();
+            SecretsData secretsData = getSecretsDataOrException();
+            getSecret(secretsData.getCurrentVersion(), false, secretsData);
         }
     }
 
     public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> cryptoList)
             throws StorageClientException, StorageCryptoException {
-        this(keyAccessor, envId);
+        initFields(keyAccessor, envId);
         fillCustomCryptoMap(cryptoList);
+        if (!usePTEncryption) {
+            SecretsData secretsData = getSecretsDataOrException();
+            getSecret(secretsData.getCurrentVersion(), currentCrypto != null, secretsData);
+        }
+    }
+
+    private void initFields(SecretKeyAccessor keyAccessor, String envId) {
+        this.usePTEncryption = keyAccessor == null;
+        this.keyAccessor = keyAccessor;
+        this.envId = envId;
     }
 
     private void fillCustomCryptoMap(List<Crypto> cryptoList) throws StorageClientException, StorageCryptoException {
-        if (usePTEncryption && (cryptoList != null && cryptoList.isEmpty())) {
+        if (usePTEncryption && (cryptoList != null && !cryptoList.isEmpty())) {
             LOG.error(MSG_ERR_ENCRYPTION_OFF);
             throw new StorageClientException(MSG_ERR_ENCRYPTION_OFF);
         }
@@ -101,15 +111,15 @@ public class CryptoManager {
             throw new StorageClientException(MSG_ERR_NULL_CRYPTO_VERSION);
         }
         if (one.isCurrent()) {
-            if (currentCrypto != null && !currentCrypto.equals(one)) {
-                String message = String.format(MSG_ERR_MANY_CURRENT_CRYPTO, one.getVersion());
+            if (currentCrypto != null) {
+                String message = String.format(MSG_ERR_MANY_CURRENT_CRYPTO, one.getVersion(), currentCrypto.getVersion());
                 LOG.error(message);
                 throw new StorageClientException(message);
             }
             currentCrypto = one;
             currentCryptoVersion = getHashedEncVersion(one.getVersion());
         }
-        if (result.get(one.getVersion()) != null) {
+        if (result.get(getHashedEncVersion(one.getVersion())) != null) {
             String message = String.format(MSG_ERR_UNIQ_CRYPTO, one.getVersion());
             LOG.error(message);
             throw new StorageClientException(message);
@@ -159,7 +169,8 @@ public class CryptoManager {
         SecretKey secretKey = getSecret(secretsData.getCurrentVersion(), true, secretsData);
         try {
             String cipherText = currentCrypto.encrypt(text, secretKey);
-            return new AbstractMap.SimpleEntry<>(currentCryptoVersion + ":" + cipherText, secretKey.getVersion());
+            String cipherTextBase64 = new String(Base64.getEncoder().encode(cipherText.getBytes(CHARSET)), CHARSET);
+            return new AbstractMap.SimpleEntry<>(currentCryptoVersion + ":" + cipherTextBase64, secretKey.getVersion());
         } catch (StorageClientException | StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -176,18 +187,6 @@ public class CryptoManager {
 
     private static String createHash(String stringToHash) {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash.toLowerCase());
-    }
-
-    private String decryptUnpackedCustom(byte[] decodedBytes, Crypto crypto, Integer decryptKeyVersion)
-            throws StorageClientException, StorageCryptoException {
-        try {
-            return crypto.decrypt(new String(decodedBytes, CHARSET), getSecret(decryptKeyVersion, true, null));
-        } catch (StorageClientException | StorageCryptoException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            LOG.error(MSG_ERR_UNSUPPORTED, ex);
-            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
-        }
     }
 
     private SecretKey getSecret(Integer version, boolean isForCustomEncryption, SecretsData secretsData) throws StorageClientException {
@@ -249,7 +248,7 @@ public class CryptoManager {
         }
         String[] parts = cipherText.split(":", 2);
         if (parts[0].equals(PREFIX_PLAIN_TEXT_VERSION)) {
-            return decryptVPT(parts[1]);
+            return decryptBase64(parts[1]);
         } else if (usePTEncryption) {
             String message = MSG_ERR_NO_SECRET + cipherText;
             throw new StorageCryptoException(message);
@@ -278,17 +277,28 @@ public class CryptoManager {
         if (!decryptVersion.startsWith(PREFIX_CUSTOM_ENCRYPTION)) {
             throw new StorageCryptoException(MSG_ERR_DECRYPTION_FORMAT);
         }
-        Crypto crypto = cryptoMap.get(cipherText);
+        Crypto crypto = cryptoMap.get(decryptVersion);
         if (crypto == null) {
-            String version = new String(Base64.getDecoder().decode(decryptVersion.substring(1).getBytes(CHARSET)), CHARSET);
-            String message = String.format(MSG_ERR_DECRYPTION, version);
-            throw new StorageCryptoException(message);
+            try {
+                String version = new String(Base64.getDecoder().decode(decryptVersion.substring(1).getBytes(CHARSET)), CHARSET);
+                String message = String.format(MSG_ERR_DECRYPTION, version);
+                throw new StorageCryptoException(message);
+            } catch (IllegalArgumentException iex) {
+                String message = String.format(MSG_ERR_DECRYPTION_BASE64, decryptVersion.substring(1));
+                throw new StorageCryptoException(message, iex);
+            }
         }
-        byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
-        return decryptUnpackedCustom(decodedBytes, crypto, decryptKeyVersion);
+        try {
+            return crypto.decrypt(decryptBase64(cipherText), getSecret(decryptKeyVersion, true, null));
+        } catch (StorageClientException | StorageCryptoException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            LOG.error(MSG_ERR_UNSUPPORTED, ex);
+            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+        }
     }
 
-    private String decryptVPT(String cipherText) {
+    private String decryptBase64(String cipherText) {
         byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
         return new String(decodedBytes, CHARSET);
     }

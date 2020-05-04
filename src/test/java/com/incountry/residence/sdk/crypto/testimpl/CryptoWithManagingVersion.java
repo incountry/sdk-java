@@ -1,0 +1,31 @@
+package com.incountry.residence.sdk.crypto.testimpl;
+
+import com.incountry.residence.sdk.tools.crypto.DefaultCrypto;
+
+import java.nio.charset.StandardCharsets;
+
+public class CryptoWithManagingVersion extends DefaultCrypto {
+
+    private final String version;
+    private boolean current;
+
+    public CryptoWithManagingVersion(String version) {
+        super(StandardCharsets.UTF_8);
+        this.version = version;
+    }
+
+    public CryptoWithManagingVersion(String version, boolean current) {
+        this(version);
+        this.current = current;
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
+    }
+
+    @Override
+    public boolean isCurrent() {
+        return current;
+    }
+}

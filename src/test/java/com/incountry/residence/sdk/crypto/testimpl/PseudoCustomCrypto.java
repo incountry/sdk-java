@@ -1,14 +1,14 @@
-package com.incountry.residence.sdk.crypto;
+package com.incountry.residence.sdk.crypto.testimpl;
 
 import com.incountry.residence.sdk.tools.crypto.DefaultCrypto;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class PseudoCustomCrypto extends DefaultCrypto {
     private final boolean current;
 
-    public PseudoCustomCrypto(Charset charset, boolean current) {
-        super(charset);
+    public PseudoCustomCrypto(boolean current) {
+        super(StandardCharsets.UTF_8);
         this.current = current;
     }
 
