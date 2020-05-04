@@ -348,13 +348,6 @@ public class JsonUtils {
             return rec;
         }
 
-        public void justDecryptKeys(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException {
-            setKey(cryptoManager.decrypt(getKey(), version));
-            setKey2(cryptoManager.decrypt(getKey2(), version));
-            setKey3(cryptoManager.decrypt(getKey3(), version));
-            setProfileKey(cryptoManager.decrypt(getProfileKey(), version));
-        }
-
         public void decryptAllFromBody() {
             Gson gson = getGson4Records();
             JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
@@ -404,13 +397,8 @@ public class JsonUtils {
         public Record decrypt(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
             try {
                 if (cryptoManager != null && getBody() != null) {
-                    String[] parts = getBody().split(":", 2);
                     setBody(cryptoManager.decrypt(getBody(), version));
-                    if (parts.length != 2) {
-                        justDecryptKeys(cryptoManager);
-                    } else {
-                        decryptAllFromBody();
-                    }
+                    decryptAllFromBody();
                 }
             } catch (JsonSyntaxException ex) {
                 throw new StorageServerException(MSG_ERR_RESPONSE, ex);
