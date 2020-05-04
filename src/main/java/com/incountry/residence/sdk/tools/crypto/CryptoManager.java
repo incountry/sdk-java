@@ -36,7 +36,7 @@ public class CryptoManager {
     private static final String MSG_ERR_NULL_CRYPTO_VERSION = "Custom crypto has null version";
     private static final String MSG_ERR_MANY_CURRENT_CRYPTO = "There are more than one custom crypto with mark 'current': [%s , %s]";
     private static final String MSG_ERROR_INCORRECT_CUSTOM_CRYPTO = "Custom crypto with version %s is invalid, test encryption is incorrect";
-    private static final String MSG_ERR_UNSUPPORTED = "Unexpected exception";
+    private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
     private static final String MSG_ERR_NO_CUSTOM_KEY = "There is no any SecretKey for custom encryption";
 
     private static final String TEST_ENCRYPTION_TEXT = "This is test message for enc/dec_!@#$%^&*()_+|?.,~//\\=-' "
@@ -175,8 +175,8 @@ public class CryptoManager {
         } catch (StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
-            LOG.error(MSG_ERR_UNSUPPORTED, ex);
-            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+            LOG.error(MSG_ERR_UNEXPECTED, ex);
+            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
         }
     }
 
@@ -227,7 +227,7 @@ public class CryptoManager {
         } catch (StorageClientException clientEx) {
             throw clientEx;
         } catch (Exception ex) {
-            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
         }
         if (result == null) {
             throw new StorageClientException("SecretKeyAccessor returns null secret");
@@ -244,7 +244,7 @@ public class CryptoManager {
     }
 
     public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
-        if (cipherText == null) {
+        if (cipherText == null || cipherText.isEmpty()) {
             return null;
         }
         String[] parts = cipherText.split(":", 2);
@@ -266,8 +266,8 @@ public class CryptoManager {
         } catch (StorageException ex) {
             throw ex;
         } catch (Exception ex) {
-            LOG.error(MSG_ERR_UNSUPPORTED, ex);
-            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+            LOG.error(MSG_ERR_UNEXPECTED, ex);
+            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
         }
     }
 
@@ -301,8 +301,8 @@ public class CryptoManager {
         } catch (StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
-            LOG.error(MSG_ERR_UNSUPPORTED, ex);
-            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
+            LOG.error(MSG_ERR_UNEXPECTED, ex);
+            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
         }
     }
 

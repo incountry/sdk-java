@@ -9,7 +9,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
-import com.incountry.residence.sdk.tools.dao.POP;
+import com.incountry.residence.sdk.tools.dao.PoP;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
@@ -42,7 +42,7 @@ public class HttpDaoImpl implements Dao {
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-    private final Map<String, POP> popMap = new HashMap<>();
+    private final Map<String, PoP> popMap = new HashMap<>();
     private HttpAgent agent;
     private String endPoint = DEFAULT_ENDPOINT;
     private boolean defaultEndpoint = true;
@@ -87,7 +87,7 @@ public class HttpDaoImpl implements Dao {
         }
         if (defaultEndpoint) {
             //update country list cache every 1 min
-            POP pop;
+            PoP pop;
             synchronized (popMap) {
                 if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
                     loadCountries();

@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.search;
 
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;

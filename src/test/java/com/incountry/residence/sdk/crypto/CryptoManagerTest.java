@@ -17,6 +17,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -148,5 +149,42 @@ public class CryptoManagerTest {
     public void positiveGetNullSecretVersion() throws StorageClientException, StorageCryptoException {
         CryptoManager manager = new CryptoManager(null, "ENV_ID", null);
         assertNull(manager.getCurrentSecretVersion());
+    }
+
+    @Test
+    public void positiveDecryptNull() throws StorageClientException, StorageCryptoException {
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null);
+        assertNull(manager.decrypt(null, 1));
+        assertNull(manager.decrypt("", 1));
+    }
+
+    @Test
+    public void negativeNoSecretProvided() throws StorageClientException, StorageCryptoException {
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null);
+        String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
+        assertThrows(StorageCryptoException.class, () -> manager.decrypt(encrypted, keyVersion));
+    }
+
+    @Test
+    public void negativeTestWrongKeyType() throws StorageClientException {
+        int keyVersion = 1;
+        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, true);
+        SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
+        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
+        assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null));
+    }
+
+    @Test
+    public void positiveTestConstructor2WithoutEncryption() throws StorageClientException {
+        CryptoManager manager = new CryptoManager(null, "ENV_ID");
+        assertNotNull(manager);
+    }
+
+    @Test
+    public void negativeTestBadSecretAccessor() {
+        SecretKeyAccessor accessor = () -> {
+            throw new NullPointerException();
+        };
+        assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID"));
     }
 }

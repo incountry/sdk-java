@@ -12,6 +12,7 @@ import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
+import com.incountry.residence.sdk.tools.dao.PoP;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -335,6 +336,16 @@ public class HttpDaoImplTests {
         assertThrows(StorageClientException.class, () -> storage.write("PU", record));
         agent.setResponse(countryLoadResponse);
         assertThrows(StorageClientException.class, () -> storage.write("pu", record));
+    }
+
+    @Test
+    public void popTest() {
+        String name = "us";
+        String host = "http://localhost";
+        PoP pop = new PoP(host, name);
+        assertEquals(name, pop.getName());
+        assertEquals(host, pop.getHost());
+        assertEquals("PoP{host='" + host + "', name='" + name + "'}", pop.toString());
     }
 
     private String countryLoadResponse = "{\n" +

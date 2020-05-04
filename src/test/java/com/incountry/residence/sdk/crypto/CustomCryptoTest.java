@@ -8,6 +8,7 @@ import com.incountry.residence.sdk.crypto.testimpl.InvalidCrypto;
 import com.incountry.residence.sdk.crypto.testimpl.PseudoCustomCrypto;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
+import com.incountry.residence.sdk.tools.crypto.DefaultCrypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -16,6 +17,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CustomCryptoTest {
 
@@ -210,5 +213,25 @@ public class CustomCryptoTest {
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
         assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
+    }
+
+    @Test
+    public void negativeDecryptWrongVersion() throws StorageClientException, StorageCryptoException {
+        Crypto crypto = new CryptoStub(true);
+        List<Crypto> cryptoList = Arrays.asList(crypto);
+        int keyVersion = 1;
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretKeyAccessor accessor = () -> data;
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        Map.Entry<String, Integer> result = manager.encrypt(BODY_FOR_ENCRYPTION);
+        assertEquals(keyVersion, result.getValue());
+        assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion + 1));
+    }
+
+    @Test
+    public void defaultCryptoTest() {
+        DefaultCrypto crypto = new DefaultCrypto(StandardCharsets.UTF_8);
+        assertTrue(crypto.isCurrent());
     }
 }

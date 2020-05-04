@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.search;
 
 import com.google.gson.JsonArray;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
