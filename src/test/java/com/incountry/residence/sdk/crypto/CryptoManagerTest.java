@@ -17,6 +17,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CryptoManagerTest {
@@ -136,14 +137,6 @@ public class CryptoManagerTest {
     }
 
     @Test
-    public void testLowerCasingForKeys() {
-        String someKey = "FilterValue123~!@#$%^&*()_+";
-        CryptoManager cryptoManager = new CryptoManager("envId");
-        assertEquals(cryptoManager.createKeyHash(someKey), cryptoManager.createKeyHash(someKey.toLowerCase()));
-        assertEquals(cryptoManager.createKeyHash(someKey), cryptoManager.createKeyHash(someKey.toUpperCase()));
-    }
-
-    @Test
     public void testIncorrectKeyAccessor() {
         SecretKeyAccessor accessor1 = () -> null;
         SecretKeyAccessor accessor2 = () -> SecretsDataGenerator.fromPassword("");
@@ -151,5 +144,9 @@ public class CryptoManagerTest {
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor2));
     }
 
-
+    @Test
+    public void positiveGetNullSecretVersion() throws StorageClientException, StorageCryptoException {
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null);
+        assertNull(manager.getCurrentSecretVersion());
+    }
 }

@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.crypto;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -171,7 +172,7 @@ public class CryptoManager {
             String cipherText = currentCrypto.encrypt(text, secretKey);
             String cipherTextBase64 = new String(Base64.getEncoder().encode(cipherText.getBytes(CHARSET)), CHARSET);
             return new AbstractMap.SimpleEntry<>(currentCryptoVersion + ":" + cipherTextBase64, secretKey.getVersion());
-        } catch (StorageClientException | StorageCryptoException ex) {
+        } catch (StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
             LOG.error(MSG_ERR_UNSUPPORTED, ex);
@@ -186,7 +187,7 @@ public class CryptoManager {
     }
 
     private static String createHash(String stringToHash) {
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash.toLowerCase());
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
     private SecretKey getSecret(Integer version, boolean isForCustomEncryption, SecretsData secretsData) throws StorageClientException {
@@ -253,13 +254,20 @@ public class CryptoManager {
             String message = MSG_ERR_NO_SECRET + cipherText;
             throw new StorageCryptoException(message);
         }
-        switch (parts[0]) {
-            case "1":
-                return decryptV1(parts[1], decryptKeyVersion);
-            case "2":
-                return decryptV2(parts[1], decryptKeyVersion);
-            default:
-                return decryptCustom(parts[0], parts[1], decryptKeyVersion);
+        try {
+            switch (parts[0]) {
+                case "1":
+                    return decryptV1(parts[1], decryptKeyVersion);
+                case "2":
+                    return decryptV2(parts[1], decryptKeyVersion);
+                default:
+                    return decryptCustom(parts[0], parts[1], decryptKeyVersion);
+            }
+        } catch (StorageException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            LOG.error(MSG_ERR_UNSUPPORTED, ex);
+            throw new StorageClientException(MSG_ERR_UNSUPPORTED, ex);
         }
     }
 
@@ -290,7 +298,7 @@ public class CryptoManager {
         }
         try {
             return crypto.decrypt(decryptBase64(cipherText), getSecret(decryptKeyVersion, true, null));
-        } catch (StorageClientException | StorageCryptoException ex) {
+        } catch (StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
             LOG.error(MSG_ERR_UNSUPPORTED, ex);

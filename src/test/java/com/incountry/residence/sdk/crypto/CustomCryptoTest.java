@@ -169,4 +169,46 @@ public class CustomCryptoTest {
         String encryptedAnother = anotherManager.encrypt(BODY_FOR_ENCRYPTION).getKey();
         assertThrows(StorageCryptoException.class, () -> manager.decrypt(encryptedAnother, keyVersion));
     }
+
+    @Test
+    public void negativeTestWithCryptoExceptions() throws StorageClientException, StorageCryptoException {
+        Crypto crypto = new PseudoCustomCrypto(true, 2, 1, true);
+        List<Crypto> cryptoList = Arrays.asList(crypto);
+        int keyVersion = 1;
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretKeyAccessor accessor = () -> data;
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        String text = BODY_FOR_ENCRYPTION;
+        Map.Entry<String, Integer> result = manager.encrypt(text);
+        assertThrows(StorageCryptoException.class, () -> manager.encrypt(text));
+        assertThrows(StorageCryptoException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+    }
+
+    @Test
+    public void negativeTestWithUnexpectedExceptions() throws StorageClientException, StorageCryptoException {
+        Crypto crypto = new PseudoCustomCrypto(true, 2, 1, false);
+        List<Crypto> cryptoList = Arrays.asList(crypto);
+        int keyVersion = 1;
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretKeyAccessor accessor = () -> data;
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        String text = BODY_FOR_ENCRYPTION;
+        Map.Entry<String, Integer> result = manager.encrypt(text);
+        assertThrows(StorageClientException.class, () -> manager.encrypt(text));
+        assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+    }
+
+    @Test
+    public void negativeTestWithWrongCipher() throws StorageClientException, StorageCryptoException {
+        Crypto crypto = new PseudoCustomCrypto(true);
+        List<Crypto> cryptoList = Arrays.asList(crypto);
+        int keyVersion = 1;
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretKeyAccessor accessor = () -> data;
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
+    }
 }
