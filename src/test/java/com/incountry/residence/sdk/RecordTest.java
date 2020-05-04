@@ -17,8 +17,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RecordTest {
@@ -140,5 +142,28 @@ public class RecordTest {
         String str = batchRecord.toString();
         assertTrue(str.contains(String.valueOf(record1.hashCode())));
         assertTrue(str.contains(String.valueOf(record2.hashCode())));
+    }
+
+    @Test
+    public void testEquals() {
+        Record record1 = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record record2 = new Record(key, body, profileKey, rangeKey, key2, key3);
+        assertTrue(record1.equals(record1));
+        assertTrue(record1.equals(record2));
+        assertTrue(record2.equals(record1));
+        assertFalse(record1.equals(null));
+        assertFalse(record1.equals(UUID.randomUUID()));
+        record2 = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body + 1, profileKey, rangeKey, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey + 1, rangeKey, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey, rangeKey + 1, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey, rangeKey, key2 + 1, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey, rangeKey, key2, key3 + 1);
+        assertFalse(record1.equals(record2));
     }
 }
