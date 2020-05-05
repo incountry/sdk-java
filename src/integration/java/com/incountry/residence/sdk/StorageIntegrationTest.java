@@ -1,15 +1,16 @@
 package com.incountry.residence.sdk;
 
+import com.incountry.residence.sdk.crypto.testimpl.CryptoStub;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -52,16 +53,16 @@ public class StorageIntegrationTest {
 
     private String secret = "passwordpasswordpasswordpassword";
     private int version = 0;
-    private boolean isKey = false;
+    private boolean isCustom = false;
     private int currentVersion = 0;
 
     private static String loadFromEnv(String key) {
         return System.getenv(key);
     }
 
-    @BeforeEach
-    public void init() throws StorageServerException, StorageClientException {
-        SecretKey secretKey = new SecretKey(secret, version, isKey);
+
+    public StorageIntegrationTest() throws StorageServerException, StorageClientException {
+        SecretKey secretKey = new SecretKey(secret, version, isCustom);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
@@ -153,6 +154,45 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(600)
+    public void customEncryptionTest() throws StorageException {
+        SecretKey defaultSecretKey = new SecretKey(secret, version, false);
+        SecretKey customSecretKey = new SecretKey(secret, version + 1, true);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(defaultSecretKey);
+        secretKeyList.add(customSecretKey);
+        SecretsData secretsData = new SecretsData(secretKeyList, customSecretKey.getVersion());
+        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
+        List<Crypto> cryptoList = new ArrayList<>();
+        cryptoList.add(new CryptoStub(true));
+        storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
+                loadFromEnv(INTEGR_ENV_KEY_APIKEY),
+                loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
+                secretKeyAccessor,
+                cryptoList);
+        //write record with custom enc
+        String customRecordKey = writeKey + "_custom";
+        Record record = new Record(customRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);
+        storage.write(country, record);
+        //read record with custom enc
+        Record record1 = storage.read(country, customRecordKey);
+        assertEquals(record, record1);
+        //read recorded record with default encryption
+        Record record2 = storage.read(country, writeKey);
+        assertEquals(recordBody, record2.getBody());
+        //find record with custom enc
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(customRecordKey)
+                .rangeKeyEq(writeRangeKey);
+        Record record3 = storage.findOne(country, builder);
+        assertEquals(record, record3);
+        //delete record with custom enc
+        storage.delete(country, customRecordKey);
+        Record record4 = storage.read(country, customRecordKey);
+        assertNull(record4);
+    }
+
+    @Test
+    @Order(700)
     public void deleteTest() throws StorageException {
         storage.delete(country, writeKey);
         storage.delete(country, batchWriteKey);
