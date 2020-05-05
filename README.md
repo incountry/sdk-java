@@ -99,10 +99,10 @@ public class SecretKey {
     *
     * @param secret  secret/key
     * @param version secret version, should be a non-negative integer
-    * @param isKey   should be True only for user-defined encryption keys
+    * @param isForCustomEncryption   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isKey)
+    public SecretKey(String secret, int version, boolean isForCustomEncryption)
               throws StorageClientException {...}
     //...
 }
@@ -516,6 +516,161 @@ public void test() {
         // general error
     } catch (Exception e) {
         // something else happened not related to InCountry SDK
+    }
+}
+```
+
+Custom Encryption Support
+-----
+SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
+One of the overloaded versions of the method `getInstance` in class `StorageImpl` allows you to pass a list of custom encryption implementations:
+
+```java
+/**
+ * creating Storage instance
+ *
+ * @param environmentID Required to be passed in, or as environment variable INC_API_KEY
+ * @param apiKey Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+ * @param endpoint Optional. Defines API URL. Default endpoint will be used if this param is null
+ * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+ * @param cryptoList List with custom encryption functions
+ *
+ * @return instance of Storage
+ * @throws StorageClientException if configuration validation finished with errors
+ * @throws StorageCryptoException if custom encryption fails during initialization
+ * @throws StorageServerException if server connection failed or server response error
+ */
+public static Storage getInstance(String environmentID, String apiKey, String endpoint,
+                                      SecretKeyAccessor secretKeyAccessor, List<Crypto> cryptoList)
+            throws StorageClientException, StorageServerException, StorageCryptoException {...}
+```
+
+For using of custom encryption you need to implement the following interface:
+```java
+public interface Crypto {
+    /**
+     * encrypts data with secret
+     *
+     * @param text      data for encryption
+     * @param secretKey secret
+     * @return encrypted data as String
+     * @throws StorageClientException when parameters validation fails
+     * @throws StorageCryptoException when decryption fails
+     */
+    String encrypt(String text, SecretKey secretKey) 
+            throws StorageClientException, StorageCryptoException;
+
+    /**
+     * decrypts data with Secret
+     *
+     * @param cipherText encrypted data
+     * @param secretKey  secret
+     * @return decrypted data as String
+     * @throws StorageClientException when parameters validation fails
+     * @throws StorageCryptoException when decryption fails
+     */
+    String decrypt(String cipherText, SecretKey secretKey) 
+            throws StorageClientException, StorageCryptoException;
+
+    /**
+     * version of encryption algorithm as String
+     *
+     * @return version
+     */
+    String getVersion();
+
+    /**
+     * only one CustomCrypto can be current. This parameter 
+     * used only during {@link com.incountry.residence.sdk.Storage}
+     * initialisation. Changing this parameter will be ignored after initialization
+     *
+     * @return is current or not
+     */
+    boolean isCurrent();
+}
+```
+
+---
+**NOTE**
+
+You should provide a specific encryption key via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
+
+```javascript
+secrets_data = {
+  "secrets": [{
+       "secret": "<secret for custom encryption>",
+       "version": 1,
+       "isForCustomEncryption": true,
+    }
+  }],
+  "currentVersion": 1,
+}
+```
+---
+
+`version` attribute is used to differ one custom encryption from another and from the default encryption as well.
+This way SDK will be able to successfully decrypt any old data if encryption changes with time.
+
+`isCurrent` attribute allows to specify one of the custom encryption implementations to use for encryption. Only one implementation can be set as `isCurrent() == true`.
+
+If none of the configurations have `isCurrent() == true` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
+
+Here's an example of how you can set up SDK to use custom encryption (using Fernet encryption from https://github.com/l0s/fernet-java8 )
+
+```java
+/**
+ * Example of custom implementation of {@link Crypto} using Fernet algorithm
+ */
+public class FernetCrypto implements Crypto {
+
+    private boolean current;
+    private Validator<String> validator;
+
+    public FernetCrypto(boolean current) {
+        this.current = current;
+        this.validator = new StringValidator() {
+        };
+    }
+
+    @Override
+    public String encrypt(String text, SecretKey secretKey)
+            throws StorageClientException, StorageCryptoException {
+        if (isEasySecret(secretKey.getSecret())) {
+            throw new StorageClientException("Secret is too easy, use more strong password");
+        }
+        try {
+            Key key = new Key(secretKey.getSecret());
+            Token result = Token.generate(key, text);
+            return result.serialise();
+        } catch (IllegalStateException ex) {
+            throw new StorageCryptoException("Encryption error", ex);
+        }
+    }
+
+    @Override
+    public String decrypt(String cipherText, SecretKey secretKey) 
+            throws StorageCryptoException {
+        try {
+            Key key = new Key(secretKey.getSecret());
+            Token result = Token.fromString(cipherText);
+            return result.validateAndDecrypt(key, validator);
+        } catch (PayloadValidationException ex) {
+            throw new StorageCryptoException("Decryption error", ex);
+        }
+    }
+
+    @Override
+    public String getVersion() {
+        return FernetCrypto.class.getName();
+    }
+
+    @Override
+    public boolean isCurrent() {
+        return current;
+    }
+
+    private boolean isEasySecret(String secret) {
+        //some checking for simplicity
     }
 }
 ```

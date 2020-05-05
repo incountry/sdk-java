@@ -52,6 +52,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
     integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
+    testCompile group: "com.macasaet.fernet", name: "fernet-java8", version: "${fernetVersion}"
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"

@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.crypto.testimpl.CryptoStub;
+import com.incountry.residence.sdk.crypto.testimpl.FernetCrypto;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -163,7 +163,7 @@ public class StorageIntegrationTest {
         SecretsData secretsData = new SecretsData(secretKeyList, customSecretKey.getVersion());
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         List<Crypto> cryptoList = new ArrayList<>();
-        cryptoList.add(new CryptoStub(true));
+        cryptoList.add(new FernetCrypto(true));
         storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
