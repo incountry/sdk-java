@@ -67,7 +67,7 @@ public class CustomCryptoTest {
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList);
+        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false);
         assertNotNull(cryptoManager);
     }
 
@@ -78,7 +78,7 @@ public class CustomCryptoTest {
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        assertThrows(StorageCryptoException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList));
+        assertThrows(StorageCryptoException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false));
     }
 
     @Test
@@ -184,7 +184,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         assertEquals(keyVersion, result.getValue());
@@ -200,7 +200,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
 
         String wrongCipherText1 = CryptoManager.PREFIX_CUSTOM_ENCRYPTION + UUID.randomUUID() + ":123";
         assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText1, keyVersion));
@@ -210,7 +210,7 @@ public class CustomCryptoTest {
 
         Crypto anotherCrypto = new PseudoCustomCrypto(true);
         cryptoList = Arrays.asList(anotherCrypto);
-        CryptoManager anotherManager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager anotherManager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String encryptedAnother = anotherManager.encrypt(BODY_FOR_ENCRYPTION).getKey();
         assertThrows(StorageCryptoException.class, () -> manager.decrypt(encryptedAnother, keyVersion));
     }
@@ -223,7 +223,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         assertThrows(StorageCryptoException.class, () -> manager.encrypt(text));
@@ -238,7 +238,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         assertThrows(StorageClientException.class, () -> manager.encrypt(text));
@@ -253,7 +253,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
     }
 
@@ -265,7 +265,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         Map.Entry<String, Integer> result = manager.encrypt(BODY_FOR_ENCRYPTION);
         assertEquals(keyVersion, result.getValue());
         assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion + 1));

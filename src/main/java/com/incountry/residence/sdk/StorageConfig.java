@@ -14,6 +14,7 @@ public class StorageConfig {
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
     private List<Crypto> customCryptoList;
+    private boolean ignoreKeyCase;
 
     public String getEnvId() {
         return envId;
@@ -90,6 +91,21 @@ public class StorageConfig {
         return this;
     }
 
+    public boolean isIgnoreKeyCase() {
+        return ignoreKeyCase;
+    }
+
+    /**
+     * if true - all keys will be stored as lower cased. default is false
+     *
+     * @param ignoreKeyCase value
+     * @return StorageConfig
+     */
+    public StorageConfig setIgnoreKeyCase(boolean ignoreKeyCase) {
+        this.ignoreKeyCase = ignoreKeyCase;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -97,6 +113,7 @@ public class StorageConfig {
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
         newInstance.setCustomCryptoList(getCustomCryptoList());
+        newInstance.setIgnoreKeyCase(isIgnoreKeyCase());
         return newInstance;
     }
 }
