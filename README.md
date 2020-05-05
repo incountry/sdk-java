@@ -527,22 +527,42 @@ One of the overloaded versions of the method `getInstance` in class `StorageImpl
 
 ```java
 /**
- * creating Storage instance
- *
- * @param environmentID Required to be passed in, or as environment variable INC_API_KEY
- * @param apiKey Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
- * @param endpoint Optional. Defines API URL. Default endpoint will be used if this param is null
- * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
- * @param cryptoList List with custom encryption functions
- *
- * @return instance of Storage
- * @throws StorageClientException if configuration validation finished with errors
- * @throws StorageCryptoException if custom encryption fails during initialization
- * @throws StorageServerException if server connection failed or server response error
- */
-public static Storage getInstance(String environmentID, String apiKey, String endpoint,
-                                      SecretKeyAccessor secretKeyAccessor, List<Crypto> cryptoList)
-            throws StorageClientException, StorageServerException, StorageCryptoException {...}
+  * creating Storage instance
+  *
+  * @param config Configuration for Storage initialization
+  * @return instance of Storage
+  * @throws StorageClientException if configuration validation finished with errors
+  * @throws StorageCryptoException if custom encryption fails during initialization
+  * @throws StorageServerException if server connection failed or server response error
+  */
+public static Storage getInstance(StorageConfig config)
+              throws StorageClientException, StorageServerException, StorageCryptoException {...}
+```
+
+Class `StorageConfig` is a container with Storage configuration, using pattern 'builder'. Use method `setCustomCryptoList` for passing a list of custom encryption implementations:
+
+```java
+public class StorageConfig {
+    private String envId;
+    private String apiKey;
+    private String endPoint;
+    private SecretKeyAccessor secretKeyAccessor;
+    private List<Crypto> customCryptoList;
+    //...
+
+    /**
+     * for custom encryption
+     *
+     * @param customCryptoList List with custom encryption functions
+     * @return StorageConfig
+     */
+    public StorageConfig setCustomCryptoList(List<Crypto> customCryptoList) {
+        this.customCryptoList = customCryptoList;
+        return this;
+    }
+
+    //...
+}
 ```
 
 For using of custom encryption you need to implement the following interface:

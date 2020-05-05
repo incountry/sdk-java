@@ -164,11 +164,13 @@ public class StorageIntegrationTest {
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         List<Crypto> cryptoList = new ArrayList<>();
         cryptoList.add(new FernetCrypto(true));
-        storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
-                loadFromEnv(INTEGR_ENV_KEY_APIKEY),
-                loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
-                secretKeyAccessor,
-                cryptoList);
+        StorageConfig config = new StorageConfig()
+                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
+                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
+                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setCustomCryptoList(cryptoList);
+        storage = StorageImpl.getInstance(config);
         //write record with custom enc
         String customRecordKey = writeKey + "_custom";
         Record record = new Record(customRecordKey, recordBody, profileKey, writeRangeKey, key2, key3);

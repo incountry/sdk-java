@@ -4,7 +4,6 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -63,7 +62,7 @@ public class StorageImpl implements Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance() throws StorageClientException, StorageServerException {
-        return getInstance(null);
+        return getInstance((SecretKeyAccessor) null);
     }
 
     /**
@@ -109,35 +108,30 @@ public class StorageImpl implements Storage {
     /**
      * creating Storage instance
      *
-     * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
-     * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-     * @param endpoint          Optional. Defines API URL. Default endpoint will be used if this param is null
-     * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
-     * @param cryptoList        List with custom encryption functions
+     * @param config Configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
      * @throws StorageCryptoException if custom encryption fails during initialization
      * @throws StorageServerException if server connection failed or server response error
      */
-    public static Storage getInstance(String environmentID, String apiKey, String endpoint,
-                                      SecretKeyAccessor secretKeyAccessor, List<Crypto> cryptoList)
+    public static Storage getInstance(StorageConfig config)
             throws StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={}, cryptoList={})",
-                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
-                    apiKey != null ? LOG_SECURE2 + apiKey.hashCode() + "]]" : null,
-                    endpoint,
-                    secretKeyAccessor != null ? LOG_SECURE : null,
-                    cryptoList
+                    config.getEnvId() != null ? LOG_SECURE2 + config.getEnvId().hashCode() + "]]" : null,
+                    config.getApiKey() != null ? LOG_SECURE2 + config.getApiKey().hashCode() + "]]" : null,
+                    config.getEndPoint(),
+                    config.getSecretKeyAccessor() != null ? LOG_SECURE : null,
+                    config.getCustomCryptoList()
             );
         }
-        StorageImpl instance = getInstanceWithoutCrypto(environmentID, apiKey, endpoint, secretKeyAccessor);
-        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, cryptoList);
+        StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomCryptoList());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
     public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao
-            dao, List<Crypto> cryptoList) throws StorageClientException, StorageCryptoException {
+            dao) throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
@@ -152,7 +146,7 @@ public class StorageImpl implements Storage {
         }
         StorageImpl instance = new StorageImpl();
         instance.isEncrypted = secretKeyAccessor != null;
-        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID, cryptoList);
+        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }

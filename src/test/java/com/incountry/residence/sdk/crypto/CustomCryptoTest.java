@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.crypto;
 
 import com.incountry.residence.sdk.Storage;
+import com.incountry.residence.sdk.StorageConfig;
 import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.crypto.testimpl.CryptoStub;
 import com.incountry.residence.sdk.crypto.testimpl.CryptoWithManagingVersion;
@@ -45,11 +46,17 @@ public class CustomCryptoTest {
         SecretKey key2 = new SecretKey(CUSTOM_PASSWORD_2, 2, true);
         SecretsData data = new SecretsData(Arrays.asList(key1, key2), 2);
         SecretKeyAccessor accessor = () -> data;
-        Storage storage = StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList);
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(accessor)
+                .setCustomCryptoList(cryptoList);
+        Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
-        storage = StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, null, null);
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomCryptoList(null));
         assertNotNull(storage);
-        storage = StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, null, new ArrayList<>());
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomCryptoList(new ArrayList<>()));
         assertNotNull(storage);
     }
 
@@ -80,10 +87,15 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList1));
-
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(accessor)
+                .setCustomCryptoList(cryptoList1);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         List<Crypto> cryptoList2 = Arrays.asList(new CryptoWithManagingVersion(""));
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList2));
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomCryptoList(cryptoList2)));
     }
 
     @Test
@@ -92,13 +104,25 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList));
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(accessor)
+                .setCustomCryptoList(cryptoList);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
     @Test
     public void negativeTestWithoutEncWithCustomCrypto() {
         List<Crypto> cryptoList = Arrays.asList(new PseudoCustomCrypto(true));
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, null, cryptoList));
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(null)
+                .setCustomCryptoList(cryptoList);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
     @Test
@@ -110,7 +134,13 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList));
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(accessor)
+                .setCustomCryptoList(cryptoList);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
     @Test
@@ -121,7 +151,13 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList));
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(accessor)
+                .setCustomCryptoList(cryptoList);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
     @Test
@@ -131,7 +167,13 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENV_ID, API_KEY, FAKE_ENDPOINT, accessor, cryptoList));
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(accessor)
+                .setCustomCryptoList(cryptoList);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
     @Test

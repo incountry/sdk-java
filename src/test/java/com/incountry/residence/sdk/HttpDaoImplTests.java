@@ -47,13 +47,13 @@ public class HttpDaoImplTests {
     private int currentVersion = 0;
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
-    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException, StorageCryptoException {
+    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
         Storage storage;
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         if (encrypt) {
-            storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao, null);
+            storage = StorageImpl.getInstance("envId", secretKeyAccessor, dao);
         } else {
-            storage = StorageImpl.getInstance("envId", null, dao, null);
+            storage = StorageImpl.getInstance("envId", null, dao);
         }
         return storage;
     }
