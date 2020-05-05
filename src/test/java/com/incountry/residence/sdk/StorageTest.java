@@ -339,6 +339,8 @@ public class StorageTest {
         SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor, null));
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, secretKeyAccessor, null, null));
     }
 
     @Test
