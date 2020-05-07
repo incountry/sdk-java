@@ -187,4 +187,14 @@ public class CryptoManagerTest {
         };
         assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID"));
     }
+
+    @Test
+    public void negativeVersionTest() throws StorageClientException, StorageCryptoException {
+        SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
+        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null);
+        String text = "Some secret text";
+        Map.Entry<String, Integer> encrypted = manager.encrypt(text);
+        String decrypted = manager.decrypt(encrypted.getKey(), -1);
+        assertEquals(text, decrypted);
+    }
 }

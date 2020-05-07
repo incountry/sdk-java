@@ -38,6 +38,7 @@ public class CryptoManager {
     private static final String MSG_ERROR_INCORRECT_CUSTOM_CRYPTO = "Custom crypto with version %s is invalid, test encryption is incorrect";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
     private static final String MSG_ERR_NO_CUSTOM_KEY = "There is no any SecretKey for custom encryption";
+    private static final String MSG_WARN_NEGATIVE_VERSION = "Record key version is negative, try to use SecretKey with version = 0";
 
     private static final String TEST_ENCRYPTION_TEXT = "This is test message for enc/dec_!@#$%^&*()_+|?.,~//\\=-' "
             + UUID.randomUUID().toString();
@@ -190,16 +191,21 @@ public class CryptoManager {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private SecretKey getSecret(Integer version, boolean isForCustomEncryption, SecretsData secretsData) throws StorageClientException {
+    private SecretKey getSecret(final Integer version, boolean isForCustomEncryption, SecretsData secretsData) throws StorageClientException {
         if (secretsData == null) {
             secretsData = getSecretsDataOrException();
         }
+        Integer usedVersion = version;
         if (version == null) {
-            version = secretsData.getCurrentVersion();
+            usedVersion = secretsData.getCurrentVersion();
+        }
+        if (usedVersion < 0) {
+            LOG.warn(MSG_WARN_NEGATIVE_VERSION);
+            usedVersion = 0;
         }
         SecretKey secret = null;
         for (SecretKey item : secretsData.getSecrets()) {
-            if (item.getVersion() == version && !Boolean.logicalXor(isForCustomEncryption, item.isForCustomEncryption())) {
+            if (item.getVersion() == usedVersion && !Boolean.logicalXor(isForCustomEncryption, item.isForCustomEncryption())) {
                 secret = item;
                 break;
             }
