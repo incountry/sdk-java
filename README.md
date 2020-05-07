@@ -613,9 +613,26 @@ public interface Crypto {
 ---
 **NOTE**
 
-You should provide a specific encryption key via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
-This secret should use flag `isForCustomEncryption` instead of the regular `isKey`.
+You should provide a specific encryption key in `SecretKey` via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
+This secret should use flag `isForCustomEncryption` instead of the regular `isKey`:
+```java
+public class SecretKey {
+    /**
+     * @param secret secret/key
+     * @param version secret version, should be a non-negative integer
+     * @param isKey should be True only for user-defined encryption keys
+     * @param isForCustomEncryption should be True for using this key in custom encryption 
+     *                              implementations. Only one parameter from {@link #isKey} 
+     *                              and {@link #isForCustomEncryption}) can be True at the moment
+     * @throws StorageClientException when parameter validation fails
+     */
+    public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
+              throws StorageClientException {...}
+    //...
+}
+```
 
+Setting flag `isForCustomEncryption` from `SecretsData` in JSON format:
 ```javascript
 secrets_data = {
   "secrets": [{
