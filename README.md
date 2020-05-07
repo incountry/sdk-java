@@ -99,10 +99,10 @@ public class SecretKey {
     *
     * @param secret  secret/key
     * @param version secret version, should be a non-negative integer
-    * @param isForCustomEncryption   should be True only for user-defined encryption keys
+    * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isForCustomEncryption)
+    public SecretKey(String secret, int version, boolean isKey)
               throws StorageClientException {...}
     //...
 }
@@ -614,6 +614,7 @@ public interface Crypto {
 **NOTE**
 
 You should provide a specific encryption key via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
+This secret should use flag `isForCustomEncryption` instead of the regular `isKey`.
 
 ```javascript
 secrets_data = {

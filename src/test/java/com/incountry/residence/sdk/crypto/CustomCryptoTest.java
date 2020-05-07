@@ -42,8 +42,8 @@ public class CustomCryptoTest {
     @Test
     public void positiveStorageInitTest() throws StorageClientException, StorageServerException, StorageCryptoException {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
-        SecretKey key2 = new SecretKey(CUSTOM_PASSWORD_2, 2, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
+        SecretKey key2 = new SecretKey(CUSTOM_PASSWORD_2, 2, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1, key2), 2);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
@@ -64,7 +64,7 @@ public class CustomCryptoTest {
     public void customEncryptionTestPositive() throws StorageClientException, StorageCryptoException {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true));
         int keyVersion = 1;
-        SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList);
@@ -75,7 +75,7 @@ public class CustomCryptoTest {
     public void customEncryptionTestNegative() throws StorageClientException {
         List<Crypto> cryptoList = Arrays.asList(new InvalidCrypto(true));
         int keyVersion = 1;
-        SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         assertThrows(StorageCryptoException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList));
@@ -84,7 +84,7 @@ public class CustomCryptoTest {
     @Test
     public void negativeNullCryptoVersionTest() throws StorageClientException {
         List<Crypto> cryptoList1 = Arrays.asList(new CryptoWithManagingVersion(null));
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
@@ -101,7 +101,7 @@ public class CustomCryptoTest {
     @Test
     public void negativeNullCryptoTest() throws StorageClientException {
         List<Crypto> cryptoList = Arrays.asList(null, new PseudoCustomCrypto(true));
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
@@ -131,7 +131,7 @@ public class CustomCryptoTest {
         Crypto crypto1 = new CryptoWithManagingVersion(cryptoVersion, true);
         Crypto crypto2 = new CryptoWithManagingVersion(cryptoVersion, false);
         List<Crypto> cryptoList = Arrays.asList(crypto1, crypto2);
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
@@ -148,7 +148,7 @@ public class CustomCryptoTest {
         Crypto crypto1 = new CryptoWithManagingVersion("first", true);
         Crypto crypto2 = new CryptoStub(true);
         List<Crypto> cryptoList = Arrays.asList(crypto1, crypto2);
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
@@ -164,7 +164,7 @@ public class CustomCryptoTest {
     public void negativeTestCustomCryptoWithoutKey() throws StorageClientException {
         Crypto crypto = new CryptoStub(true);
         List<Crypto> cryptoList = Arrays.asList(crypto);
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, false);
         SecretsData data = new SecretsData(Arrays.asList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
@@ -181,7 +181,7 @@ public class CustomCryptoTest {
         Crypto crypto = new CryptoStub(true);
         List<Crypto> cryptoList = Arrays.asList(crypto);
         int keyVersion = 1;
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
@@ -197,7 +197,7 @@ public class CustomCryptoTest {
         Crypto crypto = new CryptoStub(true);
         List<Crypto> cryptoList = Arrays.asList(crypto);
         int keyVersion = 1;
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
@@ -220,7 +220,7 @@ public class CustomCryptoTest {
         Crypto crypto = new PseudoCustomCrypto(true, 2, 1, true);
         List<Crypto> cryptoList = Arrays.asList(crypto);
         int keyVersion = 1;
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
@@ -235,7 +235,7 @@ public class CustomCryptoTest {
         Crypto crypto = new PseudoCustomCrypto(true, 2, 1, false);
         List<Crypto> cryptoList = Arrays.asList(crypto);
         int keyVersion = 1;
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
@@ -250,7 +250,7 @@ public class CustomCryptoTest {
         Crypto crypto = new PseudoCustomCrypto(true);
         List<Crypto> cryptoList = Arrays.asList(crypto);
         int keyVersion = 1;
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
@@ -262,7 +262,7 @@ public class CustomCryptoTest {
         Crypto crypto = new CryptoStub(true);
         List<Crypto> cryptoList = Arrays.asList(crypto);
         int keyVersion = 1;
-        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, true);
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList);
