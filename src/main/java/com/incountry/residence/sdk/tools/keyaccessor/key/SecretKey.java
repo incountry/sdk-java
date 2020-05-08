@@ -13,8 +13,8 @@ public class SecretKey {
 
     private static final String MSG_ERR_VERSION = "Version must be >= 0";
     private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
-    private static final String MSG_ERR_OPTION = "Only one parameter from list [isKey, isForCustomEncryption] can be True at the moment";
-    private static final String MSG_ERR_KEY_LEN = "Wrong key length for custom encryption. Should be "
+    private static final String MSG_ERR_OPTION = "SecretKey can have either 'isKey' or 'isForCustomEncryption' set to True, not both";
+    private static final String MSG_ERR_KEY_LEN = "Wrong key length for default encryption with option 'isKey==true'. Should be "
             + KEY_LENGTH + " characters ‘utf8’ encoded string";
 
     private final String secret;
