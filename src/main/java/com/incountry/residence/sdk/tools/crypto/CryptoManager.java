@@ -62,9 +62,9 @@ public class CryptoManager {
     }
 
     public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList)
-            throws StorageClientException, StorageCryptoException {
+            throws StorageClientException {
         initFields(keyAccessor, envId);
-        fillCustomEncryptionMap(customEncryptionList);
+        initCustomEncryptionMap(customEncryptionList);
         if (!usePTEncryption) {
             getSecret(null, currentCrypto != null);
         }
@@ -76,7 +76,7 @@ public class CryptoManager {
         this.envId = envId;
     }
 
-    private void fillCustomEncryptionMap(List<Crypto> cryptoList) throws StorageClientException, StorageCryptoException {
+    private void initCustomEncryptionMap(List<Crypto> cryptoList) throws StorageClientException {
         if (usePTEncryption && (cryptoList != null && !cryptoList.isEmpty())) {
             LOG.error(MSG_ERR_ENCRYPTION_OFF);
             throw new StorageClientException(MSG_ERR_ENCRYPTION_OFF);

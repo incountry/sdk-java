@@ -536,10 +536,10 @@ One of the overloaded versions of the method `getInstance` in class `StorageImpl
   * @throws StorageServerException if server connection failed or server response error
   */
 public static Storage getInstance(StorageConfig config)
-              throws StorageClientException, StorageServerException, StorageCryptoException {...}
+              throws StorageClientException, StorageServerException {...}
 ```
 
-Class `StorageConfig` is a container with Storage configuration, using pattern 'builder'. Use method `setCustomCryptoList` for passing a list of custom encryption implementations:
+Class `StorageConfig` is a container with Storage configuration, using pattern 'builder'. Use method `setCustomEncryptionList` for passing a list of custom encryption implementations:
 
 ```java
 public class StorageConfig {

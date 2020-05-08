@@ -32,7 +32,7 @@ public class CryptoUtils {
     }
 
     public static void validateCrypto(Crypto crypto, SecretsData secretsData, Map<String, Crypto> result, Charset charset, Crypto currentCrypto)
-            throws StorageClientException, StorageCryptoException {
+            throws StorageClientException {
         if (crypto == null) {
             LOG.error(MSG_ERR_NULL_CRYPTO);
             throw new StorageClientException(MSG_ERR_NULL_CRYPTO);
@@ -54,19 +54,25 @@ public class CryptoUtils {
         testEncryption(crypto, secretsData);
     }
 
-    private static void testEncryption(Crypto crypto, SecretsData secretsData) throws StorageCryptoException, StorageClientException {
+    private static void testEncryption(Crypto crypto, SecretsData secretsData) throws StorageClientException {
         Optional<SecretKey> secretKeyOptional = secretsData.getSecrets().stream().filter(SecretKey::isForCustomEncryption).findFirst();
         if (!secretKeyOptional.isPresent()) {
             LOG.error(MSG_ERR_NO_CUSTOM_KEY);
             throw new StorageClientException(MSG_ERR_NO_CUSTOM_KEY);
         }
         SecretKey key = secretKeyOptional.get();
-        String encryptedText = crypto.encrypt(TEST_ENCRYPTION_TEXT, key);
-        String decryptedText = crypto.decrypt(encryptedText, key);
-        if (!TEST_ENCRYPTION_TEXT.equals(decryptedText)) {
+        try {
+            String encryptedText = crypto.encrypt(TEST_ENCRYPTION_TEXT, key);
+            String decryptedText = crypto.decrypt(encryptedText, key);
+            if (!TEST_ENCRYPTION_TEXT.equals(decryptedText)) {
+                String message = String.format(MSG_ERROR_INCORRECT_CUSTOM_CRYPTO, crypto.getVersion());
+                LOG.error(message);
+                throw new StorageClientException(message);
+            }
+        } catch (StorageCryptoException ex) {
             String message = String.format(MSG_ERROR_INCORRECT_CUSTOM_CRYPTO, crypto.getVersion());
-            LOG.error(message);
-            throw new StorageCryptoException(message);
+            LOG.error(message, ex);
+            throw new StorageClientException(message, ex);
         }
     }
 

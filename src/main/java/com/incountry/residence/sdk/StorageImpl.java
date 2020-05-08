@@ -37,6 +37,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
+    private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String LOG_SECURE = "[SECURE]";
@@ -111,11 +112,10 @@ public class StorageImpl implements Storage {
      * @param config Configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageCryptoException if custom encryption fails during initialization
      * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(StorageConfig config)
-            throws StorageClientException, StorageServerException, StorageCryptoException {
+            throws StorageClientException, StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={}, cryptoList={})",
                     config.getEnvId() != null ? LOG_SECURE2 + config.getEnvId().hashCode() + "]]" : null,
@@ -124,6 +124,10 @@ public class StorageImpl implements Storage {
                     config.getSecretKeyAccessor() != null ? LOG_SECURE : null,
                     config.getCustomEncryptionList()
             );
+        }
+        if (config.getSecretKeyAccessor() == null && config.getCustomEncryptionList() != null) {
+            LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
+            throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
         }
         StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
         instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionList());

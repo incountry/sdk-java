@@ -4,17 +4,17 @@ import com.incountry.residence.sdk.tools.crypto.DefaultCrypto;
 
 import java.nio.charset.StandardCharsets;
 
-public class CryptoWithManagingVersion extends DefaultCrypto {
+public class DefaultCryptoWithCustomVersion extends DefaultCrypto {
 
     private final String version;
     private boolean current;
 
-    public CryptoWithManagingVersion(String version) {
+    public DefaultCryptoWithCustomVersion(String version) {
         super(StandardCharsets.UTF_8);
         this.version = version;
     }
 
-    public CryptoWithManagingVersion(String version, boolean current) {
+    public DefaultCryptoWithCustomVersion(String version, boolean current) {
         this(version);
         this.current = current;
     }
