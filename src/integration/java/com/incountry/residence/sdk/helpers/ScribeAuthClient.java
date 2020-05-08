@@ -13,22 +13,16 @@ import org.apache.logging.log4j.Logger;
 import java.util.AbstractMap;
 import java.util.Map;
 
+
 public class ScribeAuthClient implements AuthClient {
 
     private static final Logger LOG = LogManager.getLogger(ScribeAuthClient.class);
 
     private static final String MSG_ERR_TOKEN = "Exception while getting token";
     private static final String MSG_ERR_INVALID_TOKEN = "Authorization server returned expired token [token=%s, expireTime=%s]";
-    private String authUrl = System.getenv("INT_INC_AUTH_ENDPOINT");
-    private String clientId = System.getenv("INT_INC_CLIENT_ID");
-    private String secret = System.getenv("INT_INC_CLIENT_SECRET");
-
-    public ScribeAuthClient() {
-    }
-
-    public ScribeAuthClient(String login, String secret, String authUrl) {
-        setCredentials(login, secret, authUrl);
-    }
+    private String authUrl;
+    private String clientId;
+    private String secret;
 
     public void setCredentials(String clientId, String secret, String authUrl) {
         this.clientId = clientId;
@@ -71,11 +65,5 @@ public class ScribeAuthClient implements AuthClient {
         protected String getAuthorizationBaseUrl() {
             return authUrl;
         }
-    }
-
-    public static void main(String... args) throws StorageServerException {
-        ScribeAuthClient client = new ScribeAuthClient();
-        Object o = client.newToken();
-        LOG.debug(o);
     }
 }

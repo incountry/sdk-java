@@ -13,7 +13,7 @@ import com.incountry.residence.sdk.tools.dao.PoP;
 import com.incountry.residence.sdk.tools.http.AuthClient;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
-import com.incountry.residence.sdk.tools.http.impl.HttpAuthClient;
+import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -62,7 +62,7 @@ public class HttpDaoImpl implements Dao {
     public HttpDaoImpl(String environmentId, String endPoint) throws StorageServerException {
         this(endPoint,
                 ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET)),
-                (AuthClient) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAuthClient()));
+                (AuthClient) ProxyUtils.createLoggingProxyForPublicMethods(new DefaultAuthClient()));
     }
 
     public HttpDaoImpl(String endPoint, HttpAgent agent, AuthClient authClient) throws StorageServerException {

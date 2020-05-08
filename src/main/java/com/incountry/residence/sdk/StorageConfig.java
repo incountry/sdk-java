@@ -15,6 +15,9 @@ public class StorageConfig {
     private SecretKeyAccessor secretKeyAccessor;
     private List<Crypto> customCryptoList;
     private boolean ignoreKeyCase;
+    private String clientId;
+    private String clientSecret;
+    private String authEndPoint;
 
     public String getEnvId() {
         return envId;
@@ -106,6 +109,54 @@ public class StorageConfig {
         return this;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
+    /**
+     * Set login for authorisation.
+     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     *
+     * @param clientId login
+     * @return StorageConfig
+     */
+    public StorageConfig setClientId(String clientId) {
+        this.clientId = clientId;
+        return this;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    /**
+     * Set user secret for authorisation.
+     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     *
+     * @param clientSecret password
+     * @return StorageConfig
+     */
+    public StorageConfig setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+        return this;
+    }
+
+    public String getAuthEndPoint() {
+        return authEndPoint;
+    }
+
+    /**
+     * Set custom authorization server URL. If null - default authorization server will be used.
+     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     *
+     * @param authEndPoint custom authorization server URL
+     * @return StorageConfig
+     */
+    public StorageConfig setAuthEndPoint(String authEndPoint) {
+        this.authEndPoint = authEndPoint;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -114,6 +165,9 @@ public class StorageConfig {
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
         newInstance.setCustomCryptoList(getCustomCryptoList());
         newInstance.setIgnoreKeyCase(isIgnoreKeyCase());
+        newInstance.setClientId(getClientId());
+        newInstance.setClientSecret(getClientSecret());
+        newInstance.setAuthEndPoint(getAuthEndPoint());
         return newInstance;
     }
 }

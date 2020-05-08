@@ -30,9 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageIntegrationTest {
 
-    private static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
-    private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
-    private static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
+    public static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
+    public static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
+    public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
     private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
 
     private static final String TEMP = new StringBuilder("-javasdk-")
@@ -60,7 +60,7 @@ public class StorageIntegrationTest {
 
     private String secret = "123456789_123456789_1234567890Ab";
 
-    private static String loadFromEnv(String key) {
+    public static String loadFromEnv(String key) {
         return System.getenv(key);
     }
 
