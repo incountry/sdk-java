@@ -291,9 +291,9 @@ public class JsonUtils {
         }
         Map<String, PoP> result = new HashMap<>();
         TransferPopList.validatePopList(popList);
-        for (TransferPop one : popList.countries) {
-            if (one.direct) {
-                result.put(one.getId(), new PoP(uriStart + one.getId() + uriEnd, one.name));
+        for (TransferPop transferPop : popList.countries) {
+            if (transferPop.direct) {
+                result.put(transferPop.getId(), new PoP(uriStart + transferPop.getId() + uriEnd, transferPop.name));
             }
         }
         return result;

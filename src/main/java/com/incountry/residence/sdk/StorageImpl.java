@@ -237,8 +237,8 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NULL_BATCH);
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
-            for (Record one : records) {
-                checkParameters(country, one.getKey());
+            for (Record record : records) {
+                checkParameters(country, record.getKey());
             }
             dao.createBatch(records, country, cryptoManager);
         }

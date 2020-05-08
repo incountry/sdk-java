@@ -95,8 +95,8 @@ public class CryptoManager {
         Map<String, Crypto> result = new HashMap<>();
         if (cryptoList != null && !cryptoList.isEmpty()) {
             SecretsData secretsData = keyAccessor.getSecretsData();
-            for (Crypto one : cryptoList) {
-                validateAndAddOneCrypto(one, secretsData, result);
+            for (Crypto crypto : cryptoList) {
+                validateAndAddOneCrypto(crypto, secretsData, result);
             }
         }
         this.cryptoMap = result;
