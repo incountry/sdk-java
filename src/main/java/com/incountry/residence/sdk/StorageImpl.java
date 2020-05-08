@@ -139,11 +139,8 @@ public class StorageImpl implements Storage {
                     dao != null ? LOG_SECURE : null
             );
         }
-        checkEnvironment(environmentID);
-        if (dao == null) {
-            LOG.error(MSG_ERR_PASS_DAO);
-            throw new StorageClientException(MSG_ERR_PASS_DAO);
-        }
+        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
+        checkNotNull(dao, MSG_ERR_PASS_DAO);
         StorageImpl instance = new StorageImpl();
         instance.isEncrypted = secretKeyAccessor != null;
         instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
@@ -153,33 +150,25 @@ public class StorageImpl implements Storage {
 
     private static StorageImpl getInstanceWithoutCrypto(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException, StorageServerException {
-        checkEnvironment(environmentID);
-        if (apiKey == null) {
-            LOG.error(MSG_ERR_PASS_API_KEY);
-            throw new StorageClientException(MSG_ERR_PASS_API_KEY);
-        }
+        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
+        checkNotNull(apiKey, MSG_ERR_PASS_API_KEY);
         StorageImpl instance = new StorageImpl();
         instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
         instance.isEncrypted = secretKeyAccessor != null;
         return instance;
     }
 
-    private static void checkEnvironment(String environmentID) throws StorageClientException {
-        if (environmentID == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
-            throw new StorageClientException(MSG_ERR_PASS_ENV);
+    private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {
+        if (parameter == null) {
+            LOG.error(nullErrorMessage);
+            throw new StorageClientException(nullErrorMessage);
         }
     }
 
+
     private void checkParameters(String country, String key) throws StorageClientException {
-        if (country == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
-            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
-        }
-        if (key == null) {
-            LOG.error(MSG_ERR_NULL_KEY);
-            throw new StorageClientException(MSG_ERR_NULL_KEY);
-        }
+        checkNotNull(country, MSG_ERR_PASS_ENV);
+        checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
     public Record write(String country, Record record) throws
@@ -189,10 +178,7 @@ public class StorageImpl implements Storage {
                     country,
                     record != null ? LOG_SECURE2 + record.hashCode() + "]]" : null);
         }
-        if (record == null) {
-            LOG.error(MSG_ERR_NULL_RECORD);
-            throw new StorageClientException(MSG_ERR_NULL_RECORD);
-        }
+        checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getKey());
         dao.createRecord(country, record, cryptoManager);
         return record;
@@ -275,14 +261,8 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("find params (country={} , builder={})", country, builder);
         }
-        if (country == null) {
-            LOG.error(MSG_ERR_NULL_COUNTRY);
-            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
-        }
-        if (builder == null) {
-            LOG.error(MSG_ERR_NULL_FILTERS);
-            throw new StorageClientException(MSG_ERR_NULL_FILTERS);
-        }
+        checkNotNull(country, MSG_ERR_NULL_COUNTRY);
+        checkNotNull(builder, MSG_ERR_NULL_FILTERS);
         BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
