@@ -6,6 +6,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.http.FakeAuthClient;
 import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -13,6 +14,7 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.http.AuthClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -50,6 +52,7 @@ public class StorageTest {
 
     private String environmentId = "envId";
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
+    private AuthClient authClient = new FakeAuthClient(300L);
 
     @BeforeEach
     public void initializeAccessorAndCrypto() throws StorageClientException {
@@ -66,7 +69,7 @@ public class StorageTest {
         Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
         String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent(Arrays.asList(content, "OK"))));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent(Arrays.asList(content, "OK")), authClient));
         BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, cryptoManager);
 
         int migratedRecords = batchRecord.getCount();
@@ -79,9 +82,9 @@ public class StorageTest {
 
     @Test
     public void migrateNegativeTest() throws StorageException {
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent(""), authClient));
         assertThrows(StorageClientException.class, () -> storage.migrate("us", 0));
-        Storage storage2 = StorageImpl.getInstance(environmentId, null, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent("")));
+        Storage storage2 = StorageImpl.getInstance(environmentId, null, new HttpDaoImpl(fakeEndpoint, new FakeHttpAgent(""), authClient));
         assertThrows(StorageClientException.class, () -> storage2.migrate("us", 1));
     }
 
@@ -93,7 +96,7 @@ public class StorageTest {
         Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
         BatchRecord batchRecord = storage.find(country, builder);
 
         assertEquals(1, batchRecord.getCount());
@@ -106,7 +109,7 @@ public class StorageTest {
     public void testCustomEndpoint() throws StorageException, IOException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent, authClient));
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         storage.write(country, record);
         String expectedURL = endpoint + "/v2/storage/records/" + country;
@@ -118,7 +121,7 @@ public class StorageTest {
     public void testNegativeWriteNullKey() throws StorageException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent, authClient));
         Record record = new Record(null, body, profileKey, rangeKey, key2, key3);
         assertThrows(StorageClientException.class, () -> storage.write(country, record));
     }
@@ -127,7 +130,7 @@ public class StorageTest {
     public void testNegativeWriteNullRecord() throws StorageException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(endpoint, agent, authClient));
         assertThrows(StorageClientException.class, () -> storage.write(country, null));
     }
 
@@ -140,7 +143,7 @@ public class StorageTest {
         Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
         BatchRecord batchRecord = storage.find(country, builder);
         String callBody = agent.getCallBody();
         String expected = "{\"filter\":{\"profile_key\":[\"" + cryptoManager.createKeyHash(profileKey) + "\"]},\"options\":{\"limit\":1,\"offset\":0}}";
@@ -165,7 +168,7 @@ public class StorageTest {
         Record rec = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
 
         Record foundRecord = storage.findOne(country, builder);
 
@@ -201,7 +204,7 @@ public class StorageTest {
         String encryptedRec = JsonUtils.toJsonString(recEnc, cryptoManager);
 
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
 
         BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getErrors().size());
@@ -222,7 +225,7 @@ public class StorageTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq("SomeValue");
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
         storage.find(country, builder);
         String body = agent.getCallBody();
         JsonObject json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
@@ -287,7 +290,7 @@ public class StorageTest {
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
 
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
 
         BatchRecord batchRecord = storage.find(country, builder);
         assertEquals(1, batchRecord.getErrors().size());
@@ -310,7 +313,7 @@ public class StorageTest {
                 .profileKeyEq(profileKey);
         String string = null;
         FakeHttpAgent agent = new FakeHttpAgent(string);
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
         BatchRecord findResult = storage.find(country, builder);
         assertEquals(0, findResult.getRecords().size());
     }
@@ -319,7 +322,7 @@ public class StorageTest {
     public void testReadNotFound() throws StorageException {
         String string = null;
         FakeHttpAgent agent = new FakeHttpAgent(string);
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
         Record readRecord = storage.read(country, key);
         assertNull(readRecord);
     }
@@ -329,7 +332,7 @@ public class StorageTest {
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
         String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
-        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent, authClient));
         assertThrows(StorageClientException.class, () -> storage.find(null, null));
         assertThrows(StorageClientException.class, () -> storage.find(country, null));
     }
@@ -348,7 +351,7 @@ public class StorageTest {
     @Test
     public void testErrorReadInsufficientArgs() throws StorageServerException, StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = new HttpDaoImpl(fakeEndpoint, agent);
+        Dao dao = new HttpDaoImpl(fakeEndpoint, agent, authClient);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
         assertThrows(StorageClientException.class, () -> storage.read(null, null));
     }
@@ -356,7 +359,7 @@ public class StorageTest {
     @Test
     public void testErrorDeleteInsufficientArgs() throws StorageClientException, StorageServerException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = new HttpDaoImpl(fakeEndpoint, agent);
+        Dao dao = new HttpDaoImpl(fakeEndpoint, agent, authClient);
         assertNotNull(dao);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
         assertThrows(StorageClientException.class, () -> storage.delete(null, null));
@@ -365,7 +368,7 @@ public class StorageTest {
     @Test
     public void testErrorMigrateWhenEncryptionOff() throws StorageException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Dao dao = new HttpDaoImpl(fakeEndpoint, agent);
+        Dao dao = new HttpDaoImpl(fakeEndpoint, agent, authClient);
         assertNotNull(dao);
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, dao);
         assertThrows(StorageClientException.class, () -> storage.migrate(null, 100));

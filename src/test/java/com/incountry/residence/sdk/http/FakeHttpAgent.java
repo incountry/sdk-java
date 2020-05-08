@@ -8,13 +8,13 @@ import java.util.Map;
 
 public class FakeHttpAgent implements HttpAgent {
 
-
     private String callEndpoint;
     private String callMethod;
     private String callBody;
     private String response;
     private List<String> responseList;
     private Map<Integer, ApiResponse> codeMap;
+    private String token;
 
     public FakeHttpAgent(String response) {
         this.response = response;
@@ -25,12 +25,12 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap) {
+    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, String token) {
         this.callEndpoint = endpoint;
         this.callMethod = method;
         this.callBody = body;
         this.codeMap = codeMap;
-
+        this.token = token;
         return getResponse();
     }
 
@@ -64,5 +64,9 @@ public class FakeHttpAgent implements HttpAgent {
 
     public void setResponse(String response) {
         this.response = response;
+    }
+
+    public String getToken() {
+        return token;
     }
 }

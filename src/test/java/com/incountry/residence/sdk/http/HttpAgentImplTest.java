@@ -15,25 +15,26 @@ public class HttpAgentImplTest {
 
     @Test
     public void testNullEndpointException() {
-        HttpAgent agent = new HttpAgentImpl("apiKey", "envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>()));
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null));
     }
 
     @Test
     public void testNullApiKeyException() {
-        HttpAgent agent = new HttpAgentImpl(null, "envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>()));
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null));
     }
 
     @Test
     public void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl("apiKey", null, StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>()));
+        HttpAgent agent = new HttpAgentImpl(null, StandardCharsets.UTF_8);
+        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null));
     }
 
     @Test
     public void testFakeEndpointException() {
-        HttpAgent agent = new HttpAgentImpl("apiKey", "envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost", "GET", "someBody", new HashMap<>()));
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost",
+                "GET", "someBody", new HashMap<>(), null));
     }
 }

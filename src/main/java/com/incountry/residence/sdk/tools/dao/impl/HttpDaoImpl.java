@@ -10,8 +10,10 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.PoP;
+import com.incountry.residence.sdk.tools.http.AuthClient;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
+import com.incountry.residence.sdk.tools.http.impl.HttpAuthClient;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -43,22 +45,33 @@ public class HttpDaoImpl implements Dao {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final Map<String, PoP> popMap = new HashMap<>();
-    private HttpAgent agent;
+
+    private HttpAgent httpAgent;
+    private AuthClient authClient;
     private String endPoint = DEFAULT_ENDPOINT;
     private boolean defaultEndpoint = true;
     private long lastLoadedTime;
+    private volatile String token;
+    private volatile Long tokenExpire;
 
     public HttpDaoImpl(String apiKey, String environmentId, String endPoint) throws StorageServerException {
-        this(endPoint, ProxyUtils.createLoggingProxyForPublicMethods(
-                new HttpAgentImpl(apiKey, environmentId, CHARSET)));
+        this(endPoint, (HttpAgent) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET)), null);
+        this.token = apiKey;
     }
 
-    public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {
+    public HttpDaoImpl(String environmentId, String endPoint) throws StorageServerException {
+        this(endPoint,
+                ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET)),
+                (AuthClient) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAuthClient()));
+    }
+
+    public HttpDaoImpl(String endPoint, HttpAgent agent, AuthClient authClient) throws StorageServerException {
         if (endPoint != null && !endPoint.equals(DEFAULT_ENDPOINT)) {
             this.endPoint = endPoint;
             this.defaultEndpoint = false;
         }
-        this.agent = agent;
+        this.httpAgent = agent;
+        this.authClient = authClient;
         if (defaultEndpoint) {
             loadCountries();
         }
@@ -72,7 +85,7 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = agent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY);
+            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, getToken());
             popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
@@ -118,7 +131,7 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createRecord(String country, Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
         String url = getEndpoint(concatUrl(country), country);
-        String response = agent.request(url, URI_POST, JsonUtils.toJsonString(record, cryptoManager), ApiResponse.WRITE);
+        String response = httpAgent.request(url, URI_POST, JsonUtils.toJsonString(record, cryptoManager), ApiResponse.WRITE, getToken());
         validatePlainTextResponse("ok", response);
     }
 
@@ -126,7 +139,7 @@ public class HttpDaoImpl implements Dao {
     public void createBatch(List<Record> records, String country, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
-        String response = agent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE);
+        String response = httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, getToken());
         validatePlainTextResponse("ok", response);
     }
 
@@ -134,7 +147,7 @@ public class HttpDaoImpl implements Dao {
     public Record read(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        String response = agent.request(url, URI_GET, null, ApiResponse.READ);
+        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, getToken());
         if (response == null) {
             return null;
         } else {
@@ -146,7 +159,7 @@ public class HttpDaoImpl implements Dao {
     public void delete(String country, String key, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String newKey = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         String url = createUrl(country, newKey);
-        String response = agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
+        String response = httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, getToken());
         validatePlainTextResponse("{}", response);
     }
 
@@ -154,7 +167,7 @@ public class HttpDaoImpl implements Dao {
     public BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String url = getEndpoint(concatUrl(country, URI_FIND), country);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
-        String content = agent.request(url, URI_POST, postData, ApiResponse.FIND);
+        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, getToken());
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
@@ -177,6 +190,21 @@ public class HttpDaoImpl implements Dao {
             String message = MSG_ERROR_RESPONSE + response;
             LOG.error(message);
             throw new StorageServerException(message);
+        }
+    }
+
+    private String getToken() throws StorageServerException {
+        if (authClient != null) {
+            refreshToken();
+        }
+        return token;
+    }
+
+    private synchronized void refreshToken() throws StorageServerException {
+        if (tokenExpire == null || tokenExpire < System.currentTimeMillis()) {
+            Map.Entry<String, Long> newToken = authClient.newToken();
+            token = newToken.getKey();
+            tokenExpire = newToken.getValue();
         }
     }
 }

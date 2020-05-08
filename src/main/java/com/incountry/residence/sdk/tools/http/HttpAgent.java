@@ -7,5 +7,5 @@ import java.util.Map;
 
 public interface HttpAgent {
 
-    String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap) throws StorageServerException;
+    String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, String token) throws StorageServerException;
 }

@@ -21,27 +21,24 @@ public class HttpAgentImpl implements HttpAgent {
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error";
 
-    private String apiKey;
     private String environmentId;
     private Charset charset;
     private String userAgent;
 
 
-    public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
+    public HttpAgentImpl(String environmentId, Charset charset) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HttpAgentImpl constructor params (apiKey={} , environmentId={} , charset={})",
-                    apiKey != null ? "[SECURE[" + apiKey.hashCode() + "]]" : null,
+            LOG.debug("HttpAgentImpl constructor params (environmentId={} , charset={})",
                     environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null,
                     charset);
         }
-        this.apiKey = apiKey;
         this.environmentId = environmentId;
         this.charset = charset;
         userAgent = "SDK-Java/" + Version.BUILD_VERSION;
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap) throws StorageServerException {
+    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, String token) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , codeMap={})",
                     endpoint,
@@ -52,7 +49,7 @@ public class HttpAgentImpl implements HttpAgent {
             URL url = new URL(endpoint);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
-            con.setRequestProperty("Authorization", "Bearer " + apiKey);
+            con.setRequestProperty("Authorization", "Bearer " + token);
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);

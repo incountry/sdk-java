@@ -13,7 +13,7 @@ public class ProxyUtilsTest {
 
     static class FakeHttpAgent implements HttpAgent {
         @Override
-        public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap) {
+        public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, String token) {
             doNothing();
             throw new NullPointerException();
         }
@@ -25,6 +25,6 @@ public class ProxyUtilsTest {
     @Test
     public void testProxyException() {
         HttpAgent agent = ProxyUtils.createLoggingProxyForPublicMethods(new FakeHttpAgent());
-        assertThrows(NullPointerException.class, () -> agent.request(null, null, null, null));
+        assertThrows(NullPointerException.class, () -> agent.request(null, null, null, null, null));
     }
 }

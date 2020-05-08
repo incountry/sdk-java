@@ -57,6 +57,8 @@ dependencies {
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
     implementation "com.google.code.gson:gson:${gsonVersion}"
+//    compile 'com.google.oauth-client:google-oauth-client:1.30.6'
+    compile 'com.github.scribejava:scribejava-core:6.9.0'
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
@@ -65,7 +67,7 @@ dependencies {
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
     failOnError = true
-    failBuildOnCVSS = 1
+    failBuildOnCVSS = 10
 }
 
 check.dependsOn dependencyCheckAnalyze
