@@ -547,17 +547,17 @@ public class StorageConfig {
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customCryptoList;
+    private List<Crypto> customEncryptionList;
     //...
 
     /**
      * for custom encryption
      *
-     * @param customCryptoList List with custom encryption functions
+     * @param customEncryptionList List with custom encryption functions
      * @return StorageConfig
      */
-    public StorageConfig setCustomCryptoList(List<Crypto> customCryptoList) {
-        this.customCryptoList = customCryptoList;
+    public StorageConfig setCustomEncryptionList(List<Crypto> customEncryptionList) {
+        this.customCryptoList = customEncryptionList;
         return this;
     }
 

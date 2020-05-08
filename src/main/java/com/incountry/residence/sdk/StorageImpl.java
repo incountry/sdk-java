@@ -122,11 +122,11 @@ public class StorageImpl implements Storage {
                     config.getApiKey() != null ? LOG_SECURE2 + config.getApiKey().hashCode() + "]]" : null,
                     config.getEndPoint(),
                     config.getSecretKeyAccessor() != null ? LOG_SECURE : null,
-                    config.getCustomCryptoList()
+                    config.getCustomEncryptionList()
             );
         }
         StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomCryptoList());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionList());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 

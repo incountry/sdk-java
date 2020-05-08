@@ -13,7 +13,7 @@ public class StorageConfig {
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customCryptoList;
+    private List<Crypto> customEncryptionList;
 
     public String getEnvId() {
         return envId;
@@ -75,18 +75,18 @@ public class StorageConfig {
         return this;
     }
 
-    public List<Crypto> getCustomCryptoList() {
-        return customCryptoList;
+    public List<Crypto> getCustomEncryptionList() {
+        return customEncryptionList;
     }
 
     /**
      * for custom encryption
      *
-     * @param customCryptoList List with custom encryption functions
+     * @param customEncryptionList List with custom encryption functions
      * @return StorageConfig
      */
-    public StorageConfig setCustomCryptoList(List<Crypto> customCryptoList) {
-        this.customCryptoList = customCryptoList;
+    public StorageConfig setCustomEncryptionList(List<Crypto> customEncryptionList) {
+        this.customEncryptionList = customEncryptionList;
         return this;
     }
 
@@ -96,7 +96,7 @@ public class StorageConfig {
         newInstance.setApiKey(getApiKey());
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
-        newInstance.setCustomCryptoList(getCustomCryptoList());
+        newInstance.setCustomEncryptionList(getCustomEncryptionList());
         return newInstance;
     }
 }
