@@ -40,7 +40,7 @@ public class CustomCryptoTest {
     private static final String BODY_FOR_ENCRYPTION = "SomeSecretBody!234567=!@#$%^&**()_+|";
 
     @Test
-    public void positiveStorageInitTest() throws StorageClientException, StorageServerException, StorageCryptoException {
+    public void positiveStorageInitTest() throws StorageClientException, StorageServerException {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretKey key2 = new SecretKey(CUSTOM_PASSWORD_2, 2, false, true);
@@ -231,6 +231,17 @@ public class CustomCryptoTest {
     }
 
     @Test
+    public void negativeTestWithCryptoExceptionsInInit() throws StorageClientException {
+        Crypto crypto = new PseudoCustomCrypto(true, 0, 0, true);
+        List<Crypto> cryptoList = Arrays.asList(crypto);
+        int keyVersion = 1;
+        SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
+        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretKeyAccessor accessor = () -> data;
+        assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList));
+    }
+
+    @Test
     public void negativeTestWithUnexpectedExceptions() throws StorageClientException, StorageCryptoException {
         Crypto crypto = new PseudoCustomCrypto(true, 2, 1, false);
         List<Crypto> cryptoList = Arrays.asList(crypto);
@@ -275,5 +286,16 @@ public class CustomCryptoTest {
     public void defaultCryptoTest() {
         DefaultCrypto crypto = new DefaultCrypto(StandardCharsets.UTF_8);
         assertTrue(crypto.isCurrent());
+    }
+
+    @Test
+    public void negativeTestPteAndCustomEnc() {
+        List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENV_ID)
+                .setApiKey(API_KEY)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setCustomEncryptionList(cryptoList);
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 }

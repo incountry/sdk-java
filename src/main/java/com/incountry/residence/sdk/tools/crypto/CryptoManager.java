@@ -32,7 +32,6 @@ public class CryptoManager {
     private static final String MSG_ERR_DECRYPTION_FORMAT = "Unknown cipher format";
     private static final String MSG_ERR_DECRYPTION = "Unknown encryption version requested: %s";
     private static final String MSG_ERR_DECRYPTION_BASE64 = "Unexpected exception during custom decryption - failed to get custom encryption version: %s";
-    private static final String MSG_ERR_ENCRYPTION_OFF = "Encryption is off, but custom crypto list isn't empty";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
@@ -78,10 +77,6 @@ public class CryptoManager {
     }
 
     private void initCustomEncryptionMap(List<Crypto> cryptoList) throws StorageClientException {
-        if (usePTEncryption && (cryptoList != null && !cryptoList.isEmpty())) {
-            LOG.error(MSG_ERR_ENCRYPTION_OFF);
-            throw new StorageClientException(MSG_ERR_ENCRYPTION_OFF);
-        }
         Map<String, Crypto> result = new HashMap<>();
         if (cryptoList != null && !cryptoList.isEmpty()) {
             SecretsData secretsData = keyAccessor.getSecretsData();
