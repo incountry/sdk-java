@@ -125,7 +125,7 @@ public class StorageImpl implements Storage {
                     config.getCustomEncryptionList()
             );
         }
-        if (config.getSecretKeyAccessor() == null && config.getCustomEncryptionList() != null) {
+        if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionList() == null || config.getCustomEncryptionList().isEmpty())) {
             LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
             throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
         }

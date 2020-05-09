@@ -16,6 +16,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.getHashedEncVersion;
 import static com.incountry.residence.sdk.tools.crypto.CryptoUtils.validateCrypto;
@@ -135,28 +136,21 @@ public class CryptoManager {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(stringToHash);
     }
 
-    private SecretKey getSecret(final Integer version, boolean isForCustomEncryption) throws StorageClientException {
+    private SecretKey getSecret(Integer version, boolean isForCustomEncryption) throws StorageClientException {
         SecretsData secretsData = getSecretsDataOrException();
-        Integer usedVersion = version;
         if (version == null) {
-            usedVersion = secretsData.getCurrentVersion();
+            version = secretsData.getCurrentVersion();
         }
-        if (usedVersion < 0) {
-            usedVersion = 0;
-        }
-        SecretKey secret = null;
-        for (SecretKey item : secretsData.getSecrets()) {
-            if (item.getVersion() == usedVersion && !Boolean.logicalXor(isForCustomEncryption, item.isForCustomEncryption())) {
-                secret = item;
-                break;
-            }
-        }
-        if (secret == null) {
+        int usedVersion = version >= 0 ? version : 0;
+        Optional<SecretKey> optionalSecretKey = secretsData.getSecrets().stream()
+                .filter(secretKey -> (secretKey.getVersion() == usedVersion) && (isForCustomEncryption == secretKey.isForCustomEncryption()))
+                .findFirst();
+        if (!optionalSecretKey.isPresent()) {
             String message = String.format(MSG_ERR_VERSION, version, isForCustomEncryption);
             LOG.error(message);
             throw new StorageClientException(message);
         }
-        return secret;
+        return optionalSecretKey.get();
     }
 
     public Integer getCurrentSecretVersion() throws StorageClientException {
