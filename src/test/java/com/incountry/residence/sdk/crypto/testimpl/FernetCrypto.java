@@ -61,6 +61,6 @@ public class FernetCrypto implements Crypto {
     }
 
     private boolean isEasySecret(String secret) {
-        return false;
+        return secret.length() < 7;
     }
 }

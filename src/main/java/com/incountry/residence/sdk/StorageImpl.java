@@ -37,6 +37,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
+    private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String LOG_SECURE = "[SECURE]";
@@ -111,22 +112,25 @@ public class StorageImpl implements Storage {
      * @param config Configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageCryptoException if custom encryption fails during initialization
      * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(StorageConfig config)
-            throws StorageClientException, StorageServerException, StorageCryptoException {
+            throws StorageClientException, StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={}, cryptoList={})",
                     config.getEnvId() != null ? LOG_SECURE2 + config.getEnvId().hashCode() + "]]" : null,
                     config.getApiKey() != null ? LOG_SECURE2 + config.getApiKey().hashCode() + "]]" : null,
                     config.getEndPoint(),
                     config.getSecretKeyAccessor() != null ? LOG_SECURE : null,
-                    config.getCustomCryptoList()
+                    config.getCustomEncryptionList()
             );
         }
+        if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionList() == null || config.getCustomEncryptionList().isEmpty())) {
+            LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
+            throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
+        }
         StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomCryptoList(), config.isIgnoreKeyCase());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionList(), config.isIgnoreKeyCase());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
@@ -139,11 +143,8 @@ public class StorageImpl implements Storage {
                     dao != null ? LOG_SECURE : null
             );
         }
-        checkEnvironment(environmentID);
-        if (dao == null) {
-            LOG.error(MSG_ERR_PASS_DAO);
-            throw new StorageClientException(MSG_ERR_PASS_DAO);
-        }
+        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
+        checkNotNull(dao, MSG_ERR_PASS_DAO);
         StorageImpl instance = new StorageImpl();
         instance.encrypted = secretKeyAccessor != null;
         instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
@@ -153,33 +154,25 @@ public class StorageImpl implements Storage {
 
     private static StorageImpl getInstanceWithoutCrypto(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException, StorageServerException {
-        checkEnvironment(environmentID);
-        if (apiKey == null) {
-            LOG.error(MSG_ERR_PASS_API_KEY);
-            throw new StorageClientException(MSG_ERR_PASS_API_KEY);
-        }
+        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
+        checkNotNull(apiKey, MSG_ERR_PASS_API_KEY);
         StorageImpl instance = new StorageImpl();
         instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
         instance.encrypted = secretKeyAccessor != null;
         return instance;
     }
 
-    private static void checkEnvironment(String environmentID) throws StorageClientException {
-        if (environmentID == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
-            throw new StorageClientException(MSG_ERR_PASS_ENV);
+    private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {
+        if (parameter == null) {
+            LOG.error(nullErrorMessage);
+            throw new StorageClientException(nullErrorMessage);
         }
     }
 
+
     private void checkParameters(String country, String key) throws StorageClientException {
-        if (country == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
-            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
-        }
-        if (key == null) {
-            LOG.error(MSG_ERR_NULL_KEY);
-            throw new StorageClientException(MSG_ERR_NULL_KEY);
-        }
+        checkNotNull(country, MSG_ERR_PASS_ENV);
+        checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
     public Record write(String country, Record record) throws
@@ -189,10 +182,7 @@ public class StorageImpl implements Storage {
                     country,
                     record != null ? LOG_SECURE2 + record.hashCode() + "]]" : null);
         }
-        if (record == null) {
-            LOG.error(MSG_ERR_NULL_RECORD);
-            throw new StorageClientException(MSG_ERR_NULL_RECORD);
-        }
+        checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getKey());
         dao.createRecord(country, record, cryptoManager);
         return record;
@@ -251,8 +241,8 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NULL_BATCH);
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
-            for (Record one : records) {
-                checkParameters(country, one.getKey());
+            for (Record record : records) {
+                checkParameters(country, record.getKey());
             }
             dao.createBatch(records, country, cryptoManager);
         }
@@ -275,14 +265,8 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("find params (country={} , builder={})", country, builder);
         }
-        if (country == null) {
-            LOG.error(MSG_ERR_NULL_COUNTRY);
-            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
-        }
-        if (builder == null) {
-            LOG.error(MSG_ERR_NULL_FILTERS);
-            throw new StorageClientException(MSG_ERR_NULL_FILTERS);
-        }
+        checkNotNull(country, MSG_ERR_NULL_COUNTRY);
+        checkNotNull(builder, MSG_ERR_NULL_FILTERS);
         BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);

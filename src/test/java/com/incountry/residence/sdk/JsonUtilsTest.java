@@ -33,7 +33,7 @@ public class JsonUtilsTest {
     }
 
     @Test
-    public void testNullFiltetToJson() {
+    public void testNullFilterToJson() {
         FindFilter filter = null;
         JsonObject json = JsonUtils.toJson(filter, null);
         assertEquals("{}", json.toString());
