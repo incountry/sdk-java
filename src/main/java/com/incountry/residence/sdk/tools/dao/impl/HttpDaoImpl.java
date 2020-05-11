@@ -178,8 +178,8 @@ public class HttpDaoImpl implements Dao {
         StringBuilder builder = new StringBuilder(STORAGE_URL);
         builder.append(country.toLowerCase());
         if (other != null) {
-            for (String one : other) {
-                builder.append(one);
+            for (String part : other) {
+                builder.append(part);
             }
         }
         return builder.toString();

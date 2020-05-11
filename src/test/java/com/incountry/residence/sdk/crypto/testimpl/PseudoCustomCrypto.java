@@ -8,8 +8,8 @@ import java.nio.charset.StandardCharsets;
 
 public class PseudoCustomCrypto extends DefaultCrypto {
     private boolean current;
-    private Integer encryptBeforeException;
-    private Integer decryptBeforeException;
+    private Integer encryptCountBeforeException;
+    private Integer decryptCountBeforeException;
     private boolean exceptionType;
 
     public PseudoCustomCrypto(boolean current) {
@@ -17,12 +17,12 @@ public class PseudoCustomCrypto extends DefaultCrypto {
         this.current = current;
     }
 
-    public PseudoCustomCrypto(boolean current, Integer encryptBeforeException, Integer decryptBeforeException, boolean exceptionType) {
+    public PseudoCustomCrypto(boolean current, Integer encryptCountBeforeException, Integer decryptCountBeforeException, boolean exceptionType) {
         super(StandardCharsets.UTF_8);
         this.current = current;
         this.exceptionType = exceptionType;
-        this.encryptBeforeException = encryptBeforeException;
-        this.decryptBeforeException = decryptBeforeException;
+        this.encryptCountBeforeException = encryptCountBeforeException;
+        this.decryptCountBeforeException = decryptCountBeforeException;
     }
 
 
@@ -39,32 +39,32 @@ public class PseudoCustomCrypto extends DefaultCrypto {
 
     @Override
     public String encrypt(String text, SecretKey secretKey) throws StorageCryptoException {
-        if (encryptBeforeException == null) {
+        if (encryptCountBeforeException == null) {
             return super.encrypt(text, secretKey);
-        } else if (encryptBeforeException == 0) {
+        } else if (encryptCountBeforeException == 0) {
             if (exceptionType) {
                 throw new StorageCryptoException("");
             } else {
                 throw new NullPointerException();
             }
         } else {
-            encryptBeforeException -= 1;
+            encryptCountBeforeException -= 1;
             return super.encrypt(text, secretKey);
         }
     }
 
     @Override
     public String decrypt(String cipherText, SecretKey secretKey) throws StorageCryptoException {
-        if (decryptBeforeException == null) {
+        if (decryptCountBeforeException == null) {
             return super.decrypt(cipherText, secretKey);
-        } else if (decryptBeforeException == 0) {
+        } else if (decryptCountBeforeException == 0) {
             if (exceptionType) {
                 throw new StorageCryptoException("");
             } else {
                 throw new NullPointerException();
             }
         } else {
-            decryptBeforeException -= 1;
+            decryptCountBeforeException -= 1;
             return super.decrypt(cipherText, secretKey);
         }
     }

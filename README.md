@@ -99,10 +99,10 @@ public class SecretKey {
     *
     * @param secret  secret/key
     * @param version secret version, should be a non-negative integer
-    * @param isForCustomEncryption   should be True only for user-defined encryption keys
+    * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isForCustomEncryption)
+    public SecretKey(String secret, int version, boolean isKey)
               throws StorageClientException {...}
     //...
 }
@@ -536,10 +536,10 @@ One of the overloaded versions of the method `getInstance` in class `StorageImpl
   * @throws StorageServerException if server connection failed or server response error
   */
 public static Storage getInstance(StorageConfig config)
-              throws StorageClientException, StorageServerException, StorageCryptoException {...}
+              throws StorageClientException, StorageServerException {...}
 ```
 
-Class `StorageConfig` is a container with Storage configuration, using pattern 'builder'. Use method `setCustomCryptoList` for passing a list of custom encryption implementations:
+Class `StorageConfig` is a container with Storage configuration, using pattern 'builder'. Use method `setCustomEncryptionList` for passing a list of custom encryption implementations:
 
 ```java
 public class StorageConfig {
@@ -547,18 +547,18 @@ public class StorageConfig {
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customCryptoList;
+    private List<Crypto> customEncryptionList;
     private boolean ignoreKeyCase;
     //...
 
     /**
      * for custom encryption
      *
-     * @param customCryptoList List with custom encryption functions
+     * @param customEncryptionList List with custom encryption functions
      * @return StorageConfig
      */
-    public StorageConfig setCustomCryptoList(List<Crypto> customCryptoList) {
-        this.customCryptoList = customCryptoList;
+    public StorageConfig setCustomEncryptionList(List<Crypto> customEncryptionList) {
+        this.customCryptoList = customEncryptionList;
         return this;
     }
 
@@ -614,8 +614,26 @@ public interface Crypto {
 ---
 **NOTE**
 
-You should provide a specific encryption key via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
+You should provide a specific encryption key in `SecretKey` via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
+This secret should use flag `isForCustomEncryption` instead of the regular `isKey`:
+```java
+public class SecretKey {
+    /**
+     * @param secret secret/key
+     * @param version secret version, should be a non-negative integer
+     * @param isKey should be True only for user-defined encryption keys
+     * @param isForCustomEncryption should be True for using this key in custom encryption 
+     *                              implementations. Only one parameter from {@link #isKey} 
+     *                              and {@link #isForCustomEncryption}) can be True at the moment
+     * @throws StorageClientException when parameter validation fails
+     */
+    public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
+              throws StorageClientException {...}
+    //...
+}
+```
 
+Setting flag `isForCustomEncryption` from `SecretsData` in JSON format:
 ```javascript
 secrets_data = {
   "secrets": [{

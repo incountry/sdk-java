@@ -168,7 +168,7 @@ public class CryptoManagerTest {
     @Test
     public void negativeTestWrongKeyType() throws StorageClientException {
         int keyVersion = 1;
-        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, true);
+        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null, false));
@@ -195,6 +195,14 @@ public class CryptoManagerTest {
         assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toLowerCase()));
         assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toUpperCase()));
     }
+
+    @Test
+    public void negativeVersionTest() throws StorageClientException, StorageCryptoException {
+        SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
+        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false);
+        String text = "Some secret text";
+        Map.Entry<String, Integer> encrypted = manager.encrypt(text);
+        String decrypted = manager.decrypt(encrypted.getKey(), -1);
+        assertEquals(text, decrypted);
+    }
 }
-
-

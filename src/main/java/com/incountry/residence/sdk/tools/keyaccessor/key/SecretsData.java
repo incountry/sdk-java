@@ -52,12 +52,12 @@ public class SecretsData {
         }
         List<Integer> errorList = new ArrayList<>();
         Set<Integer> versionSet = new HashSet<>();
-        for (SecretKey one : secrets) {
-            SecretKey.validateSecretKey(one.getSecret(), one.getVersion(), one.isForCustomEncryption());
-            if (versionSet.contains(one.getVersion())) {
-                errorList.add(one.getVersion());
+        for (SecretKey secretKey : secrets) {
+            SecretKey.validateSecretKey(secretKey.getSecret(), secretKey.getVersion(), secretKey.isKey(), secretKey.isForCustomEncryption());
+            if (versionSet.contains(secretKey.getVersion())) {
+                errorList.add(secretKey.getVersion());
             } else {
-                versionSet.add(one.getVersion());
+                versionSet.add(secretKey.getVersion());
             }
             if (!errorList.isEmpty()) {
                 String message = String.format(MSG_ERR_UNIQUE_VERSIONS, errorList.toString());
