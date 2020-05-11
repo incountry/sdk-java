@@ -27,6 +27,8 @@ public class DefaultAuthClient implements AuthClient {
 
     private static final Logger LOG = LogManager.getLogger(DefaultAuthClient.class);
 
+    private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/";
+    //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
     private static final String MSG_ERR_EXPIRES = "Token TTL is invalid";
@@ -49,7 +51,7 @@ public class DefaultAuthClient implements AuthClient {
     @Override
     public void setCredentials(String clientId, String secret, String authUrl) {
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.authUrl = authUrl;
+        this.authUrl = authUrl != null ? authUrl : DEFAULT_AUTH_URL;
     }
 
     @Override

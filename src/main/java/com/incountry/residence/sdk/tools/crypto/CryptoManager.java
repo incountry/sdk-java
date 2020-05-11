@@ -49,17 +49,12 @@ public class CryptoManager {
     private boolean ignoreKeyCase;
 
 
-    public CryptoManager(String envId) {
-        this.envId = envId;
-        usePTEncryption = true;
+    public CryptoManager(String envId) throws StorageClientException {
+        this(null, envId, null, false);
     }
 
-    public CryptoManager(SecretKeyAccessor keyAccessor, String envId)
-            throws StorageClientException {
-        initFields(keyAccessor, envId);
-        if (!usePTEncryption) {
-            getSecret(null, false);
-        }
+    public CryptoManager(SecretKeyAccessor keyAccessor, String envId) throws StorageClientException {
+        this(keyAccessor, envId, null, false);
     }
 
     public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean ignoreKeyCase)

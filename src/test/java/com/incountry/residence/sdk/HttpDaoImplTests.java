@@ -50,7 +50,7 @@ public class HttpDaoImplTests {
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
     private AuthClient authClient = new FakeAuthClient(300L);
 
-    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
+    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException, StorageServerException {
         Storage storage;
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         if (encrypt) {
@@ -65,7 +65,7 @@ public class HttpDaoImplTests {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         CryptoManager cryptoManager;
         if (encrypt) {
-            cryptoManager = new CryptoManager(secretKeyAccessor, "envId");
+            cryptoManager = new CryptoManager(secretKeyAccessor, "envId", null, false);
         } else {
             cryptoManager = new CryptoManager("envId");
         }

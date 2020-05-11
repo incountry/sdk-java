@@ -9,6 +9,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
+import com.incountry.residence.sdk.tools.http.AuthClient;
+import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
@@ -16,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
+
+import static com.incountry.residence.sdk.StorageConfig.LOG_SECURE2;
 
 /**
  * Basic implementation
@@ -26,9 +30,11 @@ public class StorageImpl implements Storage {
     private static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
     private static final String PARAM_API_KEY = "INC_API_KEY";
     private static final String PARAM_ENDPOINT = "INC_ENDPOINT";
+    private static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
+    private static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
+    private static final String PARAM_AUTH_ENDPOINT = "INC_AUTH_ENDPOINT";
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_ERR_PASS_DAO = "Please pass dao param";
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
@@ -38,11 +44,12 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
+    private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
+    private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
+    private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String LOG_SECURE = "[SECURE]";
-    private static final String LOG_SECURE2 = "[SECURE[";
-
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -75,10 +82,15 @@ public class StorageImpl implements Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException, StorageServerException {
-        return getInstance(loadFromEnv(PARAM_ENV_ID),
-                loadFromEnv(PARAM_API_KEY),
-                loadFromEnv(PARAM_ENDPOINT),
-                secretKeyAccessor);
+        StorageConfig config = new StorageConfig()
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setEnvId(loadFromEnv(PARAM_ENV_ID))
+                .setApiKey(loadFromEnv(PARAM_API_KEY))
+                .setEndPoint(loadFromEnv(PARAM_ENDPOINT))
+                .setClientId(loadFromEnv(PARAM_CLIENT_ID))
+                .setClientSecret(loadFromEnv(PARAM_CLIENT_SECRET))
+                .setAuthEndPoint(loadFromEnv(PARAM_AUTH_ENDPOINT));
+        return getInstance(config);
     }
 
     /**
@@ -94,16 +106,12 @@ public class StorageImpl implements Storage {
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException, StorageServerException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={})",
-                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
-                    apiKey != null ? LOG_SECURE2 + apiKey.hashCode() + "]]" : null,
-                    endpoint,
-                    secretKeyAccessor != null ? LOG_SECURE : null);
-        }
-        StorageImpl instance = getInstanceWithoutCrypto(environmentID, apiKey, endpoint, secretKeyAccessor);
-        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
-        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
+        StorageConfig config = new StorageConfig()
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setEnvId(environmentID)
+                .setApiKey(apiKey)
+                .setEndPoint(endpoint);
+        return getInstance(config);
     }
 
     /**
@@ -117,53 +125,61 @@ public class StorageImpl implements Storage {
     public static Storage getInstance(StorageConfig config)
             throws StorageClientException, StorageServerException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={}, cryptoList={})",
-                    config.getEnvId() != null ? LOG_SECURE2 + config.getEnvId().hashCode() + "]]" : null,
-                    config.getApiKey() != null ? LOG_SECURE2 + config.getApiKey().hashCode() + "]]" : null,
-                    config.getEndPoint(),
-                    config.getSecretKeyAccessor() != null ? LOG_SECURE : null,
-                    config.getCustomEncryptionList()
-            );
+            LOG.debug("StorageImpl constructor params config={}", config);
         }
         if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionList() == null || config.getCustomEncryptionList().isEmpty())) {
             LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
             throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
         }
-        StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
+        return getInstance(config, null);
+    }
+
+    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException, StorageServerException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
+                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
+                    secretKeyAccessor,
+                    dao
+            );
+        }
+        StorageConfig config = new StorageConfig()
+                .setEnvId(environmentID)
+                .setSecretKeyAccessor(secretKeyAccessor);
+        return getInstance(config, dao);
+    }
+
+    private static Storage getInstance(StorageConfig config, Dao dao)
+            throws StorageClientException, StorageServerException {
+        checkNotNull(config.getEnvId(), MSG_ERR_PASS_ENV);
+        StorageImpl instance = new StorageImpl();
+        instance.dao = initDao(config, dao);
+        instance.encrypted = config.getSecretKeyAccessor() != null;
         instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionList(), config.isIgnoreKeyCase());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao
-            dao) throws StorageClientException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
-                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
-                    secretKeyAccessor != null ? LOG_SECURE : null,
-                    dao != null ? LOG_SECURE : null
-            );
+    private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
+        if (dao == null) {
+            if (config.getClientId() != null && config.getClientSecret() != null) {
+                checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
+                checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
+                AuthClient authClient = new DefaultAuthClient();
+                authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint());
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), authClient);
+            } else if (config.getApiKey() != null) {
+                checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
+                return new HttpDaoImpl(config.getApiKey(), config.getEnvId(), config.getEndPoint());
+            } else {
+                LOG.error(MSG_ERR_PASS_AUTH);
+                throw new StorageClientException(MSG_ERR_PASS_AUTH);
+            }
+        } else {
+            return dao;
         }
-        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
-        checkNotNull(dao, MSG_ERR_PASS_DAO);
-        StorageImpl instance = new StorageImpl();
-        instance.encrypted = secretKeyAccessor != null;
-        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
-        instance.dao = dao;
-        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
-    }
-
-    private static StorageImpl getInstanceWithoutCrypto(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
-            throws StorageClientException, StorageServerException {
-        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
-        checkNotNull(apiKey, MSG_ERR_PASS_API_KEY);
-        StorageImpl instance = new StorageImpl();
-        instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
-        instance.encrypted = secretKeyAccessor != null;
-        return instance;
     }
 
     private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {
-        if (parameter == null) {
+        if (parameter == null || String.valueOf(parameter).isEmpty()) {
             LOG.error(nullErrorMessage);
             throw new StorageClientException(nullErrorMessage);
         }

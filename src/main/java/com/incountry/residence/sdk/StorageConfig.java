@@ -9,6 +9,9 @@ import java.util.List;
  * container with Storage configuration, using pattern 'builder'
  */
 public class StorageConfig {
+
+    public static final String LOG_SECURE2 = "[SECURE[";
+
     private String envId;
     private String apiKey;
     private String endPoint;
@@ -169,5 +172,24 @@ public class StorageConfig {
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
         return newInstance;
+    }
+
+    @Override
+    public String toString() {
+        return "StorageConfig{" +
+                "envId='" + hideParam(envId) + '\'' +
+                ", apiKey='" + hideParam(apiKey) + '\'' +
+                ", endPoint='" + endPoint + '\'' +
+                ", secretKeyAccessor=" + secretKeyAccessor +
+                ", customEncryptionList=" + customEncryptionList +
+                ", ignoreKeyCase=" + ignoreKeyCase +
+                ", clientId='" + hideParam(clientId) + '\'' +
+                ", clientSecret='" + hideParam(clientSecret) + '\'' +
+                ", authEndPoint='" + authEndPoint + '\'' +
+                '}';
+    }
+
+    private String hideParam(String param) {
+        return param != null ? LOG_SECURE2 + param.hashCode() + "]]" : null;
     }
 }
