@@ -6,7 +6,6 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
@@ -41,10 +40,9 @@ public class StorageIntegrationTest {
             .append(UUID.randomUUID().toString().replace("-", ""))
             .toString();
 
-    private Storage storage;
-    private Storage storageIgnoreCase;
-    private SecretKey secretKey;
-    private SecretKeyAccessor secretKeyAccessor;
+    private final Storage storage;
+    private final Storage storageIgnoreCase;
+    private final SecretKeyAccessor secretKeyAccessor;
 
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
     private static final String BATCH_WRITE_KEY = "BatchWriteKey" + TEMP;
@@ -70,7 +68,7 @@ public class StorageIntegrationTest {
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
-        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
+        secretKeyAccessor = () -> secretsData;
         storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
                 loadFromEnv(INTEGR_ENV_KEY_APIKEY),
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),

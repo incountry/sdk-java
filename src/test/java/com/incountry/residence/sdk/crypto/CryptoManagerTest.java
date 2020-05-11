@@ -199,7 +199,7 @@ public class CryptoManagerTest {
     @Test
     public void negativeVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
-        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null);
+        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false);
         String text = "Some secret text";
         Map.Entry<String, Integer> encrypted = manager.encrypt(text);
         String decrypted = manager.decrypt(encrypted.getKey(), -1);

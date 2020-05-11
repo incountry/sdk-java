@@ -238,7 +238,7 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList));
+        assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList, false));
     }
 
     @Test
