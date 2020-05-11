@@ -34,8 +34,7 @@ public class JsonUtilsTest {
 
     @Test
     public void testNullFilterToJson() {
-        FindFilter filter = null;
-        JsonObject json = JsonUtils.toJson(filter, null);
+        JsonObject json = JsonUtils.toJson((FindFilter) null, null);
         assertEquals("{}", json.toString());
     }
 
@@ -43,12 +42,12 @@ public class JsonUtilsTest {
     public void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
         filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, true));
-        JsonObject json = JsonUtils.toJson(filter, new CryptoManager("envId"));
+        JsonObject json = JsonUtils.toJson(filter, new CryptoManager(null, "envId", null, false));
         assertEquals("{\"version\":{\"$not\":[1]}}", json.toString());
 
         filter = new FindFilter();
         filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, false));
-        json = JsonUtils.toJson(filter, new CryptoManager("envId"));
+        json = JsonUtils.toJson(filter, new CryptoManager(null, "envId", null, false));
         assertEquals("{\"version\":[1]}", json.toString());
     }
 }

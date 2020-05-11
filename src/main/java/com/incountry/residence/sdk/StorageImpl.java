@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.http.AuthClient;
 import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
+import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
@@ -165,10 +166,10 @@ public class StorageImpl implements Storage {
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
                 AuthClient authClient = new DefaultAuthClient();
                 authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint());
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), authClient);
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new DefaultTokenGenerator(authClient));
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
-                return new HttpDaoImpl(config.getApiKey(), config.getEnvId(), config.getEndPoint());
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new DefaultTokenGenerator(config.getApiKey()));
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);

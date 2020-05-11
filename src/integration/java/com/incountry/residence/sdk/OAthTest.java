@@ -8,6 +8,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.AuthClient;
+import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
@@ -43,7 +44,7 @@ public class OAthTest {
     private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
 
-    private SecretKeyAccessor accessor;
+    private final SecretKeyAccessor accessor;
 
     public OAthTest() throws StorageClientException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
@@ -52,7 +53,7 @@ public class OAthTest {
 
     private Storage initStorage(AuthClient authClient) throws StorageServerException, StorageClientException {
         authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL);
-        Dao dao = new HttpDaoImpl(END_POINT, new HttpAgentImpl(ENV_ID, StandardCharsets.UTF_8), authClient);
+        Dao dao = new HttpDaoImpl(END_POINT, new HttpAgentImpl(ENV_ID, StandardCharsets.UTF_8), new DefaultTokenGenerator(authClient));
         return StorageImpl.getInstance(ENV_ID, accessor, dao);
     }
 

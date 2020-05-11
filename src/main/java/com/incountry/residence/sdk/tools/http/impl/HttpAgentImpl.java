@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.http.TokenGenerator;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -38,7 +39,7 @@ public class HttpAgentImpl implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, String token) throws StorageServerException {
+    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenGenerator tokenGenerator, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , codeMap={})",
                     endpoint,
@@ -49,7 +50,7 @@ public class HttpAgentImpl implements HttpAgent {
             URL url = new URL(endpoint);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
-            con.setRequestProperty("Authorization", "Bearer " + token);
+            con.setRequestProperty("Authorization", "Bearer " + tokenGenerator.getToken());
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);
@@ -63,10 +64,13 @@ public class HttpAgentImpl implements HttpAgent {
             int status = con.getResponseCode();
             ApiResponse params = codeMap.get(status);
             BufferedReader reader;
-            if (params == null || params.isError()) {
+            if (params != null && !params.isError()) {
+                reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
+            } else if (params == null || !canRetry(params, retryCount)) {
                 reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
             } else {
-                reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
+                tokenGenerator.refreshToken(true);
+                return request(endpoint, method, body, codeMap, tokenGenerator, retryCount - 1);
             }
             String inputLine;
             StringBuilder content = new StringBuilder();
@@ -88,5 +92,9 @@ public class HttpAgentImpl implements HttpAgent {
         } catch (IOException ex) {
             throw new StorageServerException(MSG_SERVER_ERROR + method, ex);
         }
+    }
+
+    private boolean canRetry(ApiResponse params, int retryCount) {
+        return params.isCanRetry() && retryCount < 1;
     }
 }

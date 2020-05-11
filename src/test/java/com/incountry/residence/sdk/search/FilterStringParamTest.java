@@ -15,7 +15,7 @@ public class FilterStringParamTest {
     @Test
     public void toJSONStringTestWithCrypto() throws StorageClientException {
         String filterValue = "filterValue";
-        CryptoManager crypto = new CryptoManager("envId");
+        CryptoManager crypto = new CryptoManager(null, "envId", null, false);
         FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
         JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, crypto);
         assertEquals(crypto.createKeyHash(filterValue), jsonArray.get(0).getAsString());
