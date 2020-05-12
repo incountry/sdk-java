@@ -660,7 +660,7 @@ Here's an example of how you can set up SDK to use custom encryption (using Fern
  * Example of custom implementation of {@link Crypto} using Fernet algorithm
  */
 public class FernetCrypto implements Crypto {
-
+    private static final String VERSION = "fernet custom encryption";
     private boolean current;
     private Validator<String> validator;
 
@@ -699,7 +699,7 @@ public class FernetCrypto implements Crypto {
 
     @Override
     public String getVersion() {
-        return FernetCrypto.class.getName();
+        return VERSION;
     }
 
     @Override

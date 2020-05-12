@@ -15,6 +15,7 @@ import com.macasaet.fernet.Validator;
  */
 public class FernetCrypto implements Crypto {
 
+    private static final String VERSION = "fernet custom encryption";
     private boolean current;
     private Validator<String> validator;
 
@@ -52,7 +53,7 @@ public class FernetCrypto implements Crypto {
 
     @Override
     public String getVersion() {
-        return FernetCrypto.class.getName();
+        return VERSION;
     }
 
     @Override
