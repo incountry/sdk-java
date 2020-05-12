@@ -1,7 +1,6 @@
 package com.incountry.residence.sdk.crypto.testimpl;
 
 import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.macasaet.fernet.Key;
