@@ -13,7 +13,7 @@ public class StorageConfig {
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customEncryptionList;
+    private List<Crypto> customEncryptionConfigsList;
     private boolean ignoreKeyCase;
 
     public String getEnvId() {
@@ -76,18 +76,18 @@ public class StorageConfig {
         return this;
     }
 
-    public List<Crypto> getCustomEncryptionList() {
-        return customEncryptionList;
+    public List<Crypto> getCustomEncryptionConfigsList() {
+        return customEncryptionConfigsList;
     }
 
     /**
      * for custom encryption
      *
-     * @param customEncryptionList List with custom encryption functions
+     * @param customEncryptionConfigsList List with custom encryption functions
      * @return StorageConfig
      */
-    public StorageConfig setCustomEncryptionList(List<Crypto> customEncryptionList) {
-        this.customEncryptionList = customEncryptionList;
+    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
+        this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
     }
 
@@ -112,7 +112,7 @@ public class StorageConfig {
         newInstance.setApiKey(getApiKey());
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
-        newInstance.setCustomEncryptionList(getCustomEncryptionList());
+        newInstance.setCustomEncryptionConfigsList(getCustomEncryptionConfigsList());
         newInstance.setIgnoreKeyCase(isIgnoreKeyCase());
         return newInstance;
     }

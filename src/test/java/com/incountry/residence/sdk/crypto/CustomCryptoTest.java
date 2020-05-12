@@ -51,12 +51,12 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
-        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomEncryptionList(null));
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomEncryptionConfigsList(null));
         assertNotNull(storage);
-        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomEncryptionList(new ArrayList<>()));
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomEncryptionConfigsList(new ArrayList<>()));
         assertNotNull(storage);
     }
 
@@ -92,10 +92,10 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
-                .setCustomEncryptionList(cryptoList1);
+                .setCustomEncryptionConfigsList(cryptoList1);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         List<Crypto> cryptoList2 = Arrays.asList(new DefaultCryptoWithCustomVersion(""));
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomEncryptionList(cryptoList2)));
+        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomEncryptionConfigsList(cryptoList2)));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
@@ -121,7 +121,7 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(null)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
@@ -139,7 +139,7 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
@@ -156,7 +156,7 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
@@ -172,7 +172,7 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 
@@ -295,7 +295,7 @@ public class CustomCryptoTest {
                 .setEnvId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
     }
 }

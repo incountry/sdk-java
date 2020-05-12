@@ -14,7 +14,7 @@ public class SecretKey {
     private static final String MSG_ERR_VERSION = "Version must be >= 0";
     private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
     private static final String MSG_ERR_OPTION = "SecretKey can have either 'isKey' or 'isForCustomEncryption' set to True, not both";
-    private static final String MSG_ERR_KEY_LEN = "Wrong key length for default encryption with option 'isKey==true'. Should be "
+    private static final String MSG_ERR_KEY_LEN = "Wrong key length for secret key with 'isKey==true'. Should be "
             + KEY_LENGTH + " characters ‘utf8’ encoded string";
 
     private final String secret;
@@ -42,8 +42,8 @@ public class SecretKey {
      * @param secret                secret/key
      * @param version               secret version, should be a non-negative integer
      * @param isKey                 should be True only for user-defined encryption keys
-     * @param isForCustomEncryption should be True for using this key in custom encryption implementations
-     *                              Only one parameter from list ({@link #isKey},{@link #isForCustomEncryption}) can be True at the moment
+     * @param isForCustomEncryption should be True for using this key in custom encryption implementations.
+     *                              Either ({@link #isKey} or {@link #isForCustomEncryption}) can be True at the same moment, not both
      * @throws StorageClientException when parameter validation fails
      */
     public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption) throws StorageClientException {
@@ -79,7 +79,7 @@ public class SecretKey {
             LOG.error(MSG_ERR_NULL_SECRET);
             throw new StorageClientException(MSG_ERR_NULL_SECRET);
         }
-        if (isKey && !isForCustomEncryption && secret.length() != KEY_LENGTH) {
+        if (isKey && secret.length() != KEY_LENGTH) {
             LOG.error(MSG_ERR_KEY_LEN);
             throw new StorageClientException(MSG_ERR_KEY_LEN);
         }

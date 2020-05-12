@@ -235,7 +235,7 @@ public class StorageIntegrationTest {
                 .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
                 .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
                 .setSecretKeyAccessor(customAccessor)
-                .setCustomEncryptionList(cryptoList);
+                .setCustomEncryptionConfigsList(cryptoList);
         Storage storage2 = StorageImpl.getInstance(config);
         //write record with custom enc
         String customRecordKey = WRITE_KEY + "_custom";
