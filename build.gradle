@@ -52,6 +52,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
     integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
+    testCompile group: "com.macasaet.fernet", name: "fernet-java8", version: "${fernetVersion}"
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
@@ -64,7 +65,7 @@ dependencies {
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
     failOnError = true
-    failBuildOnCVSS = 1
+    failBuildOnCVSS = 10
 }
 
 check.dependsOn dependencyCheckAnalyze
@@ -105,16 +106,23 @@ sonarqube {
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.organization", "incountry"
         property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/report.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/test/jacocoTestReport.xml"
     }
+}
+
+jacoco {
+    toolVersion = "${jacocoVersion}"
+    reportsDir = file("$buildDir/jacoco")
 }
 
 jacocoTestReport {
     reports {
         xml.enabled true
-        xml.destination file("${buildDir}/jacoco/report.xml")
+        csv.enabled false
+        html.enabled true
     }
 }
+
 
 repositories {
     mavenCentral()

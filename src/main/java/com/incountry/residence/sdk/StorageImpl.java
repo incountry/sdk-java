@@ -4,8 +4,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -38,13 +37,14 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
-
+    private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String LOG_SECURE = "[SECURE]";
     private static final String LOG_SECURE2 = "[SECURE[";
 
-    private Crypto crypto;
+
+    private CryptoManager cryptoManager;
     private Dao dao;
     private boolean isEncrypted;
 
@@ -63,7 +63,7 @@ public class StorageImpl implements Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance() throws StorageClientException, StorageServerException {
-        return getInstance(null);
+        return getInstance((SecretKeyAccessor) null);
     }
 
     /**
@@ -99,21 +99,43 @@ public class StorageImpl implements Storage {
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
                     apiKey != null ? LOG_SECURE2 + apiKey.hashCode() + "]]" : null,
                     endpoint,
-                    secretKeyAccessor != null ? LOG_SECURE : null
-            );
+                    secretKeyAccessor != null ? LOG_SECURE : null);
         }
-        checkEnvironment(environmentID);
-        if (apiKey == null) {
-            LOG.error(MSG_ERR_PASS_API_KEY);
-            throw new StorageClientException(MSG_ERR_PASS_API_KEY);
-        }
-        StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID);
-        instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+        StorageImpl instance = getInstanceWithoutCrypto(environmentID, apiKey, endpoint, secretKeyAccessor);
+        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException {
+    /**
+     * creating Storage instance
+     *
+     * @param config Configuration for Storage initialization
+     * @return instance of Storage
+     * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    public static Storage getInstance(StorageConfig config)
+            throws StorageClientException, StorageServerException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("StorageImpl constructor params (environmentID={} , apiKey={} , endpoint={}, secretKeyAccessor={}, cryptoList={})",
+                    config.getEnvId() != null ? LOG_SECURE2 + config.getEnvId().hashCode() + "]]" : null,
+                    config.getApiKey() != null ? LOG_SECURE2 + config.getApiKey().hashCode() + "]]" : null,
+                    config.getEndPoint(),
+                    config.getSecretKeyAccessor() != null ? LOG_SECURE : null,
+                    config.getCustomEncryptionConfigsList()
+            );
+        }
+        if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionConfigsList() == null || config.getCustomEncryptionConfigsList().isEmpty())) {
+            LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
+            throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
+        }
+        StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList());
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
+    }
+
+    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao
+            dao) throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
@@ -121,56 +143,48 @@ public class StorageImpl implements Storage {
                     dao != null ? LOG_SECURE : null
             );
         }
-        checkEnvironment(environmentID);
-        if (dao == null) {
-            LOG.error(MSG_ERR_PASS_DAO);
-            throw new StorageClientException(MSG_ERR_PASS_DAO);
-        }
+        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
+        checkNotNull(dao, MSG_ERR_PASS_DAO);
         StorageImpl instance = new StorageImpl();
-        instance.createCrypto(secretKeyAccessor, environmentID);
+        instance.isEncrypted = secretKeyAccessor != null;
+        instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    private static void checkEnvironment(String environmentID) throws StorageClientException {
-        if (environmentID == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
-            throw new StorageClientException(MSG_ERR_PASS_ENV);
+    private static StorageImpl getInstanceWithoutCrypto(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
+            throws StorageClientException, StorageServerException {
+        checkNotNull(environmentID, MSG_ERR_PASS_ENV);
+        checkNotNull(apiKey, MSG_ERR_PASS_API_KEY);
+        StorageImpl instance = new StorageImpl();
+        instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
+        instance.isEncrypted = secretKeyAccessor != null;
+        return instance;
+    }
+
+    private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {
+        if (parameter == null) {
+            LOG.error(nullErrorMessage);
+            throw new StorageClientException(nullErrorMessage);
         }
     }
 
-    private void createCrypto(SecretKeyAccessor secretKeyAccessor, String environmentID) throws StorageClientException {
-        isEncrypted = secretKeyAccessor != null;
-        if (isEncrypted) {
-            crypto = new CryptoImpl(secretKeyAccessor, environmentID);
-        } else {
-            crypto = new CryptoImpl(environmentID);
-        }
-    }
 
     private void checkParameters(String country, String key) throws StorageClientException {
-        if (country == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
-            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
-        }
-        if (key == null) {
-            LOG.error(MSG_ERR_NULL_KEY);
-            throw new StorageClientException(MSG_ERR_NULL_KEY);
-        }
+        checkNotNull(country, MSG_ERR_PASS_ENV);
+        checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
-    public Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public Record write(String country, Record record) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("write params (country={} , record={})",
                     country,
                     record != null ? LOG_SECURE2 + record.hashCode() + "]]" : null);
         }
-        if (record == null) {
-            LOG.error(MSG_ERR_NULL_RECORD);
-            throw new StorageClientException(MSG_ERR_NULL_RECORD);
-        }
+        checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getKey());
-        dao.createRecord(country, record, crypto);
+        dao.createRecord(country, record, cryptoManager);
         return record;
     }
 
@@ -182,14 +196,15 @@ public class StorageImpl implements Storage {
                     key != null ? LOG_SECURE : null);
         }
         checkParameters(country, key);
-        Record record = dao.read(country, key, crypto);
+        Record record = dao.read(country, key, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
         }
         return record;
     }
 
-    public MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public MigrateResult migrate(String country, int limit) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("migrate params (country={} , limit={})",
                     country,
@@ -205,7 +220,7 @@ public class StorageImpl implements Storage {
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
-                .versionNotEq(String.valueOf(crypto.getCurrentSecretVersion()));
+                .versionNotEq(String.valueOf(cryptoManager.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
         batchWrite(country, batchRecord.getRecords());
         MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
@@ -215,7 +230,8 @@ public class StorageImpl implements Storage {
         return result;
     }
 
-    public BatchRecord batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public BatchRecord batchWrite(String country, List<Record> records) throws
+            StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("batchWrite params (country={} , records={})",
                     country,
@@ -225,10 +241,10 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NULL_BATCH);
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
-            for (Record one : records) {
-                checkParameters(country, one.getKey());
+            for (Record record : records) {
+                checkParameters(country, record.getKey());
             }
-            dao.createBatch(records, country, crypto);
+            dao.createBatch(records, country, cryptoManager);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
@@ -240,23 +256,18 @@ public class StorageImpl implements Storage {
                     key != null ? LOG_SECURE : null);
         }
         checkParameters(country, key);
-        dao.delete(country, key, crypto);
+        dao.delete(country, key, cryptoManager);
         return true;
     }
 
-    public BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException {
+    public BatchRecord find(String country, FindFilterBuilder builder) throws
+            StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("find params (country={} , builder={})", country, builder);
         }
-        if (country == null) {
-            LOG.error(MSG_ERR_NULL_COUNTRY);
-            throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
-        }
-        if (builder == null) {
-            LOG.error(MSG_ERR_NULL_FILTERS);
-            throw new StorageClientException(MSG_ERR_NULL_FILTERS);
-        }
-        BatchRecord batchRecord = dao.find(country, builder.copy(), crypto);
+        checkNotNull(country, MSG_ERR_NULL_COUNTRY);
+        checkNotNull(builder, MSG_ERR_NULL_FILTERS);
+        BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
         }
@@ -271,7 +282,8 @@ public class StorageImpl implements Storage {
      * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      */
-    public Record findOne(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException {
+    public Record findOne(String country, FindFilterBuilder builder) throws
+            StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("findOne params (country={} , builder={})",
                     country,

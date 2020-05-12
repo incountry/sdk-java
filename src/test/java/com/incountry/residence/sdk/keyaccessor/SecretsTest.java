@@ -21,14 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SecretsDataGeneratorTest {
+public class SecretsTest {
 
     @Test
     public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
-        SecretKey secretKey = new SecretKey(secret, version, isKey);
+        boolean isForCustomEncryption = false;
+        SecretKey secretKey = new SecretKey(secret, version, isKey, isForCustomEncryption);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         int currentVersion = 1;
@@ -40,7 +41,8 @@ public class SecretsDataGeneratorTest {
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertEquals(isKey, resultSecretsData.getSecrets().get(0).getIsKey());
+        assertEquals(isKey, resultSecretsData.getSecrets().get(0).isKey());
+        assertEquals(isForCustomEncryption, resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
@@ -53,7 +55,7 @@ public class SecretsDataGeneratorTest {
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
         assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertFalse(resultSecretsData.getSecrets().get(0).getIsKey());
+        assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
@@ -89,7 +91,7 @@ public class SecretsDataGeneratorTest {
         assertEquals(1, data.getSecrets().size());
         assertEquals("someSecret", data.getSecrets().get(0).getSecret());
         assertEquals(1, data.getSecrets().get(0).getVersion());
-        assertFalse(data.getSecrets().get(0).getIsKey());
+        assertFalse(data.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
@@ -115,5 +117,38 @@ public class SecretsDataGeneratorTest {
         SecretKey secretKey3 = new SecretKey("password3", 0, false);
         assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2, secretKey3), 1));
         assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), 2));
+    }
+
+    @Test
+    public void secretsDataToStringTest() throws StorageClientException {
+        String expected = "SecretsData{secrets=[SecretKey{secret=HASH[1267537070], version=0, isKey=false, isForCustomEncryption=false}], currentVersion=0}";
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
+        SecretsData secretsData = accessor.getSecretsData();
+        assertEquals(expected, secretsData.toString());
+    }
+
+    @Test
+    public void secretsDataNegativeVersionTest() throws StorageClientException {
+        List<SecretKey> secrets = Arrays.asList(new SecretKey("password", 1, false));
+        assertThrows(StorageClientException.class, () -> new SecretsData(secrets, -1));
+    }
+
+    @Test
+    public void secretsDataEmptySecretsTest() {
+        assertThrows(StorageClientException.class, () -> new SecretsData(null, 1));
+        assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), 1));
+    }
+
+    @Test
+    public void secretsKeyWrongLength() {
+        assertThrows(StorageClientException.class, () -> new SecretKey("123", 1, true));
+    }
+
+    @Test
+    public void testValidationOfSecretKey() throws StorageClientException {
+        assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, true));
+        assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, false));
+        SecretKey.validateSecretKey("secret", 0, false, false);
+        SecretKey.validateSecretKey("secret", 0, false, true);
     }
 }

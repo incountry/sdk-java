@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -14,7 +15,13 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RecordTest {
     @Expose
@@ -125,5 +132,38 @@ public class RecordTest {
         Record recordFromQuazy = JsonUtils.recordFromString(quaziJsonString, null);
         Record recordFromNative = JsonUtils.recordFromString(nativeRecordJson, null);
         assertEquals(recordFromQuazy, recordFromNative);
+    }
+
+    @Test
+    public void testBatchToStringString() {
+        Record record1 = new Record(key + 1, body + 1, profileKey + 1, rangeKey + 1, key2 + 1, key3 + 1);
+        Record record2 = new Record(key + 2, body + 2, profileKey + 2, rangeKey + 2, key2 + 2, key3 + 2);
+        BatchRecord batchRecord = new BatchRecord(Arrays.asList(record1, record2), 2, 2, 0, 2, new ArrayList<>());
+        String str = batchRecord.toString();
+        assertTrue(str.contains(String.valueOf(record1.hashCode())));
+        assertTrue(str.contains(String.valueOf(record2.hashCode())));
+    }
+
+    @Test
+    public void testEquals() {
+        Record record1 = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record record2 = new Record(key, body, profileKey, rangeKey, key2, key3);
+        assertTrue(record1.equals(record1));
+        assertTrue(record1.equals(record2));
+        assertTrue(record2.equals(record1));
+        assertFalse(record1.equals(null));
+        assertFalse(record1.equals(UUID.randomUUID()));
+        record2 = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body + 1, profileKey, rangeKey, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey + 1, rangeKey, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey, rangeKey + 1, key2, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey, rangeKey, key2 + 1, key3);
+        assertFalse(record1.equals(record2));
+        record2 = new Record(key, body, profileKey, rangeKey, key2, key3 + 1);
+        assertFalse(record1.equals(record2));
     }
 }

@@ -74,8 +74,8 @@ public class FilterNumberParam {
     }
 
     private boolean notIn(String operator, String... permitted) {
-        for (String one : permitted) {
-            if (one.equals(operator)) {
+        for (String value : permitted) {
+            if (value.equals(operator)) {
                 return false;
             }
         }

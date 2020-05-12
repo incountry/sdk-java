@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.search;
 
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GT;
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_LT;

@@ -10,9 +10,9 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.http.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
+import com.incountry.residence.sdk.tools.dao.PoP;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -58,15 +58,15 @@ public class HttpDaoImplTests {
         return storage;
     }
 
-    private Crypto initCrypto(boolean isKey, boolean encrypt) throws StorageClientException {
+    private CryptoManager initCrypto(boolean isKey, boolean encrypt) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        Crypto crypto;
+        CryptoManager cryptoManager;
         if (encrypt) {
-            crypto = new CryptoImpl(secretKeyAccessor, "envId");
+            cryptoManager = new CryptoManager(secretKeyAccessor, "envId");
         } else {
-            crypto = new CryptoImpl("envId");
+            cryptoManager = new CryptoManager("envId");
         }
-        return crypto;
+        return cryptoManager;
     }
 
 
@@ -151,11 +151,11 @@ public class HttpDaoImplTests {
                          boolean encrypt) throws StorageException, MalformedURLException {
 
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
-        Crypto crypto = initCrypto(isKey, encrypt);
-        String keyHash = crypto.createKeyHash(key);
+        CryptoManager cryptoManager = initCrypto(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
-        FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, crypto));
+        FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, cryptoManager));
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
 
         Record fetched = storage.read(country, key);
@@ -183,8 +183,8 @@ public class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("{}");
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent));
         storage.delete(country, key);
-        Crypto crypto = initCrypto(isKey, encrypt);
-        String keyHash = crypto.createKeyHash(key);
+        CryptoManager cryptoManager = initCrypto(false, encrypt);
+        String keyHash = cryptoManager.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
         String callPath = new URL(agent.getCallEndpoint()).getPath();
         assertEquals(expectedPath, callPath);
@@ -219,13 +219,13 @@ public class HttpDaoImplTests {
         storage.batchWrite(country, records);
 
         String encryptedHttpBody = agent.getCallBody();
-        Crypto crypto = initCrypto(isKey, encrypt);
-        String keyHash = crypto.createKeyHash(key);
+        CryptoManager cryptoManager = initCrypto(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(key);
         JsonArray responseList = new Gson().fromJson(encryptedHttpBody, JsonObject.class).getAsJsonArray("records");
         for (JsonElement oneJsonRecord : responseList) {
             String keyFromResponse = ((JsonObject) oneJsonRecord).get("key").getAsString();
             String encryptedBody = ((JsonObject) oneJsonRecord).get("body").getAsString();
-            String actualBodyStr = crypto.decrypt(encryptedBody, 0);
+            String actualBodyStr = cryptoManager.decrypt(encryptedBody, 0);
             JsonObject bodyJsonObj = (JsonObject) JsonParser.parseString(actualBodyStr);
             String actualBody = body != null ? bodyJsonObj.get("payload").getAsString() : null;
             assertEquals(keyHash, keyFromResponse);
@@ -347,6 +347,16 @@ public class HttpDaoImplTests {
         assertThrows(StorageClientException.class, () -> storage.write("PU", record));
         agent.setResponse(countryLoadResponse);
         assertThrows(StorageClientException.class, () -> storage.write("pu", record));
+    }
+
+    @Test
+    public void popTest() {
+        String name = "us";
+        String host = "http://localhost";
+        PoP pop = new PoP(host, name);
+        assertEquals(name, pop.getName());
+        assertEquals(host, pop.getHost());
+        assertEquals("PoP{host='" + host + "', name='" + name + "'}", pop.toString());
     }
 
     private String countryLoadResponse = "{\n" +
