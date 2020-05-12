@@ -539,7 +539,7 @@ public static Storage getInstance(StorageConfig config)
               throws StorageClientException, StorageServerException {...}
 ```
 
-Class `StorageConfig` is a container with Storage configuration, using Builder pattern. Use method `setCustomEncryptionList` for passing a list of custom encryption implementations:
+Class `StorageConfig` is a container with Storage configuration, using Builder pattern. Use method `setCustomEncryptionConfigsList` for passing a list of custom encryption implementations:
 
 ```java
 public class StorageConfig {
@@ -547,17 +547,17 @@ public class StorageConfig {
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customEncryptionList;
+    private List<Crypto> customEncryptionConfigsList;
     //...
 
     /**
      * for custom encryption
      *
-     * @param customEncryptionList List with custom encryption functions
+     * @param customEncryptionConfigsList List with custom encryption functions
      * @return StorageConfig
      */
-    public StorageConfig setCustomEncryptionList(List<Crypto> customEncryptionList) {
-        this.customCryptoList = customEncryptionList;
+    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
+        this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
     }
 
@@ -672,10 +672,7 @@ public class FernetCrypto implements Crypto {
 
     @Override
     public String encrypt(String text, SecretKey secretKey)
-            throws StorageClientException, StorageCryptoException {
-        if (isEasySecret(secretKey.getSecret())) {
-            throw new StorageClientException("Secret is too easy, use more strong password");
-        }
+            throws StorageCryptoException {
         try {
             Key key = new Key(secretKey.getSecret());
             Token result = Token.generate(key, text);
@@ -705,10 +702,6 @@ public class FernetCrypto implements Crypto {
     @Override
     public boolean isCurrent() {
         return current;
-    }
-
-    private boolean isEasySecret(String secret) {
-        //some checking for simplicity
     }
 }
 ```

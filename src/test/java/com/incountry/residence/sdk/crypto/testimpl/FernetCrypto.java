@@ -26,11 +26,7 @@ public class FernetCrypto implements Crypto {
     }
 
     @Override
-    public String encrypt(String text, SecretKey secretKey)
-            throws StorageClientException, StorageCryptoException {
-        if (isEasySecret(secretKey.getSecret())) {
-            throw new StorageClientException("Secret is too easy, use more strong password");
-        }
+    public String encrypt(String text, SecretKey secretKey) throws StorageCryptoException {
         try {
             Key key = new Key(secretKey.getSecret());
             Token result = Token.generate(key, text);
@@ -59,9 +55,5 @@ public class FernetCrypto implements Crypto {
     @Override
     public boolean isCurrent() {
         return current;
-    }
-
-    private boolean isEasySecret(String secret) {
-        return secret.length() < 7;
     }
 }
