@@ -42,8 +42,8 @@ public class SecretKey {
      * @param secret                secret/key
      * @param version               secret version, should be a non-negative integer
      * @param isKey                 should be True only for user-defined encryption keys
-     * @param isForCustomEncryption should be True for using this key in custom encryption implementations
-     *                              Only one parameter from list ({@link #isKey},{@link #isForCustomEncryption}) can be True at the moment
+     * @param isForCustomEncryption should be True for using this key in custom encryption implementations.
+     *                              Either ({@link #isKey} or {@link #isForCustomEncryption}) can be True at the same moment, not both
      * @throws StorageClientException when parameter validation fails
      */
     public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption) throws StorageClientException {

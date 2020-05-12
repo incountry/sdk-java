@@ -539,7 +539,7 @@ public static Storage getInstance(StorageConfig config)
               throws StorageClientException, StorageServerException {...}
 ```
 
-Class `StorageConfig` is a container with Storage configuration, using pattern 'builder'. Use method `setCustomEncryptionList` for passing a list of custom encryption implementations:
+Class `StorageConfig` is a container with Storage configuration, using Builder pattern. Use method `setCustomEncryptionList` for passing a list of custom encryption implementations:
 
 ```java
 public class StorageConfig {
@@ -613,8 +613,7 @@ public interface Crypto {
 ---
 **NOTE**
 
-You should provide a specific encryption key in `SecretKey` via `SecretsData` passed to `SecretKeyAccessor`. This secret should use `true` flag `isForCustomEncryption`.
-This secret should use flag `isForCustomEncryption` instead of the regular `isKey`:
+You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKeyAccessor`. This secret should have flag `isForCustomEncryption` set to `true` and flag `isKey` set to `false`:
 ```java
 public class SecretKey {
     /**
@@ -622,8 +621,9 @@ public class SecretKey {
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption 
-     *                              implementations. Only one parameter from {@link #isKey} 
-     *                              and {@link #isForCustomEncryption}) can be True at the moment
+     *                              implementations. Either ({@link #isKey} or 
+     *                              {@link #isForCustomEncryption}) can be True at the same 
+     *                              moment, not both
      * @throws StorageClientException when parameter validation fails
      */
     public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
@@ -632,7 +632,7 @@ public class SecretKey {
 }
 ```
 
-Setting flag `isForCustomEncryption` from `SecretsData` in JSON format:
+You can set `isForCustomEncryption` using `SecretsData` JSON format as well:
 ```javascript
 secrets_data = {
   "secrets": [{
@@ -649,7 +649,7 @@ secrets_data = {
 `version` attribute is used to differ one custom encryption from another and from the default encryption as well.
 This way SDK will be able to successfully decrypt any old data if encryption changes with time.
 
-`isCurrent` attribute allows to specify one of the custom encryption implementations to use for encryption. Only one implementation can be set as `isCurrent() == true`.
+`isCurrent` attribute allows to specify one of the custom encryption implementations that will be used for encryption. Only one implementation can be set as `isCurrent() == true`.
 
 If none of the configurations have `isCurrent() == true` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
 
