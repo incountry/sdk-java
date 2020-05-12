@@ -415,4 +415,44 @@ public class StorageTest {
     public void testNegativeWithConstructor4nullDao() {
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, null));
     }
+
+    @Test
+    public void positiveTestWithClientId() throws StorageClientException, StorageServerException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENVIRONMENT_ID)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setClientId("clientId")
+                .setClientSecret("clientSecret");
+        assertNotNull(StorageImpl.getInstance(config));
+    }
+
+    @Test
+    public void negativeTestNullClientSecret() throws StorageClientException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENVIRONMENT_ID)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setClientId("clientId");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+    }
+
+    @Test
+    public void negativeTestEmptySecret() throws StorageClientException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENVIRONMENT_ID)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setClientId("")
+                .setClientSecret("");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Please pass clientId in configuration or set INC_CLIENT_ID env var", ex.getMessage());
+    }
 }
