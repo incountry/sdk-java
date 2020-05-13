@@ -114,11 +114,11 @@ public class RecordTest {
 
     @Test
     public void testToJsonObjectWithPTE() throws StorageCryptoException, StorageClientException, StorageServerException {
-        String bodyWithJson = "{\"FirstName\":\"Suellen\"}";
+        String bodyWithJson = "{\"FirstName\":\"<first name>\"}";
         Record record = new Record(key, bodyWithJson, profileKey, rangeKey, key2, key3);
         Crypto crypto = new CryptoImpl("envId");
         String recordJson = JsonUtils.toJsonString(record, crypto);
-        assertEquals("{\"version\":0,\"key\":\"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\"key2\":\"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\"key3\":\"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"range_key\":1,\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCJTdWVsbGVuXCJ9IiwibWV0YSI6eyJrZXkiOiJrZXkxIiwia2V5MiI6ImtleTIiLCJrZXkzIjoia2V5MyIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSIsInJhbmdlX2tleSI6MX19\"}", recordJson);
+        assertEquals("{\"version\":0,\"key\":\"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\"key2\":\"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\"key3\":\"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"range_key\":1,\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7ImtleSI6ImtleTEiLCJrZXkyIjoia2V5MiIsImtleTMiOiJrZXkzIiwicHJvZmlsZV9rZXkiOiJwcm9maWxlS2V5IiwicmFuZ2Vfa2V5IjoxfX0=\"}", recordJson);
         Record record2 = JsonUtils.recordFromString(recordJson, crypto);
         assertEquals(record, record2);
     }

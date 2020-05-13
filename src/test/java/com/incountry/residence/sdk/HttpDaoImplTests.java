@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -295,12 +296,25 @@ public class HttpDaoImplTests {
                 "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
                 "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
                 "}";
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReadResponse, "StringNotJson"));
+        String notJson = "StringNotJson";
+        String wrongJson = "{\"FirstName\":\"<first name>\"}";
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReadResponse, null, notJson, wrongJson));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent));
         String country = "US";
-        Record resRecord = storage.read(country, "key");
-        assertNotNull(resRecord);
-        assertThrows(StorageServerException.class, () -> storage.read(country, "key"));
+        String someKey = "key1";
+        Record realRecord = storage.read(country, someKey);
+        assertNotNull(realRecord);
+        assertEquals(someKey, realRecord.getKey());
+
+        Record nullRecord = storage.read(country, someKey);
+        assertNull(nullRecord);
+
+        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
+        assertEquals("Response error", ex1.getMessage());
+        assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", ex1.getCause().getMessage());
+
+        StorageServerException ex2 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
+        assertEquals("Null required record fields: key, body", ex2.getMessage());
     }
 
     @Test
