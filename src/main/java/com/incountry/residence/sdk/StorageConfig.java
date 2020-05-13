@@ -181,7 +181,7 @@ public class StorageConfig {
                 ", apiKey='" + hideParam(apiKey) + '\'' +
                 ", endPoint='" + endPoint + '\'' +
                 ", secretKeyAccessor=" + secretKeyAccessor +
-                ", customEncryptionList=" + customEncryptionList +
+                ", customEncryptionConfigsList=" + customEncryptionConfigsList +
                 ", ignoreKeyCase=" + ignoreKeyCase +
                 ", clientId='" + hideParam(clientId) + '\'' +
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +

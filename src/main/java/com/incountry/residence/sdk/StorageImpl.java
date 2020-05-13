@@ -128,7 +128,7 @@ public class StorageImpl implements Storage {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params config={}", config);
         }
-        if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionList() == null || config.getCustomEncryptionList().isEmpty())) {
+        if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionConfigsList() == null || config.getCustomEncryptionConfigsList().isEmpty())) {
             LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
             throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
         }
@@ -155,7 +155,7 @@ public class StorageImpl implements Storage {
         StorageImpl instance = new StorageImpl();
         instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionList(), config.isIgnoreKeyCase());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isIgnoreKeyCase());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
