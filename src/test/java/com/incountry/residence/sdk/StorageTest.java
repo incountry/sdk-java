@@ -22,6 +22,8 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -62,8 +65,9 @@ public class StorageTest {
         cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false);
     }
 
-    @Test
-    public void migratePositiveTest() throws StorageException {
+    @RepeatedTest(3)
+    public void migratePositiveTest(RepetitionInfo repeatInfo) throws StorageException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         Record rec = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
         String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
         String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
@@ -86,8 +90,9 @@ public class StorageTest {
         assertThrows(StorageClientException.class, () -> storage2.migrate("us", 1));
     }
 
-    @Test
-    public void findTest() throws StorageException {
+    @RepeatedTest(3)
+    public void findTest(RepetitionInfo repeatInfo) throws StorageException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
                 .profileKeyEq(PROFILE_KEY);
@@ -103,8 +108,9 @@ public class StorageTest {
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
     }
 
-    @Test
-    public void testCustomEndpoint() throws StorageException, IOException {
+    @RepeatedTest(3)
+    public void testCustomEndpoint(RepetitionInfo repeatInfo) throws StorageException, IOException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(endpoint, agent, tokenGenerator));
@@ -157,8 +163,9 @@ public class StorageTest {
         assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey());
     }
 
-    @Test
-    public void testFindOne() throws StorageException {
+    @RepeatedTest(3)
+    public void testFindOne(RepetitionInfo repeatInfo) throws StorageException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
                 .profileKeyEq(PROFILE_KEY);
@@ -318,8 +325,9 @@ public class StorageTest {
         assertEquals(0, findResult.getRecords().size());
     }
 
-    @Test
-    public void testReadNotFound() throws StorageException {
+    @RepeatedTest(3)
+    public void testReadNotFound(RepetitionInfo repeatInfo) throws StorageException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         String string = null;
         FakeHttpAgent agent = new FakeHttpAgent(string);
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, agent, tokenGenerator));
@@ -337,8 +345,9 @@ public class StorageTest {
         assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, null));
     }
 
-    @Test
-    public void testInitErrorOnInsufficientArgs() throws StorageClientException {
+    @RepeatedTest(3)
+    public void testInitErrorOnInsufficientArgs(RepetitionInfo repeatInfo) throws StorageClientException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));

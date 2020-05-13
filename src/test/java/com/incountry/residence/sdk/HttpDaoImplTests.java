@@ -24,6 +24,8 @@ import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -37,6 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -266,8 +269,9 @@ public class HttpDaoImplTests {
         assertThrows(StorageServerException.class, () -> storage.batchWrite(country, list)); //okokok
     }
 
-    @Test
-    public void testDeletePopApiResponse() throws StorageClientException, StorageServerException {
+    @RepeatedTest(3)
+    public void testDeletePopApiResponse(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("{}", "", "OK", "{ok}", "{ }"));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
         String country = "US";
