@@ -65,7 +65,7 @@ dependencies {
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
     failOnError = true
-    failBuildOnCVSS = 1
+    failBuildOnCVSS = 10
 }
 
 check.dependsOn dependencyCheckAnalyze

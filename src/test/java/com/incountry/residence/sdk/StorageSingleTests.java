@@ -251,28 +251,38 @@ public class StorageSingleTests {
     }
 
     @Test
-    public void testFindWithoutEncWithEncryptedData() throws StorageException {
-        Crypto cryptoWithEnc = new CryptoImpl(() -> SecretsDataGenerator.fromPassword("password"), environmentId);
+    public void testFindWithEncAndFoundFoundPTE() throws StorageException {
+        Crypto cryptoAsInStorage = new CryptoImpl(() -> secretKeyAccessor.getSecretsData(), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
-        FindFilterBuilder builder = FindFilterBuilder.create()
-                .limitAndOffset(2, 0)
-                .profileKeyEq(profileKey);
-
         Record recWithEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
-        Record recWithPTEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
-        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
+        Record recWithPTEnc = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
+        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoAsInStorage);
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
-
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         Storage storage = StorageImpl.getInstance(environmentId, secretKeyAccessor, new HttpDaoImpl(fakeEndpoint, agent));
+        BatchRecord batchRecord = storage.find(country, FindFilterBuilder.create());
+        assertEquals(0, batchRecord.getErrors().size());
+        assertEquals(2, batchRecord.getRecords().size());
+    }
 
-        BatchRecord batchRecord = storage.find(country, builder);
+    @Test
+    public void testFindWithoutEncWithEncryptedData() throws StorageException {
+        Crypto cryptoWithEnc = new CryptoImpl(() -> secretKeyAccessor.getSecretsData(), environmentId);
+        Crypto cryptoWithPT = new CryptoImpl(environmentId);
+        Record recWithEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record recWithPTEnc = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
+        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
+        String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
+        FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
+        Storage storage = StorageImpl.getInstance(environmentId, null, new HttpDaoImpl(fakeEndpoint, agent));
+
+        BatchRecord batchRecord = storage.find(country, FindFilterBuilder.create());
         assertEquals(1, batchRecord.getErrors().size());
         assertEquals(encryptedRec, batchRecord.getErrors().get(0).getRawData());
         assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(key, batchRecord.getRecords().get(0).getKey());
+        assertEquals(key + 1, batchRecord.getRecords().get(0).getKey());
         assertEquals(body, batchRecord.getRecords().get(0).getBody());
         assertEquals(key2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(key3, batchRecord.getRecords().get(0).getKey3());
