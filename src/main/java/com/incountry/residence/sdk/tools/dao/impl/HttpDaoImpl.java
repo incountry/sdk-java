@@ -88,9 +88,6 @@ public class HttpDaoImpl implements Dao {
     }
 
     private String getEndpoint(String path, String country) throws StorageClientException, StorageServerException {
-        if (!path.startsWith(URI_DELIMITER)) {
-            path = URI_DELIMITER + path;
-        }
         if (defaultEndpoint) {
             //update country list cache every 1 min
             PoP pop;

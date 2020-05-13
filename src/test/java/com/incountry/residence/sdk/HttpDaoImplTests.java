@@ -59,7 +59,7 @@ public class HttpDaoImplTests {
         return StorageImpl.getInstance("envId", encrypt ? secretKeyAccessor : null, dao);
     }
 
-    private CryptoManager initCrypto(boolean isKey, boolean encrypt) throws StorageClientException {
+    private CryptoManager initCryptoManager(boolean isKey, boolean encrypt) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         return new CryptoManager(encrypt ? secretKeyAccessor : null, "envId", null, false);
     }
@@ -146,7 +146,7 @@ public class HttpDaoImplTests {
                          boolean encrypt) throws StorageException, MalformedURLException {
 
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
-        CryptoManager cryptoManager = initCrypto(isKey, encrypt);
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
         String keyHash = cryptoManager.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
@@ -178,7 +178,7 @@ public class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("{}");
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
         storage.delete(country, key);
-        CryptoManager cryptoManager = initCrypto(false, encrypt);
+        CryptoManager cryptoManager = initCryptoManager(false, encrypt);
         String keyHash = cryptoManager.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
         String callPath = new URL(agent.getCallEndpoint()).getPath();
@@ -214,7 +214,7 @@ public class HttpDaoImplTests {
         storage.batchWrite(country, records);
 
         String encryptedHttpBody = agent.getCallBody();
-        CryptoManager cryptoManager = initCrypto(isKey, encrypt);
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
         String keyHash = cryptoManager.createKeyHash(key);
         JsonArray responseList = new Gson().fromJson(encryptedHttpBody, JsonObject.class).getAsJsonArray("records");
         for (JsonElement oneJsonRecord : responseList) {
@@ -303,7 +303,7 @@ public class HttpDaoImplTests {
                 .limitAndOffset(1, 0)
                 .profileKeyEq("profileKey");
         Record rec = new Record("key", "body", "profileKey", null, null, null);
-        String encrypted = JsonUtils.toJsonString(rec, initCrypto(false, false));
+        String encrypted = JsonUtils.toJsonString(rec, initCryptoManager(false, false));
         String goodResponse = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodResponse, "StringNotJson"));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
@@ -322,8 +322,9 @@ public class HttpDaoImplTests {
         assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, agent, tokenGenerator));
     }
 
-    @Test
-    public void testLoadCountriesInDefaultEndPoint() throws StorageServerException, StorageCryptoException, StorageClientException {
+    @RepeatedTest(3)
+    public void testLoadCountriesInDefaultEndPoint(RepetitionInfo repeatInfo) throws StorageServerException, StorageCryptoException, StorageClientException {
+        iterateLogLevel(repeatInfo, HttpDaoImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         Record record = new Record("1", "body");
