@@ -30,7 +30,7 @@ public class FernetCrypto implements Crypto {
             Key key = new Key(secretKey.getSecret());
             Token result = Token.generate(key, text);
             return result.serialise();
-        } catch (IllegalStateException ex) {
+        } catch (IllegalStateException | IllegalArgumentException ex) {
             throw new StorageCryptoException("Encryption error", ex);
         }
     }

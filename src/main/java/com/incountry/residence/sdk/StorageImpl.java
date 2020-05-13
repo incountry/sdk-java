@@ -46,7 +46,7 @@ public class StorageImpl implements Storage {
 
     private CryptoManager cryptoManager;
     private Dao dao;
-    private boolean isEncrypted;
+    private boolean encrypted;
 
     private static String loadFromEnv(String key) {
         return System.getenv(key);
@@ -130,7 +130,7 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
         }
         StorageImpl instance = getInstanceWithoutCrypto(config.getEnvId(), config.getApiKey(), config.getEndPoint(), config.getSecretKeyAccessor());
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
@@ -146,7 +146,7 @@ public class StorageImpl implements Storage {
         checkNotNull(environmentID, MSG_ERR_PASS_ENV);
         checkNotNull(dao, MSG_ERR_PASS_DAO);
         StorageImpl instance = new StorageImpl();
-        instance.isEncrypted = secretKeyAccessor != null;
+        instance.encrypted = secretKeyAccessor != null;
         instance.cryptoManager = new CryptoManager(secretKeyAccessor, environmentID);
         instance.dao = dao;
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
@@ -158,7 +158,7 @@ public class StorageImpl implements Storage {
         checkNotNull(apiKey, MSG_ERR_PASS_API_KEY);
         StorageImpl instance = new StorageImpl();
         instance.dao = new HttpDaoImpl(apiKey, environmentID, endpoint);
-        instance.isEncrypted = secretKeyAccessor != null;
+        instance.encrypted = secretKeyAccessor != null;
         return instance;
     }
 
@@ -210,7 +210,7 @@ public class StorageImpl implements Storage {
                     country,
                     limit);
         }
-        if (!isEncrypted) {
+        if (!encrypted) {
             LOG.error(MSG_ERR_MIGR_NOT_SUPPORT);
             throw new StorageClientException(MSG_ERR_MIGR_NOT_SUPPORT);
         }

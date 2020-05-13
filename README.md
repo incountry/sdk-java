@@ -548,6 +548,7 @@ public class StorageConfig {
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
     private List<Crypto> customEncryptionConfigsList;
+    private boolean normalizeKeys;
     //...
 
     /**
