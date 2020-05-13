@@ -46,7 +46,7 @@ public class CryptoManager {
     private final DefaultCrypto defaultCrypto = new DefaultCrypto(CHARSET);
     private String envId;
     private boolean usePTEncryption;
-    private boolean ignoreKeyCase;
+    private boolean normalizeKeys;
 
 
     public CryptoManager(String envId) {
@@ -62,9 +62,9 @@ public class CryptoManager {
         }
     }
 
-    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean ignoreKeyCase)
+    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean normalizeKeys)
             throws StorageClientException {
-        this.ignoreKeyCase = ignoreKeyCase;
+        this.normalizeKeys = normalizeKeys;
         initFields(keyAccessor, envId);
         initCustomEncryptionMap(customEncryptionList);
         if (!usePTEncryption) {
@@ -130,7 +130,7 @@ public class CryptoManager {
     }
 
     private String createHash(String stringToHash) {
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(ignoreKeyCase ? stringToHash.toLowerCase() : stringToHash);
+        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(normalizeKeys ? stringToHash.toLowerCase() : stringToHash);
     }
 
     private SecretKey getSecret(Integer version, boolean isForCustomEncryption) throws StorageClientException {

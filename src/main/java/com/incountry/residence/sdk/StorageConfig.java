@@ -14,7 +14,7 @@ public class StorageConfig {
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
     private List<Crypto> customEncryptionConfigsList;
-    private boolean ignoreKeyCase;
+    private boolean normalizeKeys;
 
     public String getEnvId() {
         return envId;
@@ -91,18 +91,18 @@ public class StorageConfig {
         return this;
     }
 
-    public boolean isIgnoreKeyCase() {
-        return ignoreKeyCase;
+    public boolean isNormalizeKeys() {
+        return normalizeKeys;
     }
 
     /**
      * if true - all keys will be stored as lower cased. default is false
      *
-     * @param ignoreKeyCase value
+     * @param normalizeKeys value
      * @return StorageConfig
      */
-    public StorageConfig setIgnoreKeyCase(boolean ignoreKeyCase) {
-        this.ignoreKeyCase = ignoreKeyCase;
+    public StorageConfig setNormalizeKeys(boolean normalizeKeys) {
+        this.normalizeKeys = normalizeKeys;
         return this;
     }
 
@@ -113,7 +113,7 @@ public class StorageConfig {
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
         newInstance.setCustomEncryptionConfigsList(getCustomEncryptionConfigsList());
-        newInstance.setIgnoreKeyCase(isIgnoreKeyCase());
+        newInstance.setNormalizeKeys(isNormalizeKeys());
         return newInstance;
     }
 }

@@ -79,7 +79,7 @@ public class StorageIntegrationTest {
                 .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
                 .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setIgnoreKeyCase(true);
+                .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
     }
 
