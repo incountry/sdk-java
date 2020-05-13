@@ -73,17 +73,17 @@ public class JsonUtils {
      */
     public static JsonObject toJson(Record record, Crypto crypto) throws StorageClientException, StorageCryptoException {
         Gson gson = getGson4Records();
-        JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
+        JsonObject recordJsonObj = (JsonObject) gson.toJsonTree(record);
         if (crypto == null) {
-            return jsonObject;
+            return recordJsonObj;
         }
         //store keys in new composite body with encryption
-        jsonObject.remove(P_BODY);
+        recordJsonObj.remove(P_BODY);
         JsonObject bodyJsonObj = new JsonObject();
         if (record.getBody() != null) {
             bodyJsonObj.addProperty(P_PAYLOAD, record.getBody());
         }
-        bodyJsonObj.add(P_META, jsonObject);
+        bodyJsonObj.add(P_META, recordJsonObj);
         TransferRecord encRec = new TransferRecord(record, crypto, bodyJsonObj.toString());
         return (JsonObject) gson.toJsonTree(encRec);
     }
