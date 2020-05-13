@@ -30,8 +30,8 @@ public class CryptoManager {
     private static final String MSG_ERR_NO_SECRET = "No secret provided. Cannot decrypt record: ";
     private static final String MSG_ERR_VERSION = "Secret not found for 'version'=%d with 'isForCustomEncryption'=%b";
     private static final String MSG_ERR_DECRYPTION_FORMAT = "Unknown cipher format";
-    private static final String MSG_ERR_DECRYPTION = "Unknown encryption version requested: %s";
-    private static final String MSG_ERR_DECRYPTION_BASE64 = "Unexpected exception during custom decryption - failed to get custom encryption version: %s";
+    private static final String MSG_ERR_DECRYPTION = "Unknown custom encryption version: %s";
+    private static final String MSG_ERR_DECRYPTION_BASE64 = "Unexpected exception during custom decryption - failed to parse custom encryption version: %s";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
     private static final String MSG_NULL_SECRET = "SecretKeyAccessor returns null secret";
 
@@ -126,15 +126,15 @@ public class CryptoManager {
             version = secretsData.getCurrentVersion();
         }
         int usedVersion = version >= 0 ? version : 0;
-        Optional<SecretKey> optionalSecretKey = secretsData.getSecrets().stream()
+        Optional<SecretKey> secretKeyOptional = secretsData.getSecrets().stream()
                 .filter(secretKey -> (secretKey.getVersion() == usedVersion) && (isForCustomEncryption == secretKey.isForCustomEncryption()))
                 .findFirst();
-        if (!optionalSecretKey.isPresent()) {
+        if (!secretKeyOptional.isPresent()) {
             String message = String.format(MSG_ERR_VERSION, version, isForCustomEncryption);
             LOG.error(message);
             throw new StorageClientException(message);
         }
-        return optionalSecretKey.get();
+        return secretKeyOptional.get();
     }
 
     public Integer getCurrentSecretVersion() throws StorageClientException {
