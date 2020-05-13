@@ -155,7 +155,7 @@ public class StorageImpl implements Storage {
         StorageImpl instance = new StorageImpl();
         instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isIgnoreKeyCase());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
