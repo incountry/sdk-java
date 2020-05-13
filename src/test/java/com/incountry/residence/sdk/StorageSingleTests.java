@@ -251,7 +251,7 @@ public class StorageSingleTests {
     }
 
     @Test
-    public void testFindWithEncAndFoundFoundPTE() throws StorageException {
+    public void testFindWithEncAndFoundPTE() throws StorageException {
         Crypto cryptoAsInStorage = new CryptoImpl(() -> secretKeyAccessor.getSecretsData(), environmentId);
         Crypto cryptoWithPT = new CryptoImpl(environmentId);
         Record recWithEnc = new Record(key, body, profileKey, rangeKey, key2, key3);
