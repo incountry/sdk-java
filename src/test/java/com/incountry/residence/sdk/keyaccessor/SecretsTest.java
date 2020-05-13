@@ -22,14 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SecretsTest {
+    private static final String PASSWORD_32 = "password__password__password__32";
 
     @Test
     public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
-        String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
         boolean isForCustomEncryption = false;
-        SecretKey secretKey = new SecretKey(secret, version, isKey, isForCustomEncryption);
+        SecretKey secretKey = new SecretKey(PASSWORD_32, version, isKey, isForCustomEncryption);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         int currentVersion = 1;
@@ -39,7 +39,7 @@ public class SecretsTest {
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyString);
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-        assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
+        assertEquals(PASSWORD_32, resultSecretsData.getSecrets().get(0).getSecret());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
         assertEquals(isKey, resultSecretsData.getSecrets().get(0).isKey());
         assertEquals(isForCustomEncryption, resultSecretsData.getSecrets().get(0).isForCustomEncryption());
@@ -146,6 +146,7 @@ public class SecretsTest {
 
     @Test
     public void testValidationOfSecretKey() throws StorageClientException {
+        assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(PASSWORD_32, 0, true, true));
         assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, true));
         assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, false));
         SecretKey.validateSecretKey("secret", 0, false, false);
