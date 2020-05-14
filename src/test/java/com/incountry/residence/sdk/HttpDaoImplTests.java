@@ -43,6 +43,7 @@ import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -354,6 +355,29 @@ public class HttpDaoImplTests {
         assertEquals(name, pop.getName());
         assertEquals(host, pop.getHost());
         assertEquals("PoP{host='" + host + "', name='" + name + "'}", pop.toString());
+    }
+
+    @Test
+    public void testHttpDaoWithoutCrypto() throws StorageServerException, StorageClientException, StorageCryptoException {
+        String readResponse = null;
+        String deleteResponse = "{}";
+        String createResponse = "OK";
+        String createResponseBad = "Not OK!";
+        String createResponseNull = null;
+        FakeHttpAgent httpAgent = new FakeHttpAgent(Arrays.asList(
+                readResponse, deleteResponse, createResponse, createResponseBad, createResponseNull));
+        HttpDaoImpl dao = new HttpDaoImpl(fakeEndpoint, httpAgent, tokenGenerator);
+        String country = "US";
+        String key = "key1";
+        assertNull(dao.read(country, key, null));
+        dao.delete(country, key, null);
+        dao.createRecord(country, new Record(key, "<body>"), null);
+        StorageServerException serverException = assertThrows(StorageServerException.class, () ->
+                dao.createRecord(country, new Record(key, "<body>"), null));
+        assertEquals("Response error: expected 'OK', but received: Not OK!", serverException.getMessage());
+        serverException = assertThrows(StorageServerException.class, () ->
+                dao.createRecord(country, new Record(key, "<body>"), null));
+        assertEquals("Response error: expected 'OK', but received: null", serverException.getMessage());
     }
 
     private String countryLoadResponse = "{\n" +
