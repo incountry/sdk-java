@@ -285,17 +285,41 @@ public class HttpDaoImplTests {
 
     @Test
     public void testReadPopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
-        String goodReadResponse = "{\n" +
-                "  \"body\": \"pt:eyJwYXlsb2FkIjoidGVzdCIsIm1ldGEiOiJ7XCJrZXlcIjpcIndyaXRlX2tleS1qYXZhc2RrLTIwMjAwNDIzMTgyMjE4LWNjM2E0NGI0MjI5ODQyODY4YjBkNjVhNzRlNzc1NTcxXCIsXCJrZXkyXCI6XCJrZXkyLWphdmFzZGstMjAyMDA0MjMxODIyMTgtY2MzYTQ0YjQyMjk4NDI4NjhiMGQ2NWE3NGU3NzU1NzFcIixcImtleTNcIjpcImtleTMtamF2YXNkay0yMDIwMDQyMzE4MjIxOC1jYzNhNDRiNDIyOTg0Mjg2OGIwZDY1YTc0ZTc3NTU3MVwiLFwicHJvZmlsZV9rZXlcIjpcInByb2ZpbGVLZXktamF2YXNkay0yMDIwMDQyMzE4MjIxOC1jYzNhNDRiNDIyOTg0Mjg2OGIwZDY1YTc0ZTc3NTU3MVwiLFwicmFuZ2Vfa2V5XCI6MX0ifQ==\"," +
-                "  \"key\": \"e7a6422dbb2d80201368a36d560970740d9e1946b6e3b55acc8363a725731894\",\n" +
-                "  \"version\": 0\n" +
+        String goodReRespPTE = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
                 "}";
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReadResponse, "StringNotJson"));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
+
+        String goodRespEnc = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"body\": \"2:9hWd62kupxyqWXeyORiLqzyJ/TY1F3iN5tpMzI+R41kg4m2SD/QVMRqV/4q1ROUE9UZG0TGSWk61bPcshNbnB0RsEvR2dNZW07oaXo/YvWOfWTa4WyJJdzljxxHuBg5q81ItZ9y84LV7uTzKmqWtKQmT9w==\"\n" +
+                "}";
+        String notJson = "StringNotJson";
+        String wrongJson = "{\"FirstName\":\"<first name>\"}";
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReRespPTE, goodRespEnc, null, notJson, wrongJson));
+        Storage storage = initializeStorage(true, true, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
         String country = "US";
-        Record resRecord = storage.read(country, "key");
-        assertNotNull(resRecord);
-        assertThrows(StorageServerException.class, () -> storage.read(country, "key"));
+        String someKey = "key1";
+        Record recordPte = storage.read(country, someKey);
+        assertNotNull(recordPte);
+
+        Record recordEnc = storage.read(country, someKey);
+        assertNotNull(recordEnc);
+        assertNotEquals(recordEnc, recordPte);
+
+        Record nullRecord = storage.read(country, someKey);
+        assertNull(nullRecord);
+
+        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
+        assertEquals("Response error", ex1.getMessage());
+        assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", ex1.getCause().getMessage());
+
+        StorageServerException ex2 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
+        assertEquals("Null required record fields: key, body", ex2.getMessage());
     }
 
     @Test

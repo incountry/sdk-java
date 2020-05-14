@@ -9,6 +9,7 @@ import com.google.gson.annotations.SerializedName;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -20,7 +21,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RecordTest {
@@ -117,6 +118,17 @@ public class RecordTest {
         assertEquals(jsonObject.get("key3"), recordJsonObject.get("key3"));
     }
 
+    @Test
+    public void testToJsonObjectWithPTE() throws StorageCryptoException, StorageClientException, StorageServerException {
+        String bodyWithJson = "{\"FirstName\":\"<first name>\"}";
+        Record record = new Record(key, bodyWithJson, profileKey, rangeKey, key2, key3);
+        CryptoManager crypto = new CryptoManager(null, "envId", null, false);
+        String recordJson = JsonUtils.toJsonString(record, crypto);
+        assertEquals("{\"version\":0,\"key\":\"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\"key2\":\"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\"key3\":\"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"range_key\":1,\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7ImtleSI6ImtleTEiLCJrZXkyIjoia2V5MiIsImtleTMiOiJrZXkzIiwicHJvZmlsZV9rZXkiOiJwcm9maWxlS2V5IiwicmFuZ2Vfa2V5IjoxfX0=\"}", recordJson);
+        Record record2 = JsonUtils.recordFromString(recordJson, crypto);
+        assertEquals(record, record2);
+    }
+
     /**
      * test case: serialize to json string some custom object with the same structure
      * as Record (orders of fields are different). Then test fuction of serialize/deserialize
@@ -148,22 +160,22 @@ public class RecordTest {
     public void testEquals() {
         Record record1 = new Record(key, body, profileKey, rangeKey, key2, key3);
         Record record2 = new Record(key, body, profileKey, rangeKey, key2, key3);
-        assertTrue(record1.equals(record1));
-        assertTrue(record1.equals(record2));
-        assertTrue(record2.equals(record1));
-        assertFalse(record1.equals(null));
-        assertFalse(record1.equals(UUID.randomUUID()));
+        assertEquals(record1, record1);
+        assertEquals(record1, record2);
+        assertEquals(record2, record1);
+        assertNotEquals(null, record1);
+        assertNotEquals(record1, UUID.randomUUID());
         record2 = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body + 1, profileKey, rangeKey, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey + 1, rangeKey, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey, rangeKey + 1, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey, rangeKey, key2 + 1, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey, rangeKey, key2, key3 + 1);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
     }
 }
