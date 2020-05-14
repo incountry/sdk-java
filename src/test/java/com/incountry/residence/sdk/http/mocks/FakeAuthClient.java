@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.http;
+package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.http.AuthClient;
 

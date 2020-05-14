@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.AuthClient;
 import com.incountry.residence.sdk.version.Version;
@@ -33,6 +34,7 @@ public class DefaultAuthClient implements AuthClient {
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
     private static final String MSG_ERR_EXPIRES = "Token TTL is invalid";
     private static final String MSG_ERR_INVALID_TYPE = "Token type is invalid";
+    private static final String MSG_ERR_JSON = "Error in parsing authorization response";
 
     private static final String USER_AGENT = "User-Agent";
     private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
@@ -82,20 +84,24 @@ public class DefaultAuthClient implements AuthClient {
     }
 
     private Map.Entry<String, Long> validateAndGet(String response) throws StorageServerException {
-        TransferToken token = new GsonBuilder()
-                .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                .create()
-                .fromJson(response, TransferToken.class);
-        if (token.accessToken == null || token.accessToken.isEmpty()) {
-            logAndThrowException(MSG_ERR_NULL_TOKEN);
+        try {
+            TransferToken token = new GsonBuilder()
+                    .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                    .create()
+                    .fromJson(response, TransferToken.class);
+            if (token.accessToken == null || token.accessToken.isEmpty()) {
+                logAndThrowException(MSG_ERR_NULL_TOKEN);
+            }
+            if (token.expiresIn == null || token.expiresIn < 1) {
+                logAndThrowException(MSG_ERR_EXPIRES);
+            }
+            if (!BEARER_TOKEN_TYPE.equals(token.tokenType)) {
+                logAndThrowException(MSG_ERR_INVALID_TYPE);
+            }
+            return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn);
+        } catch (JsonSyntaxException jsonSyntaxException) {
+            throw new StorageServerException(MSG_ERR_JSON, jsonSyntaxException);
         }
-        if (token.expiresIn == null || token.expiresIn < 1) {
-            logAndThrowException(MSG_ERR_EXPIRES);
-        }
-        if (!BEARER_TOKEN_TYPE.equals(token.tokenType)) {
-            logAndThrowException(MSG_ERR_INVALID_TYPE);
-        }
-        return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn);
     }
 
     private void logAndThrowException(String message) throws StorageServerException {
