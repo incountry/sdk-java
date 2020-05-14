@@ -19,38 +19,38 @@ public class ApiResponse {
         Map<Integer, ApiResponse> map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
-        map.put(401, new ApiResponse(true, true));
+        map.put(401, new ApiResponse(true, false, true));
         COUNTRY = Collections.unmodifiableMap(map);
 
         map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(404, new ApiResponse(true, true));
-        map.put(401, new ApiResponse(true, true));
+        map.put(401, new ApiResponse(true, false, true));
         READ = Collections.unmodifiableMap(map);
 
         map = new HashMap<>();
         map.put(201, new ApiResponse(false, false));
         map.put(404, new ApiResponse(true, false));
-        map.put(401, new ApiResponse(true, true));
+        map.put(401, new ApiResponse(true, false, true));
         WRITE = Collections.unmodifiableMap(map);
 
         map = new HashMap<>();
         map.put(201, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
-        map.put(401, new ApiResponse(true, true));
+        map.put(401, new ApiResponse(true, false, true));
         BATCH_WRITE = Collections.unmodifiableMap(map);
 
         map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
         map.put(409, new ApiResponse(true, false));
-        map.put(401, new ApiResponse(true, true));
+        map.put(401, new ApiResponse(true, false, true));
         FIND = Collections.unmodifiableMap(map);
 
         map = new HashMap<>();
         map.put(200, new ApiResponse(false, false));
         map.put(400, new ApiResponse(true, false));
-        map.put(401, new ApiResponse(true, true));
+        map.put(401, new ApiResponse(true, false, true));
         DELETE = Collections.unmodifiableMap(map);
     }
 

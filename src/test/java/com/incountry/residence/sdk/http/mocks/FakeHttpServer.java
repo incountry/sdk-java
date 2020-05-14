@@ -26,6 +26,12 @@ public class FakeHttpServer {
         server.createContext("/", new FakeHandler(responseList, responseCode));
     }
 
+    public FakeHttpServer(String response, List<Integer> respCodeList, int port) throws IOException {
+        server = HttpServer.create();
+        server.bind(new InetSocketAddress(port), 0);
+        server.createContext("/", new FakeHandler(response, respCodeList));
+    }
+
     public void start() {
         server.start();
     }
@@ -35,9 +41,10 @@ public class FakeHttpServer {
     }
 
     private static class FakeHandler implements HttpHandler {
+        LinkedList<Integer> respCodeList;
         LinkedList<String> responseList;
         String response;
-        int responseCode;
+        Integer responseCode;
 
         FakeHandler(String response, int responseCode) {
             this.response = response;
@@ -47,6 +54,11 @@ public class FakeHttpServer {
         FakeHandler(List<String> responseList, int responseCode) {
             this.responseList = new LinkedList<>(responseList);
             this.responseCode = responseCode;
+        }
+
+        FakeHandler(String response, List<Integer> respCodeList) {
+            this.response = response;
+            this.respCodeList = new LinkedList<>(respCodeList);
         }
 
         @Override
@@ -60,8 +72,17 @@ public class FakeHttpServer {
                     responseList.removeFirst();
                 }
             }
+            Integer currentCode = 200;
+            if (responseCode != null) {
+                currentCode = responseCode;
+            } else if (respCodeList != null && !respCodeList.isEmpty()) {
+                currentCode = respCodeList.getFirst();
+                if (respCodeList.size() > 1) {
+                    respCodeList.removeFirst();
+                }
+            }
             byte[] bytes = currentResponse != null ? currentResponse.getBytes(StandardCharsets.UTF_8) : new byte[0];
-            exchange.sendResponseHeaders(responseCode, bytes.length);
+            exchange.sendResponseHeaders(currentCode, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
             os.close();

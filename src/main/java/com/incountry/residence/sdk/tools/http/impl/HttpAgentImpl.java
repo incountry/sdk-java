@@ -95,6 +95,6 @@ public class HttpAgentImpl implements HttpAgent {
     }
 
     private boolean canRetry(ApiResponse params, int retryCount) {
-        return params.isCanRetry() && retryCount < 1;
+        return params.isCanRetry() && retryCount > 0;
     }
 }

@@ -16,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AuthTest {
 
+    private static final int PORT = 8765;
+
     @Test
     public void tokenGeneratorTest() throws StorageServerException {
         DefaultTokenGenerator generator = new DefaultTokenGenerator(new FakeAuthClient(0));
@@ -32,10 +34,9 @@ public class AuthTest {
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer'}"
         );
         int respCode = 200;
-        int port = 8764;
-        FakeHttpServer server = new FakeHttpServer(responseList, respCode, port);
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        String authUrl = "http://localhost:" + port;
+        String authUrl = "http://localhost:" + PORT;
 
         DefaultAuthClient authClient = new DefaultAuthClient();
         authClient.setCredentials("<client_id>", "<client_secret>", authUrl);
@@ -46,10 +47,9 @@ public class AuthTest {
     @Test
     public void defaultAuthClientNegativeTest() throws IOException {
         int respCode = 401;
-        int port = 8765;
-        FakeHttpServer server = new FakeHttpServer(Arrays.asList("error"), respCode, port);
+        FakeHttpServer server = new FakeHttpServer("error", respCode, PORT);
         server.start();
-        String authUrl = "http://localhost:" + port;
+        String authUrl = "http://localhost:" + PORT;
         DefaultAuthClient authClient = new DefaultAuthClient();
         authClient.setCredentials("<client_id>", "<client_secret>", authUrl);
         assertThrows(StorageServerException.class, authClient::newToken);
@@ -75,10 +75,9 @@ public class AuthTest {
                 "{'expires_in'='1000' , 'token_type'='bearer'}"
         );
         int respCode = 200;
-        int port = 8766;
-        FakeHttpServer server = new FakeHttpServer(responseList, respCode, port);
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        String authUrl = "http://localhost:" + port;
+        String authUrl = "http://localhost:" + PORT;
 
         DefaultAuthClient authClient = new DefaultAuthClient();
         authClient.setCredentials("<client_id>", "<client_secret>", authUrl);
