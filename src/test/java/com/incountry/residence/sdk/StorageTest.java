@@ -464,4 +464,18 @@ public class StorageTest {
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Please pass clientId in configuration or set INC_CLIENT_ID env var", ex.getMessage());
     }
+
+    @Test
+    public void negativeTestBothAuth() throws StorageClientException {
+        SecretsData secretData = new SecretsData(Arrays.asList(new SecretKey("secret", 1, false)), 1);
+        SecretKeyAccessor secretKeyAccessor = () -> secretData;
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENVIRONMENT_ID)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setClientId("<clientId>")
+                .setApiKey("<apiKey>");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Either apiKey or clientId/clientSecret can be used at the same moment, not both", ex.getMessage());
+    }
 }
