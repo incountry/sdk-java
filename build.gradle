@@ -73,6 +73,7 @@ check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
 spotbugs {
+    toolVersion = "${spotBugsToolVersion}"
     excludeFilter = file("$projectDir/config/spotbugs/exclude.xml")
     ignoreFailures = false
     effort = "max"
