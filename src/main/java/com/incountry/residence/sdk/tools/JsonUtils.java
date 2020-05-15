@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +54,9 @@ public class JsonUtils {
     private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
     private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then recieved";
     private static final String MSG_ERR_NULL_POPLIST = "Response error: country list is empty";
-    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty";
-    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty";
+    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty: %s";
+    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty: %s";
+    private static final String MSG_ERR_POP_TYPE = "Response error: country type is invalid: %s";
     private static final String MSG_ERR_RESPONSE = "Response error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
@@ -283,17 +285,17 @@ public class JsonUtils {
     }
 
     public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
-        TransferPopList popList;
+        TransferPop[] popArray;
         try {
-            popList = new Gson().fromJson(response, TransferPopList.class);
+            popArray = new Gson().fromJson(response, TransferPop[].class);
         } catch (JsonSyntaxException ex) {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
+        TransferPop.validateResponse(popArray);
         Map<String, POP> result = new HashMap<>();
-        TransferPopList.validatePopList(popList);
-        for (TransferPop transferPop : popList.countries) {
-            if (transferPop.direct) {
-                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.name));
+        for (TransferPop pop : popArray) {
+            if (TransferPop.TYPE_MID.equals(pop.type)) {
+                result.put(pop.getId(), new POP(uriStart + pop.getId() + uriEnd, pop.name));
             }
         }
         return result;
@@ -432,42 +434,44 @@ public class JsonUtils {
      * inner class for cosy serialization loading country List
      */
     private static class TransferPop {
-        String name;
-        String id;
-        String status;
-        boolean direct;
+        static final String TYPE_MID = "mid";
+        static List<String> expectedTypes = Arrays.asList(TYPE_MID, "mini");
 
-        @Override
-        public String toString() {
-            return "TransferPop{" +
-                    "name='" + name + '\'' +
-                    ", id='" + id + '\'' +
-                    ", status='" + status + '\'' +
-                    ", direct=" + direct +
-                    '}';
-        }
+        String id;
+        String name;
+        String type;
 
         public String getId() {
             return id.toLowerCase();
         }
-    }
 
-    private static class TransferPopList {
-        List<TransferPop> countries;
+        @Override
+        public String toString() {
+            return "TransferPop{" +
+                    "id='" + id + '\'' +
+                    ", name='" + name + '\'' +
+                    ", type='" + type + '\'' +
+                    '}';
+        }
 
-        static void validatePopList(TransferPopList one) throws StorageServerException {
-            if (one == null || one.countries == null || one.countries.isEmpty()) {
+        static void validateResponse(TransferPop[] popArray) throws StorageServerException {
+            if (popArray == null || popArray.length == 0) {
                 LOG.error(MSG_ERR_NULL_POPLIST);
                 throw new StorageServerException(MSG_ERR_NULL_POPLIST);
             }
-            for (TransferPop pop : one.countries) {
-                if (pop.name == null || pop.name.isEmpty()) {
-                    String message = MSG_ERR_NULL_POPNAME + pop.toString();
+            for (TransferPop pop : popArray) {
+                if (pop.id == null || pop.id.isEmpty()) {
+                    String message = String.format(MSG_ERR_NULL_POPID, pop.toString());
                     LOG.error(message);
                     throw new StorageServerException(message);
                 }
-                if (pop.id == null || pop.id.isEmpty()) {
-                    String message = MSG_ERR_NULL_POPID + pop.toString();
+                if (pop.name == null || pop.name.isEmpty()) {
+                    String message = String.format(MSG_ERR_NULL_POPNAME, pop.toString());
+                    LOG.error(message);
+                    throw new StorageServerException(message);
+                }
+                if (pop.type == null || !expectedTypes.contains(pop.type)) {
+                    String message = String.format(MSG_ERR_POP_TYPE, pop.toString());
                     LOG.error(message);
                     throw new StorageServerException(message);
                 }

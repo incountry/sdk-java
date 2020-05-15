@@ -342,9 +342,42 @@ public class HttpDaoImplTests {
         storage.write("ru", record);
         assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
         agent.setResponse(countryLoadResponse);
-        assertThrows(StorageClientException.class, () -> storage.write("PU", record));
+        assertThrows(StorageClientException.class, () -> storage.write("AE", record));
         agent.setResponse(countryLoadResponse);
-        assertThrows(StorageClientException.class, () -> storage.write("pu", record));
+        assertThrows(StorageClientException.class, () -> storage.write("ae", record));
+        agent.setResponse(countryLoadResponse);
+        assertThrows(StorageClientException.class, () -> storage.write("Other", record));
+    }
+
+    @Test
+    public void testLoadCountriesNegative() {
+        FakeHttpAgent agent = new FakeHttpAgent("[]");
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country list is empty", ex.getMessage());
+        agent.setResponse("");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country list is empty", ex.getMessage());
+        agent.setResponse("[{}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country id is empty: TransferPop{id='null', name='null', type='null'}", ex.getMessage());
+        agent.setResponse("[{'id'=''}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country id is empty: TransferPop{id='', name='null', type='null'}", ex.getMessage());
+        agent.setResponse("[{'id'='123'}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country name is empty: TransferPop{id='123', name='null', type='null'}", ex.getMessage());
+        agent.setResponse("[{'id'='123','name'=''}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country name is empty: TransferPop{id='123', name='', type='null'}", ex.getMessage());
+        agent.setResponse("[{'id'='123','name'='456'}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country type is invalid: TransferPop{id='123', name='456', type='null'}", ex.getMessage());
+        agent.setResponse("[{'id'='123','name'='456', 'type'=''}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country type is invalid: TransferPop{id='123', name='456', type=''}", ex.getMessage());
+        agent.setResponse("[{'id'='123','name'='456', 'type'='super'}]");
+        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        assertEquals("Response error: country type is invalid: TransferPop{id='123', name='456', type='super'}", ex.getMessage());
     }
 
     @Test
@@ -380,59 +413,21 @@ public class HttpDaoImplTests {
         assertEquals("Response error: expected 'OK', but received: null", serverException.getMessage());
     }
 
-    private String countryLoadResponse = "{\n" +
-            "  \"countries\": [\n" +
-            "    {\n" +
-            "      \"direct\": true,\n" +
-            "      \"id\": \"US\",\n" +
-            "      \"latencies\": [\n" +
-            "        {\n" +
-            "          \"country\": \"IN\",\n" +
-            "          \"latency\": 320\n" +
-            "        },\n" +
-            "        {\n" +
-            "          \"country\": \"US\",\n" +
-            "          \"latency\": 420\n" +
-            "        }\n" +
-            "      ],\n" +
-            "      \"latitude\": 37.09024,\n" +
-            "      \"longitude\": -95.712891,\n" +
-            "      \"name\": \"United States\",\n" +
-            "      \"region\": \"AMER\",\n" +
-            "      \"status\": \"active\",\n" +
-            "      \"type\": \"mid\"\n" +
-            "    },\n" +
-            "    {\n" +
-            "      \"direct\": true,\n" +
-            "      \"id\": \"RU\",\n" +
-            "      \"latencies\": [\n" +
-            "        {\n" +
-            "          \"country\": \"IN\",\n" +
-            "          \"latency\": 320\n" +
-            "        },\n" +
-            "        {\n" +
-            "          \"country\": \"US\",\n" +
-            "          \"latency\": 420\n" +
-            "        }\n" +
-            "      ],\n" +
-            "      \"latitude\": 61.52401,\n" +
-            "      \"longitude\": 105.318756,\n" +
-            "      \"name\": \"Russia\",\n" +
-            "      \"region\": \"EMEA\",\n" +
-            "      \"status\": \"active\",\n" +
-            "      \"type\": \"mid\"\n" +
-            "    },\n" +
-            "    {\n" +
-            "      \"direct\": false,\n" +
-            "      \"id\": \"PU\",\n" +
-            "      \"latencies\": [],\n" +
-            "      \"latitude\": null,\n" +
-            "      \"longitude\": null,\n" +
-            "      \"name\": \"Peru\",\n" +
-            "      \"region\": \"AMER\",\n" +
-            "      \"status\": \"active\",\n" +
-            "      \"type\": \"mini\"\n" +
-            "    }\n" +
-            "  ]\n" +
-            "}";
+    private String countryLoadResponse = "[\n" +
+            "  {\n" +
+            "    \"id\": \"AE\",\n" +
+            "    \"name\": \"ae\",\n" +
+            "    \"type\": \"mini\"\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"id\": \"RU\",\n" +
+            "    \"name\": \"ru\",\n" +
+            "    \"type\": \"mid\"\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"id\": \"US\",\n" +
+            "    \"name\": \"us\",\n" +
+            "    \"type\": \"mid\"\n" +
+            "  }\n" +
+            "]";
 }
