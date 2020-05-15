@@ -33,7 +33,7 @@ public class ScribeAuthClient implements AuthClient {
     public Map.Entry<String, Long> newToken() throws StorageServerException {
         OAuth20Service service = new ServiceBuilder(clientId)
                 .apiSecret(secret)
-                .build(new HydraAuthApi(authUrl));
+                .build(new DefaultAuthApi(authUrl));
         OAuth2AccessToken token;
         try {
             token = service.getAccessTokenClientCredentialsGrant();
@@ -49,10 +49,10 @@ public class ScribeAuthClient implements AuthClient {
         return new AbstractMap.SimpleEntry<>(token.getAccessToken(), expiredTime);
     }
 
-    private static class HydraAuthApi extends DefaultApi20 {
+    private static class DefaultAuthApi extends DefaultApi20 {
         String authUrl;
 
-        HydraAuthApi(String authUrl) {
+        DefaultAuthApi(String authUrl) {
             this.authUrl = authUrl;
         }
 
