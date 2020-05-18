@@ -170,7 +170,7 @@ public class StorageImpl implements Storage {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
                 AuthClient authClient = new DefaultAuthClient();
-                authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint());
+                authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint(), config.getEnvId());
                 return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new DefaultTokenGenerator(authClient));
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);

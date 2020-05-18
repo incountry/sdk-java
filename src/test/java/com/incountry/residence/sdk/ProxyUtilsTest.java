@@ -10,11 +10,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ProxyUtilsTest {
+class ProxyUtilsTest {
 
     static class FakeHttpAgent implements HttpAgent {
         @Override
-        public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenGenerator tokenGenerator, int retryCount) {
+        public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenGenerator tokenGenerator, String audienceUrl, int retryCount) {
             doNothing();
             throw new NullPointerException();
         }
@@ -24,8 +24,8 @@ public class ProxyUtilsTest {
     }
 
     @Test
-    public void testProxyException() {
+    void testProxyException() {
         HttpAgent agent = ProxyUtils.createLoggingProxyForPublicMethods(new FakeHttpAgent());
-        assertThrows(NullPointerException.class, () -> agent.request(null, null, null, null, null, 0));
+        assertThrows(NullPointerException.class, () -> agent.request(null, null, null, null, null, null, 0));
     }
 }
