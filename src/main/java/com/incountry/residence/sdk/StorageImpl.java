@@ -36,6 +36,7 @@ public class StorageImpl implements Storage {
     private static final String PARAM_AUTH_ENDPOINT = "INC_AUTH_ENDPOINT";
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
+    private static final String MSG_ERR_AUTH_DUPL = "Either apiKey or clientId/clientSecret can be used at the same moment, not both";
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
@@ -152,6 +153,10 @@ public class StorageImpl implements Storage {
     private static Storage getInstance(StorageConfig config, Dao dao)
             throws StorageClientException, StorageServerException {
         checkNotNull(config.getEnvId(), MSG_ERR_PASS_ENV);
+        if (config.getApiKey() != null && config.getClientId() != null) {
+            LOG.error(MSG_ERR_AUTH_DUPL);
+            throw new StorageClientException(MSG_ERR_AUTH_DUPL);
+        }
         StorageImpl instance = new StorageImpl();
         instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
@@ -165,7 +170,7 @@ public class StorageImpl implements Storage {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
                 AuthClient authClient = new DefaultAuthClient();
-                authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint());
+                authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint(), config.getEnvId());
                 return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new DefaultTokenGenerator(authClient));
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);

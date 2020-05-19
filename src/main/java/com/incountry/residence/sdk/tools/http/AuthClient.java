@@ -6,7 +6,7 @@ import java.util.Map;
 
 public interface AuthClient {
 
-    void setCredentials(String clientId, String secret, String authUrl);
+    void setCredentials(String clientId, String secret, String authUrl, String scope);
 
-    Map.Entry<String, Long> newToken() throws StorageServerException;
+    Map.Entry<String, Long> newToken(String audienceUrl) throws StorageServerException;
 }

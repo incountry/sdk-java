@@ -78,7 +78,7 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenGenerator, RETRY_CNT);
+            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenGenerator, PORTAL_COUNTRIES_URI, RETRY_CNT);
             popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
@@ -87,7 +87,7 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String getEndpoint(String path, String country) throws StorageClientException, StorageServerException {
+    private String getEndpoint(String country) throws StorageClientException, StorageServerException {
         if (defaultEndpoint) {
             //update country list cache every 1 min
             POP pop;
@@ -108,28 +108,31 @@ public class HttpDaoImpl implements Dao {
                 LOG.error(message);
                 throw new StorageClientException(message);
             }
-            return pop.getHost() + path;
+            return pop.getHost();
         } else {
-            return endPoint + path;
+            return endPoint;
         }
     }
 
     private String createUrl(String country, String keyHash) throws StorageClientException, StorageServerException {
-        return getEndpoint(concatUrl(country, URI_DELIMITER, keyHash), country);
+        return getEndpoint(country) + concatUrl(country, URI_DELIMITER, keyHash);
     }
 
     @Override
     public void createRecord(String country, Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
-        String url = getEndpoint(concatUrl(country), country);
-        String response = httpAgent.request(url, URI_POST, JsonUtils.toJsonString(record, cryptoManager), ApiResponse.WRITE, tokenGenerator, RETRY_CNT);
+        String audienceUrl = getEndpoint(country);
+        String endpoint = audienceUrl + concatUrl(country);
+        String body = JsonUtils.toJsonString(record, cryptoManager);
+        String response = httpAgent.request(endpoint, URI_POST, body, ApiResponse.WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
         validatePlainTextResponse("ok", response);
     }
 
     @Override
     public void createBatch(List<Record> records, String country, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
-        String url = getEndpoint(concatUrl(country, URI_BATCH_WRITE), country);
-        String response = httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenGenerator, RETRY_CNT);
+        String audienceUrl = getEndpoint(country);
+        String url = audienceUrl + concatUrl(country, URI_BATCH_WRITE);
+        String response = httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
         validatePlainTextResponse("ok", response);
     }
 
@@ -137,7 +140,8 @@ public class HttpDaoImpl implements Dao {
     public Record read(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
-        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, tokenGenerator, RETRY_CNT);
+        String audienceUrl = getEndpoint(country);
+        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, tokenGenerator, audienceUrl, RETRY_CNT);
         if (response == null) {
             return null;
         } else {
@@ -149,15 +153,17 @@ public class HttpDaoImpl implements Dao {
     public void delete(String country, String key, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String newKey = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         String url = createUrl(country, newKey);
-        String response = httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenGenerator, RETRY_CNT);
+        String audienceUrl = getEndpoint(country);
+        String response = httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenGenerator, audienceUrl, RETRY_CNT);
         validatePlainTextResponse("{}", response);
     }
 
     @Override
     public BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
-        String url = getEndpoint(concatUrl(country, URI_FIND), country);
+        String audienceUrl = getEndpoint(country);
+        String url = audienceUrl + concatUrl(country, URI_FIND);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
-        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, tokenGenerator, RETRY_CNT);
+        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, tokenGenerator, audienceUrl, RETRY_CNT);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
