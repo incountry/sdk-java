@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENDPOINT;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENVID;
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,7 +42,7 @@ public class OAthTest {
     private static final String CLIENT_ID = loadFromEnv(INTEGR_ENC_CLIENT_ID);
     private static final String SECRET = loadFromEnv(INTEGR_ENC_CLIENT_SECRET);
     private static final String END_POINT = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
-    private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
+    private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENVID);
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
 
     private final SecretKeyAccessor accessor;
@@ -52,7 +53,7 @@ public class OAthTest {
     }
 
     private Storage initStorage(AuthClient authClient) throws StorageServerException, StorageClientException {
-        authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL);
+        authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL, "envId");
         Dao dao = new HttpDaoImpl(END_POINT, new HttpAgentImpl(ENV_ID, StandardCharsets.UTF_8), new DefaultTokenGenerator(authClient));
         return StorageImpl.getInstance(ENV_ID, accessor, dao);
     }
@@ -78,8 +79,8 @@ public class OAthTest {
     @ParameterizedTest
     @MethodSource("authClients")
     public void positiveAuthTest(AuthClient authClient) throws StorageServerException {
-        authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL);
-        Map.Entry<String, Long> token = authClient.newToken();
+        authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL, ENV_ID);
+        Map.Entry<String, Long> token = authClient.newToken(END_POINT);
         assertNotNull(token.getValue());
         assertTrue(System.currentTimeMillis() < token.getValue());
     }

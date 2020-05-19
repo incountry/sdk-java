@@ -24,82 +24,82 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class HttpAgentImplTest {
+class HttpAgentImplTest {
 
     private static final int PORT = 8766;
 
     @Test
-    public void testNullEndpointException() {
+    void testNullEndpointException() {
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
+        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
     }
 
     @Test
-    public void testNullApiKeyException() {
+    void testNullApiKeyException() {
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
+        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
     }
 
     @Test
-    public void testNullEnvIdException() {
+    void testNullEnvIdException() {
         HttpAgent agent = new HttpAgentImpl(null, StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
+        assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
     }
 
     @Test
-    public void testFakeEndpointException() {
+    void testFakeEndpointException() {
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
         assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost",
-                "GET", "someBody", new HashMap<>(), new DefaultTokenGenerator("apiKey"), 0));
+                "GET", "someBody", new HashMap<>(), new DefaultTokenGenerator("apiKey"), null, 0));
     }
 
     @RepeatedTest(3)
-    public void testWithFakeHttpServer(RepetitionInfo repeatInfo) throws IOException, StorageServerException {
+    void testWithFakeHttpServer(RepetitionInfo repeatInfo) throws IOException, StorageServerException {
         iterateLogLevel(repeatInfo, HttpAgentImpl.class);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertNotNull(agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), 0));
-        assertNotNull(agent.request(url, "POST", null, ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), 0));
+        assertNotNull(agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), null, 0));
+        assertNotNull(agent.request(url, "POST", null, ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), null, 0));
         server.stop(0);
     }
 
     @Test
-    public void testWithFakeHttpServerBadCode() throws IOException {
+    void testWithFakeHttpServerBadCode() throws IOException {
         int respCode = 555;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), 0));
+        assertThrows(StorageServerException.class, () -> agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), null, 0));
         server.stop(0);
     }
 
     @Test
-    public void testWithFakeHttpServerBadCodeRefreshToken() throws IOException, StorageServerException {
+    void testWithFakeHttpServerBadCodeRefreshToken() throws IOException, StorageServerException {
         List<Integer> respCodeList = Arrays.asList(401, 401, 401, 401, 401, 200);
         FakeHttpServer server = new FakeHttpServer("{}", respCodeList, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
         assertThrows(StorageServerException.class, () ->
-                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), 0));
+                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), null, 0));
         assertThrows(StorageServerException.class, () ->
-                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), 2));
-        assertEquals("{}", agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), 1));
+                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), null, 2));
+        assertEquals("{}", agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), null, 1));
         server.stop(0);
     }
 
     @Test
-    public void testWithFakeHttpServerIgnoredStatus() throws IOException, StorageServerException {
+    void testWithFakeHttpServerIgnoredStatus() throws IOException, StorageServerException {
         int respCode = 404;
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertNull(agent.request(url, "POST", "<body>", ApiResponse.READ, new DefaultTokenGenerator("apiKey"), 0));
+        assertNull(agent.request(url, "POST", "<body>", ApiResponse.READ, new DefaultTokenGenerator("apiKey"), null, 0));
         server.stop(0);
     }
 }
