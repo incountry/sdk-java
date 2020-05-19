@@ -92,7 +92,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    public void findTest(RepetitionInfo repeatInfo) throws StorageException {
+    void findTest(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
