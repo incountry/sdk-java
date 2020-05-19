@@ -34,11 +34,12 @@ public class DefaultAuthClient implements AuthClient {
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
     private static final String MSG_ERR_EXPIRES = "Token TTL is invalid";
     private static final String MSG_ERR_INVALID_TYPE = "Token type is invalid";
+    private static final String MSG_ERR_INVALID_SCOPE = "Token scope is invalid";
     private static final String MSG_ERR_JSON = "Error in parsing authorization response";
 
     private static final String USER_AGENT = "User-Agent";
     private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
-    private static final String BODY = "grant_type=client_credentials";
+    private static final String BODY = "grant_type=client_credentials&audience=%s&scope=%s";
     private static final String BEARER_TOKEN_TYPE = "bearer";
     private static final String BASIC = "Basic ";
     private static final String POST = "POST";
@@ -49,19 +50,22 @@ public class DefaultAuthClient implements AuthClient {
 
     private String basicAuthToken;
     private String authUrl;
+    private String envId;
 
     @Override
-    public void setCredentials(String clientId, String secret, String authUrl) {
+    public void setCredentials(String clientId, String secret, String authUrl, String scope) {
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
         this.authUrl = authUrl != null ? authUrl : DEFAULT_AUTH_URL;
+        this.envId = scope;
     }
 
     @Override
-    public Map.Entry<String, Long> newToken() throws StorageServerException {
+    public Map.Entry<String, Long> newToken(String audienceUrl) throws StorageServerException {
         try {
+            String body = String.format(BODY, audienceUrl, envId);
             HttpURLConnection con = getConnection();
             OutputStream os = con.getOutputStream();
-            os.write(BODY.getBytes(CHARSET));
+            os.write(body.getBytes(CHARSET));
             os.flush();
             os.close();
             int status = con.getResponseCode();
@@ -98,6 +102,9 @@ public class DefaultAuthClient implements AuthClient {
             if (!BEARER_TOKEN_TYPE.equals(token.tokenType)) {
                 logAndThrowException(MSG_ERR_INVALID_TYPE);
             }
+            if (!envId.equals(token.scope)) {
+                logAndThrowException(MSG_ERR_INVALID_SCOPE);
+            }
             return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn);
         } catch (JsonSyntaxException jsonSyntaxException) {
             throw new StorageServerException(MSG_ERR_JSON, jsonSyntaxException);
@@ -127,6 +134,7 @@ public class DefaultAuthClient implements AuthClient {
     private static class TransferToken {
         String accessToken;
         String tokenType;
+        String scope;
         Long expiresIn;
     }
 }

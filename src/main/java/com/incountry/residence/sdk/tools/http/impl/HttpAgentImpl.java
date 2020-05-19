@@ -22,9 +22,9 @@ public class HttpAgentImpl implements HttpAgent {
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error";
 
-    private String environmentId;
-    private Charset charset;
-    private String userAgent;
+    private final String environmentId;
+    private final Charset charset;
+    private final String userAgent;
 
 
     public HttpAgentImpl(String environmentId, Charset charset) {
@@ -39,7 +39,8 @@ public class HttpAgentImpl implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenGenerator tokenGenerator, int retryCount) throws StorageServerException {
+    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap,
+                          TokenGenerator tokenGenerator, String audienceUrl, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , codeMap={})",
                     endpoint,
@@ -50,7 +51,7 @@ public class HttpAgentImpl implements HttpAgent {
             URL url = new URL(endpoint);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
-            con.setRequestProperty("Authorization", "Bearer " + tokenGenerator.getToken());
+            con.setRequestProperty("Authorization", "Bearer " + tokenGenerator.getToken(audienceUrl));
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);
@@ -66,11 +67,11 @@ public class HttpAgentImpl implements HttpAgent {
             BufferedReader reader;
             if (params != null && !params.isError()) {
                 reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
-            } else if (params == null || !canRetry(params, retryCount)) {
+            } else if (params == null || !tokenGenerator.canRefreshToken() || !canRetry(params, retryCount)) {
                 reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
             } else {
-                tokenGenerator.refreshToken(true);
-                return request(endpoint, method, body, codeMap, tokenGenerator, retryCount - 1);
+                tokenGenerator.refreshToken(true, audienceUrl);
+                return request(endpoint, method, body, codeMap, tokenGenerator, audienceUrl, retryCount - 1);
             }
             String inputLine;
             StringBuilder content = new StringBuilder();

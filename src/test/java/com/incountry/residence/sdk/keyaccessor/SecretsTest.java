@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,11 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SecretsTest {
+class SecretsTest {
     private static final String PASSWORD_32 = "password__password__password__32";
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
+    void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
         int version = 1;
         boolean isKey = true;
         boolean isForCustomEncryption = false;
@@ -46,7 +47,7 @@ public class SecretsTest {
     }
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
+    void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
@@ -59,7 +60,7 @@ public class SecretsTest {
     }
 
     @Test
-    public void testIsJson() throws StorageClientException {
+    void testIsJson() throws StorageClientException {
         JsonObject jsonWithoutSecretsDataFields = new JsonObject();
         jsonWithoutSecretsDataFields.addProperty("body", "test");
         jsonWithoutSecretsDataFields.addProperty("key", "write_key");
@@ -95,7 +96,7 @@ public class SecretsTest {
     }
 
     @Test
-    public void testWrongJson() {
+    void testWrongJson() {
         String secretDataWrongJson = "{\n" +
                 "  \"secrets\": [\n" +
                 "    {\n" +
@@ -111,7 +112,7 @@ public class SecretsTest {
     }
 
     @Test
-    public void testValidationOfSecretsData() throws StorageClientException {
+    void testValidationOfSecretsData() throws StorageClientException {
         SecretKey secretKey1 = new SecretKey("password1", 0, false);
         SecretKey secretKey2 = new SecretKey("password2", 1, false);
         SecretKey secretKey3 = new SecretKey("password3", 0, false);
@@ -120,7 +121,7 @@ public class SecretsTest {
     }
 
     @Test
-    public void secretsDataToStringTest() throws StorageClientException {
+    void secretsDataToStringTest() throws StorageClientException {
         String expected = "SecretsData{secrets=[SecretKey{secret=HASH[1267537070], version=0, isKey=false, isForCustomEncryption=false}], currentVersion=0}";
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData secretsData = accessor.getSecretsData();
@@ -128,24 +129,24 @@ public class SecretsTest {
     }
 
     @Test
-    public void secretsDataNegativeVersionTest() throws StorageClientException {
-        List<SecretKey> secrets = Arrays.asList(new SecretKey("password", 1, false));
+    void secretsDataNegativeVersionTest() throws StorageClientException {
+        List<SecretKey> secrets = Collections.singletonList(new SecretKey("password", 1, false));
         assertThrows(StorageClientException.class, () -> new SecretsData(secrets, -1));
     }
 
     @Test
-    public void secretsDataEmptySecretsTest() {
+    void secretsDataEmptySecretsTest() {
         assertThrows(StorageClientException.class, () -> new SecretsData(null, 1));
         assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), 1));
     }
 
     @Test
-    public void secretsKeyWrongLength() {
+    void secretsKeyWrongLength() {
         assertThrows(StorageClientException.class, () -> new SecretKey("123", 1, true));
     }
 
     @Test
-    public void testValidationOfSecretKey() throws StorageClientException {
+    void testValidationOfSecretKey() throws StorageClientException {
         assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(PASSWORD_32, 0, true, true));
         assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, true));
         assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, false));
