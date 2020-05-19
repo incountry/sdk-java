@@ -14,10 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FilterNumberParamTest {
+class FilterNumberParamTest {
 
     @Test
-    public void negativeRangeTest() {
+    void negativeRangeTest() {
         assertThrows(StorageClientException.class, () -> new FilterNumberParam(null));
         assertThrows(StorageClientException.class, () -> new FilterNumberParam(null, 1));
         assertThrows(StorageClientException.class, () -> new FilterNumberParam("WrongOperator!@#", 1));
@@ -32,7 +32,7 @@ public class FilterNumberParamTest {
     }
 
     @Test
-    public void isRangeTest() throws StorageClientException {
+    void isRangeTest() throws StorageClientException {
         assertFalse(new FilterNumberParam(new Integer[]{1, 2}).isRange());
         assertFalse(new FilterNumberParam(OPER_NOT, 1).isRange());
         assertTrue(new FilterNumberParam(OPER_GT, 100, OPER_LT, 200).isRange());
@@ -42,7 +42,7 @@ public class FilterNumberParamTest {
     }
 
     @Test
-    public void fromJsonEmptyFieldsNumberTest() {
+    void fromJsonEmptyFieldsNumberTest() {
         String numberFilterJson = "{}";
         FilterNumberParam numberParam = new Gson().fromJson(numberFilterJson, FilterNumberParam.class);
         Integer[] values = numberParam.getValues();
