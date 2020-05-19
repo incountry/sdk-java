@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class ApiResponseTest {
+class ApiResponseTest {
 
     @Test
-    public void createApiResponseTest() {
+    void createApiResponseTest() {
         boolean error = false;
         boolean ignore = false;
         boolean canRetry = false;

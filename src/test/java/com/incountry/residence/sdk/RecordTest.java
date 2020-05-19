@@ -20,10 +20,10 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class RecordTest {
+class RecordTest {
     @Expose
     public String key;
     @Expose
@@ -50,7 +50,7 @@ public class RecordTest {
     }
 
     @Test
-    public void testSimpleMerge() {
+    void testSimpleMerge() {
         String newKey = "newKey";
         String newBody = "newBody";
 
@@ -64,7 +64,7 @@ public class RecordTest {
 
 
     @Test
-    public void testMerge() {
+    void testMerge() {
         String newKey = "newKey";
         String newBody = "newBody";
         String newProfileKey = "newProfileKey";
@@ -83,7 +83,7 @@ public class RecordTest {
     }
 
     @Test
-    public void testFromString() throws StorageCryptoException, StorageClientException, StorageServerException {
+    void testFromString() throws StorageCryptoException, StorageClientException, StorageServerException {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("body", "test");
         jsonObject.addProperty("env_id", "5422b4ba-016d-4a3b-aea5-a832083697b1");
@@ -104,7 +104,7 @@ public class RecordTest {
     }
 
     @Test
-    public void testToJsonObject() throws StorageCryptoException, StorageClientException {
+    void testToJsonObject() throws StorageCryptoException, StorageClientException {
         JsonElement jsonElement = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJsonTree(this);
         JsonObject jsonObject = (JsonObject) jsonElement;
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
@@ -125,7 +125,7 @@ public class RecordTest {
      * @throws StorageCryptoException when problem with encryption
      */
     @Test
-    public void testToJsonString() throws StorageCryptoException, StorageClientException, StorageServerException {
+    void testToJsonString() throws StorageCryptoException, StorageClientException, StorageServerException {
         String quaziJsonString = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
         Record nativeRecord = new Record(key, body, profileKey, rangeKey, key2, key3);
         String nativeRecordJson = JsonUtils.toJsonString(nativeRecord, null);
@@ -135,7 +135,7 @@ public class RecordTest {
     }
 
     @Test
-    public void testBatchToStringString() {
+    void testBatchToStringString() {
         Record record1 = new Record(key + 1, body + 1, profileKey + 1, rangeKey + 1, key2 + 1, key3 + 1);
         Record record2 = new Record(key + 2, body + 2, profileKey + 2, rangeKey + 2, key2 + 2, key3 + 2);
         BatchRecord batchRecord = new BatchRecord(Arrays.asList(record1, record2), 2, 2, 0, 2, new ArrayList<>());
@@ -145,25 +145,25 @@ public class RecordTest {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         Record record1 = new Record(key, body, profileKey, rangeKey, key2, key3);
         Record record2 = new Record(key, body, profileKey, rangeKey, key2, key3);
-        assertTrue(record1.equals(record1));
-        assertTrue(record1.equals(record2));
-        assertTrue(record2.equals(record1));
-        assertFalse(record1.equals(null));
-        assertFalse(record1.equals(UUID.randomUUID()));
+        assertEquals(record1, record1);
+        assertEquals(record1, record2);
+        assertEquals(record2, record1);
+        assertNotEquals(null, record1);
+        assertNotEquals(record1, UUID.randomUUID());
         record2 = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body + 1, profileKey, rangeKey, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey + 1, rangeKey, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey, rangeKey + 1, key2, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey, rangeKey, key2 + 1, key3);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
         record2 = new Record(key, body, profileKey, rangeKey, key2, key3 + 1);
-        assertFalse(record1.equals(record2));
+        assertNotEquals(record1, record2);
     }
 }
