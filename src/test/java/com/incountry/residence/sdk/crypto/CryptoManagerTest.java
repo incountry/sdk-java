@@ -197,12 +197,22 @@ class CryptoManagerTest {
     }
 
     @Test
-    void negativeVersionTest() throws StorageClientException, StorageCryptoException {
+    void nullVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
         CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false);
         String text = "Some secret text";
         Map.Entry<String, Integer> encrypted = manager.encrypt(text);
-        String decrypted = manager.decrypt(encrypted.getKey(), -1);
+        String decrypted = manager.decrypt(encrypted.getKey(), null);
         assertEquals(text, decrypted);
+    }
+
+    @Test
+    void illegalVersionTest() throws StorageClientException, StorageCryptoException {
+        SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
+        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false);
+        String text = "Some secret text";
+        Map.Entry<String, Integer> encrypted = manager.encrypt(text);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(encrypted.getKey(), 100500));
+        assertEquals("Secret not found for 'version'=100500 with 'isForCustomEncryption'=false", ex.getMessage());
     }
 }
