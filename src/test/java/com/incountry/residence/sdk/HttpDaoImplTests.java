@@ -56,7 +56,7 @@ class HttpDaoImplTests {
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
     private TokenGenerator tokenGenerator = new DefaultTokenGenerator(new FakeAuthClient(300L));
 
-    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException, StorageServerException {
+    private Storage initializeStorage(boolean isKey, boolean encrypt, Dao dao) throws StorageClientException, StorageServerException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         return StorageImpl.getInstance("envId", encrypt ? secretKeyAccessor : null, dao);
     }
@@ -351,33 +351,33 @@ class HttpDaoImplTests {
     }
 
     @Test
-    public void testLoadCountriesNegative() {
+    void testLoadCountriesNegative() {
         FakeHttpAgent agent = new FakeHttpAgent("[]");
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country list is empty", ex.getMessage());
         agent.setResponse("");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country list is empty", ex.getMessage());
         agent.setResponse("[{}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country id is empty: TransferPop{id='null', name='null', type='null'}", ex.getMessage());
         agent.setResponse("[{'id'=''}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country id is empty: TransferPop{id='', name='null', type='null'}", ex.getMessage());
         agent.setResponse("[{'id'='123'}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country name is empty: TransferPop{id='123', name='null', type='null'}", ex.getMessage());
         agent.setResponse("[{'id'='123','name'=''}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country name is empty: TransferPop{id='123', name='', type='null'}", ex.getMessage());
         agent.setResponse("[{'id'='123','name'='456'}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country type is invalid: TransferPop{id='123', name='456', type='null'}", ex.getMessage());
         agent.setResponse("[{'id'='123','name'='456', 'type'=''}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country type is invalid: TransferPop{id='123', name='456', type=''}", ex.getMessage());
         agent.setResponse("[{'id'='123','name'='456', 'type'='super'}]");
-        ex = assertThrows(StorageServerException.class, () -> initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator)));
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenGenerator));
         assertEquals("Response error: country type is invalid: TransferPop{id='123', name='456', type='super'}", ex.getMessage());
     }
 
