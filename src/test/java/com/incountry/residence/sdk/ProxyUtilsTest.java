@@ -14,7 +14,7 @@ class ProxyUtilsTest {
 
     static class FakeHttpAgent implements HttpAgent {
         @Override
-        public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String audienceUrl, int retryCount) {
+        public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String popInstanceUrl, int retryCount) {
             doNothing();
             throw new NullPointerException();
         }

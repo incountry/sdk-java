@@ -111,7 +111,7 @@ class HttpDaoImplTests {
         storage.write(country, record);
 
         String received = agent.getCallBody();
-        String callPath = new URL(agent.getCallEndpoint()).getPath();
+        String callPath = new URL(agent.getCallUrl()).getPath();
         Record receivedRecord = JsonUtils.recordFromString(received, null);
 
         assertEquals(expectedPath, callPath);
@@ -155,7 +155,7 @@ class HttpDaoImplTests {
         Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
 
         Record fetched = storage.read(country, key);
-        assertEquals(expectedPath, new URL(agent.getCallEndpoint()).getPath());
+        assertEquals(expectedPath, new URL(agent.getCallUrl()).getPath());
         assertEquals(key, fetched.getKey());
         assertEquals(body, fetched.getBody());
         assertEquals(profileKey, fetched.getProfileKey());
@@ -182,7 +182,7 @@ class HttpDaoImplTests {
         CryptoManager cryptoManager = initCryptoManager(false, encrypt);
         String keyHash = cryptoManager.createKeyHash(key);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
-        String callPath = new URL(agent.getCallEndpoint()).getPath();
+        String callPath = new URL(agent.getCallUrl()).getPath();
         assertEquals(expectedPath, callPath);
     }
 
@@ -324,16 +324,16 @@ class HttpDaoImplTests {
         Record record = new Record("1", "body");
         agent.setResponse("OK");
         storage.write("US", record);
-        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
+        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallUrl());
         agent.setResponse("OK");
         storage.write("us", record);
-        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallEndpoint());
+        assertEquals("https://us.api.incountry.io/v2/storage/records/us", agent.getCallUrl());
         agent.setResponse("OK");
         storage.write("RU", record);
-        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
+        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallUrl());
         agent.setResponse("OK");
         storage.write("ru", record);
-        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
+        assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallUrl());
         agent.setResponse(countryLoadResponse);
         assertThrows(StorageClientException.class, () -> storage.write("PU", record));
         agent.setResponse(countryLoadResponse);

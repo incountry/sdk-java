@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class FakeHttpAgent implements HttpAgent {
 
-    private String callEndpoint;
+    private String callUrl;
     private String callMethod;
     private String callBody;
     private String response;
@@ -28,19 +28,19 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String audienceUrl, int retryCount) {
-        this.callEndpoint = endpoint;
+    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String popInstanceUrl, int retryCount) {
+        this.callUrl = url;
         this.callMethod = method;
         this.callBody = body;
         this.codeMap = codeMap;
         this.tokenClient = tokenClient;
         this.retryCount = retryCount;
-        this.audienceUrl = audienceUrl;
+        this.audienceUrl = popInstanceUrl;
         return getResponse();
     }
 
-    public String getCallEndpoint() {
-        return callEndpoint;
+    public String getCallUrl() {
+        return callUrl;
     }
 
     public String getCallMethod() {

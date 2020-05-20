@@ -39,19 +39,18 @@ public class HttpAgentImpl implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          TokenClient tokenClient, String audienceUrl, int retryCount) throws StorageServerException {
+    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
+                          TokenClient tokenClient, String popInstanceUrl, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (endpoint={} , method={} , codeMap={})",
-                    endpoint,
+            LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
+                    url,
                     method,
                     codeMap);
         }
         try {
-            URL url = new URL(endpoint);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
             con.setRequestMethod(method);
-            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audienceUrl));
+            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(popInstanceUrl));
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);
@@ -70,8 +69,8 @@ public class HttpAgentImpl implements HttpAgent {
             } else if (params == null || !canRetry(params, retryCount)) {
                 reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
             } else {
-                tokenClient.refreshToken(true, audienceUrl);
-                return request(endpoint, method, body, codeMap, tokenClient, audienceUrl, retryCount - 1);
+                tokenClient.refreshToken(true, popInstanceUrl);
+                return request(url, method, body, codeMap, tokenClient, popInstanceUrl, retryCount - 1);
             }
             String inputLine;
             StringBuilder content = new StringBuilder();
@@ -83,7 +82,7 @@ public class HttpAgentImpl implements HttpAgent {
                 return null;
             }
             if (params == null || params.isError()) {
-                String errorMessage = (status + " " + endpoint + " - " + content).replaceAll("[\r\n]", "");
+                String errorMessage = (status + " " + url + " - " + content).replaceAll("[\r\n]", "");
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }

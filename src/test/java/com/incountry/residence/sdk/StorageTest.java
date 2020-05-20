@@ -117,7 +117,7 @@ class StorageTest {
         Record record = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
         storage.write(COUNTRY, record);
         String expectedURL = endpoint + "/v2/storage/records/" + COUNTRY;
-        String realURL = new URL(agent.getCallEndpoint()).toString();
+        String realURL = new URL(agent.getCallUrl()).toString();
         assertEquals(expectedURL, realURL);
     }
 
