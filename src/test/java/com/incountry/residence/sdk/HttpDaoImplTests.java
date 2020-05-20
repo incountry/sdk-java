@@ -366,12 +366,8 @@ class HttpDaoImplTests {
         assertNull(dao.read(country, key, null));
         dao.delete(country, key, null);
         dao.createRecord(country, new Record(key, "<body>"), null);
-        StorageServerException serverException = assertThrows(StorageServerException.class, () ->
-                dao.createRecord(country, new Record(key, "<body>"), null));
-        assertEquals("Response error: expected 'OK', but received: Not OK!", serverException.getMessage());
-        serverException = assertThrows(StorageServerException.class, () ->
-                dao.createRecord(country, new Record(key, "<body>"), null));
-        assertEquals("Response error: expected 'OK', but received: null", serverException.getMessage());
+        dao.createRecord(country, new Record(key, "<body>"), null);
+        dao.createRecord(country, new Record(key, "<body>"), null);
     }
 
     private String countryLoadResponse = "{\n" +
