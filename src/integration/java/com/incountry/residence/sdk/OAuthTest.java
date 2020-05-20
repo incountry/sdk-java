@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Disabled("waiting for QA auth server")
-public class OAthTest {
+public class OAuthTest {
 
     private static final String INTEGR_ENC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
     private static final String INTEGR_ENC_CLIENT_ID = "INT_INC_CLIENT_ID";
@@ -47,7 +47,7 @@ public class OAthTest {
 
     private final SecretKeyAccessor accessor;
 
-    public OAthTest() throws StorageClientException {
+    public OAuthTest() throws StorageClientException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
         accessor = () -> secretsData;
     }
