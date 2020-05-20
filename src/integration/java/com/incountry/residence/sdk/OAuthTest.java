@@ -1,7 +1,6 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.helpers.ScribeAuthClient;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -15,13 +14,11 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENDPOINT;
@@ -58,16 +55,9 @@ public class OAuthTest {
         return StorageImpl.getInstance(ENV_ID, accessor, dao);
     }
 
-    public static Stream<AuthClient> authClients() {
-        return Stream.of(
-                new ScribeAuthClient(),
-                new DefaultAuthClient()
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("authClients")
-    public void testStorageWithAuthClient(AuthClient authClient) throws StorageServerException, StorageClientException, StorageCryptoException {
+    @Test
+    public void testStorageWithAuthClient() throws StorageServerException, StorageClientException, StorageCryptoException {
+        AuthClient authClient = new DefaultAuthClient();
         Storage storage = initStorage(authClient);
         String key = UUID.randomUUID().toString();
         String body = "body " + key;
@@ -76,9 +66,9 @@ public class OAuthTest {
         assertEquals(record, storage.read(COUNTRY, key));
     }
 
-    @ParameterizedTest
-    @MethodSource("authClients")
-    public void positiveAuthTest(AuthClient authClient) throws StorageServerException {
+    @Test
+    public void positiveAuthTest() throws StorageServerException {
+        AuthClient authClient = new DefaultAuthClient();
         authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL, ENV_ID);
         Map.Entry<String, Long> token = authClient.newToken(END_POINT);
         assertNotNull(token.getValue());

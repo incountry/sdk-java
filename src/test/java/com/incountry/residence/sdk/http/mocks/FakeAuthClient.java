@@ -7,10 +7,10 @@ import java.util.Map;
 
 public class FakeAuthClient implements AuthClient {
 
-    private final long expireTimeSecs;
+    private final long expireTimeSeconds;
 
-    public FakeAuthClient(long expireTimeSecs) {
-        this.expireTimeSecs = expireTimeSecs;
+    public FakeAuthClient(long expireTimeSeconds) {
+        this.expireTimeSeconds = expireTimeSeconds;
     }
 
     @Override
@@ -19,6 +19,6 @@ public class FakeAuthClient implements AuthClient {
 
     @Override
     public Map.Entry<String, Long> newToken(String audienceUrl) {
-        return new AbstractMap.SimpleEntry<>(FakeAuthClient.class.getSimpleName(), System.currentTimeMillis() + expireTimeSecs * 1_000L);
+        return new AbstractMap.SimpleEntry<>(FakeAuthClient.class.getSimpleName(), System.currentTimeMillis() + expireTimeSeconds * 1_000L);
     }
 }
