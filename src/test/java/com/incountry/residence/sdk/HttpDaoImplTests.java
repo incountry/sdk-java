@@ -243,7 +243,7 @@ class HttpDaoImplTests {
 
     @Test
     void testWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok"));
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
         String country = "US";
         Record record = new Record("key", "body");
@@ -253,12 +253,15 @@ class HttpDaoImplTests {
         assertNotNull(resRecord);
         resRecord = storage.write(country, record); //OK
         assertNotNull(resRecord);
-        assertThrows(StorageServerException.class, () -> storage.write(country, record)); //okokok
+        resRecord = storage.write(country, record); //okokok
+        assertNotNull(resRecord);
+        resRecord = storage.write(country, record); //null
+        assertNotNull(resRecord);
     }
 
     @Test
     void testBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok"));
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
         String country = "US";
         List<Record> list = Collections.singletonList(new Record("key", "body"));
@@ -268,20 +271,10 @@ class HttpDaoImplTests {
         assertNotNull(batchRecord);
         batchRecord = storage.batchWrite(country, list); //OK
         assertNotNull(batchRecord);
-        assertThrows(StorageServerException.class, () -> storage.batchWrite(country, list)); //okokok
-    }
-
-    @RepeatedTest(3)
-    void testDeletePopApiResponse(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
-        iterateLogLevel(repeatInfo, StorageImpl.class);
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("{}", "", "OK", "{ok}", "{ }"));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenGenerator));
-        String country = "US";
-        storage.delete(country, "key"); //{}
-        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); // ""
-        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //OK
-        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{ok}
-        assertThrows(StorageServerException.class, () -> storage.delete(country, "key")); //{}
+        batchRecord = storage.batchWrite(country, list); //OKokok
+        assertNotNull(batchRecord);
+        batchRecord = storage.batchWrite(country, list); //null
+        assertNotNull(batchRecord);
     }
 
     @Test

@@ -30,7 +30,7 @@ public class HttpDaoImpl implements Dao {
     private static final int RETRY_CNT = 1;
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
-    private static final String MSG_ERROR_RESPONSE = "Response error: expected 'OK', but received: ";
+    private static final String MSG_ERROR_RESPONSE = "Response error: expected 'OK', but recieved: ";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
@@ -123,8 +123,7 @@ public class HttpDaoImpl implements Dao {
         String audienceUrl = getEndpoint(country);
         String endpoint = audienceUrl + concatUrl(country);
         String body = JsonUtils.toJsonString(record, cryptoManager);
-        String response = httpAgent.request(endpoint, URI_POST, body, ApiResponse.WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
-        validatePlainTextResponse("ok", response);
+        httpAgent.request(endpoint, URI_POST, body, ApiResponse.WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
     }
 
     @Override
@@ -132,8 +131,7 @@ public class HttpDaoImpl implements Dao {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         String audienceUrl = getEndpoint(country);
         String url = audienceUrl + concatUrl(country, URI_BATCH_WRITE);
-        String response = httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
-        validatePlainTextResponse("ok", response);
+        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
     }
 
     @Override
@@ -154,8 +152,7 @@ public class HttpDaoImpl implements Dao {
         String newKey = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         String url = createUrl(country, newKey);
         String audienceUrl = getEndpoint(country);
-        String response = httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenGenerator, audienceUrl, RETRY_CNT);
-        validatePlainTextResponse("{}", response);
+        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenGenerator, audienceUrl, RETRY_CNT);
     }
 
     @Override
@@ -179,13 +176,5 @@ public class HttpDaoImpl implements Dao {
             }
         }
         return builder.toString();
-    }
-
-    private void validatePlainTextResponse(String expected, String response) throws StorageServerException {
-        if (response == null || !response.equalsIgnoreCase(expected)) {
-            String message = MSG_ERROR_RESPONSE + response;
-            LOG.error(message);
-            throw new StorageServerException(message);
-        }
     }
 }
