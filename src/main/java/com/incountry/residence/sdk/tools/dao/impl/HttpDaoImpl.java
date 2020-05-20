@@ -113,14 +113,10 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String getRecordUrl(String country, String keyHash) throws StorageClientException, StorageServerException {
-        return getEndpoint(country) + appendUrlParts(country, URI_DELIMITER, keyHash);
-    }
-
     @Override
     public void createRecord(String country, Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
         String popInstanceUrl = getEndpoint(country);
-        String url = popInstanceUrl + appendUrlParts(country);
+        String url = getRecordActionUrl(popInstanceUrl, country);
         String body = JsonUtils.toJsonString(record, cryptoManager);
         httpAgent.request(url, URI_POST, body, ApiResponse.WRITE, tokenClient, popInstanceUrl, RETRY_CNT);
     }
@@ -129,15 +125,15 @@ public class HttpDaoImpl implements Dao {
     public void createBatch(List<Record> records, String country, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         String popInstanceUrl = getEndpoint(country);
-        String url = popInstanceUrl + appendUrlParts(country, URI_BATCH_WRITE);
+        String url = getRecordActionUrl(popInstanceUrl, country, URI_BATCH_WRITE);
         httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenClient, popInstanceUrl, RETRY_CNT);
     }
 
     @Override
     public Record read(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
-        String url = getRecordUrl(country, key);
         String popInstanceUrl = getEndpoint(country);
+        String url = getRecordUrl(popInstanceUrl, country, key);
         String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, tokenClient, popInstanceUrl, RETRY_CNT);
         if (response == null) {
             return null;
@@ -149,15 +145,15 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void delete(String country, String key, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String recordHash = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
-        String url = getRecordUrl(country, recordHash);
         String popInstanceUrl = getEndpoint(country);
+        String url = getRecordUrl(popInstanceUrl, country, recordHash);
         httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenClient, popInstanceUrl, RETRY_CNT);
     }
 
     @Override
     public BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String popInstanceUrl = getEndpoint(country);
-        String url = popInstanceUrl + appendUrlParts(country, URI_FIND);
+        String url = getRecordActionUrl(popInstanceUrl, country, URI_FIND);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
         String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, tokenClient, popInstanceUrl, RETRY_CNT);
         if (content == null) {
@@ -166,9 +162,17 @@ public class HttpDaoImpl implements Dao {
         return JsonUtils.batchRecordFromString(content, cryptoManager);
     }
 
-    private String appendUrlParts(String first, String... other) {
-        StringBuilder builder = new StringBuilder(STORAGE_URL);
-        builder.append(first.toLowerCase());
+    private String getRecordUrl(String endPoint, String country, String keyHash) {
+        return new StringBuilder(endPoint)
+                .append(STORAGE_URL)
+                .append(country.toLowerCase())
+                .append(URI_DELIMITER)
+                .append(keyHash).toString();
+    }
+
+    private String getRecordActionUrl(String endpoint, String country, String... other) {
+        StringBuilder builder = new StringBuilder(endpoint).append(STORAGE_URL);
+        builder.append(country.toLowerCase());
         if (other != null) {
             for (String part : other) {
                 builder.append(part);
