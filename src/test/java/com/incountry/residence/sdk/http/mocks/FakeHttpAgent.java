@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
-import com.incountry.residence.sdk.tools.http.TokenGenerator;
+import com.incountry.residence.sdk.tools.http.TokenClient;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ public class FakeHttpAgent implements HttpAgent {
     private String response;
     private List<String> responseList;
     private Map<Integer, ApiResponse> codeMap;
-    private TokenGenerator tokenGenerator;
+    private TokenClient tokenClient;
     private int retryCount;
     private String audienceUrl;
 
@@ -28,12 +28,12 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenGenerator tokenGenerator, String audienceUrl, int retryCount) {
+    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String audienceUrl, int retryCount) {
         this.callEndpoint = endpoint;
         this.callMethod = method;
         this.callBody = body;
         this.codeMap = codeMap;
-        this.tokenGenerator = tokenGenerator;
+        this.tokenClient = tokenClient;
         this.retryCount = retryCount;
         this.audienceUrl = audienceUrl;
         return getResponse();
@@ -75,8 +75,8 @@ public class FakeHttpAgent implements HttpAgent {
         this.response = response;
     }
 
-    public TokenGenerator getTokenGenerator() {
-        return tokenGenerator;
+    public TokenClient getTokenClient() {
+        return tokenClient;
     }
 
     public int getRetryCount() {

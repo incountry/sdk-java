@@ -11,7 +11,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
-import com.incountry.residence.sdk.tools.http.TokenGenerator;
+import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +30,6 @@ public class HttpDaoImpl implements Dao {
     private static final int RETRY_CNT = 1;
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
-    private static final String MSG_ERROR_RESPONSE = "Response error: expected 'OK', but recieved: ";
     private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
@@ -47,24 +46,24 @@ public class HttpDaoImpl implements Dao {
     private final Map<String, POP> popMap = new HashMap<>();
 
     private final HttpAgent httpAgent;
-    private final TokenGenerator tokenGenerator;
+    private final TokenClient tokenClient;
     private String endPoint = DEFAULT_ENDPOINT;
     private boolean defaultEndpoint = true;
     private long lastLoadedTime;
 
-    public HttpDaoImpl(String environmentId, String endPoint, TokenGenerator tokenGenerator) throws StorageServerException {
+    public HttpDaoImpl(String environmentId, String endPoint, TokenClient tokenClient) throws StorageServerException {
         this(endPoint,
                 (HttpAgent) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET)),
-                ProxyUtils.createLoggingProxyForPublicMethods(tokenGenerator));
+                ProxyUtils.createLoggingProxyForPublicMethods(tokenClient));
     }
 
-    public HttpDaoImpl(String endPoint, HttpAgent agent, TokenGenerator tokenGenerator) throws StorageServerException {
+    public HttpDaoImpl(String endPoint, HttpAgent agent, TokenClient tokenClient) throws StorageServerException {
         if (endPoint != null && !endPoint.equals(DEFAULT_ENDPOINT)) {
             this.endPoint = endPoint;
             this.defaultEndpoint = false;
         }
         this.httpAgent = agent;
-        this.tokenGenerator = tokenGenerator;
+        this.tokenClient = tokenClient;
         if (defaultEndpoint) {
             loadCountries();
         }
@@ -78,7 +77,7 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenGenerator, PORTAL_COUNTRIES_URI, RETRY_CNT);
+            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenClient, PORTAL_COUNTRIES_URI, RETRY_CNT);
             popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
@@ -123,7 +122,7 @@ public class HttpDaoImpl implements Dao {
         String audienceUrl = getEndpoint(country);
         String endpoint = audienceUrl + concatUrl(country);
         String body = JsonUtils.toJsonString(record, cryptoManager);
-        httpAgent.request(endpoint, URI_POST, body, ApiResponse.WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
+        httpAgent.request(endpoint, URI_POST, body, ApiResponse.WRITE, tokenClient, audienceUrl, RETRY_CNT);
     }
 
     @Override
@@ -131,7 +130,7 @@ public class HttpDaoImpl implements Dao {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         String audienceUrl = getEndpoint(country);
         String url = audienceUrl + concatUrl(country, URI_BATCH_WRITE);
-        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenGenerator, audienceUrl, RETRY_CNT);
+        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenClient, audienceUrl, RETRY_CNT);
     }
 
     @Override
@@ -139,7 +138,7 @@ public class HttpDaoImpl implements Dao {
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         String url = createUrl(country, key);
         String audienceUrl = getEndpoint(country);
-        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, tokenGenerator, audienceUrl, RETRY_CNT);
+        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, tokenClient, audienceUrl, RETRY_CNT);
         if (response == null) {
             return null;
         } else {
@@ -152,7 +151,7 @@ public class HttpDaoImpl implements Dao {
         String newKey = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         String url = createUrl(country, newKey);
         String audienceUrl = getEndpoint(country);
-        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenGenerator, audienceUrl, RETRY_CNT);
+        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenClient, audienceUrl, RETRY_CNT);
     }
 
     @Override
@@ -160,7 +159,7 @@ public class HttpDaoImpl implements Dao {
         String audienceUrl = getEndpoint(country);
         String url = audienceUrl + concatUrl(country, URI_FIND);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
-        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, tokenGenerator, audienceUrl, RETRY_CNT);
+        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, tokenClient, audienceUrl, RETRY_CNT);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }

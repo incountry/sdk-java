@@ -3,7 +3,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
-import com.incountry.residence.sdk.tools.http.TokenGenerator;
+import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +40,7 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          TokenGenerator tokenGenerator, String audienceUrl, int retryCount) throws StorageServerException {
+                          TokenClient tokenClient, String audienceUrl, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (endpoint={} , method={} , codeMap={})",
                     endpoint,
@@ -51,7 +51,7 @@ public class HttpAgentImpl implements HttpAgent {
             URL url = new URL(endpoint);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
-            con.setRequestProperty("Authorization", "Bearer " + tokenGenerator.getToken(audienceUrl));
+            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audienceUrl));
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);
@@ -67,11 +67,11 @@ public class HttpAgentImpl implements HttpAgent {
             BufferedReader reader;
             if (params != null && !params.isError()) {
                 reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
-            } else if (params == null || !tokenGenerator.canRefreshToken() || !canRetry(params, retryCount)) {
+            } else if (params == null || !canRetry(params, retryCount)) {
                 reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
             } else {
-                tokenGenerator.refreshToken(true, audienceUrl);
-                return request(endpoint, method, body, codeMap, tokenGenerator, audienceUrl, retryCount - 1);
+                tokenClient.refreshToken(true, audienceUrl);
+                return request(endpoint, method, body, codeMap, tokenClient, audienceUrl, retryCount - 1);
             }
             String inputLine;
             StringBuilder content = new StringBuilder();
@@ -83,11 +83,9 @@ public class HttpAgentImpl implements HttpAgent {
                 return null;
             }
             if (params == null || params.isError()) {
-                String error = status + " " + endpoint + " - " + content;
-                if (LOG.isErrorEnabled()) {
-                    LOG.error(error.replaceAll("[\r\n]", ""));
-                }
-                throw new StorageServerException(error);
+                String errorMessage = (status + " " + endpoint + " - " + content).replaceAll("[\r\n]", "");
+                LOG.error(errorMessage);
+                throw new StorageServerException(errorMessage);
             }
             return content.toString();
         } catch (IOException ex) {
