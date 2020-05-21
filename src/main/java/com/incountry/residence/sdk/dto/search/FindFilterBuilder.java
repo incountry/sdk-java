@@ -42,9 +42,14 @@ public class FindFilterBuilder {
         return this;
     }
 
-    //key2
+    //key
     public FindFilterBuilder keyEq(String... keys) throws StorageClientException {
         filter.setKeyFilter(new FilterStringParam(keys));
+        return this;
+    }
+
+    public FindFilterBuilder keyNotEq(String... keys) throws StorageClientException {
+        filter.setKeyFilter(new FilterStringParam(keys, true));
         return this;
     }
 
@@ -54,15 +59,30 @@ public class FindFilterBuilder {
         return this;
     }
 
+    public FindFilterBuilder key2NotEq(String... keys) throws StorageClientException {
+        filter.setKey2Filter(new FilterStringParam(keys, true));
+        return this;
+    }
+
     //key3
     public FindFilterBuilder key3Eq(String... keys) throws StorageClientException {
         filter.setKey3Filter(new FilterStringParam(keys));
         return this;
     }
 
+    public FindFilterBuilder key3NotEq(String... keys) throws StorageClientException {
+        filter.setKey3Filter(new FilterStringParam(keys, true));
+        return this;
+    }
+
     //profileKey
     public FindFilterBuilder profileKeyEq(String... keys) throws StorageClientException {
         filter.setProfileKeyFilter(new FilterStringParam(keys));
+        return this;
+    }
+
+    public FindFilterBuilder profileKeyNotEq(String... keys) throws StorageClientException {
+        filter.setProfileKeyFilter(new FilterStringParam(keys, true));
         return this;
     }
 

@@ -125,7 +125,7 @@ public class CryptoManager {
         if (version == null) {
             version = secretsData.getCurrentVersion();
         }
-        int usedVersion = version >= 0 ? version : 0;
+        int usedVersion = version;
         Optional<SecretKey> secretKeyOptional = secretsData.getSecrets().stream()
                 .filter(secretKey -> (secretKey.getVersion() == usedVersion) && (isForCustomEncryption == secretKey.isForCustomEncryption()))
                 .findFirst();
