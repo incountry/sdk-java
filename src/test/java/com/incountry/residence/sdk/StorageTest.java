@@ -374,8 +374,9 @@ class StorageTest {
         assertThrows(StorageClientException.class, () -> storage.read(null, null));
     }
 
-    @Test
-    void testErrorDeleteInsufficientArgs() throws StorageClientException, StorageServerException {
+    @RepeatedTest(3)
+    void testErrorDeleteInsufficientArgs(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent("");
         Dao dao = new HttpDaoImpl(FAKE_ENDPOINT, agent, tokenClient);
         assertNotNull(dao);

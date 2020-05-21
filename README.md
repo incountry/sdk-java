@@ -358,6 +358,10 @@ EQUALS         (FindFilterBuilder::keyEq)
                (FindFilterBuilder::key2Eq)
                (FindFilterBuilder::key3Eq)
                (FindFilterBuilder::profileKeyEq)
+NOT_EQUALS     (FindFilterBuilder::keyNotEq)
+               (FindFilterBuilder::key2NotEq)
+               (FindFilterBuilder::key3NotEq)
+               (FindFilterBuilder::profileKeyNotEq)
 ```
 
 You can use the following builder methods for filtering by numerical `rangeKey` field:
