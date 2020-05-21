@@ -9,12 +9,18 @@ import java.util.List;
  * container with Storage configuration, using pattern 'builder'
  */
 public class StorageConfig {
+
+    public static final String LOG_SECURE2 = "[SECURE[";
+
     private String envId;
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
     private List<Crypto> customEncryptionConfigsList;
     private boolean normalizeKeys;
+    private String clientId;
+    private String clientSecret;
+    private String authEndPoint;
 
     public String getEnvId() {
         return envId;
@@ -106,6 +112,54 @@ public class StorageConfig {
         return this;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
+    /**
+     * Set login for authorisation.
+     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     *
+     * @param clientId login
+     * @return StorageConfig
+     */
+    public StorageConfig setClientId(String clientId) {
+        this.clientId = clientId;
+        return this;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    /**
+     * Set user secret for authorisation.
+     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     *
+     * @param clientSecret password
+     * @return StorageConfig
+     */
+    public StorageConfig setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+        return this;
+    }
+
+    public String getAuthEndPoint() {
+        return authEndPoint;
+    }
+
+    /**
+     * Set custom authorization server URL. If null - default authorization server will be used.
+     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     *
+     * @param authEndPoint custom authorization server URL
+     * @return StorageConfig
+     */
+    public StorageConfig setAuthEndPoint(String authEndPoint) {
+        this.authEndPoint = authEndPoint;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -114,6 +168,28 @@ public class StorageConfig {
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
         newInstance.setCustomEncryptionConfigsList(getCustomEncryptionConfigsList());
         newInstance.setNormalizeKeys(isNormalizeKeys());
+        newInstance.setClientId(getClientId());
+        newInstance.setClientSecret(getClientSecret());
+        newInstance.setAuthEndPoint(getAuthEndPoint());
         return newInstance;
+    }
+
+    @Override
+    public String toString() {
+        return "StorageConfig{" +
+                "envId='" + hideParam(envId) + '\'' +
+                ", apiKey='" + hideParam(apiKey) + '\'' +
+                ", endPoint='" + endPoint + '\'' +
+                ", secretKeyAccessor=" + secretKeyAccessor +
+                ", customEncryptionConfigsList=" + customEncryptionConfigsList +
+                ", ignoreKeyCase=" + normalizeKeys +
+                ", clientId='" + hideParam(clientId) + '\'' +
+                ", clientSecret='" + hideParam(clientSecret) + '\'' +
+                ", authEndPoint='" + authEndPoint + '\'' +
+                '}';
+    }
+
+    private String hideParam(String param) {
+        return param != null ? LOG_SECURE2 + param.hashCode() + "]]" : null;
     }
 }

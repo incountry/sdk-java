@@ -1,20 +1,23 @@
-package com.incountry.residence.sdk.http;
+package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.http.TokenClient;
 
 import java.util.List;
 import java.util.Map;
 
 public class FakeHttpAgent implements HttpAgent {
 
-
-    private String callEndpoint;
+    private String callUrl;
     private String callMethod;
     private String callBody;
     private String response;
     private List<String> responseList;
     private Map<Integer, ApiResponse> codeMap;
+    private TokenClient tokenClient;
+    private int retryCount;
+    private String audienceUrl;
 
     public FakeHttpAgent(String response) {
         this.response = response;
@@ -25,17 +28,19 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap) {
-        this.callEndpoint = endpoint;
+    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String popInstanceUrl, int retryCount) {
+        this.callUrl = url;
         this.callMethod = method;
         this.callBody = body;
         this.codeMap = codeMap;
-
+        this.tokenClient = tokenClient;
+        this.retryCount = retryCount;
+        this.audienceUrl = popInstanceUrl;
         return getResponse();
     }
 
-    public String getCallEndpoint() {
-        return callEndpoint;
+    public String getCallUrl() {
+        return callUrl;
     }
 
     public String getCallMethod() {
@@ -44,6 +49,10 @@ public class FakeHttpAgent implements HttpAgent {
 
     public String getCallBody() {
         return callBody;
+    }
+
+    public String getAudienceUrl() {
+        return audienceUrl;
     }
 
     public Map<Integer, ApiResponse> getCodeMap() {
@@ -64,5 +73,13 @@ public class FakeHttpAgent implements HttpAgent {
 
     public void setResponse(String response) {
         this.response = response;
+    }
+
+    public TokenClient getTokenClient() {
+        return tokenClient;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
     }
 }

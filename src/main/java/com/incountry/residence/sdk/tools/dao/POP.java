@@ -3,11 +3,11 @@ package com.incountry.residence.sdk.tools.dao;
 /**
  * class-container to store host list with PoPAPI
  */
-public class PoP {
+public class POP {
     private String host;
     private String name;
 
-    public PoP(String host, String name) {
+    public POP(String host, String name) {
         this.host = host;
         this.name = name;
     }

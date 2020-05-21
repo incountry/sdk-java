@@ -13,7 +13,7 @@ import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
-import com.incountry.residence.sdk.tools.dao.PoP;
+import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -282,18 +282,18 @@ public class JsonUtils {
         return result;
     }
 
-    public static Map<String, PoP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
+    public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
         TransferPopList popList;
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
         } catch (JsonSyntaxException ex) {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
-        Map<String, PoP> result = new HashMap<>();
+        Map<String, POP> result = new HashMap<>();
         TransferPopList.validatePopList(popList);
         for (TransferPop transferPop : popList.countries) {
             if (transferPop.direct) {
-                result.put(transferPop.getId(), new PoP(uriStart + transferPop.getId() + uriEnd, transferPop.name));
+                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.name));
             }
         }
         return result;

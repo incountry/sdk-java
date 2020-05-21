@@ -33,6 +33,7 @@ public class CryptoManager {
     private static final String MSG_ERR_DECRYPTION = "Unknown custom encryption version: %s";
     private static final String MSG_ERR_DECRYPTION_BASE64 = "Unexpected exception during custom decryption - failed to parse custom encryption version: %s";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
+    private static final String MSG_NULL_SECRET = "SecretKeyAccessor returns null secret";
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
@@ -47,20 +48,6 @@ public class CryptoManager {
     private String envId;
     private boolean usePTEncryption;
     private boolean normalizeKeys;
-
-
-    public CryptoManager(String envId) {
-        this.envId = envId;
-        usePTEncryption = true;
-    }
-
-    public CryptoManager(SecretKeyAccessor keyAccessor, String envId)
-            throws StorageClientException {
-        initFields(keyAccessor, envId);
-        if (!usePTEncryption) {
-            getSecret(null, false);
-        }
-    }
 
     public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean normalizeKeys)
             throws StorageClientException {
@@ -168,7 +155,7 @@ public class CryptoManager {
             throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
         }
         if (result == null) {
-            throw new StorageClientException("SecretKeyAccessor returns null secret");
+            throw new StorageClientException(MSG_NULL_SECRET);
         }
         return result;
     }
