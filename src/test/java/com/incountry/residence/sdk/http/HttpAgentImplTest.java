@@ -1,11 +1,10 @@
 package com.incountry.residence.sdk.http;
 
-import com.incountry.residence.sdk.http.mocks.FakeAuthClient;
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
-import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
+import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
@@ -50,7 +49,7 @@ class HttpAgentImplTest {
     void testFakeEndpointException() {
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
         assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost",
-                "GET", "someBody", new HashMap<>(), new DefaultTokenGenerator("apiKey"), null, 0));
+                "GET", "someBody", new HashMap<>(), new ApiKeyTokenClient("<apiKey>"), null, 0));
     }
 
     @RepeatedTest(3)
@@ -61,8 +60,8 @@ class HttpAgentImplTest {
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertNotNull(agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), null, 0));
-        assertNotNull(agent.request(url, "POST", null, ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), null, 0));
+        assertNotNull(agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
+        assertNotNull(agent.request(url, "POST", null, ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }
 
@@ -73,7 +72,7 @@ class HttpAgentImplTest {
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertThrows(StorageServerException.class, () -> agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator("apiKey"), null, 0));
+        assertThrows(StorageServerException.class, () -> agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }
 
@@ -85,10 +84,10 @@ class HttpAgentImplTest {
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
         assertThrows(StorageServerException.class, () ->
-                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), null, 0));
+                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 0));
         assertThrows(StorageServerException.class, () ->
-                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), null, 2));
-        assertEquals("{}", agent.request(url, "POST", "<body>", ApiResponse.DELETE, new DefaultTokenGenerator(new FakeAuthClient(0)), null, 1));
+                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 2));
+        assertEquals("{}", agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 1));
         server.stop(0);
     }
 
@@ -99,7 +98,7 @@ class HttpAgentImplTest {
         server.start();
         String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
-        assertNull(agent.request(url, "POST", "<body>", ApiResponse.READ, new DefaultTokenGenerator("apiKey"), null, 0));
+        assertNull(agent.request(url, "POST", "<body>", ApiResponse.READ, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }
 }
