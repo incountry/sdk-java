@@ -25,18 +25,6 @@ public class FindFilter {
     private int limit = MAX_LIMIT;
     private int offset = 0;
 
-    public FindFilter() {
-    }
-
-    public FindFilter(FilterStringParam keyFilter, FilterStringParam key2Filter, FilterStringParam key3Filter, FilterStringParam profileKeyFilter, FilterNumberParam rangeKeyFilter, FilterStringParam versionFilter) {
-        this.keyFilter = keyFilter;
-        this.key2Filter = key2Filter;
-        this.key3Filter = key3Filter;
-        this.profileKeyFilter = profileKeyFilter;
-        this.rangeKeyFilter = rangeKeyFilter;
-        this.versionFilter = versionFilter;
-    }
-
     public void setLimit(int limit) throws StorageClientException {
         if (limit > MAX_LIMIT) {
             String message = String.format(MSG_MAX_LIMIT, MAX_LIMIT);

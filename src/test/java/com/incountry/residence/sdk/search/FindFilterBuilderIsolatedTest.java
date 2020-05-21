@@ -97,7 +97,9 @@ public class FindFilterBuilderIsolatedTest {
         assertEquals("1", builder.keyEq("1").build().getKeyFilter().getValues().get(0));
         assertEquals("2", builder.keyEq("1", "2").build().getKeyFilter().getValues().get(1));
         assertFalse(builder.keyEq("4").build().getKeyFilter().isNotCondition());
-        assertFalse(builder.keyEq("7", "8").build().getKeyFilter().isNotCondition());
+        assertEquals("6", builder.keyNotEq("5", "6").build().getKeyFilter().getValues().get(1));
+        assertTrue(builder.keyNotEq("7", "8").build().getKeyFilter().isNotCondition());
+        assertFalse(builder.keyEq("9", "10").build().getKeyFilter().isNotCondition());
     }
 
     @Test
@@ -106,7 +108,9 @@ public class FindFilterBuilderIsolatedTest {
         assertEquals("1", builder.key2Eq("1").build().getKey2Filter().getValues().get(0));
         assertEquals("2", builder.key2Eq("1", "2").build().getKey2Filter().getValues().get(1));
         assertFalse(builder.key2Eq("4").build().getKey2Filter().isNotCondition());
-        assertFalse(builder.key2Eq("7", "8").build().getKey2Filter().isNotCondition());
+        assertEquals("6", builder.key2NotEq("5", "6").build().getKey2Filter().getValues().get(1));
+        assertTrue(builder.key2NotEq("7", "8").build().getKey2Filter().isNotCondition());
+        assertFalse(builder.key2Eq("9", "10").build().getKey2Filter().isNotCondition());
     }
 
     @Test
@@ -115,7 +119,9 @@ public class FindFilterBuilderIsolatedTest {
         assertEquals("1", builder.key3Eq("1").build().getKey3Filter().getValues().get(0));
         assertEquals("2", builder.key3Eq("1", "2").build().getKey3Filter().getValues().get(1));
         assertFalse(builder.key3Eq("4").build().getKey3Filter().isNotCondition());
-        assertFalse(builder.key3Eq("7", "8").build().getKey3Filter().isNotCondition());
+        assertEquals("6", builder.key3NotEq("5", "6").build().getKey3Filter().getValues().get(1));
+        assertTrue(builder.key3NotEq("7", "8").build().getKey3Filter().isNotCondition());
+        assertFalse(builder.key3Eq("9", "10").build().getKey3Filter().isNotCondition());
     }
 
     @Test
@@ -124,7 +130,9 @@ public class FindFilterBuilderIsolatedTest {
         assertEquals("1", builder.profileKeyEq("1").build().getProfileKeyFilter().getValues().get(0));
         assertEquals("2", builder.profileKeyEq("1", "2").build().getProfileKeyFilter().getValues().get(1));
         assertFalse(builder.profileKeyEq("4").build().getProfileKeyFilter().isNotCondition());
-        assertFalse(builder.profileKeyEq("7", "8").build().getProfileKeyFilter().isNotCondition());
+        assertEquals("6", builder.profileKeyNotEq("5", "6").build().getProfileKeyFilter().getValues().get(1));
+        assertTrue(builder.profileKeyNotEq("7", "8").build().getProfileKeyFilter().isNotCondition());
+        assertFalse(builder.profileKeyEq("9", "10").build().getProfileKeyFilter().isNotCondition());
     }
 
     @Test

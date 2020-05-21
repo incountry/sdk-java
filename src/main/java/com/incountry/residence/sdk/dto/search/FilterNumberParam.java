@@ -5,6 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GT;
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GTE;
@@ -23,19 +25,24 @@ public class FilterNumberParam {
     private static final String ERR_CONDITION_RESTR = String.format("Operator in number filter can by only in [%s,%s,%s,%s,%s]",
             OPER_LT, OPER_LTE, OPER_GT, OPER_GTE, OPER_NOT);
 
-    private Integer[] values;
-    private String operator1;
-    private String operator2;
+    private final Integer[] values;
+    private final String operator1;
+    private final String operator2;
 
-    private FilterNumberParam() {
+    private FilterNumberParam(Integer[] values, String operator1, String operator2) {
+        this.values = Arrays.copyOf(values, values.length);
+        this.operator1 = operator1;
+        this.operator2 = operator2;
     }
 
     public FilterNumberParam(Integer[] values) throws StorageClientException {
-        if (values == null || values.length == 0 || (values.length == 1 && values[0] == null)) {
+        if (values == null || values.length == 0 || (Stream.of(values).anyMatch(Objects::isNull))) {
             LOG.error(ERR_NULL_VALUE);
             throw new StorageClientException(ERR_NULL_VALUE);
         }
         this.values = Arrays.copyOf(values, values.length);
+        this.operator1 = null;
+        this.operator2 = null;
     }
 
     public FilterNumberParam(String operator, Integer value) throws StorageClientException {
@@ -49,6 +56,7 @@ public class FilterNumberParam {
         }
         this.values = new Integer[]{value};
         this.operator1 = operator;
+        this.operator2 = null;
     }
 
     public FilterNumberParam(String operator1, Integer value1, String operator2, Integer value2) throws StorageClientException {
@@ -72,6 +80,7 @@ public class FilterNumberParam {
         this.operator1 = operator1;
         this.operator2 = operator2;
     }
+
 
     private boolean notIn(String operator, String... permitted) {
         for (String value : permitted) {
@@ -106,11 +115,7 @@ public class FilterNumberParam {
     }
 
     public FilterNumberParam copy() {
-        FilterNumberParam clone = new FilterNumberParam();
-        clone.values = getValues();
-        clone.operator1 = operator1;
-        clone.operator2 = operator2;
-        return clone;
+        return new FilterNumberParam(getValues(), getOperator1(), getOperator2());
     }
 
     @Override
