@@ -2,7 +2,7 @@ package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
-import com.incountry.residence.sdk.tools.http.TokenGenerator;
+import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +14,7 @@ class ProxyUtilsTest {
 
     static class FakeHttpAgent implements HttpAgent {
         @Override
-        public String request(String endpoint, String method, String body, Map<Integer, ApiResponse> codeMap, TokenGenerator tokenGenerator, String audienceUrl, int retryCount) {
+        public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, TokenClient tokenClient, String popInstanceUrl, int retryCount) {
             doNothing();
             throw new NullPointerException();
         }
