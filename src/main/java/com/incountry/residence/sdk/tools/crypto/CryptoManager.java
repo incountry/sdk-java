@@ -55,7 +55,7 @@ public class CryptoManager {
         initFields(keyAccessor, envId);
         initCustomEncryptionMap(customEncryptionList);
         if (!usePTEncryption) {
-            getSecret(null, currentCrypto != null, false);
+            getSecret(null, currentCrypto != null);
         }
     }
 
@@ -97,7 +97,7 @@ public class CryptoManager {
     }
 
     private Map.Entry<String, Integer> encryptCustom(String text) throws StorageClientException, StorageCryptoException {
-        SecretKey secretKey = getSecret(null, true, false);
+        SecretKey secretKey = getSecret(null, true);
         try {
             String cipherText = currentCrypto.encrypt(text, secretKey);
             String cipherTextBase64 = new String(Base64.getEncoder().encode(cipherText.getBytes(CHARSET)), CHARSET);
@@ -111,7 +111,7 @@ public class CryptoManager {
     }
 
     private Map.Entry<String, Integer> encryptDefault(String text) throws StorageClientException, StorageCryptoException {
-        SecretKey secretKey = getSecret(null, false, false);
+        SecretKey secretKey = getSecret(null, false);
         String cipher = defaultCrypto.encrypt(text, secretKey);
         return new AbstractMap.SimpleEntry<>(defaultCrypto.getVersion() + ":" + cipher, secretKey.getVersion());
     }
@@ -120,14 +120,10 @@ public class CryptoManager {
         return org.apache.commons.codec.digest.DigestUtils.sha256Hex(normalizeKeys ? stringToHash.toLowerCase() : stringToHash);
     }
 
-    private SecretKey getSecret(Integer version, boolean isForCustomEncryption, boolean forDecryption) throws StorageClientException {
+    private SecretKey getSecret(Integer version, boolean isForCustomEncryption) throws StorageClientException {
         SecretsData secretsData = getSecretsDataOrException();
         if (version == null) {
-            if (forDecryption) {
-                version = 0;
-            } else {
-                version = secretsData.getCurrentVersion();
-            }
+            version = secretsData.getCurrentVersion();
         }
         int usedVersion = version;
         Optional<SecretKey> secretKeyOptional = secretsData.getSecrets().stream()
@@ -201,12 +197,12 @@ public class CryptoManager {
     }
 
     private String decryptV1(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
-        SecretKey secretKey = getSecret(decryptKeyVersion, false, true);
+        SecretKey secretKey = getSecret(decryptKeyVersion, false);
         return defaultCrypto.decryptV1(cipherText, secretKey);
     }
 
     private String decryptV2(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
-        SecretKey secretKey = getSecret(decryptKeyVersion, false, true);
+        SecretKey secretKey = getSecret(decryptKeyVersion, false);
         return defaultCrypto.decrypt(cipherText, secretKey);
     }
 
@@ -226,7 +222,7 @@ public class CryptoManager {
             }
         }
         try {
-            return crypto.decrypt(decryptBase64(cipherText), getSecret(decryptKeyVersion, true, true));
+            return crypto.decrypt(decryptBase64(cipherText), getSecret(decryptKeyVersion, true));
         } catch (StorageCryptoException ex) {
             throw ex;
         } catch (Exception ex) {
