@@ -26,28 +26,29 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class HttpAgentImplTest {
 
     private static final int PORT = 8766;
+    private static final Integer TIMEOUT_IN_MS = 30_000;
 
     @Test
     void testNullEndpointException() {
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
     }
 
     @Test
     void testNullApiKeyException() {
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
     }
 
     @Test
     void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl(null, StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl(null, StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
     }
 
     @Test
     void testFakeEndpointException() {
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost",
                 "GET", "someBody", new HashMap<>(), new ApiKeyTokenClient("<apiKey>"), null, 0));
     }
@@ -59,7 +60,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertNotNull(agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         assertNotNull(agent.request(url, "POST", null, ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
@@ -71,7 +72,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () -> agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }
@@ -82,7 +83,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCodeList, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () ->
                 agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 0));
         assertThrows(StorageServerException.class, () ->
@@ -97,7 +98,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
         String url = "http://localhost:" + PORT;
-        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8);
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertNull(agent.request(url, "POST", "<body>", ApiResponse.READ, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }

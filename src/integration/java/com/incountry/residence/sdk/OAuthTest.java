@@ -36,6 +36,8 @@ public class OAuthTest {
     private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENVID);
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
 
+    private static final Integer HTTP_TIMEOUT = 30;
+
     private final SecretKeyAccessor accessor;
 
     public OAuthTest() throws StorageClientException {
@@ -66,7 +68,7 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET));
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT));
         assertNotNull(tokenClient.getToken(END_POINT));
         assertNotNull(tokenClient.refreshToken(true, END_POINT));
     }

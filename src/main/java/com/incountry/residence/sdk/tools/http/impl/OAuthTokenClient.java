@@ -50,12 +50,14 @@ public class OAuthTokenClient implements TokenClient {
     private final String basicAuthToken;
     private final String authEndpoint;
     private final String scope;
+    private final Integer timeoutInMs;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
 
-    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret) {
+    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret, Integer timeoutInMs) {
         this.authEndpoint = authEndpoint != null ? authEndpoint : DEFAULT_AUTH_URL;
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
+        this.timeoutInMs = timeoutInMs;
     }
 
     @Override
@@ -79,6 +81,8 @@ public class OAuthTokenClient implements TokenClient {
         try {
             String body = String.format(BODY, audienceUrl, scope);
             HttpURLConnection con = getConnection();
+            con.setReadTimeout(timeoutInMs);
+            con.setConnectTimeout(timeoutInMs);
             OutputStream os = con.getOutputStream();
             os.write(body.getBytes(CHARSET));
             os.flush();

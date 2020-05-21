@@ -51,9 +51,9 @@ public class HttpDaoImpl implements Dao {
     private boolean defaultEndpoint = true;
     private long lastLoadedTime;
 
-    public HttpDaoImpl(String environmentId, String endPoint, TokenClient tokenClient) throws StorageServerException {
+    public HttpDaoImpl(String environmentId, String endPoint, TokenClient tokenClient, Integer httpTimeout) throws StorageServerException {
         this(endPoint,
-                (HttpAgent) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET)),
+                (HttpAgent) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET, httpTimeout)),
                 ProxyUtils.createLoggingProxyForPublicMethods(tokenClient));
     }
 

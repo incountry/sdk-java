@@ -21,6 +21,7 @@ public class StorageConfig {
     private String clientId;
     private String clientSecret;
     private String authEndPoint;
+    private Integer httpTimeout;
 
     public String getEnvId() {
         return envId;
@@ -160,6 +161,22 @@ public class StorageConfig {
         return this;
     }
 
+    public Integer getHttpTimeout() {
+        return httpTimeout;
+    }
+
+    /**
+     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Default value is 30 seconds.
+     *
+     * @param httpTimeout timeout in seconds
+     * @return StorageConfig
+     */
+    public StorageConfig setHttpTimeout(Integer httpTimeout) {
+        this.httpTimeout = httpTimeout;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -171,6 +188,7 @@ public class StorageConfig {
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
+        newInstance.setHttpTimeout(getHttpTimeout());
         return newInstance;
     }
 
