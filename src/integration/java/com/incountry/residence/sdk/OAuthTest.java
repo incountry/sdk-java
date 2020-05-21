@@ -1,27 +1,19 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.helpers.ScribeAuthClient;
-import com.incountry.residence.sdk.tools.dao.Dao;
-import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.AuthClient;
-import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
-import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
-import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
+import com.incountry.residence.sdk.tools.http.TokenClient;
+import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
+import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENDPOINT;
@@ -29,10 +21,9 @@ import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Disabled("waiting for QA auth server")
-public class OAthTest {
+public class OAuthTest {
 
     private static final String INTEGR_ENC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
     private static final String INTEGR_ENC_CLIENT_ID = "INT_INC_CLIENT_ID";
@@ -47,28 +38,25 @@ public class OAthTest {
 
     private final SecretKeyAccessor accessor;
 
-    public OAthTest() throws StorageClientException {
+    public OAuthTest() throws StorageClientException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
         accessor = () -> secretsData;
     }
 
-    private Storage initStorage(AuthClient authClient) throws StorageServerException, StorageClientException {
-        authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL, "envId");
-        Dao dao = new HttpDaoImpl(END_POINT, new HttpAgentImpl(ENV_ID, StandardCharsets.UTF_8), new DefaultTokenGenerator(authClient));
-        return StorageImpl.getInstance(ENV_ID, accessor, dao);
+    private Storage initStorage() throws StorageServerException, StorageClientException {
+        StorageConfig config = new StorageConfig()
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setAuthEndPoint(AUTH_URL)
+                .setEnvId(ENV_ID)
+                .setEndPoint(END_POINT)
+                .setSecretKeyAccessor(accessor);
+        return StorageImpl.getInstance(config);
     }
 
-    public static Stream<AuthClient> authClients() {
-        return Stream.of(
-                new ScribeAuthClient(),
-                new DefaultAuthClient()
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("authClients")
-    public void testStorageWithAuthClient(AuthClient authClient) throws StorageServerException, StorageClientException, StorageCryptoException {
-        Storage storage = initStorage(authClient);
+    @Test
+    public void testStorageWithAuthClient() throws StorageServerException, StorageClientException, StorageCryptoException {
+        Storage storage = initStorage();
         String key = UUID.randomUUID().toString();
         String body = "body " + key;
         Record record = new Record(key, body);
@@ -76,12 +64,10 @@ public class OAthTest {
         assertEquals(record, storage.read(COUNTRY, key));
     }
 
-    @ParameterizedTest
-    @MethodSource("authClients")
-    public void positiveAuthTest(AuthClient authClient) throws StorageServerException {
-        authClient.setCredentials(CLIENT_ID, SECRET, AUTH_URL, ENV_ID);
-        Map.Entry<String, Long> token = authClient.newToken(END_POINT);
-        assertNotNull(token.getValue());
-        assertTrue(System.currentTimeMillis() < token.getValue());
+    @Test
+    public void positiveAuthTest() throws StorageServerException {
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET));
+        assertNotNull(tokenClient.getToken(END_POINT));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT));
     }
 }
