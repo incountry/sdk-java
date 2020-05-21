@@ -9,9 +9,9 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
-import com.incountry.residence.sdk.tools.http.AuthClient;
-import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
-import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
+import com.incountry.residence.sdk.tools.http.TokenClient;
+import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
+import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
@@ -169,12 +169,12 @@ public class StorageImpl implements Storage {
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
-                AuthClient authClient = new DefaultAuthClient();
-                authClient.setCredentials(config.getClientId(), config.getClientSecret(), config.getAuthEndPoint(), config.getEnvId());
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new DefaultTokenGenerator(authClient));
+                TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(
+                        new OAuthTokenClient(config.getAuthEndPoint(), config.getEnvId(), config.getClientId(), config.getClientSecret()));
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), tokenClient);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new DefaultTokenGenerator(config.getApiKey()));
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new ApiKeyTokenClient(config.getApiKey()));
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);

@@ -1,10 +1,9 @@
 package com.incountry.residence.sdk.http;
 
-import com.incountry.residence.sdk.http.mocks.FakeAuthClient;
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.impl.DefaultAuthClient;
-import com.incountry.residence.sdk.tools.http.impl.DefaultTokenGenerator;
+import com.incountry.residence.sdk.tools.http.TokenClient;
+import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
@@ -24,15 +23,26 @@ class AuthTest {
     private static final String ENV_ID = "envId";
     private static final String AUTH_URL = "http://localhost:" + PORT;
 
+    private TokenClient getTokenClient() {
+        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>");
+    }
+
     @RepeatedTest(3)
-    void tokenGeneratorTest(RepetitionInfo repeatInfo) throws StorageServerException {
-        iterateLogLevel(repeatInfo, DefaultTokenGenerator.class);
-        DefaultTokenGenerator generator = new DefaultTokenGenerator(new FakeAuthClient(0));
+    void tokenGeneratorTest(RepetitionInfo repeatInfo) throws StorageServerException, IOException {
+        iterateLogLevel(repeatInfo, OAuthTokenClient.class);
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='1234567889' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
+        );
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
-            assertNotNull(generator.getToken("http://test"));
+            assertNotNull(tokenClient.getToken("http://test"));
         }
-        generator.refreshToken(false, "http://test");
-        generator.refreshToken(true, "http://test");
+        tokenClient.refreshToken(false, "http://test");
+        tokenClient.refreshToken(true, "http://test");
+        server.stop(0);
     }
 
     @Test
@@ -43,10 +53,7 @@ class AuthTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-
-        DefaultAuthClient authClient = new DefaultAuthClient();
-        authClient.setCredentials("<client_id>", "<client_secret>", AUTH_URL, ENV_ID);
-        assertNotNull(authClient.newToken("http://test"));
+        assertNotNull(getTokenClient().getToken("http://test"));
         server.stop(0);
     }
 
@@ -55,9 +62,7 @@ class AuthTest {
         int respCode = 401;
         FakeHttpServer server = new FakeHttpServer("error", respCode, PORT);
         server.start();
-        DefaultAuthClient authClient = new DefaultAuthClient();
-        authClient.setCredentials("<client_id>", "<client_secret>", AUTH_URL, ENV_ID);
-        assertThrows(StorageServerException.class, () -> authClient.newToken("http://test"));
+        assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test"));
         server.stop(0);
     }
 
@@ -83,11 +88,8 @@ class AuthTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-
-        DefaultAuthClient authClient = new DefaultAuthClient();
-        authClient.setCredentials("<client_id>", "<client_secret>", AUTH_URL, ENV_ID);
         for (int i = 0; i < responseList.size(); i++) {
-            assertThrows(StorageServerException.class, () -> authClient.newToken("http://test"));
+            assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test"));
         }
         server.stop(0);
     }
