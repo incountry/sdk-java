@@ -30,7 +30,7 @@ public class HttpDaoImpl implements Dao {
     private static final int RETRY_CNT = 1;
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
-    private static final String PORTAL_COUNTRIES_URI = "https://us.api.incountry.io/countries";
+    private static final String COUNTRIES_URI = "https://us.api.incountry.io/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
     private static final String URI_HTTPS = "https://";
@@ -77,7 +77,7 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenClient, PORTAL_COUNTRIES_URI, RETRY_CNT);
+            content = httpAgent.request(COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenClient, COUNTRIES_URI, RETRY_CNT);
             popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
