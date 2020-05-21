@@ -1,15 +1,13 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
-
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.AuthClient;
+import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,12 +20,13 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
-public class DefaultAuthClient implements AuthClient {
+public class OAuthTokenClient implements TokenClient {
 
-    private static final Logger LOG = LogManager.getLogger(DefaultAuthClient.class);
-
+    private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
+    private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audienceUrl={}";
     private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/";
     //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
@@ -48,21 +47,37 @@ public class DefaultAuthClient implements AuthClient {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String APPLICATION_URLENCODED = "application/x-www-form-urlencoded";
 
-    private String basicAuthToken;
-    private String authUrl;
-    private String envId;
+    private final String basicAuthToken;
+    private final String authEndpoint;
+    private final String scope;
+    private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
 
-    @Override
-    public void setCredentials(String clientId, String secret, String authUrl, String scope) {
+    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret) {
+        this.authEndpoint = authEndpoint != null ? authEndpoint : DEFAULT_AUTH_URL;
+        this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.authUrl = authUrl != null ? authUrl : DEFAULT_AUTH_URL;
-        this.envId = scope;
     }
 
     @Override
-    public Map.Entry<String, Long> newToken(String audienceUrl) throws StorageServerException {
+    public String getToken(String audienceUrl) throws StorageServerException {
+        return refreshToken(false, audienceUrl);
+    }
+
+    public synchronized String refreshToken(boolean force, String audienceUrl) throws StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(MSG_REFRESH_TOKEN, force, audienceUrl);
+        }
+        Map.Entry<String, Long> token = tokenMap.get(audienceUrl);
+        if (force || token == null || token.getValue() < System.currentTimeMillis()) {
+            token = newToken(audienceUrl);
+            tokenMap.put(audienceUrl, token);
+        }
+        return token.getKey();
+    }
+
+    private Map.Entry<String, Long> newToken(String audienceUrl) throws StorageServerException {
         try {
-            String body = String.format(BODY, audienceUrl, envId);
+            String body = String.format(BODY, audienceUrl, scope);
             HttpURLConnection con = getConnection();
             OutputStream os = con.getOutputStream();
             os.write(body.getBytes(CHARSET));
@@ -102,7 +117,7 @@ public class DefaultAuthClient implements AuthClient {
             if (!BEARER_TOKEN_TYPE.equals(token.tokenType)) {
                 logAndThrowException(MSG_ERR_INVALID_TYPE);
             }
-            if (!envId.equals(token.scope)) {
+            if (!scope.equals(token.scope)) {
                 logAndThrowException(MSG_ERR_INVALID_SCOPE);
             }
             return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn);
@@ -117,7 +132,7 @@ public class DefaultAuthClient implements AuthClient {
     }
 
     private HttpURLConnection getConnection() throws IOException {
-        URL url = new URL(authUrl);
+        URL url = new URL(authEndpoint);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(POST);
         connection.setRequestProperty(AUTHORIZATION, basicAuthToken);
