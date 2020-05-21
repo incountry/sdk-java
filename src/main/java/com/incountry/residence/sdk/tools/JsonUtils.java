@@ -79,6 +79,7 @@ public class JsonUtils {
         }
         //store keys in new composite body with encryption
         recordJsonObj.remove(P_BODY);
+        recordJsonObj.remove(P_RANGE_KEY);
         JsonObject bodyJsonObj = new JsonObject();
         if (record.getBody() != null) {
             bodyJsonObj.addProperty(P_PAYLOAD, record.getBody());
