@@ -283,29 +283,38 @@ class StorageTest {
     }
 
     @Test
-    void testFindWithoutEncWithEncryptedData() throws StorageException {
-        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("password");
-        CryptoManager cryptoWithEnc = new CryptoManager(accessor, ENVIRONMENT_ID, null, false);
+    void testFindWithEncAndFoundPTE() throws StorageException {
+        CryptoManager cryptoAsInStorage = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
         CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
-        FindFilterBuilder builder = FindFilterBuilder.create()
-                .limitAndOffset(2, 0)
-                .profileKeyEq(PROFILE_KEY);
-
         Record recWithEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        Record recWithPTEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
+        Record recWithPTEnc = new Record(KEY + 1, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoAsInStorage);
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
-
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, agent, tokenClient));
+        BatchRecord batchRecord = storage.find(COUNTRY, FindFilterBuilder.create());
+        assertEquals(0, batchRecord.getErrors().size());
+        assertEquals(2, batchRecord.getRecords().size());
+    }
 
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
+    @Test
+    void testFindWithoutEncWithEncryptedData() throws StorageException {
+        CryptoManager cryptoWithEnc = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
+        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        Record recWithEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record recWithPTEnc = new Record(KEY + 1, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
+        String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
+        FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, null, new HttpDaoImpl(FAKE_ENDPOINT, agent, tokenClient));
+
+        BatchRecord batchRecord = storage.find(COUNTRY, FindFilterBuilder.create());
         assertEquals(1, batchRecord.getErrors().size());
         assertEquals(encryptedRec, batchRecord.getErrors().get(0).getRawData());
         assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(KEY + 1, batchRecord.getRecords().get(0).getKey());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
@@ -365,8 +374,9 @@ class StorageTest {
         assertThrows(StorageClientException.class, () -> storage.read(null, null));
     }
 
-    @Test
-    void testErrorDeleteInsufficientArgs() throws StorageClientException, StorageServerException {
+    @RepeatedTest(3)
+    void testErrorDeleteInsufficientArgs(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent("");
         Dao dao = new HttpDaoImpl(FAKE_ENDPOINT, agent, tokenClient);
         assertNotNull(dao);

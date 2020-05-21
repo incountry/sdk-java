@@ -20,7 +20,7 @@ public class FindFilterTest {
     public void testToJsonObject() throws StorageClientException {
         FilterStringParam versionFilterParam = new FilterStringParam(new String[]{version}, true);
         FilterStringParam keyFilterParam = new FilterStringParam(new String[]{key}, true);
-        FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey});
+        FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey}, true);
 
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionFilter(versionFilterParam);
@@ -30,7 +30,7 @@ public class FindFilterTest {
 
         assertEquals(String.format("{\"$not\":[%s]}", version), jsonObject.get("version").toString());
         assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
-        assertEquals(String.format("[\"%s\"]", profileKey), jsonObject.get("profile_key").toString());
+        assertEquals(String.format("{\"$not\":[\"%s\"]}", profileKey), jsonObject.get("profile_key").toString());
     }
 
 

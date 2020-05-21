@@ -154,6 +154,28 @@ public class StorageIntegrationTest {
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey());
+
+        builder.clear()
+                .key2Eq(KEY_2)
+                .key3Eq(KEY_3)
+                .profileKeyEq(PROFILE_KEY);
+        batchRecord = storage.find(COUNTRY, builder);
+        assertEquals(2, batchRecord.getCount());
+        assertEquals(2, batchRecord.getRecords().size());
+        assertTrue(batchRecord.getRecords().stream().anyMatch(record
+                -> record.getKey().equals(BATCH_WRITE_KEY)));
+        assertTrue(batchRecord.getRecords().stream().anyMatch(record
+                -> record.getKey().equals(WRITE_KEY)));
+
+        builder.clear()
+                .keyNotEq(WRITE_KEY)
+                .key2Eq(KEY_2)
+                .key3Eq(KEY_3)
+                .profileKeyEq(PROFILE_KEY);
+        batchRecord = storage.find(COUNTRY, builder);
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(1, batchRecord.getRecords().size());
+        assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey());
     }
 
     @Test

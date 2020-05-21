@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.BatchRecord;
@@ -72,17 +73,18 @@ public class JsonUtils {
      */
     public static JsonObject toJson(Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException {
         Gson gson = getGson4Records();
-        JsonObject jsonObject = (JsonObject) gson.toJsonTree(record);
+        JsonObject recordJsonObj = (JsonObject) gson.toJsonTree(record);
         if (cryptoManager == null) {
-            return jsonObject;
+            return recordJsonObj;
         }
-        //store keys in new composite body with encription
-        jsonObject.remove(P_BODY);
-        Map<String, String> mapBodyMeta = new HashMap<>();
-        mapBodyMeta.put(P_PAYLOAD, record.getBody());
-        mapBodyMeta.put(P_META, jsonObject.toString());
-        String packedBody = gson.toJson(mapBodyMeta);
-        TransferRecord encRec = new TransferRecord(record, cryptoManager, packedBody);
+        //store keys in new composite body with encryption
+        recordJsonObj.remove(P_BODY);
+        JsonObject bodyJsonObj = new JsonObject();
+        if (record.getBody() != null) {
+            bodyJsonObj.addProperty(P_PAYLOAD, record.getBody());
+        }
+        bodyJsonObj.add(P_META, recordJsonObj);
+        TransferRecord encRec = new TransferRecord(record, cryptoManager, bodyJsonObj.toString());
         return (JsonObject) gson.toJsonTree(encRec);
     }
 
@@ -228,7 +230,10 @@ public class JsonUtils {
     }
 
     private static Gson getGson4Records() {
-        return new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+        return new GsonBuilder()
+                .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .disableHtmlEscaping()
+                .create();
     }
 
     public static String toJsonString(List<Record> records, CryptoManager cryptoManager)
@@ -351,27 +356,13 @@ public class JsonUtils {
         public void decryptAllFromBody() {
             Gson gson = getGson4Records();
             JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
-            setBody(getPropertyFromJson(bodyObj, P_PAYLOAD));
-            String meta = getPropertyFromJson(bodyObj, P_META);
-            Record recordFromMeta = gson.fromJson(meta, Record.class);
+            JsonElement innerBodyJson = bodyObj.get(P_PAYLOAD);
+            setBody(innerBodyJson != null ? innerBodyJson.getAsString() : null);
+            Record recordFromMeta = gson.fromJson(bodyObj.get(P_META), Record.class);
             setKey(recordFromMeta.getKey());
             setKey2(recordFromMeta.getKey2());
             setKey3(recordFromMeta.getKey3());
             setProfileKey(recordFromMeta.getProfileKey());
-        }
-
-        /**
-         * Get property value from json
-         *
-         * @param jsonObject json object
-         * @param property   property name
-         * @return property value
-         */
-        private String getPropertyFromJson(JsonObject jsonObject, String property) {
-            if (!jsonObject.has(property)) {
-                return null;
-            }
-            return jsonObject.get(property).isJsonNull() ? null : jsonObject.get(property).getAsString();
         }
 
         @Override
