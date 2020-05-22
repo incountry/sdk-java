@@ -364,9 +364,18 @@ class HttpDaoImplTests {
         storage.write("ru", record);
         assertEquals("https://ru.api.incountry.io/v2/storage/records/ru", agent.getCallEndpoint());
         agent.setResponse(countryLoadResponse);
-        assertThrows(StorageClientException.class, () -> storage.write("PU", record));
+        //country 'PU' has no separate endpoint
+        storage.write("PU", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/pu", agent.getCallEndpoint());
         agent.setResponse(countryLoadResponse);
-        assertThrows(StorageClientException.class, () -> storage.write("pu", record));
+        storage.write("pu", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/pu", agent.getCallEndpoint());
+        //country 'SU' is not in country list
+        storage.write("SU", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/su", agent.getCallEndpoint());
+        agent.setResponse(countryLoadResponse);
+        storage.write("su", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/su", agent.getCallEndpoint());
     }
 
     private String countryLoadResponse = "{\n" +
