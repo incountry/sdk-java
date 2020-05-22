@@ -32,6 +32,12 @@ public class FakeHttpServer {
         server.createContext("/", new FakeHandler(response, respCodeList));
     }
 
+    public FakeHttpServer(String response, int responseCode, int port, int sleepTimeoutInSeconds) throws IOException {
+        server = HttpServer.create();
+        server.bind(new InetSocketAddress(port), 0);
+        server.createContext("/", new FakeHandler(response, responseCode, sleepTimeoutInSeconds));
+    }
+
     public void start() {
         server.start();
     }
@@ -45,6 +51,7 @@ public class FakeHttpServer {
         LinkedList<String> responseList;
         String response;
         Integer responseCode;
+        Integer sleepTimeout;
 
         FakeHandler(String response, int responseCode) {
             this.response = response;
@@ -61,8 +68,22 @@ public class FakeHttpServer {
             this.respCodeList = new LinkedList<>(respCodeList);
         }
 
+        FakeHandler(String response, int responseCode, int sleepTimeoutInSeconds) {
+            this.response = response;
+            this.responseCode = responseCode;
+            this.sleepTimeout = sleepTimeoutInSeconds;
+        }
+
+        @SuppressWarnings("java:S2925")
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (sleepTimeout != null) {
+                try {
+                    Thread.sleep(sleepTimeout * 1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             String currentResponse = null;
             if (response != null) {
                 currentResponse = response;

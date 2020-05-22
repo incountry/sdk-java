@@ -20,7 +20,7 @@ import java.util.Map;
 public class HttpAgentImpl implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
-    private static final String MSG_SERVER_ERROR = "Server request error";
+    private static final String MSG_SERVER_ERROR = "Server request error: %s";
 
     private final String environmentId;
     private final Charset charset;
@@ -93,7 +93,7 @@ public class HttpAgentImpl implements HttpAgent {
             }
             return content.toString();
         } catch (IOException ex) {
-            throw new StorageServerException(MSG_SERVER_ERROR + method, ex);
+            throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
     }
 
