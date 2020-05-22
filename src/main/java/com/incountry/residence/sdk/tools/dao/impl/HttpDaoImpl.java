@@ -30,7 +30,7 @@ public class HttpDaoImpl implements Dao {
     private static final int RETRY_CNT = 1;
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
-    private static final String COUNTRIES_URI = "https://us.api.incountry.io/countries";
+    private static final String COUNTRIES_URI = DEFAULT_ENDPOINT + "/countries";
     private static final String URI_ENDPOINT_PART = ".api.incountry.io";
     private static final String STORAGE_URL = "/v2/storage/records/";
     private static final String URI_HTTPS = "https://";
