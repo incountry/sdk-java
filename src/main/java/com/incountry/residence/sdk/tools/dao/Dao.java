@@ -17,7 +17,7 @@ public interface Dao {
 
     Record read(String country, String key, Crypto crypto) throws StorageClientException, StorageServerException, StorageCryptoException;
 
-    void delete(String country, String key, Crypto crypto) throws StorageClientException, StorageServerException;
+    void delete(String country, String key, Crypto crypto) throws StorageServerException;
 
     BatchRecord find(String country, FindFilterBuilder builder, Crypto crypto) throws StorageClientException, StorageServerException;
 }

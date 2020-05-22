@@ -80,7 +80,7 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private String getEndpoint(String path, String country) throws StorageClientException, StorageServerException {
+    private String getEndpoint(String path, String country) throws StorageServerException {
         if (!path.startsWith(URI_DELIMITER)) {
             path = URI_DELIMITER + path;
         }
@@ -93,24 +93,14 @@ public class HttpDaoImpl implements Dao {
                 }
                 pop = popMap.get(country.toLowerCase());
             }
-            if (pop == null) {
-                loadCountries();
-                synchronized (popMap) {
-                    pop = popMap.get(country.toLowerCase());
-                }
+            if (pop != null) {
+                return pop.getHost() + path;
             }
-            if (pop == null) {
-                String message = "Country " + country + " has no PoPAPI";
-                LOG.error(message);
-                throw new StorageClientException(message);
-            }
-            return pop.getHost() + path;
-        } else {
-            return endPoint + path;
         }
+        return endPoint + path;
     }
 
-    private String createUrl(String country, String keyHash) throws StorageClientException, StorageServerException {
+    private String createUrl(String country, String keyHash) throws StorageServerException {
         return getEndpoint(concatUrl(country, URI_DELIMITER, keyHash), country);
     }
 
@@ -140,7 +130,7 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void delete(String country, String key, Crypto crypto) throws StorageClientException, StorageServerException {
+    public void delete(String country, String key, Crypto crypto) throws StorageServerException {
         String newKey = crypto != null ? crypto.createKeyHash(key) : key;
         String url = createUrl(country, newKey);
         agent.request(url, URI_DELETE, null, ApiResponse.DELETE);
