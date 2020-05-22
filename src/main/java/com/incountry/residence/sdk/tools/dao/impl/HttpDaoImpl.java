@@ -53,7 +53,7 @@ public class HttpDaoImpl implements Dao {
 
     public HttpDaoImpl(String environmentId, String endPoint, TokenClient tokenClient, Integer httpTimeout) throws StorageServerException {
         this(endPoint,
-                (HttpAgent) ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET, httpTimeout)),
+                ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET, httpTimeout)),
                 ProxyUtils.createLoggingProxyForPublicMethods(tokenClient));
     }
 
@@ -163,10 +163,8 @@ public class HttpDaoImpl implements Dao {
     private String getRecordActionUrl(String endpoint, String country, String... other) {
         StringBuilder builder = new StringBuilder(endpoint).append(STORAGE_URL);
         builder.append(country.toLowerCase());
-        if (other != null) {
-            for (String part : other) {
-                builder.append(part);
-            }
+        for (String part : other) {
+            builder.append(part);
         }
         return builder.toString();
     }

@@ -36,7 +36,7 @@ public class OAuthTest {
     private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENVID);
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
 
-    private static final Integer HTTP_TIMEOUT = 30;
+    private static final Integer HTTP_TIMEOUT = 30_000;
 
     private final SecretKeyAccessor accessor;
 
