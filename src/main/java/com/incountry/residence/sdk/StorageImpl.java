@@ -20,8 +20,6 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
 
-import static com.incountry.residence.sdk.StorageConfig.LOG_SECURE2;
-
 /**
  * Basic implementation
  */
@@ -52,7 +50,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
-    private static final String LOG_SECURE = "[SECURE]";
+    private static final String MSG_SIMPLE_SECURE = "[SECURE]";
     private static final Integer DEFAULT_TIMEOUT = 30;
 
     private CryptoManager cryptoManager;
@@ -141,7 +139,7 @@ public class StorageImpl implements Storage {
     public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException, StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
-                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
+                    environmentID != null ? String.format(StorageConfig.MSG_SECURE, environmentID.hashCode()) : null,
                     secretKeyAccessor,
                     dao
             );
@@ -216,7 +214,7 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("write params (country={} , record={})",
                     country,
-                    record != null ? LOG_SECURE2 + record.hashCode() + "]]" : null);
+                    record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getKey());
@@ -229,7 +227,7 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("read params (country={} , key={})",
                     country,
-                    key != null ? LOG_SECURE : null);
+                    key != null ? MSG_SIMPLE_SECURE : null);
         }
         checkParameters(country, key);
         Record record = dao.read(country, key, cryptoManager);
@@ -289,7 +287,7 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("delete params (country={} , key={})",
                     country,
-                    key != null ? LOG_SECURE : null);
+                    key != null ? MSG_SIMPLE_SECURE : null);
         }
         checkParameters(country, key);
         dao.delete(country, key, cryptoManager);

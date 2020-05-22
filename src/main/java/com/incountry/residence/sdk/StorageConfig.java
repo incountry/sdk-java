@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class StorageConfig {
 
-    public static final String LOG_SECURE2 = "[SECURE[";
+    public static final String MSG_SECURE = "[SECURE[%s]]";
 
     private String envId;
     private String apiKey;
@@ -208,6 +208,6 @@ public class StorageConfig {
     }
 
     private String hideParam(String param) {
-        return param != null ? LOG_SECURE2 + param.hashCode() + "]]" : null;
+        return param != null ? String.format(MSG_SECURE, param.hashCode()) : null;
     }
 }
