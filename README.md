@@ -547,12 +547,16 @@ Class `StorageConfig` is a container with Storage configuration, using Builder p
 
 ```java
 public class StorageConfig {
-    private String envId;
-    private String apiKey;
-    private String endPoint;
-    private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customEncryptionConfigsList;
-    private boolean normalizeKeys;
+   private String envId;
+       private String apiKey;
+       private String endPoint;
+       private SecretKeyAccessor secretKeyAccessor;
+       private List<Crypto> customEncryptionConfigsList;
+       private boolean normalizeKeys;
+       private String clientId;
+       private String clientSecret;
+       private String authEndPoint;
+       private Integer httpTimeout;
     //...
 
     /**
@@ -565,6 +569,19 @@ public class StorageConfig {
         this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
     }
+
+    /**
+     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Default value is 30 seconds.
+     *
+     * @param httpTimeout timeout in seconds
+     * @return StorageConfig
+     */
+    public StorageConfig setHttpTimeout(Integer httpTimeout) {
+        this.httpTimeout = httpTimeout;
+        return this;
+    }
+
 
     //...
 }

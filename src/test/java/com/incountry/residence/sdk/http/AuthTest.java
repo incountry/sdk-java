@@ -20,11 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class AuthTest {
 
     private static final int PORT = 8765;
+    private static final int TIMEOUT_IN_MS = 30_000;
     private static final String ENV_ID = "envId";
     private static final String AUTH_URL = "http://localhost:" + PORT;
 
     private TokenClient getTokenClient() {
-        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>");
+        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
     }
 
     @RepeatedTest(3)

@@ -20,8 +20,6 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
 
-import static com.incountry.residence.sdk.StorageConfig.LOG_SECURE2;
-
 /**
  * Basic implementation
  */
@@ -45,13 +43,15 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
+    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
     private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
-    private static final String LOG_SECURE = "[SECURE]";
+    private static final String MSG_SIMPLE_SECURE = "[SECURE]";
+    private static final Integer DEFAULT_TIMEOUT = 30;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -139,7 +139,7 @@ public class StorageImpl implements Storage {
     public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException, StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
-                    environmentID != null ? LOG_SECURE2 + environmentID.hashCode() + "]]" : null,
+                    environmentID != null ? String.format(StorageConfig.MSG_SECURE, environmentID.hashCode()) : null,
                     secretKeyAccessor,
                     dao
             );
@@ -166,15 +166,27 @@ public class StorageImpl implements Storage {
 
     private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
         if (dao == null) {
+            Integer httpTimeout = config.getHttpTimeout();
+            if (httpTimeout != null && httpTimeout < 1) {
+                LOG.error(MSG_ERR_ILLEGAL_TIMEOUT);
+                throw new StorageClientException(MSG_ERR_ILLEGAL_TIMEOUT);
+            } else if (httpTimeout == null) {
+                httpTimeout = DEFAULT_TIMEOUT;
+            }
+            httpTimeout *= 1000; //expected value in ms
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
-                TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(
-                        new OAuthTokenClient(config.getAuthEndPoint(), config.getEnvId(), config.getClientId(), config.getClientSecret()));
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), tokenClient);
+                TokenClient tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
+                        config.getEnvId(),
+                        config.getClientId(),
+                        config.getClientSecret(),
+                        httpTimeout);
+                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), tokenClient, httpTimeout);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new ApiKeyTokenClient(config.getApiKey()));
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new ApiKeyTokenClient(config.getApiKey()), httpTimeout);
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);
@@ -202,7 +214,7 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("write params (country={} , record={})",
                     country,
-                    record != null ? LOG_SECURE2 + record.hashCode() + "]]" : null);
+                    record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getKey());
@@ -215,7 +227,7 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("read params (country={} , key={})",
                     country,
-                    key != null ? LOG_SECURE : null);
+                    key != null ? MSG_SIMPLE_SECURE : null);
         }
         checkParameters(country, key);
         Record record = dao.read(country, key, cryptoManager);
@@ -275,7 +287,7 @@ public class StorageImpl implements Storage {
         if (LOG.isTraceEnabled()) {
             LOG.trace("delete params (country={} , key={})",
                     country,
-                    key != null ? LOG_SECURE : null);
+                    key != null ? MSG_SIMPLE_SECURE : null);
         }
         checkParameters(country, key);
         dao.delete(country, key, cryptoManager);

@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class StorageConfig {
 
-    public static final String LOG_SECURE2 = "[SECURE[";
+    public static final String MSG_SECURE = "[SECURE[%s]]";
 
     private String envId;
     private String apiKey;
@@ -21,6 +21,7 @@ public class StorageConfig {
     private String clientId;
     private String clientSecret;
     private String authEndPoint;
+    private Integer httpTimeout;
 
     public String getEnvId() {
         return envId;
@@ -160,6 +161,22 @@ public class StorageConfig {
         return this;
     }
 
+    public Integer getHttpTimeout() {
+        return httpTimeout;
+    }
+
+    /**
+     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Default value is 30 seconds.
+     *
+     * @param httpTimeout timeout in seconds
+     * @return StorageConfig
+     */
+    public StorageConfig setHttpTimeout(Integer httpTimeout) {
+        this.httpTimeout = httpTimeout;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -171,6 +188,7 @@ public class StorageConfig {
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
+        newInstance.setHttpTimeout(getHttpTimeout());
         return newInstance;
     }
 
@@ -190,6 +208,6 @@ public class StorageConfig {
     }
 
     private String hideParam(String param) {
-        return param != null ? LOG_SECURE2 + param.hashCode() + "]]" : null;
+        return param != null ? String.format(MSG_SECURE, param.hashCode()) : null;
     }
 }
