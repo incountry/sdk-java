@@ -20,22 +20,25 @@ import java.util.Map;
 public class HttpAgentImpl implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
-    private static final String MSG_SERVER_ERROR = "Server request error";
+    private static final String MSG_SERVER_ERROR = "Server request error: %s";
 
     private final String environmentId;
     private final Charset charset;
     private final String userAgent;
+    private final Integer timeout;
 
 
-    public HttpAgentImpl(String environmentId, Charset charset) {
+    public HttpAgentImpl(String environmentId, Charset charset, Integer timeoutInMs) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HttpAgentImpl constructor params (environmentId={} , charset={})",
+            LOG.debug("HttpAgentImpl constructor params (environmentId={} , charset={}, timeoutInMs={})",
                     environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null,
-                    charset);
+                    charset,
+                    timeoutInMs);
         }
         this.environmentId = environmentId;
         this.charset = charset;
-        userAgent = "SDK-Java/" + Version.BUILD_VERSION;
+        this.timeout = timeoutInMs;
+        this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
     }
 
     @Override
@@ -50,6 +53,8 @@ public class HttpAgentImpl implements HttpAgent {
         try {
             HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
             con.setRequestMethod(method);
+            con.setConnectTimeout(timeout);
+            con.setReadTimeout(timeout);
             con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(popInstanceUrl));
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
@@ -88,7 +93,7 @@ public class HttpAgentImpl implements HttpAgent {
             }
             return content.toString();
         } catch (IOException ex) {
-            throw new StorageServerException(MSG_SERVER_ERROR + method, ex);
+            throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
     }
 

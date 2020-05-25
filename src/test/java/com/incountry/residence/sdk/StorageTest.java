@@ -7,6 +7,7 @@ import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.http.mocks.FakeHttpAgent;
+import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
@@ -37,8 +38,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StorageTest {
+    private static final int PORT = 8767;
     private static final String ENVIRONMENT_ID = "envId";
     private static final String FAKE_ENDPOINT = "http://fakeEndpoint.localhost:8081";
     private static final String SECRET = "passwordpasswordpasswordpassword";
@@ -487,5 +490,46 @@ class StorageTest {
                 .setApiKey("<apiKey>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Either apiKey or clientId/clientSecret can be used at the same moment, not both", ex.getMessage());
+    }
+
+    @Test
+    void positiveTestCustomTimeout() throws StorageException, IOException {
+        FakeHttpServer server = new FakeHttpServer("{}", 200, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        assertTrue(storage.delete(COUNTRY, KEY));
+        server.stop(0);
+    }
+
+    @Test
+    void negativeTestIllegalTimeout() {
+        StorageConfig config = new StorageConfig()
+                .setEnvId(ENVIRONMENT_ID)
+                .setEndPoint(FAKE_ENDPOINT)
+                .setApiKey("<apiKey>")
+                .setHttpTimeout(0);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Connection timeout can't be <1", ex.getMessage());
+    }
+
+    @Test
+    void negativeTestTimeoutError() throws StorageException, IOException {
+        FakeHttpServer server = new FakeHttpServer("{}", 200, PORT, 5);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(1)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
+        assertEquals("Server request error: DELETE", ex.getMessage());
+        assertEquals("Read timed out", ex.getCause().getMessage());
+        server.stop(0);
     }
 }
