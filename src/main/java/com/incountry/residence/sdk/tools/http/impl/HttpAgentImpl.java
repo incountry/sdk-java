@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -19,12 +20,13 @@ import java.util.Map;
 public class HttpAgentImpl implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
-    private static final String MSG_SERVER_ERROR = "Server request error";
+    private static final String MSG_SERVER_ERROR = "Server request error: %s";
+    private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
 
-    private String apiKey;
-    private String environmentId;
-    private Charset charset;
-    private String userAgent;
+    private final String apiKey;
+    private final String environmentId;
+    private final Charset charset;
+    private final String userAgent;
 
 
     public HttpAgentImpl(String apiKey, String environmentId, Charset charset) {
@@ -65,23 +67,26 @@ public class HttpAgentImpl implements HttpAgent {
             }
             int status = con.getResponseCode();
             ApiResponse params = codeMap.get(status);
-            BufferedReader reader;
+            InputStream responseStream;
             if (params == null || params.isError()) {
-                reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
+                responseStream = con.getErrorStream();
             } else {
-                reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
+                responseStream = con.getInputStream();
             }
-            String inputLine;
             StringBuilder content = new StringBuilder();
-            while ((inputLine = reader.readLine()) != null) {
-                content.append(inputLine);
+            if (responseStream != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream, charset));
+                String inputLine;
+                while ((inputLine = reader.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                reader.close();
             }
-            reader.close();
             if (params != null && params.isIgnored()) {
                 return null;
             }
             if (params == null || params.isError()) {
-                String error = status + " " + endpoint + " - " + content;
+                String error = String.format(MSG_ERR_CONTENT, status, endpoint, content.toString());
                 if (LOG.isErrorEnabled()) {
                     LOG.error(error.replaceAll("[\r\n]", ""));
                 }
@@ -89,7 +94,7 @@ public class HttpAgentImpl implements HttpAgent {
             }
             return content.toString();
         } catch (IOException ex) {
-            throw new StorageServerException(MSG_SERVER_ERROR + method, ex);
+            throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
     }
 }
