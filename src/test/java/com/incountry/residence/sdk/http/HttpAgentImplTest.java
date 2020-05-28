@@ -25,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class HttpAgentImplTest {
 
-    private static final int PORT = 8766;
+    private static final int PORT = 8769;
+    private static final String ENDPOINT = "http://localhost:" + PORT;
     private static final Integer TIMEOUT_IN_MS = 30_000;
 
     @Test
@@ -59,10 +60,9 @@ class HttpAgentImplTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
-        String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
-        assertNotNull(agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
-        assertNotNull(agent.request(url, "POST", null, ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
+        assertNotNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
+        assertNotNull(agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }
 
@@ -71,9 +71,8 @@ class HttpAgentImplTest {
         int respCode = 555;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
-        String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
-        assertThrows(StorageServerException.class, () -> agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
+        assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("<apiKey>"), null, 0));
         server.stop(0);
     }
 
@@ -82,13 +81,12 @@ class HttpAgentImplTest {
         List<Integer> respCodeList = Arrays.asList(401, 401, 401, 401, 401, 200);
         FakeHttpServer server = new FakeHttpServer("{}", respCodeList, PORT);
         server.start();
-        String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         assertThrows(StorageServerException.class, () ->
-                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 0));
+                agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 0));
         assertThrows(StorageServerException.class, () ->
-                agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 2));
-        assertEquals("{}", agent.request(url, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 1));
+                agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 2));
+        assertEquals("{}", agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, new ApiKeyTokenClient("apiKey"), null, 1));
         server.stop(0);
     }
 
@@ -97,9 +95,21 @@ class HttpAgentImplTest {
         int respCode = 404;
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
-        String url = "http://localhost:" + PORT;
         HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
-        assertNull(agent.request(url, "POST", "<body>", ApiResponse.READ, new ApiKeyTokenClient("<apiKey>"), null, 0));
+        assertNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.READ, new ApiKeyTokenClient("<apiKey>"), null, 0));
+        server.stop(0);
+    }
+
+    @Test
+    void testExpectedExceptionInsteadOfNPE() throws IOException {
+        int respCode = 201;
+        String response = "ok";
+        FakeHttpServer server = new FakeHttpServer(response, respCode, PORT);
+        server.start();
+        HttpAgent agent = new HttpAgentImpl("envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        StorageServerException ex = assertThrows(StorageServerException.class, ()
+                -> agent.request(ENDPOINT, "GET", "someBody", new HashMap<>(), new ApiKeyTokenClient("<apiKey>"), null, 0));
+        assertEquals("Code=201, endpoint=[http://localhost:8769], content=[]", ex.getMessage());
         server.stop(0);
     }
 }
