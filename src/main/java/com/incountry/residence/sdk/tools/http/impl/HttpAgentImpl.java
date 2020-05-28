@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -21,6 +22,7 @@ public class HttpAgentImpl implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error: %s";
+    private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
 
     private final String environmentId;
     private final Charset charset;
@@ -68,26 +70,29 @@ public class HttpAgentImpl implements HttpAgent {
             }
             int status = con.getResponseCode();
             ApiResponse params = codeMap.get(status);
-            BufferedReader reader;
+            InputStream responseStream;
             if (params != null && !params.isError()) {
-                reader = new BufferedReader(new InputStreamReader(con.getInputStream(), charset));
+                responseStream = con.getInputStream();
             } else if (params == null || !canRetry(params, retryCount)) {
-                reader = new BufferedReader(new InputStreamReader(con.getErrorStream(), charset));
+                responseStream = con.getErrorStream();
             } else {
                 tokenClient.refreshToken(true, popInstanceUrl);
                 return request(url, method, body, codeMap, tokenClient, popInstanceUrl, retryCount - 1);
             }
-            String inputLine;
             StringBuilder content = new StringBuilder();
-            while ((inputLine = reader.readLine()) != null) {
-                content.append(inputLine);
+            if (responseStream != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream, charset));
+                String inputLine;
+                while ((inputLine = reader.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                reader.close();
             }
-            reader.close();
             if (params != null && params.isIgnored()) {
                 return null;
             }
             if (params == null || params.isError()) {
-                String errorMessage = (status + " " + url + " - " + content).replaceAll("[\r\n]", "");
+                String errorMessage = String.format(MSG_ERR_CONTENT, status, url, content.toString()).replaceAll("[\r\n]", "");
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
