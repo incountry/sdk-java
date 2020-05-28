@@ -56,7 +56,7 @@ dependencies {
     testCompile group: "com.macasaet.fernet", name: "fernet-java8", version: "${fernetVersion}"
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
-    implementation "com.google.code.gson:gson:${gsonVersion}"
+    compile "com.google.code.gson:gson:${gsonVersion}"
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
