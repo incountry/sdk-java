@@ -46,7 +46,7 @@ public class StorageImpl implements Storage {
 }
 ```
 
-Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
+Parameters `environmentID` and `apiKey` (or `clientId` and `clientSecret` instead of `apiKey`) can be fetched from your dashboard on `Incountry` site.
 
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
@@ -57,6 +57,20 @@ String endPoint = "https://us.api.incountry.io";
 String envId = "<env_id>";
 String apiKey = "<api_key>";
 Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
+```
+
+#### oAuth Authentication
+
+SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
+
+Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+```java
+StorageConfig config = new StorageConfig()
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setAuthEndPoint(AUTH_URL)
+                .setEnvId(ENV_ID);                                
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 ### Encryption key/secret
@@ -733,22 +747,20 @@ Project dependencies
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 
-| **GroupId**              | **ArtifactId** | **Version** | **Type** |
-| :---:                    | :---:          | :---:       | :---:    |
-| javax.xml.bind           | jaxb-api       | 2.2.4       | jar      |
-| javax.xml.stream         | stax-api       | 1.0-2       | jar      |
-| javax.activation         | activation     | 1.1         | jar      |
-| commons-codec            | commons-codec  | 1.14        | jar      |
-| org.apache.logging.log4j | log4j-api      | 2.13.2      | jar      |
-| org.apache.logging.log4j | log4j-core     | 2.13.2      | jar      |
-| com.google.code.gson     | gson           | 2.8.6       | jar      |
+| **GroupId**              | **ArtifactId**       | **Version** | **Type** |
+| :---:                    | :---:                | :---:       | :---:    |
+| javax.xml.bind           | jaxb-api             | 2.3.1       | jar      |
+| javax.activation         | javax.activation-api | 1.14        | jar      |
+| commons-codec            | commons-codec        | 1.14        | jar      |
+| org.apache.logging.log4j | log4j-api            | 2.13.2      | jar      |
+| org.apache.logging.log4j | log4j-core           | 2.13.2      | jar      |
+| com.google.code.gson     | gson                 | 2.8.6       | jar      |
 
 #### Dependency Tree
 ```
 compileClasspath
-+--- javax.xml.bind:jaxb-api:2.2.4
-|    +--- javax.xml.stream:stax-api:1.0-2
-|    \--- javax.activation:activation:1.1
++--- javax.xml.bind:jaxb-api:2.3.1
+|    \--- javax.activation:javax.activation-api:1.2.0
 +--- commons-codec:commons-codec:1.14
 +--- org.apache.logging.log4j:log4j-api:2.13.2
 +--- org.apache.logging.log4j:log4j-core:2.13.2
