@@ -46,7 +46,7 @@ public class StorageImpl implements Storage {
 }
 ```
 
-Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
+Parameters `environmentID` and `apiKey` (or `clientId` and `clientSecret` instead of `apiKey`) can be fetched from your dashboard on `Incountry` site.
 
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
@@ -57,6 +57,20 @@ String endPoint = "https://us.api.incountry.io";
 String envId = "<env_id>";
 String apiKey = "<api_key>";
 Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
+```
+
+#### oAuth Authentication
+
+SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
+
+Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+```java
+StorageConfig config = new StorageConfig()
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setAuthEndPoint(AUTH_URL)
+                .setEnvId(ENV_ID);                                
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 ### Encryption key/secret
