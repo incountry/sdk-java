@@ -27,7 +27,7 @@ public class OAuthTokenClient implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
     private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audienceUrl={}";
-    private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/";
+    private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/oauth2/token";
     //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";

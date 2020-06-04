@@ -10,7 +10,6 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -22,9 +21,7 @@ import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Disabled("waiting for QA auth server")
 public class OAuthTest {
-
     private static final String INTEGR_ENC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
     private static final String INTEGR_ENC_CLIENT_ID = "INT_INC_CLIENT_ID";
     private static final String INTEGR_ENC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
