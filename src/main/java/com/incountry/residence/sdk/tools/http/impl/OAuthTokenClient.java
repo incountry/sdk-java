@@ -26,7 +26,7 @@ import java.util.Map;
 public class OAuthTokenClient implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
-    private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audienceUrl={}";
+    private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audienceUrl={}, countryCode={}";
     private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/oauth2/token";
     //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
@@ -49,30 +49,39 @@ public class OAuthTokenClient implements TokenClient {
 
     private final String basicAuthToken;
     private final String authEndpoint;
+    private final String endpointMask;
     private final String scope;
     private final Integer timeoutInMs;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
 
-    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret, Integer timeoutInMs) {
+    public OAuthTokenClient(String authEndpoint, String endpointMask, String scope, String clientId, String secret, Integer timeoutInMs) {
         this.authEndpoint = authEndpoint != null ? authEndpoint : DEFAULT_AUTH_URL;
+        this.endpointMask = endpointMask;
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
         this.timeoutInMs = timeoutInMs;
     }
 
     @Override
-    public String getToken(String audienceUrl) throws StorageServerException {
-        return refreshToken(false, audienceUrl);
+    public String getToken(String audienceUrl, String countryCode) throws StorageServerException {
+        return refreshToken(false, audienceUrl, countryCode);
     }
 
-    public synchronized String refreshToken(boolean force, String audienceUrl) throws StorageServerException {
+    public synchronized String refreshToken(final boolean force, final String audienceUrl, final String countryCode) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace(MSG_REFRESH_TOKEN, force, audienceUrl);
+            LOG.trace(MSG_REFRESH_TOKEN, force, audienceUrl, countryCode);
         }
-        Map.Entry<String, Long> token = tokenMap.get(audienceUrl);
+        String compositeAudienceUrl = audienceUrl;
+        if (endpointMask != null && countryCode != null) {
+            String anotherAudienceUrl = " https://" + countryCode + "." + endpointMask;
+            if (!compositeAudienceUrl.equals(anotherAudienceUrl)) {
+                compositeAudienceUrl += " " + anotherAudienceUrl;
+            }
+        }
+        Map.Entry<String, Long> token = tokenMap.get(compositeAudienceUrl);
         if (force || token == null || token.getValue() < System.currentTimeMillis()) {
-            token = newToken(audienceUrl);
-            tokenMap.put(audienceUrl, token);
+            token = newToken(compositeAudienceUrl);
+            tokenMap.put(compositeAudienceUrl, token);
         }
         return token.getKey();
     }

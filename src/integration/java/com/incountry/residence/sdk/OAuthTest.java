@@ -32,6 +32,8 @@ public class OAuthTest {
     private static final String END_POINT = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
     private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENVID);
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
+    private static final String ENDPOINT_MASK = "qa.incountry.io";
+    private static final String MINIPOP_COUNTRY = "IN";
 
     private static final Integer HTTP_TIMEOUT = 30_000;
 
@@ -47,6 +49,7 @@ public class OAuthTest {
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
                 .setAuthEndPoint(AUTH_URL)
+                .setEndpointMask(ENDPOINT_MASK)
                 .setEnvId(ENV_ID)
                 .setEndPoint(END_POINT)
                 .setSecretKeyAccessor(accessor);
@@ -61,12 +64,20 @@ public class OAuthTest {
         Record record = new Record(key, body);
         storage.write(COUNTRY, record);
         assertEquals(record, storage.read(COUNTRY, key));
+
+        String key2 = UUID.randomUUID().toString();
+        String body2 = "body " + key2;
+        Record record2 = new Record(key2, body2);
+        storage.write(MINIPOP_COUNTRY, record2);
+        assertEquals(record2, storage.read(MINIPOP_COUNTRY, key2));
     }
 
     @Test
     public void positiveAuthTest() throws StorageServerException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT));
-        assertNotNull(tokenClient.getToken(END_POINT));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT));
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENDPOINT_MASK, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT));
+        assertNotNull(tokenClient.getToken(END_POINT, COUNTRY.toLowerCase()));
+        assertNotNull(tokenClient.getToken(END_POINT, MINIPOP_COUNTRY.toLowerCase()));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT, COUNTRY.toLowerCase()));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT, MINIPOP_COUNTRY.toLowerCase()));
     }
 }

@@ -23,9 +23,11 @@ class AuthTest {
     private static final int TIMEOUT_IN_MS = 30_000;
     private static final String ENV_ID = "envId";
     private static final String AUTH_URL = "http://localhost:" + PORT;
+    private static final String ENDPOINT_MASK = "localhost:" + PORT;
+    private static final String COUNTRY = "US";
 
     private TokenClient getTokenClient() {
-        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        return new OAuthTokenClient(AUTH_URL, ENDPOINT_MASK, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
     }
 
     @RepeatedTest(3)
@@ -39,10 +41,10 @@ class AuthTest {
         server.start();
         TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
-            assertNotNull(tokenClient.getToken("http://test"));
+            assertNotNull(tokenClient.getToken("http://test", COUNTRY));
         }
-        tokenClient.refreshToken(false, "http://test");
-        tokenClient.refreshToken(true, "http://test");
+        tokenClient.refreshToken(false, "http://test", COUNTRY);
+        tokenClient.refreshToken(true, "http://test", COUNTRY);
         server.stop(0);
     }
 
@@ -54,7 +56,7 @@ class AuthTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(getTokenClient().getToken("http://test"));
+        assertNotNull(getTokenClient().getToken("http://test", COUNTRY));
         server.stop(0);
     }
 
@@ -63,7 +65,7 @@ class AuthTest {
         int respCode = 401;
         FakeHttpServer server = new FakeHttpServer("error", respCode, PORT);
         server.start();
-        assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test"));
+        assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test", COUNTRY));
         server.stop(0);
     }
 
@@ -90,7 +92,7 @@ class AuthTest {
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
         for (int i = 0; i < responseList.size(); i++) {
-            assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test"));
+            assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test", COUNTRY));
         }
         server.stop(0);
     }

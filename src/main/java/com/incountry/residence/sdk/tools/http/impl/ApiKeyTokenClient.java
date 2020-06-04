@@ -11,12 +11,12 @@ public class ApiKeyTokenClient implements TokenClient {
     }
 
     @Override
-    public String getToken(String audienceUrl) {
+    public String getToken(String audienceUrl, String countryCode) {
         return apiKey;
     }
 
     @Override
-    public String refreshToken(boolean force, String audienceUrl) {
+    public String refreshToken(boolean force, String audienceUrl, String countryCode) {
         return apiKey;
     }
 }

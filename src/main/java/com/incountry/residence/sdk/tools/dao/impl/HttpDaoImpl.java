@@ -46,24 +46,26 @@ public class HttpDaoImpl implements Dao {
     private final Map<String, POP> popMap = new HashMap<>();
 
     private final HttpAgent httpAgent;
-    private final TokenClient tokenClient;
     private String endPoint = DEFAULT_ENDPOINT;
     private boolean defaultEndpoint = true;
     private long lastLoadedTime;
 
     public HttpDaoImpl(String environmentId, String endPoint, TokenClient tokenClient, Integer httpTimeout) throws StorageServerException {
         this(endPoint,
-                ProxyUtils.createLoggingProxyForPublicMethods(new HttpAgentImpl(environmentId, CHARSET, httpTimeout)),
-                ProxyUtils.createLoggingProxyForPublicMethods(tokenClient));
+                ProxyUtils.createLoggingProxyForPublicMethods(
+                        new HttpAgentImpl(
+                                ProxyUtils.createLoggingProxyForPublicMethods(tokenClient),
+                                environmentId,
+                                CHARSET,
+                                httpTimeout)));
     }
 
-    public HttpDaoImpl(String endPoint, HttpAgent agent, TokenClient tokenClient) throws StorageServerException {
+    public HttpDaoImpl(String endPoint, HttpAgent agent) throws StorageServerException {
         if (endPoint != null && !endPoint.equals(DEFAULT_ENDPOINT)) {
             this.endPoint = endPoint;
             this.defaultEndpoint = false;
         }
         this.httpAgent = agent;
-        this.tokenClient = tokenClient;
         if (defaultEndpoint) {
             loadCountries();
         }
@@ -77,7 +79,7 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, tokenClient, PORTAL_COUNTRIES_URI, RETRY_CNT);
+            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, PORTAL_COUNTRIES_URI, null, RETRY_CNT);
             popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, URI_ENDPOINT_PART));
             lastLoadedTime = System.currentTimeMillis();
         }
@@ -94,7 +96,7 @@ public class HttpDaoImpl implements Dao {
                 if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
                     loadCountries();
                 }
-                pop = popMap.get(country.toLowerCase());
+                pop = popMap.get(country);
             }
             if (pop != null) {
                 return pop.getHost();
@@ -105,26 +107,29 @@ public class HttpDaoImpl implements Dao {
 
     @Override
     public void createRecord(String country, Record record, CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
-        String popInstanceUrl = getEndpoint(country);
-        String url = getRecordActionUrl(popInstanceUrl, country);
+        String lowerCountry = country.toLowerCase();
+        String popInstanceUrl = getEndpoint(lowerCountry);
+        String url = getRecordActionUrl(popInstanceUrl, lowerCountry);
         String body = JsonUtils.toJsonString(record, cryptoManager);
-        httpAgent.request(url, URI_POST, body, ApiResponse.WRITE, tokenClient, popInstanceUrl, RETRY_CNT);
+        httpAgent.request(url, URI_POST, body, ApiResponse.WRITE, popInstanceUrl, lowerCountry, RETRY_CNT);
     }
 
     @Override
     public void createBatch(List<Record> records, String country, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
+        String lowerCountry = country.toLowerCase();
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
-        String popInstanceUrl = getEndpoint(country);
-        String url = getRecordActionUrl(popInstanceUrl, country, URI_BATCH_WRITE);
-        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, tokenClient, popInstanceUrl, RETRY_CNT);
+        String popInstanceUrl = getEndpoint(lowerCountry);
+        String url = getRecordActionUrl(popInstanceUrl, lowerCountry, URI_BATCH_WRITE);
+        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, popInstanceUrl, lowerCountry, RETRY_CNT);
     }
 
     @Override
     public Record read(String country, String recordKey, CryptoManager cryptoManager) throws StorageClientException, StorageServerException, StorageCryptoException {
+        String lowerCountry = country.toLowerCase();
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
-        String popInstanceUrl = getEndpoint(country);
-        String url = getRecordUrl(popInstanceUrl, country, key);
-        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, tokenClient, popInstanceUrl, RETRY_CNT);
+        String popInstanceUrl = getEndpoint(lowerCountry);
+        String url = getRecordUrl(popInstanceUrl, lowerCountry, key);
+        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, popInstanceUrl, lowerCountry, RETRY_CNT);
         if (response == null) {
             return null;
         } else {
@@ -134,18 +139,20 @@ public class HttpDaoImpl implements Dao {
 
     @Override
     public void delete(String country, String key, CryptoManager cryptoManager) throws StorageServerException {
+        String lowerCountry = country.toLowerCase();
         String recordHash = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
-        String popInstanceUrl = getEndpoint(country);
-        String url = getRecordUrl(popInstanceUrl, country, recordHash);
-        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, tokenClient, popInstanceUrl, RETRY_CNT);
+        String popInstanceUrl = getEndpoint(lowerCountry);
+        String url = getRecordUrl(popInstanceUrl, lowerCountry, recordHash);
+        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, popInstanceUrl, lowerCountry, RETRY_CNT);
     }
 
     @Override
     public BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
-        String popInstanceUrl = getEndpoint(country);
-        String url = getRecordActionUrl(popInstanceUrl, country, URI_FIND);
+        String lowerCountry = country.toLowerCase();
+        String popInstanceUrl = getEndpoint(lowerCountry);
+        String url = getRecordActionUrl(popInstanceUrl, lowerCountry, URI_FIND);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
-        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, tokenClient, popInstanceUrl, RETRY_CNT);
+        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, popInstanceUrl, lowerCountry, RETRY_CNT);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
@@ -155,14 +162,14 @@ public class HttpDaoImpl implements Dao {
     private String getRecordUrl(String endPoint, String country, String keyHash) {
         return new StringBuilder(endPoint)
                 .append(STORAGE_URL)
-                .append(country.toLowerCase())
+                .append(country)
                 .append(URI_DELIMITER)
                 .append(keyHash).toString();
     }
 
     private String getRecordActionUrl(String endpoint, String country, String... other) {
         StringBuilder builder = new StringBuilder(endpoint).append(STORAGE_URL);
-        builder.append(country.toLowerCase());
+        builder.append(country);
         for (String part : other) {
             builder.append(part);
         }

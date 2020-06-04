@@ -24,19 +24,22 @@ public class HttpAgentImpl implements HttpAgent {
     private static final String MSG_SERVER_ERROR = "Server request error: %s";
     private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
 
+    private final TokenClient tokenClient;
     private final String environmentId;
     private final Charset charset;
     private final String userAgent;
     private final Integer timeout;
 
 
-    public HttpAgentImpl(String environmentId, Charset charset, Integer timeoutInMs) {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HttpAgentImpl constructor params (environmentId={} , charset={}, timeoutInMs={})",
+            LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
+                    tokenClient,
                     environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null,
                     charset,
                     timeoutInMs);
         }
+        this.tokenClient = tokenClient;
         this.environmentId = environmentId;
         this.charset = charset;
         this.timeout = timeoutInMs;
@@ -45,7 +48,7 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          TokenClient tokenClient, String popInstanceUrl, int retryCount) throws StorageServerException {
+                          String popInstanceUrl, String country, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
                     url,
@@ -57,7 +60,7 @@ public class HttpAgentImpl implements HttpAgent {
             con.setRequestMethod(method);
             con.setConnectTimeout(timeout);
             con.setReadTimeout(timeout);
-            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(popInstanceUrl));
+            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(popInstanceUrl, country));
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);
@@ -76,8 +79,8 @@ public class HttpAgentImpl implements HttpAgent {
             } else if (params == null || !canRetry(params, retryCount)) {
                 responseStream = con.getErrorStream();
             } else {
-                tokenClient.refreshToken(true, popInstanceUrl);
-                return request(url, method, body, codeMap, tokenClient, popInstanceUrl, retryCount - 1);
+                tokenClient.refreshToken(true, popInstanceUrl, country);
+                return request(url, method, body, codeMap, popInstanceUrl, country, retryCount - 1);
             }
             StringBuilder content = new StringBuilder();
             if (responseStream != null) {
