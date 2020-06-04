@@ -21,6 +21,7 @@ public class StorageConfig {
     private String clientId;
     private String clientSecret;
     private String authEndPoint;
+    private String endpointMask;
     private Integer httpTimeout;
 
     public String getEnvId() {
@@ -177,6 +178,24 @@ public class StorageConfig {
         return this;
     }
 
+    public String getEndpointMask() {
+        return endpointMask;
+    }
+
+    /**
+     * Set mask for endpoint. Optional parameter. Is used for getting tokens for mini/midi-PoPs.
+     * Expected value example:
+     * If {@link #endpointMask}='api.incountry.io', it transforms to "https://{COUNTRY_CODE}.api.incountry.io" while
+     * getting access token
+     *
+     * @param endpointMask template
+     * @return StorageConfig
+     */
+    public StorageConfig setEndpointMask(String endpointMask) {
+        this.endpointMask = endpointMask;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -188,6 +207,7 @@ public class StorageConfig {
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
+        newInstance.setEndpointMask(getEndpointMask());
         newInstance.setHttpTimeout(getHttpTimeout());
         return newInstance;
     }
@@ -204,6 +224,8 @@ public class StorageConfig {
                 ", clientId='" + hideParam(clientId) + '\'' +
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +
                 ", authEndPoint='" + authEndPoint + '\'' +
+                ", endpointMask='" + endpointMask + '\'' +
+                ", httpTimeout='" + httpTimeout + '\'' +
                 '}';
     }
 
