@@ -23,8 +23,9 @@ class AuthTest {
     private static final int TIMEOUT_IN_MS = 30_000;
     private static final String ENV_ID = "envId";
     private static final String AUTH_URL = "http://localhost:" + PORT;
-    private static final String ENDPOINT_MASK = "localhost:" + PORT;
-    private static final String COUNTRY = "US";
+    private static final String ENDPOINT_MASK = "localhost";
+    private static final String AUDIENCE_URL = "https://localhost";
+    private static final String COUNTRY = "us";
 
     private TokenClient getTokenClient() {
         return new OAuthTokenClient(AUTH_URL, ENDPOINT_MASK, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
@@ -41,10 +42,16 @@ class AuthTest {
         server.start();
         TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
-            assertNotNull(tokenClient.getToken("http://test", COUNTRY));
+            assertNotNull(tokenClient.getToken(AUDIENCE_URL, COUNTRY));
         }
-        tokenClient.refreshToken(false, "http://test", COUNTRY);
-        tokenClient.refreshToken(true, "http://test", COUNTRY);
+        tokenClient.refreshToken(false, AUDIENCE_URL, COUNTRY);
+        tokenClient.refreshToken(true, AUDIENCE_URL, COUNTRY);
+        tokenClient.refreshToken(false, AUDIENCE_URL, null);
+        tokenClient.refreshToken(true, AUDIENCE_URL, null);
+        tokenClient.refreshToken(false, "https://us." + ENDPOINT_MASK, "ru");
+        tokenClient.refreshToken(true, "https://us." + ENDPOINT_MASK, "ru");
+        tokenClient.refreshToken(false, "https://us." + ENDPOINT_MASK, COUNTRY);
+        tokenClient.refreshToken(true, "https://us." + ENDPOINT_MASK, COUNTRY);
         server.stop(0);
     }
 
@@ -56,7 +63,21 @@ class AuthTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(getTokenClient().getToken("http://test", COUNTRY));
+        assertNotNull(getTokenClient().getToken(AUDIENCE_URL, COUNTRY));
+        server.stop(0);
+    }
+
+    @Test
+    void defaultAuthClientPositiveTestWithoutMask() throws IOException, StorageServerException {
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
+        );
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL, COUNTRY));
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
         server.stop(0);
     }
 
@@ -65,7 +86,7 @@ class AuthTest {
         int respCode = 401;
         FakeHttpServer server = new FakeHttpServer("error", respCode, PORT);
         server.start();
-        assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test", COUNTRY));
+        assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, COUNTRY));
         server.stop(0);
     }
 
@@ -92,7 +113,7 @@ class AuthTest {
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
         for (int i = 0; i < responseList.size(); i++) {
-            assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test", COUNTRY));
+            assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, COUNTRY));
         }
         server.stop(0);
     }

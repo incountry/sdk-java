@@ -73,7 +73,7 @@ public class OAuthTokenClient implements TokenClient {
         }
         String compositeAudienceUrl = audienceUrl;
         if (endpointMask != null && countryCode != null) {
-            String anotherAudienceUrl = " https://" + countryCode + "." + endpointMask;
+            String anotherAudienceUrl = "https://" + countryCode + "." + endpointMask;
             if (!compositeAudienceUrl.equals(anotherAudienceUrl)) {
                 compositeAudienceUrl += " " + anotherAudienceUrl;
             }
