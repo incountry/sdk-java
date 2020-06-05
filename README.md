@@ -74,7 +74,7 @@ StorageConfig config = new StorageConfig()
 Storage storage = StorageImpl.getInstance(config);
 ```
 
-Note: parameter `endpointMask` is used for getting access tokens for mini/midi-PoPs. It is required for case with several mini/midi-PoPs. For example if you set `endpointMask`==`api.incountry.io`, it transforms to `https://{COUNTRY_CODE}.api.incountry.io` while getting access token to country with code `{COUNTRY_CODE}` 
+Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`private.incountry.io ` will make all further requests to be sent to `https://{COUNTRY_CODE}.private.incountry.io` 
 
 ### Encryption key/secret
 

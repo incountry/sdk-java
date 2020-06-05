@@ -183,10 +183,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set mask for endpoint. It is required for case with several mini/midi-PoPs. Is used for getting tokens for mini/midi-PoPs.
-     * Expected value example:
-     * If {@link #endpointMask}='api.incountry.io', it transforms to "https://{COUNTRY_CODE}.api.incountry.io" while
-     * getting access token
+     * Note: parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
      *
      * @param endpointMask template
      * @return StorageConfig
