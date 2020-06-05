@@ -69,9 +69,12 @@ StorageConfig config = new StorageConfig()
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
                 .setAuthEndPoint(AUTH_URL)
+                .setEndpointMask(ENDPOINT_MASK)
                 .setEnvId(ENV_ID);                                
 Storage storage = StorageImpl.getInstance(config);
 ```
+
+Note: parameter `endpointMask` is used for getting access tokens for mini/midi-PoPs. It is required for case with several mini/midi-PoPs. For example if you set `endpointMask`==`api.incountry.io`, it transforms to `https://{COUNTRY_CODE}.api.incountry.io` while getting access token to country with code `{COUNTRY_CODE}` 
 
 ### Encryption key/secret
 
