@@ -80,8 +80,8 @@ public class HttpDaoImpl implements Dao {
 
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, PORTAL_COUNTRIES_URI, null, RETRY_CNT);
-            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, "." + (endPointMask != null ? endPointMask : DEFAULT_ENDPOINT)));
+            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, PORTAL_COUNTRIES_URI, RETRY_CNT);
+            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, "." + (endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK)));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
@@ -129,7 +129,7 @@ public class HttpDaoImpl implements Dao {
         Map.Entry<String, String> popInstanceUrl = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(popInstanceUrl.getKey(), lowerCountry);
         String body = JsonUtils.toJsonString(record, cryptoManager);
-        httpAgent.request(url, URI_POST, body, ApiResponse.WRITE, popInstanceUrl.getValue(), lowerCountry, RETRY_CNT);
+        httpAgent.request(url, URI_POST, body, ApiResponse.WRITE, popInstanceUrl.getValue(), RETRY_CNT);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class HttpDaoImpl implements Dao {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         Map.Entry<String, String> popInstanceUrl = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(popInstanceUrl.getKey(), lowerCountry, URI_BATCH_WRITE);
-        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, popInstanceUrl.getValue(), lowerCountry, RETRY_CNT);
+        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, popInstanceUrl.getValue(), RETRY_CNT);
     }
 
     @Override
@@ -147,7 +147,7 @@ public class HttpDaoImpl implements Dao {
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         Map.Entry<String, String> popInstanceUrl = getEndpoint(lowerCountry);
         String url = getRecordUrl(popInstanceUrl.getKey(), lowerCountry, key);
-        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, popInstanceUrl.getValue(), lowerCountry, RETRY_CNT);
+        String response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, popInstanceUrl.getValue(), RETRY_CNT);
         if (response == null) {
             return null;
         } else {
@@ -161,7 +161,7 @@ public class HttpDaoImpl implements Dao {
         String recordHash = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         Map.Entry<String, String> popInstanceUrl = getEndpoint(lowerCountry);
         String url = getRecordUrl(popInstanceUrl.getKey(), lowerCountry, recordHash);
-        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, popInstanceUrl.getValue(), lowerCountry, RETRY_CNT);
+        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, popInstanceUrl.getValue(), RETRY_CNT);
     }
 
     @Override
@@ -170,7 +170,7 @@ public class HttpDaoImpl implements Dao {
         Map.Entry<String, String> popInstanceUrl = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(popInstanceUrl.getKey(), lowerCountry, URI_FIND);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
-        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, popInstanceUrl.getValue(), lowerCountry, RETRY_CNT);
+        String content = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, popInstanceUrl.getValue(), RETRY_CNT);
         if (content == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }

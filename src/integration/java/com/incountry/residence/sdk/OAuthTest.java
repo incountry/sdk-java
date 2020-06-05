@@ -76,10 +76,10 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENDPOINT_MASK, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT));
-        assertNotNull(tokenClient.getToken(END_POINT, COUNTRY.toLowerCase()));
-        assertNotNull(tokenClient.getToken(END_POINT, MINIPOP_COUNTRY.toLowerCase()));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT, COUNTRY.toLowerCase()));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT, MINIPOP_COUNTRY.toLowerCase()));
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT));
+        assertNotNull(tokenClient.getToken(END_POINT));
+        assertNotNull(tokenClient.getToken(END_POINT));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT));
     }
 }

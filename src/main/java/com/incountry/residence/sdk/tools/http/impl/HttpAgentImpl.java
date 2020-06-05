@@ -48,7 +48,7 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          String popInstanceUrl, String country, int retryCount) throws StorageServerException {
+                          String audience, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
                     url,
@@ -60,7 +60,7 @@ public class HttpAgentImpl implements HttpAgent {
             con.setRequestMethod(method);
             con.setConnectTimeout(timeout);
             con.setReadTimeout(timeout);
-            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(popInstanceUrl, country));
+            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audience));
             con.setRequestProperty("x-env-id", environmentId);
             con.setRequestProperty("Content-Type", "application/json");
             con.setRequestProperty("User-Agent", userAgent);
@@ -79,8 +79,8 @@ public class HttpAgentImpl implements HttpAgent {
             } else if (params == null || !canRetry(params, retryCount)) {
                 responseStream = con.getErrorStream();
             } else {
-                tokenClient.refreshToken(true, popInstanceUrl, country);
-                return request(url, method, body, codeMap, popInstanceUrl, country, retryCount - 1);
+                tokenClient.refreshToken(true, audience);
+                return request(url, method, body, codeMap, audience, retryCount - 1);
             }
             StringBuilder content = new StringBuilder();
             if (responseStream != null) {

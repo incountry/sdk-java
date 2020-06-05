@@ -16,7 +16,6 @@ public class FakeHttpAgent implements HttpAgent {
     private Map<Integer, ApiResponse> codeMap;
     private int retryCount;
     private String audienceUrl;
-    private String country;
 
     public FakeHttpAgent(String response) {
         this.response = response;
@@ -27,14 +26,13 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, String popInstanceUrl, String country, int retryCount) {
+    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, String audience, int retryCount) {
         this.callUrl = url;
         this.callMethod = method;
         this.callBody = body;
         this.codeMap = codeMap;
         this.retryCount = retryCount;
-        this.audienceUrl = popInstanceUrl;
-        this.country = country;
+        this.audienceUrl = audience;
         return getResponse();
     }
 
@@ -72,10 +70,6 @@ public class FakeHttpAgent implements HttpAgent {
 
     public void setResponse(String response) {
         this.response = response;
-    }
-
-    public String getCountry() {
-        return country;
     }
 
     public int getRetryCount() {
