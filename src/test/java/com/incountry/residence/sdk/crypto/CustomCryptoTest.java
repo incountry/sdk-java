@@ -78,7 +78,8 @@ public class CustomCryptoTest {
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false));
+        assertTrue(ex.getMessage().startsWith("Validation failed for custom encryption config with version"));
     }
 
     @Test
@@ -93,9 +94,11 @@ public class CustomCryptoTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList1);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Custom encryption has null version", ex1.getMessage());
         List<Crypto> cryptoList2 = Arrays.asList(new DefaultCryptoWithCustomVersion(""));
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomEncryptionConfigsList(cryptoList2)));
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomEncryptionConfigsList(cryptoList2)));
+        assertEquals("Custom encryption has null version", ex2.getMessage());
     }
 
     @Test
@@ -110,7 +113,8 @@ public class CustomCryptoTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Custom encryption list contains null", ex.getMessage());
     }
 
     @Test
@@ -122,7 +126,8 @@ public class CustomCryptoTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(null)
                 .setCustomEncryptionConfigsList(cryptoList);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Custom encryption can be used only with not null SecretKeyAccessor", ex.getMessage());
     }
 
     @Test
@@ -140,7 +145,8 @@ public class CustomCryptoTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals(String.format("Custom encryption versions are not unique: %s", cryptoVersion), ex.getMessage());
     }
 
     @Test
@@ -157,7 +163,8 @@ public class CustomCryptoTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("There are more than one custom encryption with flag 'current == true': [CryptoStub , first]", ex.getMessage());
     }
 
     @Test
@@ -173,7 +180,8 @@ public class CustomCryptoTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("There is no any SecretKey for custom encryption", ex.getMessage());
     }
 
     @Test
@@ -203,16 +211,19 @@ public class CustomCryptoTest {
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
 
         String wrongCipherText1 = CryptoManager.PREFIX_CUSTOM_ENCRYPTION + UUID.randomUUID() + ":123";
-        assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText1, keyVersion));
+        StorageCryptoException ex1 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText1, keyVersion));
+        assertTrue(ex1.getMessage().startsWith("Unexpected exception during custom decryption - failed to parse custom encryption version:"));
 
         String wrongCipherText2 = UUID.randomUUID() + ":123";
-        assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText2, keyVersion));
+        StorageCryptoException ex2 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText2, keyVersion));
+        assertEquals("Unknown cipher format", ex2.getMessage());
 
         Crypto anotherCrypto = new PseudoCustomCrypto(true);
         cryptoList = Arrays.asList(anotherCrypto);
         CryptoManager anotherManager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String encryptedAnother = anotherManager.encrypt(BODY_FOR_ENCRYPTION).getKey();
-        assertThrows(StorageCryptoException.class, () -> manager.decrypt(encryptedAnother, keyVersion));
+        StorageCryptoException ex3 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(encryptedAnother, keyVersion));
+        assertEquals("Unknown custom encryption version: PseudoCustomCrypto", ex3.getMessage());
     }
 
     @Test
@@ -226,8 +237,10 @@ public class CustomCryptoTest {
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
-        assertThrows(StorageCryptoException.class, () -> manager.encrypt(text));
-        assertThrows(StorageCryptoException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+        StorageCryptoException ex1 = assertThrows(StorageCryptoException.class, () -> manager.encrypt(text));
+        assertTrue(ex1.getMessage().isEmpty());
+        StorageCryptoException ex2 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+        assertTrue(ex2.getMessage().isEmpty());
     }
 
     @Test
@@ -238,7 +251,8 @@ public class CustomCryptoTest {
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList, false));
+        assertTrue(ex.getMessage().startsWith("Validation failed for custom encryption config with version"));
     }
 
     @Test
@@ -252,8 +266,10 @@ public class CustomCryptoTest {
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
-        assertThrows(StorageClientException.class, () -> manager.encrypt(text));
-        assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> manager.encrypt(text));
+        assertEquals("Unexpected exception", ex1.getMessage());
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+        assertEquals("Unexpected exception", ex2.getMessage());
     }
 
     @Test
@@ -265,7 +281,8 @@ public class CustomCryptoTest {
         SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
-        assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
+        assertEquals("Unexpected exception", ex.getMessage());
     }
 
     @Test
@@ -279,7 +296,8 @@ public class CustomCryptoTest {
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         Map.Entry<String, Integer> result = manager.encrypt(BODY_FOR_ENCRYPTION);
         assertEquals(keyVersion, result.getValue());
-        assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion + 1));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion + 1));
+        assertEquals("Unexpected exception", ex.getMessage());
     }
 
     @Test
@@ -296,6 +314,7 @@ public class CustomCryptoTest {
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setCustomEncryptionConfigsList(cryptoList);
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Custom encryption can be used only with not null SecretKeyAccessor", ex.getMessage());
     }
 }
