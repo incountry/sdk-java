@@ -16,24 +16,26 @@ import java.util.UUID;
 
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENDPOINT;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENVID;
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class OAuthTest {
-    private static final String INTEGR_ENC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
-    private static final String INTEGR_ENC_CLIENT_ID = "INT_INC_CLIENT_ID";
-    private static final String INTEGR_ENC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
+    private static final String INT_INC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
+    private static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
+    private static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
+    private static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
+    private static final String INT_MINIPOP_COUNTRY = "INT_MINIPOP_COUNTRY";
+    private static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
 
-    private static final String AUTH_URL = loadFromEnv(INTEGR_ENC_AUTH_ENDPOINT);
-    private static final String CLIENT_ID = loadFromEnv(INTEGR_ENC_CLIENT_ID);
-    private static final String SECRET = loadFromEnv(INTEGR_ENC_CLIENT_SECRET);
+    private static final String AUTH_URL = loadFromEnv(INT_INC_AUTH_ENDPOINT);
+    private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
+    private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
     private static final String END_POINT = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
-    private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENVID);
+    private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_HYDRA);
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
-    private static final String ENDPOINT_MASK = "qa.incountry.io";
-    private static final String MINIPOP_COUNTRY = "IN";
+    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
+    private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
 
     private static final Integer HTTP_TIMEOUT = 30_000;
 
