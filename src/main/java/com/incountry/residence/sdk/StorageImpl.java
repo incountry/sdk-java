@@ -184,10 +184,10 @@ public class StorageImpl implements Storage {
                         config.getClientSecret(),
                         httpTimeout);
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), tokenClient, httpTimeout);
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), tokenClient, httpTimeout);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), new ApiKeyTokenClient(config.getApiKey()), httpTimeout);
+                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), new ApiKeyTokenClient(config.getApiKey()), httpTimeout);
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);
