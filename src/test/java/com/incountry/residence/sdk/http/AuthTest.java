@@ -46,12 +46,6 @@ class AuthTest {
         }
         tokenClient.refreshToken(false, AUDIENCE_URL);
         tokenClient.refreshToken(true, AUDIENCE_URL);
-        tokenClient.refreshToken(false, AUDIENCE_URL);
-        tokenClient.refreshToken(true, AUDIENCE_URL);
-        tokenClient.refreshToken(false, "https://us." + ENDPOINT_MASK);
-        tokenClient.refreshToken(true, "https://us." + ENDPOINT_MASK);
-        tokenClient.refreshToken(false, "https://us." + ENDPOINT_MASK);
-        tokenClient.refreshToken(true, "https://us." + ENDPOINT_MASK);
         server.stop(0);
     }
 

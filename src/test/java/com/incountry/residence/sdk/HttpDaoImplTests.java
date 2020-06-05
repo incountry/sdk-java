@@ -370,6 +370,47 @@ class HttpDaoImplTests {
     }
 
     @Test
+    void testLoadCountriesInDefaultEndPointWithMask() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, "test.org", agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("OK");
+        storage.write("US", record);
+        assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
+        agent.setResponse("OK");
+        storage.write("us", record);
+        assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
+        agent.setResponse("OK");
+        storage.write("RU", record);
+        assertEquals("https://ru.test.org/v2/storage/records/ru", agent.getCallUrl());
+        agent.setResponse("OK");
+        storage.write("ru", record);
+        assertEquals("https://ru.test.org/v2/storage/records/ru", agent.getCallUrl());
+        //country 'PU' has no separate endpoint
+        storage.write("PU", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
+        agent.setResponse(countryLoadResponse);
+        storage.write("pu", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
+        //country 'SU' is not in country list
+        storage.write("SU", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
+        agent.setResponse(countryLoadResponse);
+        storage.write("su", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
+    }
+
+    @Test
+    void testWriteToCustomEndpointWithMinipop() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl("https://us.test.org", "test.org", agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("OK");
+        storage.write("US", record);
+        assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
+    }
+
+    @Test
     void popTest() {
         String name = "us";
         String host = "http://localhost";
