@@ -205,7 +205,7 @@ public class StorageImpl implements Storage {
 
 
     private void checkParameters(String country, String key) throws StorageClientException {
-        checkNotNull(country, MSG_ERR_PASS_ENV);
+        checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 

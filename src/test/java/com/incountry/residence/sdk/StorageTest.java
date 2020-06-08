@@ -142,6 +142,23 @@ class StorageTest {
     }
 
     @Test
+    void testNegativeWriteNullCountry() throws StorageException {
+        String endpoint = "https://custom.endpoint.io";
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(endpoint, agent, tokenClient));
+        String key = "<key>";
+        Record record = new Record(key, "<body>");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(null, record));
+        assertEquals("Country can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.read(null, key));
+        assertEquals("Country can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.delete(null, key));
+        assertEquals("Country can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.batchWrite(null, Collections.singletonList(record)));
+        assertEquals("Country can't be null", ex.getMessage());
+    }
+
+    @Test
     void testFindWithEnc() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
