@@ -1,6 +1,7 @@
 InCountry Storage SDK
-============
-
+===========
+[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=alert_status)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
+[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 Installation
 -----
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
@@ -14,7 +15,7 @@ For Maven users please add this section to your dependencies list
 </dependency>
 ```
 
-For Gradle users plase add this line to your dependencies list
+For Gradle users please add this line to your dependencies list
 ```groovy
 compile "com.incountry:incountry-java-client:2.0.0"
 ```
@@ -63,7 +64,7 @@ Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAcce
 
 SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
 
-Below is the example how to create storage instance with oAuth credentials (also provide custom oAuth endpoint):
+Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
 ```java
 StorageConfig config = new StorageConfig()
    .setClientId(CLIENT_ID)  //can be also set via environment variable INC_CLIENT_ID
