@@ -63,14 +63,14 @@ Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAcce
 
 SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
 
-Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+Below is the example how to create storage instance with oAuth credentials (also provide custom oAuth endpoint):
 ```java
 StorageConfig config = new StorageConfig()
-                .setClientId(CLIENT_ID)
-                .setClientSecret(SECRET)
-                .setAuthEndPoint(AUTH_URL)
-                .setEndpointMask(ENDPOINT_MASK)
-                .setEnvId(ENV_ID);                                
+   .setClientId(CLIENT_ID)  //can be also set via environment variable INC_CLIENT_ID
+   .setClientSecret(SECRET) //can be also set via environment variable INC_CLIENT_SECRET
+   .setAuthEndPoint(AUTH_URL) //can be also set via environment variable INC_AUTH_ENDPOINT
+   .setEndpointMask(ENDPOINT_MASK)
+   .setEnvId(ENV_ID);                                
 Storage storage = StorageImpl.getInstance(config);
 ```
 

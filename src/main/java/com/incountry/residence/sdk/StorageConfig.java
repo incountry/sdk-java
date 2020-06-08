@@ -119,7 +119,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set login for authorisation.
+     * Set login for oAuth authorization, can be also set via environment variable INC_CLIENT_ID.
      * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param clientId login
@@ -135,7 +135,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set user secret for authorisation.
+     * Set user secret for oAuth authorization, can be also set via environment variable INC_CLIENT_SECRET.
      * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param clientSecret password
@@ -151,7 +151,8 @@ public class StorageConfig {
     }
 
     /**
-     * Set custom authorization server URL. If null - default authorization server will be used.
+     * Set custom oAuth authorization server URL, can be also set via environment variable INC_AUTH_ENDPOINT.
+     * If null - default authorization server will be used.
      * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param authEndPoint custom authorization server URL
