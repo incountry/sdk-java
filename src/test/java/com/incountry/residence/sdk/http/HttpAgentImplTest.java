@@ -41,13 +41,13 @@ class HttpAgentImplTest {
     @Test
     void testNullApiKeyException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(),null, 0));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }
 
     @Test
     void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }
