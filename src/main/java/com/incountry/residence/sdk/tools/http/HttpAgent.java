@@ -8,5 +8,5 @@ import java.util.Map;
 public interface HttpAgent {
 
     String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
-                   TokenClient tokenClient, String popInstanceUrl, int retryCount) throws StorageServerException;
+                   String audience, int retryCount) throws StorageServerException;
 }

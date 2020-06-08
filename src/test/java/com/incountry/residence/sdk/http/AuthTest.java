@@ -23,6 +23,9 @@ class AuthTest {
     private static final int TIMEOUT_IN_MS = 30_000;
     private static final String ENV_ID = "envId";
     private static final String AUTH_URL = "http://localhost:" + PORT;
+    private static final String ENDPOINT_MASK = "localhost";
+    private static final String AUDIENCE_URL = "https://localhost";
+    private static final String COUNTRY = "us";
 
     private TokenClient getTokenClient() {
         return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
@@ -39,10 +42,10 @@ class AuthTest {
         server.start();
         TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
-            assertNotNull(tokenClient.getToken("http://test"));
+            assertNotNull(tokenClient.getToken(AUDIENCE_URL));
         }
-        tokenClient.refreshToken(false, "http://test");
-        tokenClient.refreshToken(true, "http://test");
+        tokenClient.refreshToken(false, AUDIENCE_URL);
+        tokenClient.refreshToken(true, AUDIENCE_URL);
         server.stop(0);
     }
 
@@ -54,7 +57,21 @@ class AuthTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(getTokenClient().getToken("http://test"));
+        assertNotNull(getTokenClient().getToken(AUDIENCE_URL));
+        server.stop(0);
+    }
+
+    @Test
+    void defaultAuthClientPositiveTestWithoutMask() throws IOException, StorageServerException {
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
+        );
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL));
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL));
         server.stop(0);
     }
 
@@ -63,7 +80,7 @@ class AuthTest {
         int respCode = 401;
         FakeHttpServer server = new FakeHttpServer("error", respCode, PORT);
         server.start();
-        assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test"));
+        assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
         server.stop(0);
     }
 
@@ -90,7 +107,7 @@ class AuthTest {
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
         for (int i = 0; i < responseList.size(); i++) {
-            assertThrows(StorageServerException.class, () -> getTokenClient().getToken("http://test"));
+            assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
         }
         server.stop(0);
     }

@@ -26,8 +26,8 @@ import java.util.Map;
 public class OAuthTokenClient implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
-    private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audienceUrl={}";
-    private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/";
+    private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audience={}";
+    private static final String DEFAULT_AUTH_URL = "https://auth-emea.qa.incountry.com/oauth2/token";
     //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
@@ -61,25 +61,25 @@ public class OAuthTokenClient implements TokenClient {
     }
 
     @Override
-    public String getToken(String audienceUrl) throws StorageServerException {
-        return refreshToken(false, audienceUrl);
+    public String getToken(String audience) throws StorageServerException {
+        return refreshToken(false, audience);
     }
 
-    public synchronized String refreshToken(boolean force, String audienceUrl) throws StorageServerException {
+    public synchronized String refreshToken(final boolean force, final String audience) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace(MSG_REFRESH_TOKEN, force, audienceUrl);
+            LOG.trace(MSG_REFRESH_TOKEN, force, audience);
         }
-        Map.Entry<String, Long> token = tokenMap.get(audienceUrl);
+        Map.Entry<String, Long> token = tokenMap.get(audience);
         if (force || token == null || token.getValue() < System.currentTimeMillis()) {
-            token = newToken(audienceUrl);
-            tokenMap.put(audienceUrl, token);
+            token = newToken(audience);
+            tokenMap.put(audience, token);
         }
         return token.getKey();
     }
 
-    private Map.Entry<String, Long> newToken(String audienceUrl) throws StorageServerException {
+    private Map.Entry<String, Long> newToken(String audience) throws StorageServerException {
         try {
-            String body = String.format(BODY, audienceUrl, scope);
+            String body = String.format(BODY, audience, scope);
             HttpURLConnection con = getConnection();
             con.setReadTimeout(timeoutInMs);
             con.setConnectTimeout(timeoutInMs);
