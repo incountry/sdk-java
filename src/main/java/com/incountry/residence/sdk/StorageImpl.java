@@ -150,7 +150,7 @@ public class StorageImpl implements Storage {
 
     private void checkParameters(String country, String key) throws StorageClientException {
         if (country == null) {
-            LOG.error(MSG_ERR_PASS_ENV);
+            LOG.error(MSG_ERR_NULL_COUNTRY);
             throw new StorageClientException(MSG_ERR_NULL_COUNTRY);
         }
         if (key == null) {
