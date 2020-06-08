@@ -145,7 +145,7 @@ class StorageTest {
     void testNegativeWriteNullCountry() throws StorageException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
-        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(endpoint, agent, tokenClient));
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(endpoint, null, agent));
         String key = "<key>";
         Record record = new Record(key, "<body>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(null, record));
