@@ -193,7 +193,7 @@ class HttpDaoImplTests {
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
         assertEquals("Can't write empty batch", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
-        assertEquals("Can't write empty batch", ex1.getMessage());
+        assertEquals("Can't write empty batch", ex2.getMessage());
     }
 
     @ParameterizedTest
