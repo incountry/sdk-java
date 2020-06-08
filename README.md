@@ -67,12 +67,15 @@ SDK also supports oAuth authentication credentials instead of plain API key auth
 Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
 ```java
 StorageConfig config = new StorageConfig()
-                .setClientId(CLIENT_ID)
-                .setClientSecret(SECRET)
-                .setAuthEndPoint(AUTH_URL)
-                .setEnvId(ENV_ID);                                
+   .setClientId(CLIENT_ID)  //can be also set via environment variable INC_CLIENT_ID
+   .setClientSecret(SECRET) //can be also set via environment variable INC_CLIENT_SECRET
+   .setAuthEndPoint(AUTH_URL) //can be also set via environment variable INC_AUTH_ENDPOINT
+   .setEndpointMask(ENDPOINT_MASK)
+   .setEnvId(ENV_ID);                                
 Storage storage = StorageImpl.getInstance(config);
 ```
+
+Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`private.incountry.io ` will make all further requests to be sent to `https://{COUNTRY_CODE}.private.incountry.io` 
 
 ### Encryption key/secret
 

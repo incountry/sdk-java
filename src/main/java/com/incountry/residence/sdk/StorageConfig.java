@@ -21,6 +21,7 @@ public class StorageConfig {
     private String clientId;
     private String clientSecret;
     private String authEndPoint;
+    private String endpointMask;
     private Integer httpTimeout;
 
     public String getEnvId() {
@@ -118,7 +119,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set login for authorisation.
+     * Set login for oAuth authorization, can be also set via environment variable INC_CLIENT_ID.
      * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param clientId login
@@ -134,7 +135,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set user secret for authorisation.
+     * Set user secret for oAuth authorization, can be also set via environment variable INC_CLIENT_SECRET.
      * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param clientSecret password
@@ -150,7 +151,8 @@ public class StorageConfig {
     }
 
     /**
-     * Set custom authorization server URL. If null - default authorization server will be used.
+     * Set custom oAuth authorization server URL, can be also set via environment variable INC_AUTH_ENDPOINT.
+     * If null - default authorization server will be used.
      * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param authEndPoint custom authorization server URL
@@ -177,6 +179,21 @@ public class StorageConfig {
         return this;
     }
 
+    public String getEndpointMask() {
+        return endpointMask;
+    }
+
+    /**
+     * Note: parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
+     *
+     * @param endpointMask template
+     * @return StorageConfig
+     */
+    public StorageConfig setEndpointMask(String endpointMask) {
+        this.endpointMask = endpointMask;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -188,6 +205,7 @@ public class StorageConfig {
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
+        newInstance.setEndpointMask(getEndpointMask());
         newInstance.setHttpTimeout(getHttpTimeout());
         return newInstance;
     }
@@ -204,6 +222,8 @@ public class StorageConfig {
                 ", clientId='" + hideParam(clientId) + '\'' +
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +
                 ", authEndPoint='" + authEndPoint + '\'' +
+                ", endpointMask='" + endpointMask + '\'' +
+                ", httpTimeout='" + httpTimeout + '\'' +
                 '}';
     }
 

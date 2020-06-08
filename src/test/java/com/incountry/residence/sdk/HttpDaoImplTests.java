@@ -18,8 +18,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
@@ -53,7 +51,6 @@ class HttpDaoImplTests {
     private int version = 0;
     private int currentVersion = 0;
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
-    private TokenClient tokenClient = new ApiKeyTokenClient("<apiKey>");
 
     private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException, StorageServerException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
@@ -104,7 +101,7 @@ class HttpDaoImplTests {
                    boolean isKey,
                    boolean encrypt) throws StorageException, MalformedURLException {
         FakeHttpAgent agent = new FakeHttpAgent("OK");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
@@ -152,7 +149,7 @@ class HttpDaoImplTests {
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
         FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, cryptoManager));
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, agent));
 
         Record fetched = storage.read(country, key);
         assertEquals(expectedPath, new URL(agent.getCallUrl()).getPath());
@@ -177,7 +174,7 @@ class HttpDaoImplTests {
                     boolean encrypt) throws StorageException, IOException {
 
         FakeHttpAgent agent = new FakeHttpAgent("{}");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, agent));
         storage.delete(country, key);
         CryptoManager cryptoManager = initCryptoManager(false, encrypt);
         String keyHash = cryptoManager.createKeyHash(key);
@@ -189,7 +186,7 @@ class HttpDaoImplTests {
     @Test
     void batchWriteNullTest() throws StorageServerException, StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
         assertEquals("Can't write empty batch", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
@@ -209,7 +206,7 @@ class HttpDaoImplTests {
                         boolean encrypt) throws StorageException {
 
         FakeHttpAgent agent = new FakeHttpAgent("ok");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, agent));
 
         List<Record> records = new ArrayList<>();
         Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
@@ -245,7 +242,7 @@ class HttpDaoImplTests {
     @Test
     void testWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, agent));
         String country = "US";
         Record record = new Record("key", "body");
         Record resRecord = storage.write(country, record); //ok
@@ -263,7 +260,7 @@ class HttpDaoImplTests {
     @Test
     void testBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, agent));
         String country = "US";
         List<Record> list = Collections.singletonList(new Record("key", "body"));
         BatchRecord batchRecord = storage.batchWrite(country, list); //ok
@@ -296,7 +293,7 @@ class HttpDaoImplTests {
         String notJson = "StringNotJson";
         String wrongJson = "{\"FirstName\":\"<first name>\"}";
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReRespPTE, goodRespEnc, null, notJson, wrongJson));
-        Storage storage = initializeStorage(true, true, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(true, true, new HttpDaoImpl(fakeEndpoint, null, agent));
         String country = "US";
         String someKey = "key1";
         Record recordPte = storage.read(country, someKey);
@@ -326,7 +323,7 @@ class HttpDaoImplTests {
         String encrypted = JsonUtils.toJsonString(rec, initCryptoManager(false, false));
         String goodResponse = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodResponse, "StringNotJson"));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, agent, tokenClient));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, agent));
         String country = "US";
         BatchRecord batchRecord = storage.find(country, builder);
         assertNotNull(batchRecord);
@@ -338,9 +335,9 @@ class HttpDaoImplTests {
     @Test
     void testLoadCountriesPopApiResponse() throws StorageServerException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse, "StringNotJson"));
-        Dao dao = new HttpDaoImpl(null, agent, tokenClient);
+        Dao dao = new HttpDaoImpl(null, null, agent);
         assertNotNull(dao);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, agent, tokenClient));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, agent));
         assertEquals("Response error", ex.getMessage());
     }
 
@@ -348,7 +345,7 @@ class HttpDaoImplTests {
     void testLoadCountriesInDefaultEndPoint(RepetitionInfo repeatInfo) throws StorageServerException, StorageCryptoException, StorageClientException {
         iterateLogLevel(repeatInfo, HttpDaoImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, agent, tokenClient));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, null, agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
         storage.write("US", record);
@@ -377,6 +374,47 @@ class HttpDaoImplTests {
     }
 
     @Test
+    void testLoadCountriesInDefaultEndPointWithMask() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(HttpDaoImpl.DEFAULT_ENDPOINT, "test.org", agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("OK");
+        storage.write("US", record);
+        assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
+        agent.setResponse("OK");
+        storage.write("us", record);
+        assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
+        agent.setResponse("OK");
+        storage.write("RU", record);
+        assertEquals("https://ru.test.org/v2/storage/records/ru", agent.getCallUrl());
+        agent.setResponse("OK");
+        storage.write("ru", record);
+        assertEquals("https://ru.test.org/v2/storage/records/ru", agent.getCallUrl());
+        //country 'PU' has no separate endpoint
+        storage.write("PU", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
+        agent.setResponse(countryLoadResponse);
+        storage.write("pu", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
+        //country 'SU' is not in country list
+        storage.write("SU", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
+        agent.setResponse(countryLoadResponse);
+        storage.write("su", record);
+        assertEquals("https://us.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
+    }
+
+    @Test
+    void testWriteToCustomEndpointWithMinipop() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl("https://us.test.org", "test.org", agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("OK");
+        storage.write("US", record);
+        assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
+    }
+
+    @Test
     void popTest() {
         String name = "us";
         String host = "http://localhost";
@@ -395,7 +433,7 @@ class HttpDaoImplTests {
         String createResponseNull = null;
         FakeHttpAgent httpAgent = new FakeHttpAgent(Arrays.asList(
                 readResponse, deleteResponse, createResponse, createResponseBad, createResponseNull));
-        HttpDaoImpl dao = new HttpDaoImpl(fakeEndpoint, httpAgent, tokenClient);
+        HttpDaoImpl dao = new HttpDaoImpl(fakeEndpoint, null, httpAgent);
         String country = "US";
         String key = "key1";
         assertNull(dao.read(country, key, null));
