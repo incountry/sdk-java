@@ -191,7 +191,12 @@ public class StorageImpl implements Storage {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);
             }
-            return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), null, tokenClient, httpTimeout);
+            return new HttpDaoImpl(config.getEnvId(),
+                    config.getEndPoint(),
+                    config.getEndpointMask(),
+                    config.getCountriesEndpoint(),
+                    tokenClient,
+                    httpTimeout);
         } else {
             return dao;
         }

@@ -22,6 +22,7 @@ public class StorageConfig {
     private String clientSecret;
     private String authEndPoint;
     private String endpointMask;
+    private String countriesEndpoint;
     private Integer httpTimeout;
 
     public String getEnvId() {
@@ -184,13 +185,28 @@ public class StorageConfig {
     }
 
     /**
-     * Note: parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
+     * Parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
      *
      * @param endpointMask template
      * @return StorageConfig
      */
     public StorageConfig setEndpointMask(String endpointMask) {
         this.endpointMask = endpointMask;
+        return this;
+    }
+
+    public String getCountriesEndpoint() {
+        return countriesEndpoint;
+    }
+
+    /**
+     * Set custom endpoint for loading countries list. Parameter is optional.
+     *
+     * @param countriesEndpoint custom endpoint for countries loading
+     * @return StorageConfig
+     */
+    public StorageConfig setCountriesEndpoint(String countriesEndpoint) {
+        this.countriesEndpoint = countriesEndpoint;
         return this;
     }
 
@@ -206,6 +222,7 @@ public class StorageConfig {
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
         newInstance.setEndpointMask(getEndpointMask());
+        newInstance.setCountriesEndpoint(getCountriesEndpoint());
         newInstance.setHttpTimeout(getHttpTimeout());
         return newInstance;
     }
@@ -223,6 +240,7 @@ public class StorageConfig {
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +
                 ", authEndPoint='" + authEndPoint + '\'' +
                 ", endpointMask='" + endpointMask + '\'' +
+                ", countriesEndpoint='" + countriesEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
                 '}';
     }

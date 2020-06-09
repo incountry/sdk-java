@@ -341,7 +341,7 @@ class HttpDaoImplTests {
     void testLoadCountriesInDefaultEndPoint(RepetitionInfo repeatInfo) throws StorageServerException, StorageCryptoException, StorageClientException {
         iterateLogLevel(repeatInfo, HttpDaoImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, null, null, agent));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, null, "https://localhost:8080", agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
         storage.write("US", record);
