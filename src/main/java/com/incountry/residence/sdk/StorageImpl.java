@@ -174,23 +174,24 @@ public class StorageImpl implements Storage {
                 httpTimeout = DEFAULT_TIMEOUT;
             }
             httpTimeout *= 1000; //expected value in ms
+            TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
-                TokenClient tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
+                tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),
                         httpTimeout);
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), tokenClient, httpTimeout);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), new ApiKeyTokenClient(config.getApiKey()), httpTimeout);
+                tokenClient = new ApiKeyTokenClient(config.getApiKey());
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);
             }
+            return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), null, tokenClient, httpTimeout);
         } else {
             return dao;
         }

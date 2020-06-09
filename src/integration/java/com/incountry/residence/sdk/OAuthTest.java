@@ -53,7 +53,6 @@ public class OAuthTest {
                 .setAuthEndPoint(AUTH_URL)
                 .setEndpointMask(ENDPOINT_MASK)
                 .setEnvId(ENV_ID)
-                .setEndPoint(END_POINT)
                 .setSecretKeyAccessor(accessor);
         return StorageImpl.getInstance(config);
     }
