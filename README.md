@@ -75,7 +75,14 @@ StorageConfig config = new StorageConfig()
 Storage storage = StorageImpl.getInstance(config);
 ```
 
-Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`private.incountry.io ` will make all further requests to be sent to `https://{COUNTRY_CODE}.private.incountry.io` 
+Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`private.incountry.io ` will make all further requests to be sent to `https://{COUNTRY_CODE}.private.incountry.io`
+If your PoPAPI configuration relies on a custom PoPAPI server (rather than the default one) use `countriesEndpoint` option to specify the endpoint responsible for fetching supported countries list.  
+```java
+StorageConfig config = new StorageConfig()
+   .setCountriesEndpoint(countriesEndpoint)  
+   //...                                
+Storage storage = StorageImpl.getInstance(config);
+```
 
 ### Encryption key/secret
 
