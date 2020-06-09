@@ -32,8 +32,10 @@ public class StorageImpl implements Storage {
   /**
    * creating Storage instance
    *
-   * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
+   * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY 
+                              with {@link #getInstance()} 
    * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+                              with {@link #getInstance()}
    * @param endpoint          Optional. Defines API URL.
    *                          Default endpoint will be used if this param is null
    * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
@@ -67,9 +69,12 @@ SDK also supports oAuth authentication credentials instead of plain API key auth
 Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
 ```java
 StorageConfig config = new StorageConfig()
-   .setClientId(CLIENT_ID)  //can be also set via environment variable INC_CLIENT_ID
-   .setClientSecret(SECRET) //can be also set via environment variable INC_CLIENT_SECRET
-   .setAuthEndPoint(AUTH_URL) //can be also set via environment variable INC_AUTH_ENDPOINT
+   //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
+   .setClientId(CLIENT_ID)  
+   //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
+   .setClientSecret(SECRET) 
+   //can be also set via environment variable INC_AUTH_ENDPOINT with {@link #getInstance()}
+   .setAuthEndPoint(AUTH_URL) 
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID);                                
 Storage storage = StorageImpl.getInstance(config);
