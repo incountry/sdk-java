@@ -91,7 +91,7 @@ public class HttpDaoImpl implements Dao {
         String content;
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, countriesEndpoint, RETRY_CNT);
+            content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, RETRY_CNT);
             popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, maskForDefaultEndpoint));
             lastLoadedTime = System.currentTimeMillis();
         }
