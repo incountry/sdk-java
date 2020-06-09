@@ -32,7 +32,7 @@ public class HttpDaoImpl implements Dao {
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
     private static final String DEFAULT_COUNTRY_ENDPOINT = "https://portal-backend.incountry.com/countries";
     private static final String DEFAULT_ENDPOINT_MASK = "api.incountry.io";
-    private static final String DEFAULT_COUNTY = "us";
+    private static final String DEFAULT_COUNTRY = "us";
     private static final String STORAGE_URL = "/v2/storage/records/";
     private static final String URI_HTTPS = "https://";
     private static final String URI_POST = "POST";
@@ -123,7 +123,7 @@ public class HttpDaoImpl implements Dao {
             if (endPointMask == null) {
                 resultEndpoint = new EndPoint(endPoint, getAudienceForMiniPop(endPoint, country));
             } else {
-                String mainUrl = URI_HTTPS + DEFAULT_COUNTY + maskForDefaultEndpoint;
+                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + maskForDefaultEndpoint;
                 resultEndpoint = new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country));
             }
         }
