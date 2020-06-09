@@ -45,6 +45,12 @@ class ParamsFromEnvTest {
         assertEquals(clientId, config.getClientId());
         assertEquals(clientSecret, config.getClientSecret());
         assertEquals(authEndPoint, config.getAuthEndPoint());
+        unsetEnv(PARAM_ENV_ID);
+        unsetEnv(PARAM_API_KEY);
+        unsetEnv(PARAM_ENDPOINT);
+        unsetEnv(PARAM_CLIENT_ID);
+        unsetEnv(PARAM_CLIENT_SECRET);
+        unsetEnv(PARAM_AUTH_ENDPOINT);
     }
 
     @Test
@@ -57,6 +63,9 @@ class ParamsFromEnvTest {
         setEnv(PARAM_ENDPOINT, endPoint);
         Storage storage = StorageImpl.getInstance();
         assertNotNull(storage);
+        unsetEnv(PARAM_ENV_ID);
+        unsetEnv(PARAM_API_KEY);
+        unsetEnv(PARAM_ENDPOINT);
     }
 
     private static void setEnv(String key, String value) {
@@ -69,6 +78,19 @@ class ParamsFromEnvTest {
             writableEnv.put(key, value);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to set environment variable", e);
+        }
+    }
+
+    private static void unsetEnv(String key) {
+        try {
+            Map<String, String> env = System.getenv();
+            Class<?> cl = env.getClass();
+            Field field = cl.getDeclaredField("m");
+            field.setAccessible(true);
+            Map<String, String> writableEnv = (Map<String, String>) field.get(env);
+            writableEnv.remove(key);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to unset environment variable", e);
         }
     }
 }
