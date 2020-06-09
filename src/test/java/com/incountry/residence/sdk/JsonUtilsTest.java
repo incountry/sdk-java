@@ -76,4 +76,9 @@ class JsonUtilsTest {
     void testPassNullToJsonInt() {
         assertNull(JsonUtils.toJsonInt(null));
     }
+
+    @Test
+    void testPassNullToJsonArray() {
+        assertNull(JsonUtils.toJsonArray(null, null));
+    }
 }
