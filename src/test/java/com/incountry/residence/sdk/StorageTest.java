@@ -215,7 +215,6 @@ class StorageTest {
         agent.setResponse("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
         foundRecord = storage.findOne(COUNTRY, builder);
         assertNull(foundRecord);
-
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.findOne(COUNTRY, null));
         assertEquals("Filters can't be null", ex.getMessage());
     }
