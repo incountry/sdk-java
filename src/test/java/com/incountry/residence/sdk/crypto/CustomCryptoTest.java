@@ -267,8 +267,10 @@ public class CustomCryptoTest {
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> manager.encrypt(text));
+        assertEquals(NullPointerException.class, ex1.getCause().getClass());
         assertEquals("Unexpected exception", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion));
+        assertEquals(NullPointerException.class, ex2.getCause().getClass());
         assertEquals("Unexpected exception", ex2.getMessage());
     }
 
@@ -283,6 +285,8 @@ public class CustomCryptoTest {
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
         assertEquals("Unexpected exception", ex.getMessage());
+        assertEquals(ArrayIndexOutOfBoundsException.class, ex.getCause().getClass());
+        assertEquals("Index 1 out of bounds for length 1", ex.getCause().getMessage());
     }
 
     @Test
@@ -298,6 +302,8 @@ public class CustomCryptoTest {
         assertEquals(keyVersion, result.getValue());
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion + 1));
         assertEquals("Unexpected exception", ex.getMessage());
+        assertEquals(StorageClientException.class, ex.getCause().getClass());
+        assertEquals("Secret not found for 'version'=2 with 'isForCustomEncryption'=true", ex.getCause().getMessage());
     }
 
     @Test

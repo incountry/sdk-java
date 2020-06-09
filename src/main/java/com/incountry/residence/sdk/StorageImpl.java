@@ -33,9 +33,9 @@ public class StorageImpl implements Storage {
     private static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
     private static final String PARAM_AUTH_ENDPOINT = "INC_AUTH_ENDPOINT";
     //error messages
-    private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
+    private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INT_INC_ENVIRONMENT_ID env var";
     private static final String MSG_ERR_AUTH_DUPL = "Either apiKey or clientId/clientSecret can be used at the same moment, not both";
-    private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
+    private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INT_INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
     private static final String MSG_ERR_NULL_KEY = "Key can't be null";
@@ -45,9 +45,9 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
     private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
-    private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
-    private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
-    private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
+    private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INT_INC_CLIENT_ID env var";
+    private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INT_INC_CLIENT_SECRET env var";
+    private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INT_INC_CLIENT_ID, INT_INC_CLIENT_SECRET) env vars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";

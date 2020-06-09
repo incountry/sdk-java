@@ -193,6 +193,7 @@ class CryptoManagerTest {
             throw new NullPointerException();
         };
         StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID", null, false));
+        assertEquals(NullPointerException.class, ex.getCause().getClass());
         assertEquals("Unexpected exception", ex.getMessage());
     }
 

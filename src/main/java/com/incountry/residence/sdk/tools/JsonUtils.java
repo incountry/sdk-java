@@ -54,8 +54,8 @@ public class JsonUtils {
     private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
     private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then recieved";
     private static final String MSG_ERR_NULL_POPLIST = "Response error: country list is empty";
-    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty ";
-    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty ";
+    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty %s";
+    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty %s";
     private static final String MSG_ERR_RESPONSE = "Response error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
@@ -454,12 +454,12 @@ public class JsonUtils {
             }
             for (TransferPop pop : one.countries) {
                 if (pop.name == null || pop.name.isEmpty()) {
-                    String message = MSG_ERR_NULL_POPNAME + pop.toString();
+                    String message = String.format(MSG_ERR_NULL_POPNAME, pop.toString());
                     LOG.error(message);
                     throw new StorageServerException(message);
                 }
                 if (pop.id == null || pop.id.isEmpty()) {
-                    String message = MSG_ERR_NULL_POPID + pop.toString();
+                    String message = String.format(MSG_ERR_NULL_POPID, pop.toString());
                     LOG.error(message);
                     throw new StorageServerException(message);
                 }

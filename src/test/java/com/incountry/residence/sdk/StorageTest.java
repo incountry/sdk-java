@@ -387,13 +387,13 @@ class StorageTest {
         SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
-        assertEquals("Please pass environment_id param or set INC_ENVIRONMENT_ID env var", ex1.getMessage());
+        assertEquals("Please pass environment_id param or set INT_INC_ENVIRONMENT_ID env var", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, secretKeyAccessor, null));
-        assertEquals("Please pass environment_id param or set INC_ENVIRONMENT_ID env var", ex2.getMessage());
+        assertEquals("Please pass environment_id param or set INT_INC_ENVIRONMENT_ID env var", ex2.getMessage());
 
         StorageConfig config = new StorageConfig().setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex3 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please pass environment_id param or set INC_ENVIRONMENT_ID env var", ex3.getMessage());
+        assertEquals("Please pass environment_id param or set INT_INC_ENVIRONMENT_ID env var", ex3.getMessage());
     }
 
     @Test
@@ -429,7 +429,7 @@ class StorageTest {
     @Test
     void testNegativeWithEmptyConstructor() {
         StorageClientException ex = assertThrows(StorageClientException.class, StorageImpl::getInstance);
-        assertEquals("Please pass environment_id param or set INC_ENVIRONMENT_ID env var", ex.getMessage());
+        assertEquals("Please pass environment_id param or set INT_INC_ENVIRONMENT_ID env var", ex.getMessage());
     }
 
     @Test
@@ -462,13 +462,13 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INT_INC_CLIENT_ID, INT_INC_CLIENT_SECRET) env vars", ex.getMessage());
     }
 
     @Test
     void testNegativeWithConstructor4nullDao() {
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, null));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INT_INC_CLIENT_ID, INT_INC_CLIENT_SECRET) env vars", ex.getMessage());
     }
 
     @Test
@@ -494,7 +494,7 @@ class StorageTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("clientId");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INT_INC_CLIENT_ID, INT_INC_CLIENT_SECRET) env vars", ex.getMessage());
     }
 
     @Test
@@ -508,7 +508,7 @@ class StorageTest {
                 .setClientId("")
                 .setClientSecret("");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please pass clientId in configuration or set INC_CLIENT_ID env var", ex.getMessage());
+        assertEquals("Please pass clientId in configuration or set INT_INC_CLIENT_ID env var", ex.getMessage());
     }
 
     @Test

@@ -81,10 +81,11 @@ class AuthTest {
     @Test
     void defaultAuthClientNegativeTest() throws IOException {
         int respCode = 401;
-        FakeHttpServer server = new FakeHttpServer("error", respCode, PORT);
+        String error = "error";
+        FakeHttpServer server = new FakeHttpServer(error, respCode, PORT);
         server.start();
         StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
-        assertEquals("error", ex.getMessage());
+        assertEquals(error, ex.getMessage());
         server.stop(0);
     }
 
@@ -115,6 +116,48 @@ class AuthTest {
             StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
             assertEquals(responsesWithExpectedExceptions.get(responseList.get(i)), ex.getMessage());
         }
+        server.stop(0);
+    }
+
+    @Test
+    void negativeTestAccessTokenEmpty() throws IOException {
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
+        );
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
+        assertEquals("Token is null", ex.getMessage());
+        server.stop(0);
+    }
+
+    @Test
+    void negativeTestTokenTypeNotEqualBearer() throws IOException {
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='test', 'scope'='" + ENV_ID + "'}"
+        );
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
+        assertEquals("Token type is invalid", ex.getMessage());
+        server.stop(0);
+    }
+
+    @Test
+    void negativeTestWrongScope() throws IOException {
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + "test" + "'}"
+        );
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
+        assertEquals("Token scope is invalid", ex.getMessage());
         server.stop(0);
     }
 }
