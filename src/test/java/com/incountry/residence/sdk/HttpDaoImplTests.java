@@ -375,21 +375,26 @@ class HttpDaoImplTests {
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, "test.org", null, agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
-        storage.write("US", record); //US is midpop
+
+        //US is midpop
+        storage.write("US", record);
         assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
         assertEquals("https://us.test.org", agent.getAudienceUrl());
         agent.setResponse("OK");
         storage.write("us", record);
         assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
         assertEquals("https://us.test.org", agent.getAudienceUrl());
+
+        //RU is midpop
         agent.setResponse("OK");
-        storage.write("RU", record); //RU is midpop
+        storage.write("RU", record);
         assertEquals("https://ru.test.org/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://ru.test.org", agent.getAudienceUrl());
         agent.setResponse("OK");
         storage.write("ru", record);
         assertEquals("https://ru.test.org/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://ru.test.org", agent.getAudienceUrl());
+
         //country 'PU' is minipop
         storage.write("PU", record);
         assertEquals("https://us.test.org/v2/storage/records/pu", agent.getCallUrl());
@@ -398,6 +403,7 @@ class HttpDaoImplTests {
         storage.write("pu", record);
         assertEquals("https://us.test.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us.test.org https://pu.test.org", agent.getAudienceUrl());
+
         //country 'SU' is not in country list
         storage.write("SU", record);
         assertEquals("https://us.test.org/v2/storage/records/su", agent.getCallUrl());

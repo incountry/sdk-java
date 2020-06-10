@@ -49,8 +49,8 @@ public class HttpDaoImpl implements Dao {
     private final HttpAgent httpAgent;
     private final String endPoint;
     private final String endPointMask;
-    private final String maskForDefaultEndpoint;
-    private final boolean defaultEndpoint;
+    private final String usingDefaultEndpoint;
+    private final boolean isDefaultEndpoint;
     private final String countriesEndpoint;
     private long lastLoadedTime;
 
@@ -65,18 +65,18 @@ public class HttpDaoImpl implements Dao {
     }
 
     public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) throws StorageServerException {
-        defaultEndpoint = (endPoint == null);
-        this.endPoint = defaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
+        isDefaultEndpoint = (endPoint == null);
+        this.endPoint = isDefaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
         this.endPointMask = endpointMask;
         this.httpAgent = agent;
-        this.maskForDefaultEndpoint = initMaskForDefaultEndpoint(defaultEndpoint, endpointMask);
-        if (defaultEndpoint) {
+        this.usingDefaultEndpoint = initUsingDefaultEndpoint(isDefaultEndpoint, endpointMask);
+        if (isDefaultEndpoint) {
             loadCountries();
         }
     }
 
-    private String initMaskForDefaultEndpoint(boolean defaultEndpoint, String mask) {
+    private String initUsingDefaultEndpoint(boolean defaultEndpoint, String mask) {
         String resultMask = null;
         if (defaultEndpoint) {
             resultMask = "." + (mask != null ? mask : DEFAULT_ENDPOINT_MASK);
@@ -92,7 +92,7 @@ public class HttpDaoImpl implements Dao {
         synchronized (popMap) {
             popMap.clear();
             content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, RETRY_CNT);
-            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, maskForDefaultEndpoint));
+            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, usingDefaultEndpoint));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
@@ -101,7 +101,7 @@ public class HttpDaoImpl implements Dao {
     }
 
     private EndPoint getEndpoint(String country) throws StorageServerException {
-        if (defaultEndpoint) {
+        if (isDefaultEndpoint) {
             //update country list cache every 1 min
             POP pop;
             synchronized (popMap) {
@@ -123,7 +123,7 @@ public class HttpDaoImpl implements Dao {
             if (endPointMask == null) {
                 resultEndpoint = new EndPoint(endPoint, getAudienceForMiniPop(endPoint, country));
             } else {
-                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + maskForDefaultEndpoint;
+                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpoint;
                 resultEndpoint = new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country));
             }
         }
@@ -132,7 +132,7 @@ public class HttpDaoImpl implements Dao {
 
     private String getAudienceForMiniPop(String mainUrl, String country) {
         String mask = endPointMask;
-        if (defaultEndpoint && mask == null) {
+        if (isDefaultEndpoint && mask == null) {
             mask = DEFAULT_ENDPOINT_MASK;
         }
         if (mask == null) {
