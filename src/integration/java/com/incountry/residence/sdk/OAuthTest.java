@@ -27,6 +27,7 @@ public class OAuthTest {
     private static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
     private static final String INT_MINIPOP_COUNTRY = "INT_MINIPOP_COUNTRY";
     private static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
+    private static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
 
     private static final String AUTH_URL = loadFromEnv(INT_INC_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
@@ -36,6 +37,7 @@ public class OAuthTest {
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
     private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
     private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
+    private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final Integer HTTP_TIMEOUT = 30_000;
 
@@ -53,8 +55,8 @@ public class OAuthTest {
                 .setAuthEndPoint(AUTH_URL)
                 .setEndpointMask(ENDPOINT_MASK)
                 .setEnvId(ENV_ID)
-                .setEndPoint(END_POINT)
-                .setSecretKeyAccessor(accessor);
+                .setSecretKeyAccessor(accessor)
+                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT);
         return StorageImpl.getInstance(config);
     }
 
