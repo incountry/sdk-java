@@ -16,9 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class TransferRecordTest {
 
@@ -77,30 +76,30 @@ class TransferRecordTest {
     void positiveTestEqualsWithSameObjects() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        assertTrue(transferRecord.equals(transferRecord));
+        assertEquals(transferRecord, transferRecord);
+//        assertTrue(transferRecord.equals(transferRecord));
     }
 
     @Test
     void negativeTestEqualsWithNull() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-//        TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
-        assertFalse(transferRecord.equals(null));
+        assertNotEquals(transferRecord, null);
     }
 
     @Test
     void negativeTestEqualsDifferentClassObjects() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        assertFalse(transferRecord.equals(""));
+        assertNotEquals(transferRecord, (""));
     }
 
     @Test
-    void negativeTestEqualsWithDiffersObjects() throws StorageException {
+    void negativeTestEqualsWithDifferentObjects() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
-        assertFalse(transferRecord.equals(transferRecord1));
+        assertNotEquals(transferRecord, transferRecord1);
     }
 
     @Test
@@ -110,7 +109,7 @@ class TransferRecordTest {
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody("");
         transferRecord1.setBody("");
-        assertTrue(transferRecord.equals(transferRecord1));
+        assertEquals(transferRecord, transferRecord1);
     }
 
     @Test
