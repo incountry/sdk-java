@@ -271,8 +271,8 @@ public class CustomCryptoTest {
         assertEquals(NullPointerException.class, ex1.getCause().getClass());
         assertEquals("Unexpected exception", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion));
-        assertEquals(NullPointerException.class, ex2.getCause().getClass());
         assertEquals("Unexpected exception", ex2.getMessage());
+        assertEquals(NullPointerException.class, ex2.getCause().getClass());
     }
 
     @Test
