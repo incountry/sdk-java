@@ -1,5 +1,8 @@
 package com.incountry.residence.sdk;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -26,7 +29,7 @@ class TransferRecordTest {
 
     private CryptoManager cryptoManager;
     private SecretKeyAccessor secretKeyAccessor;
-
+    private Gson gson;
 
     @BeforeEach
     public void initializeAccessorAndCrypto() throws StorageClientException {
@@ -37,6 +40,11 @@ class TransferRecordTest {
         SecretsData secretsData = new SecretsData(secretKeyList, version);
         secretKeyAccessor = () -> secretsData;
         cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false);
+
+        gson = new GsonBuilder()
+                .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .disableHtmlEscaping()
+                .create();
     }
 
     @Test
@@ -115,7 +123,7 @@ class TransferRecordTest {
     void negativeTestDecrypt() throws StorageException {
         Record record = new Record("key", null, "profileKay", 1, "key2", "key3");
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.decrypt(cryptoManager));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.decrypt(cryptoManager, gson));
         assertEquals("Response error", ex.getMessage());
     }
 
@@ -126,7 +134,7 @@ class TransferRecordTest {
         Record recordForComparison = new Record(cryptData, null, cryptData, 1, cryptData, cryptData);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody(null);
-        assertEquals(recordForComparison, transferRecord.decrypt(null));
+        assertEquals(recordForComparison, transferRecord.decrypt(null, gson));
     }
 
     @Test
@@ -136,7 +144,7 @@ class TransferRecordTest {
         Record recordForComparison = new Record(cryptData, "", cryptData, 1, cryptData, cryptData);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody("");
-        assertEquals(recordForComparison, transferRecord.decrypt(null));
+        assertEquals(recordForComparison, transferRecord.decrypt(null, gson));
     }
 
     @Test
@@ -146,7 +154,7 @@ class TransferRecordTest {
         Record recordForComparison = new Record(cryptData, null, cryptData, 1, cryptData, cryptData);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody(null);
-        assertEquals(recordForComparison, transferRecord.decrypt(cryptoManager));
+        assertEquals(recordForComparison, transferRecord.decrypt(cryptoManager, gson));
     }
 
 }

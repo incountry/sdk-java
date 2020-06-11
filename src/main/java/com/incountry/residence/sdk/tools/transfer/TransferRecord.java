@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -77,8 +76,7 @@ public class TransferRecord extends Record {
         return rec;
     }
 
-    public void decryptAllFromBody() {
-        Gson gson = JsonUtils.getGson4Records();
+    public void decryptAllFromBody(Gson gson) {
         JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
         JsonElement innerBodyJson = bodyObj.get(P_PAYLOAD);
         setBody(innerBodyJson != null ? innerBodyJson.getAsString() : null);
@@ -109,11 +107,11 @@ public class TransferRecord extends Record {
             return Objects.hash(super.hashCode(), version);
         }
 
-    public Record decrypt(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
+    public Record decrypt(CryptoManager cryptoManager, Gson gson) throws StorageClientException, StorageCryptoException, StorageServerException {
         try {
             if (cryptoManager != null && getBody() != null) {
                 setBody(cryptoManager.decrypt(getBody(), version));
-                decryptAllFromBody();
+                decryptAllFromBody(gson);
             }
         } catch (JsonSyntaxException ex) {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);

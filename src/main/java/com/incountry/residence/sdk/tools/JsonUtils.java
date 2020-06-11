@@ -125,7 +125,7 @@ public class JsonUtils {
         if (tempRecord.getVersion() == null) {
             tempRecord.setVersion(0);
         }
-        return tempRecord.decrypt(cryptoManager);
+        return tempRecord.decrypt(cryptoManager, getGson4Records());
     }
 
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
@@ -171,7 +171,7 @@ public class JsonUtils {
                     if (tempRecord.getVersion() == null) {
                         tempRecord.setVersion(0);
                     }
-                    records.add(tempRecord.decrypt(cryptoManager));
+                    records.add(tempRecord.decrypt(cryptoManager, getGson4Records()));
                 } catch (Exception e) {
                     errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, gson.toJson(tempRecord), e));
                 }
@@ -221,7 +221,7 @@ public class JsonUtils {
         return array;
     }
 
-    public static Gson getGson4Records() {
+    private static Gson getGson4Records() {
         return new GsonBuilder()
                 .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .disableHtmlEscaping()
