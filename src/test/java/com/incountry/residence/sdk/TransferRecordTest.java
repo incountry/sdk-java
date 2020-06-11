@@ -77,7 +77,6 @@ class TransferRecordTest {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         assertEquals(transferRecord, transferRecord);
-//        assertTrue(transferRecord.equals(transferRecord));
     }
 
     @Test
