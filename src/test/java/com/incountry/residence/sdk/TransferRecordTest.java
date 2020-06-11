@@ -84,7 +84,7 @@ class TransferRecordTest {
     void negativeTestEqualsWithNull() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        assertNotEquals(transferRecord, null);
+        assertNotEquals(null, transferRecord);
     }
 
     @Test
