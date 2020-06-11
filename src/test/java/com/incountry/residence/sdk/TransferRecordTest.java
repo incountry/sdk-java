@@ -80,13 +80,6 @@ class TransferRecordTest {
     }
 
     @Test
-    void negativeTestEqualsWithNull() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
-        TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        assertNotEquals(null, transferRecord);
-    }
-
-    @Test
     void negativeTestEqualsDifferentClassObjects() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
@@ -125,4 +118,35 @@ class TransferRecordTest {
         StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.decrypt(cryptoManager));
         assertEquals("Response error", ex.getMessage());
     }
+
+    @Test
+    void testDecryptWithCryptoManagerAndBodyNull() throws StorageException {
+        String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
+        Record record = new Record("", null, "", 1, "", "");
+        Record recordForComparison = new Record(cryptData, null, cryptData, 1, cryptData, cryptData);
+        TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
+        transferRecord.setBody(null);
+        assertEquals(recordForComparison, transferRecord.decrypt(null));
+    }
+
+    @Test
+    void testDecryptWithCryptoManagerNull() throws StorageException {
+        String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
+        Record record = new Record("", null, "", 1, "", "");
+        Record recordForComparison = new Record(cryptData, "", cryptData, 1, cryptData, cryptData);
+        TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
+        transferRecord.setBody("");
+        assertEquals(recordForComparison, transferRecord.decrypt(null));
+    }
+
+    @Test
+    void testDecryptWithBodyNull() throws StorageException {
+        String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
+        Record record = new Record("", null, "", 1, "", "");
+        Record recordForComparison = new Record(cryptData, null, cryptData, 1, cryptData, cryptData);
+        TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
+        transferRecord.setBody(null);
+        assertEquals(recordForComparison, transferRecord.decrypt(cryptoManager));
+    }
+
 }
