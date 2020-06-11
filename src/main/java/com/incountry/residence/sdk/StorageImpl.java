@@ -25,13 +25,6 @@ import java.util.List;
  */
 public class StorageImpl implements Storage {
     private static final Logger LOG = LogManager.getLogger(StorageImpl.class);
-    //params from OS env
-    private static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
-    private static final String PARAM_API_KEY = "INC_API_KEY";
-    private static final String PARAM_ENDPOINT = "INC_ENDPOINT";
-    private static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
-    private static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
-    private static final String PARAM_AUTH_ENDPOINT = "INC_AUTH_ENDPOINT";
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INT_INC_ENVIRONMENT_ID env var";
     private static final String MSG_ERR_AUTH_DUPL = "Either apiKey or clientId/clientSecret can be used at the same moment, not both";
@@ -56,10 +49,6 @@ public class StorageImpl implements Storage {
     private CryptoManager cryptoManager;
     private Dao dao;
     private boolean encrypted;
-
-    private static String loadFromEnv(String key) {
-        return System.getenv(key);
-    }
 
     private StorageImpl() {
     }
@@ -86,20 +75,20 @@ public class StorageImpl implements Storage {
     public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException, StorageServerException {
         StorageConfig config = new StorageConfig()
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setEnvId(loadFromEnv(PARAM_ENV_ID))
-                .setApiKey(loadFromEnv(PARAM_API_KEY))
-                .setEndPoint(loadFromEnv(PARAM_ENDPOINT))
-                .setClientId(loadFromEnv(PARAM_CLIENT_ID))
-                .setClientSecret(loadFromEnv(PARAM_CLIENT_SECRET))
-                .setAuthEndPoint(loadFromEnv(PARAM_AUTH_ENDPOINT));
+                .useEnvIdFromEnv()
+                .useApiKeyFromEnv()
+                .useEndPointFromEnv()
+                .useClientIdFromEnv()
+                .useClientSecretFromEnv()
+                .useAuthEndPointFromEnv();
         return getInstance(config);
     }
 
     /**
      * creating Storage instance
      *
-     * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
-     * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+     * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY with {@link #getInstance()}
+     * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID with {@link #getInstance()}
      * @param endpoint          Optional. Defines API URL. Default endpoint will be used if this param is null
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
@@ -174,23 +163,29 @@ public class StorageImpl implements Storage {
                 httpTimeout = DEFAULT_TIMEOUT;
             }
             httpTimeout *= 1000; //expected value in ms
+            TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
-                TokenClient tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
+                tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),
                         httpTimeout);
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), tokenClient, httpTimeout);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
-                return new HttpDaoImpl(config.getEnvId(), config.getEndPoint(), config.getEndpointMask(), new ApiKeyTokenClient(config.getApiKey()), httpTimeout);
+                tokenClient = new ApiKeyTokenClient(config.getApiKey());
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
                 throw new StorageClientException(MSG_ERR_PASS_AUTH);
             }
+            return new HttpDaoImpl(config.getEnvId(),
+                    config.getEndPoint(),
+                    config.getEndpointMask(),
+                    config.getCountriesEndpoint(),
+                    tokenClient,
+                    httpTimeout);
         } else {
             return dao;
         }

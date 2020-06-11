@@ -11,6 +11,13 @@ import java.util.List;
 public class StorageConfig {
 
     public static final String MSG_SECURE = "[SECURE[%s]]";
+    //params from OS env
+    public static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
+    public static final String PARAM_API_KEY = "INC_API_KEY";
+    public static final String PARAM_ENDPOINT = "INC_ENDPOINT";
+    public static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
+    public static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
+    public static final String PARAM_AUTH_ENDPOINT = "INC_AUTH_ENDPOINT";
 
     private String envId;
     private String apiKey;
@@ -22,6 +29,7 @@ public class StorageConfig {
     private String clientSecret;
     private String authEndPoint;
     private String endpointMask;
+    private String countriesEndpoint;
     private Integer httpTimeout;
 
     public String getEnvId() {
@@ -39,6 +47,17 @@ public class StorageConfig {
         return this;
     }
 
+    /**
+     * load envId from env variable 'INC_ENVIRONMENT_ID'
+     *
+     * @return StorageConfig
+     */
+    public StorageConfig useEnvIdFromEnv() {
+        this.envId = loadFromEnv(PARAM_ENV_ID);
+        return this;
+    }
+
+
     public String getApiKey() {
         return apiKey;
     }
@@ -54,6 +73,16 @@ public class StorageConfig {
         return this;
     }
 
+    /**
+     * load apiKey from env variable 'INC_API_KEY'
+     *
+     * @return StorageConfig
+     */
+    public StorageConfig useApiKeyFromEnv() {
+        this.apiKey = loadFromEnv(PARAM_API_KEY);
+        return this;
+    }
+
     public String getEndPoint() {
         return endPoint;
     }
@@ -66,6 +95,16 @@ public class StorageConfig {
      */
     public StorageConfig setEndPoint(String endPoint) {
         this.endPoint = endPoint;
+        return this;
+    }
+
+    /**
+     * load endPoint from env variable 'INC_ENDPOINT'
+     *
+     * @return StorageConfig
+     */
+    public StorageConfig useEndPointFromEnv() {
+        this.endPoint = loadFromEnv(PARAM_ENDPOINT);
         return this;
     }
 
@@ -130,6 +169,16 @@ public class StorageConfig {
         return this;
     }
 
+    /**
+     * load clientId from env variable 'INC_CLIENT_ID'
+     *
+     * @return StorageConfig
+     */
+    public StorageConfig useClientIdFromEnv() {
+        this.clientId = loadFromEnv(PARAM_CLIENT_ID);
+        return this;
+    }
+
     public String getClientSecret() {
         return clientSecret;
     }
@@ -143,6 +192,16 @@ public class StorageConfig {
      */
     public StorageConfig setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
+        return this;
+    }
+
+    /**
+     * load clientSecret from env variable 'INC_CLIENT_SECRET'
+     *
+     * @return StorageConfig
+     */
+    public StorageConfig useClientSecretFromEnv() {
+        this.clientSecret = loadFromEnv(PARAM_CLIENT_SECRET);
         return this;
     }
 
@@ -160,6 +219,16 @@ public class StorageConfig {
      */
     public StorageConfig setAuthEndPoint(String authEndPoint) {
         this.authEndPoint = authEndPoint;
+        return this;
+    }
+
+    /**
+     * load authEndPoint from env variable 'INC_AUTH_ENDPOINT'
+     *
+     * @return StorageConfig
+     */
+    public StorageConfig useAuthEndPointFromEnv() {
+        this.authEndPoint = loadFromEnv(PARAM_AUTH_ENDPOINT);
         return this;
     }
 
@@ -184,13 +253,28 @@ public class StorageConfig {
     }
 
     /**
-     * Note: parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
+     * Parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
      *
      * @param endpointMask template
      * @return StorageConfig
      */
     public StorageConfig setEndpointMask(String endpointMask) {
         this.endpointMask = endpointMask;
+        return this;
+    }
+
+    public String getCountriesEndpoint() {
+        return countriesEndpoint;
+    }
+
+    /**
+     * Set custom endpoint for loading countries list. Parameter is optional.
+     *
+     * @param countriesEndpoint custom endpoint for countries loading
+     * @return StorageConfig
+     */
+    public StorageConfig setCountriesEndpoint(String countriesEndpoint) {
+        this.countriesEndpoint = countriesEndpoint;
         return this;
     }
 
@@ -206,6 +290,7 @@ public class StorageConfig {
         newInstance.setClientSecret(getClientSecret());
         newInstance.setAuthEndPoint(getAuthEndPoint());
         newInstance.setEndpointMask(getEndpointMask());
+        newInstance.setCountriesEndpoint(getCountriesEndpoint());
         newInstance.setHttpTimeout(getHttpTimeout());
         return newInstance;
     }
@@ -223,11 +308,16 @@ public class StorageConfig {
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +
                 ", authEndPoint='" + authEndPoint + '\'' +
                 ", endpointMask='" + endpointMask + '\'' +
+                ", countriesEndpoint='" + countriesEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
                 '}';
     }
 
     private String hideParam(String param) {
         return param != null ? String.format(MSG_SECURE, param.hashCode()) : null;
+    }
+
+    private static String loadFromEnv(String key) {
+        return System.getenv(key);
     }
 }

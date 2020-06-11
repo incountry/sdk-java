@@ -56,28 +56,21 @@ public class HttpAgentImpl implements HttpAgent {
                     codeMap);
         }
         try {
-            HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-            con.setRequestMethod(method);
-            con.setConnectTimeout(timeout);
-            con.setReadTimeout(timeout);
-            con.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audience));
-            con.setRequestProperty("x-env-id", environmentId);
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("User-Agent", userAgent);
+            HttpURLConnection connection = initConnection(url, method, audience);
             if (body != null) {
-                con.setDoOutput(true);
-                OutputStream os = con.getOutputStream();
+                connection.setDoOutput(true);
+                OutputStream os = connection.getOutputStream();
                 os.write(body.getBytes(charset));
                 os.flush();
                 os.close();
             }
-            int status = con.getResponseCode();
+            int status = connection.getResponseCode();
             ApiResponse params = codeMap.get(status);
             InputStream responseStream;
             if (params != null && !params.isError()) {
-                responseStream = con.getInputStream();
+                responseStream = connection.getInputStream();
             } else if (params == null || !canRetry(params, retryCount)) {
-                responseStream = con.getErrorStream();
+                responseStream = connection.getErrorStream();
             } else {
                 tokenClient.refreshToken(true, audience);
                 return request(url, method, body, codeMap, audience, retryCount - 1);
@@ -103,6 +96,20 @@ public class HttpAgentImpl implements HttpAgent {
         } catch (IOException ex) {
             throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
+    }
+
+    private HttpURLConnection initConnection(String url, String method, String audience) throws IOException, StorageServerException {
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod(method);
+        connection.setConnectTimeout(timeout);
+        connection.setReadTimeout(timeout);
+        if (audience != null) {
+            connection.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audience));
+        }
+        connection.setRequestProperty("x-env-id", environmentId);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("User-Agent", userAgent);
+        return connection;
     }
 
     private boolean canRetry(ApiResponse params, int retryCount) {

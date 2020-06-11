@@ -26,12 +26,13 @@ import java.util.Map;
 
 public class HttpDaoImpl implements Dao {
 
-    public static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
+    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
     private static final int RETRY_CNT = 1;
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
-    private static final String PORTAL_COUNTRIES_URI = "https://portal-backend.incountry.com/countries";
+    private static final String DEFAULT_COUNTRY_ENDPOINT = "https://portal-backend.incountry.com/countries";
     private static final String DEFAULT_ENDPOINT_MASK = "api.incountry.io";
+    private static final String DEFAULT_COUNTRY = "us";
     private static final String STORAGE_URL = "/v2/storage/records/";
     private static final String URI_HTTPS = "https://";
     private static final String URI_POST = "POST";
@@ -48,11 +49,13 @@ public class HttpDaoImpl implements Dao {
     private final HttpAgent httpAgent;
     private final String endPoint;
     private final String endPointMask;
-    private final boolean defaultEndpoint;
+    private final String usingDefaultEndpoint;
+    private final boolean isDefaultEndpoint;
+    private final String countriesEndpoint;
     private long lastLoadedTime;
 
-    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, TokenClient tokenClient, Integer httpTimeout) throws StorageServerException {
-        this(endPoint, endpointMask,
+    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, Integer httpTimeout) throws StorageServerException {
+        this(endPoint, endpointMask, countriesEndpoint,
                 ProxyUtils.createLoggingProxyForPublicMethods(
                         new HttpAgentImpl(
                                 ProxyUtils.createLoggingProxyForPublicMethods(tokenClient),
@@ -61,14 +64,24 @@ public class HttpDaoImpl implements Dao {
                                 httpTimeout)));
     }
 
-    public HttpDaoImpl(String endPoint, String endpointMask, HttpAgent agent) throws StorageServerException {
-        defaultEndpoint = (endPoint == null || endPoint.equals(DEFAULT_ENDPOINT));
-        this.endPoint = defaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
+    public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) throws StorageServerException {
+        isDefaultEndpoint = (endPoint == null);
+        this.endPoint = isDefaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
+        this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
         this.endPointMask = endpointMask;
         this.httpAgent = agent;
-        if (defaultEndpoint) {
+        this.usingDefaultEndpoint = initUsingDefaultEndpoint(isDefaultEndpoint, endpointMask);
+        if (isDefaultEndpoint) {
             loadCountries();
         }
+    }
+
+    private String initUsingDefaultEndpoint(boolean defaultEndpoint, String mask) {
+        String resultMask = null;
+        if (defaultEndpoint) {
+            resultMask = "." + (mask != null ? mask : DEFAULT_ENDPOINT_MASK);
+        }
+        return resultMask;
     }
 
     private void loadCountries() throws StorageServerException {
@@ -76,11 +89,10 @@ public class HttpDaoImpl implements Dao {
             LOG.debug("Start loading country list");
         }
         String content;
-
         synchronized (popMap) {
             popMap.clear();
-            content = httpAgent.request(PORTAL_COUNTRIES_URI, URI_GET, null, ApiResponse.COUNTRY, PORTAL_COUNTRIES_URI, RETRY_CNT);
-            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, "." + (endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK)));
+            content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, RETRY_CNT);
+            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, usingDefaultEndpoint));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
@@ -89,7 +101,7 @@ public class HttpDaoImpl implements Dao {
     }
 
     private EndPoint getEndpoint(String country) throws StorageServerException {
-        if (defaultEndpoint) {
+        if (isDefaultEndpoint) {
             //update country list cache every 1 min
             POP pop;
             synchronized (popMap) {
@@ -98,24 +110,37 @@ public class HttpDaoImpl implements Dao {
                 }
                 pop = popMap.get(country);
             }
-            if (pop != null) {
-                return new EndPoint(pop.getHost(), pop.getHost());
-            }
+            return getDefaultEndpointForPop(pop, country);
         }
-        return new EndPoint(endPoint, getAudienceForMiniPop(country));
+        return new EndPoint(endPoint, getAudienceForMiniPop(endPoint, country));
     }
 
-    private String getAudienceForMiniPop(String country) {
+    private EndPoint getDefaultEndpointForPop(POP pop, String country) {
+        EndPoint resultEndpoint;
+        if (pop != null) { //mid pop for default endpoint
+            resultEndpoint = new EndPoint(pop.getHost(), pop.getHost());
+        } else { //minipop for default endpoint
+            if (endPointMask == null) {
+                resultEndpoint = new EndPoint(endPoint, getAudienceForMiniPop(endPoint, country));
+            } else {
+                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpoint;
+                resultEndpoint = new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country));
+            }
+        }
+        return resultEndpoint;
+    }
+
+    private String getAudienceForMiniPop(String mainUrl, String country) {
         String mask = endPointMask;
-        if (defaultEndpoint && mask == null) {
+        if (isDefaultEndpoint && mask == null) {
             mask = DEFAULT_ENDPOINT_MASK;
         }
         if (mask == null) {
-            return endPoint;
+            return mainUrl;
         } else {
             String secondaryUrl = URI_HTTPS + country + "." + mask;
-            String resultAudience = endPoint;
-            if (!endPoint.equals(secondaryUrl)) {
+            String resultAudience = mainUrl;
+            if (!mainUrl.equals(secondaryUrl)) {
                 resultAudience += " " + secondaryUrl;
             }
             return resultAudience;
