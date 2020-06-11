@@ -214,7 +214,8 @@ public class CustomCryptoTest {
         StorageCryptoException ex1 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText1, keyVersion));
         assertTrue(ex1.getMessage().startsWith("Unexpected exception during custom decryption - failed to parse custom encryption version:"));
 
-        String wrongCipherText2 = UUID.randomUUID() + ":123";
+        String randomUUID = UUID.randomUUID() + ":123";
+        String wrongCipherText2 = randomUUID.replaceFirst("c", "d");
         StorageCryptoException ex2 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText2, keyVersion));
         assertEquals("Unknown cipher format", ex2.getMessage());
 

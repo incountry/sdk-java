@@ -33,6 +33,10 @@ class JsonUtilsTest {
         expected = "{\"filter\":{\"range_key\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
         fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, false, 9, false).build(), null);
         assertEquals(expected, fact);
+
+//        String expected = "{\"filter\":{},\"options\":{\"limit\":100,\"offset\":0}}";
+//        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, 9).build(), null);
+//        assertEquals(expected, fact);
     }
 
     @Test
