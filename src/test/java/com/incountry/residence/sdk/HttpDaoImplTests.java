@@ -337,7 +337,7 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse, "StringNotJson"));
         Dao dao = new HttpDaoImpl(null, null, null, agent);
         assertNotNull(dao);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null agent));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
         assertEquals("Response error", ex.getMessage());
     }
 
