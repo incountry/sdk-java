@@ -23,8 +23,6 @@ import com.incountry.residence.sdk.tools.transfer.TransferBatch;
 import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
