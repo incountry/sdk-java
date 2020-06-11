@@ -34,8 +34,6 @@ import java.util.stream.Collectors;
 
 public class JsonUtils {
 
-    private static final Logger LOG = LogManager.getLogger(JsonUtils.class);
-
     private static final String P_BODY = "body";
     private static final String P_KEY = "key";
     private static final String P_KEY_2 = "key2";

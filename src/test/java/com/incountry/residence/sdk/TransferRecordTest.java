@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TransferRecordTest {
+class TransferRecordTest {
 
     private static final String SECRET = "secret";
     private static final String ENVIRONMENT_ID = "envId";
