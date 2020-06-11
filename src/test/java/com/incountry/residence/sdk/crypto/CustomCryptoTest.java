@@ -268,8 +268,8 @@ public class CustomCryptoTest {
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> manager.encrypt(text));
-        assertEquals(NullPointerException.class, ex1.getCause().getClass());
         assertEquals("Unexpected exception", ex1.getMessage());
+        assertEquals(NullPointerException.class, ex1.getCause().getClass());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion));
         assertEquals("Unexpected exception", ex2.getMessage());
         assertEquals(NullPointerException.class, ex2.getCause().getClass());
