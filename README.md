@@ -244,7 +244,7 @@ body = "some PII data";
 profileKey = "customer";
 rangeKey = 10000;
 key2 = "english";
-key3 = "rolls-royce";
+key3 = "insurance";
 Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
 storage.write("us", record);
 ```
@@ -356,7 +356,7 @@ Use `FindFilterBuilder` class to refine your find request.
 Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                  .key2Eq("kitty")
+                  .key2Eq("someKey")
                   .key3Eq("firstValue","secondValue")
                   .rangeKeyBetween(123, 456);
 
@@ -369,7 +369,7 @@ if (findResult.getCount() > 0) {
 
 The request will return records, filtered according to the following pseudo-sql
 ```sql
-key2 = 'kitty' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey` < = 456)
+key2 = 'someKey' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey` < = 456)
 ```
 
 All conditions added via `FindFilterBuilder` are joined using logical `AND`. You may not add multiple conditions for the same key - if you do only the last one will be used.
@@ -451,7 +451,7 @@ It works the same way as `find` but returns the first record or `null` if no rec
 Here is the example of how `findOne` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                .key2Eq("kitty")
+                .key2Eq("someKey")
                 .key3Eq("firstValue", "secondValue")
                 .rangeKeyBetween(123, 456);
 
