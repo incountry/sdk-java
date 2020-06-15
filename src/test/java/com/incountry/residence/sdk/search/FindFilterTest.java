@@ -37,8 +37,11 @@ public class FindFilterTest {
     @Test
     public void testErrorArgs() {
         FindFilter findFilter = new FindFilter();
-        assertThrows(StorageClientException.class, () -> findFilter.setLimit(0));
-        assertThrows(StorageClientException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
-        assertThrows(StorageClientException.class, () -> findFilter.setOffset(-1));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> findFilter.setLimit(0));
+        assertEquals("Limit must be more than 1", ex1.getMessage());
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
+        assertEquals("Max limit is 100. Use offset to populate more", ex2.getMessage());
+        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> findFilter.setOffset(-1));
+        assertEquals("Offset must be more than 0", ex3.getMessage());
     }
 }

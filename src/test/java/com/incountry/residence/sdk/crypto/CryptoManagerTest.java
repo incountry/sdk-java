@@ -124,25 +124,30 @@ class CryptoManagerTest {
         secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
-        assertThrows(StorageCryptoException.class, () -> crypto.decrypt(encrypted, keyVersion));
+        StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> crypto.decrypt(encrypted, keyVersion));
+        assertEquals("Data encryption error", ex.getMessage());
     }
 
     @Test
     void testSecretKeyWithNegativeVersion() {
-        assertThrows(StorageClientException.class, () -> new SecretKey(secret, -1, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretKey(secret, -1, false));
+        assertEquals("Version must be >= 0", ex.getMessage());
     }
 
     @Test
     void testSecretKeyDataWithNegativeVersion() {
-        assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), -2));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), -2));
+        assertEquals("Secrets in SecretData are null", ex.getMessage());
     }
 
     @Test
     void testIncorrectKeyAccessor() {
         SecretKeyAccessor accessor1 = () -> null;
         SecretKeyAccessor accessor2 = () -> SecretsDataGenerator.fromPassword("");
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor1));
-        assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor2));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor1));
+        assertEquals("SecretKeyAccessor returns null secret", ex1.getMessage());
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor2));
+        assertEquals("Secret can't be null", ex2.getMessage());
     }
 
     @Test
@@ -162,7 +167,8 @@ class CryptoManagerTest {
     void negativeNoSecretProvided() throws StorageClientException {
         CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
-        assertThrows(StorageCryptoException.class, () -> manager.decrypt(encrypted, keyVersion));
+        StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> manager.decrypt(encrypted, keyVersion));
+        assertEquals(String.format("No secret provided. Cannot decrypt record: %s", encrypted), ex.getMessage());
     }
 
     @Test
@@ -171,7 +177,8 @@ class CryptoManagerTest {
         SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null, false));
+        assertEquals("Secret not found for 'version'=1 with 'isForCustomEncryption'=false", ex.getMessage());
     }
 
     @Test
@@ -185,7 +192,9 @@ class CryptoManagerTest {
         SecretKeyAccessor accessor = () -> {
             throw new NullPointerException();
         };
-        assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID", null, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID", null, false));
+        assertEquals("Unexpected exception", ex.getMessage());
+        assertEquals(NullPointerException.class, ex.getCause().getClass());
     }
 
     @Test

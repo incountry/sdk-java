@@ -187,8 +187,10 @@ class HttpDaoImplTests {
     void batchWriteNullTest() throws StorageServerException, StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
-        assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
-        assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
+        assertEquals("Can't write empty batch", ex1.getMessage());
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
+        assertEquals("Can't write empty batch", ex2.getMessage());
     }
 
     @ParameterizedTest
@@ -326,7 +328,8 @@ class HttpDaoImplTests {
         BatchRecord batchRecord = storage.find(country, builder);
         assertNotNull(batchRecord);
         assertTrue(batchRecord.getRecords().size() > 0);
-        assertThrows(StorageServerException.class, () -> storage.find(country, builder));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.find(country, builder));
+        assertEquals("Response error", ex.getMessage());
     }
 
     @Test
@@ -334,7 +337,8 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse, "StringNotJson"));
         Dao dao = new HttpDaoImpl(null, null, null, agent);
         assertNotNull(dao);
-        assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        assertEquals("Response error", ex.getMessage());
     }
 
     @RepeatedTest(3)

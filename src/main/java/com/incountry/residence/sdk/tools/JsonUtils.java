@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.BatchRecord;
@@ -20,19 +19,18 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import com.incountry.residence.sdk.tools.transfer.TransferBatch;
+import com.incountry.residence.sdk.tools.transfer.TransferPop;
+import com.incountry.residence.sdk.tools.transfer.TransferPopList;
+import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class JsonUtils {
-
-    private static final Logger LOG = LogManager.getLogger(JsonUtils.class);
 
     private static final String P_BODY = "body";
     private static final String P_KEY = "key";
@@ -49,13 +47,6 @@ public class JsonUtils {
     private static final String P_FILTER = "filter";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-    private static final String MSG_ERR_NULL_META = "Response error: Meta is null";
-    private static final String MSG_ERR_NEGATIVE_META = "Response error: negative values in batch metadata";
-    private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
-    private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then recieved";
-    private static final String MSG_ERR_NULL_POPLIST = "Response error: country list is empty";
-    private static final String MSG_ERR_NULL_POPNAME = "Response error: country name is empty";
-    private static final String MSG_ERR_NULL_POPID = "Response error: country id is empty";
     private static final String MSG_ERR_RESPONSE = "Response error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
@@ -131,10 +122,10 @@ public class JsonUtils {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
         tempRecord.validate();
-        if (tempRecord.version == null) {
-            tempRecord.version = 0;
+        if (tempRecord.getVersion() == null) {
+            tempRecord.setVersion(0);
         }
-        return tempRecord.decrypt(cryptoManager);
+        return tempRecord.decrypt(cryptoManager, getGson4Records());
     }
 
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
@@ -173,21 +164,21 @@ public class JsonUtils {
         }
         transferBatch.validate();
         List<Record> records = new ArrayList<>();
-        if (transferBatch.meta.getCount() != 0) {
-            for (TransferRecord tempRecord : transferBatch.data) {
+        if (transferBatch.getMeta().getCount() != 0) {
+            for (TransferRecord tempRecord : transferBatch.getData()) {
                 try {
                     tempRecord.validate();
-                    if (tempRecord.version == null) {
-                        tempRecord.version = 0;
+                    if (tempRecord.getVersion() == null) {
+                        tempRecord.setVersion(0);
                     }
-                    records.add(tempRecord.decrypt(cryptoManager));
+                    records.add(tempRecord.decrypt(cryptoManager, getGson4Records()));
                 } catch (Exception e) {
                     errors.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, gson.toJson(tempRecord), e));
                 }
             }
         }
-        return new BatchRecord(records, transferBatch.meta.getCount(), transferBatch.meta.getLimit(),
-                transferBatch.meta.getOffset(), transferBatch.meta.getTotal(), errors);
+        return new BatchRecord(records, transferBatch.getMeta().getCount(), transferBatch.getMeta().getLimit(),
+                transferBatch.getMeta().getOffset(), transferBatch.getMeta().getTotal(), errors);
     }
 
     private static JsonArray valueJSON(FilterNumberParam range) {
@@ -297,173 +288,11 @@ public class JsonUtils {
         }
         Map<String, POP> result = new HashMap<>();
         TransferPopList.validatePopList(popList);
-        for (TransferPop transferPop : popList.countries) {
-            if (transferPop.direct) {
-                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.name));
+        for (TransferPop transferPop : popList.getCountries()) {
+            if (transferPop.isDirect()) {
+                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName()));
             }
         }
         return result;
-    }
-
-    /**
-     * inner class for cosy encryption and serialization of {@link Record} instances
-     */
-    private static class TransferRecord extends Record {
-        Integer version;
-
-        TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
-            setKey(cryptoManager.createKeyHash(record.getKey()));
-            setKey2(cryptoManager.createKeyHash(record.getKey2()));
-            setKey3(cryptoManager.createKeyHash(record.getKey3()));
-            setProfileKey(cryptoManager.createKeyHash(record.getProfileKey()));
-            setRangeKey(record.getRangeKey());
-
-            Map.Entry<String, Integer> encBodyAndVersion = cryptoManager.encrypt(bodyJsonString);
-            setBody(encBodyAndVersion.getKey());
-            version = (encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
-        }
-
-        public void validate() throws StorageServerException {
-            StringBuilder builder = null;
-            if (getKey() == null || getKey().length() == 0) {
-                builder = new StringBuilder("Null required record fields: key");
-            }
-            if (getBody() == null || getBody().length() == 0) {
-                builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
-            }
-            if (builder != null) {
-                String message = builder.toString();
-                LOG.error(message);
-                throw new StorageServerException(message);
-            }
-        }
-
-        /**
-         * immutable get Record
-         *
-         * @return return immutalbe Record
-         */
-        private Record toRecord() {
-            Record rec = new Record();
-            rec.setKey(getKey());
-            rec.setKey2(getKey2());
-            rec.setKey3(getKey3());
-            rec.setBody(getBody());
-            rec.setRangeKey(getRangeKey());
-            rec.setProfileKey(getProfileKey());
-            return rec;
-        }
-
-        public void decryptAllFromBody() {
-            Gson gson = getGson4Records();
-            JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
-            JsonElement innerBodyJson = bodyObj.get(P_PAYLOAD);
-            setBody(innerBodyJson != null ? innerBodyJson.getAsString() : null);
-            Record recordFromMeta = gson.fromJson(bodyObj.get(P_META), Record.class);
-            setKey(recordFromMeta.getKey());
-            setKey2(recordFromMeta.getKey2());
-            setKey3(recordFromMeta.getKey3());
-            setProfileKey(recordFromMeta.getProfileKey());
-        }
-
-        @Override
-        public boolean equals(Object object) {
-            if (this == object) {
-                return true;
-            }
-            if (object == null || getClass() != object.getClass()) {
-                return false;
-            }
-            if (!super.equals(object)) {
-                return false;
-            }
-            TransferRecord that = (TransferRecord) object;
-            return Objects.equals(version, that.version);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), version);
-        }
-
-        public Record decrypt(CryptoManager cryptoManager) throws StorageClientException, StorageCryptoException, StorageServerException {
-            try {
-                if (cryptoManager != null && getBody() != null) {
-                    setBody(cryptoManager.decrypt(getBody(), version));
-                    decryptAllFromBody();
-                }
-            } catch (JsonSyntaxException ex) {
-                throw new StorageServerException(MSG_ERR_RESPONSE, ex);
-            }
-            return toRecord();
-        }
-    }
-
-    /**
-     * inner class for cosy serialization of {@link BatchRecord} instances
-     */
-    private static class TransferBatch {
-        BatchRecord meta;
-        List<TransferRecord> data;
-
-        public void validate() throws StorageServerException {
-            if (meta == null) {
-                throw new StorageServerException(MSG_ERR_NULL_META);
-            } else if (meta.getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0) {
-                throw new StorageServerException(MSG_ERR_NEGATIVE_META);
-            } else if (meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount())
-                    || meta.getCount() == 0 && !data.isEmpty()) {
-                throw new StorageServerException(MSG_ERR_INCORRECT_COUNT);
-            } else if (meta.getCount() > meta.getTotal()) {
-                throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);
-            }
-        }
-    }
-
-    /**
-     * inner class for cosy serialization loading country List
-     */
-    private static class TransferPop {
-        String name;
-        String id;
-        String status;
-        boolean direct;
-
-        @Override
-        public String toString() {
-            return "TransferPop{" +
-                    "name='" + name + '\'' +
-                    ", id='" + id + '\'' +
-                    ", status='" + status + '\'' +
-                    ", direct=" + direct +
-                    '}';
-        }
-
-        public String getId() {
-            return id.toLowerCase();
-        }
-    }
-
-    private static class TransferPopList {
-        List<TransferPop> countries;
-
-        static void validatePopList(TransferPopList one) throws StorageServerException {
-            if (one == null || one.countries == null || one.countries.isEmpty()) {
-                LOG.error(MSG_ERR_NULL_POPLIST);
-                throw new StorageServerException(MSG_ERR_NULL_POPLIST);
-            }
-            for (TransferPop pop : one.countries) {
-                if (pop.name == null || pop.name.isEmpty()) {
-                    String message = MSG_ERR_NULL_POPNAME + pop.toString();
-                    LOG.error(message);
-                    throw new StorageServerException(message);
-                }
-                if (pop.id == null || pop.id.isEmpty()) {
-                    String message = MSG_ERR_NULL_POPID + pop.toString();
-                    LOG.error(message);
-                    throw new StorageServerException(message);
-                }
-            }
-        }
     }
 }
