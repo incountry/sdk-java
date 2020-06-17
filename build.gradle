@@ -15,7 +15,6 @@ plugins {
     id 'io.codearte.nexus-staging' version "${nexusStagingVersion}"
     id "org.sonarqube" version "${sonarQubeVersion}"
     id 'jacoco'
-    id 'org.barfuin.gradle.jacocolog' version "${jacocologVersion}"
     id "com.github.spotbugs" version "${spotbugsVersion}"
 }
 
@@ -105,6 +104,21 @@ sonarqube {
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.organization", "incountry"
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/test/jacocoTestReport.xml"
+    }
+}
+
+jacoco {
+    toolVersion = "${jacocoVersion}"
+    reportsDir = file("$buildDir/jacoco")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.enabled true
     }
 }
 
