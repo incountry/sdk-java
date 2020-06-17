@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FilterNumberParamTest {
+class FilterNumberParamTest {
 
     @Test
-    public void negativeRangeTest() {
+    void negativeRangeTest() {
         assertThrows(StorageClientException.class, () -> new FilterNumberParam(null));
         assertThrows(StorageClientException.class, () -> new FilterNumberParam(null, 1));
         assertThrows(StorageClientException.class, () -> new FilterNumberParam("WrongOperator!@#", 1));

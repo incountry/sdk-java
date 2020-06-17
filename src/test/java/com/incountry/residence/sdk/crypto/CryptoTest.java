@@ -13,14 +13,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class CryptoTest {
+class CryptoTest {
 
     private SecretsData secretsData;
     private String secret;
@@ -31,12 +31,12 @@ public class CryptoTest {
         secret = "password";
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
-        secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
+        secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
 
     }
 
     @Test
-    public void testWithNormalEncryption() throws StorageClientException, StorageCryptoException {
+    void testWithNormalEncryption() throws StorageClientException, StorageCryptoException {
         CryptoImpl crypto = new CryptoImpl(() -> secretsData);
 
         String[] plainTexts = {"",
@@ -58,7 +58,7 @@ public class CryptoTest {
     }
 
     @Test
-    public void testWithPTEncryption() throws StorageClientException, StorageCryptoException {
+    void testWithPTEncryption() throws StorageClientException, StorageCryptoException {
         CryptoImpl crypto = new CryptoImpl("");
 
         String[] plainTexts = {"",
@@ -83,7 +83,7 @@ public class CryptoTest {
     }
 
     @Test
-    public void testV1Decryption() throws StorageCryptoException, StorageClientException {
+    void testV1Decryption() throws StorageCryptoException, StorageClientException {
         CryptoImpl crypto = new CryptoImpl(() -> secretsData);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
@@ -91,7 +91,7 @@ public class CryptoTest {
     }
 
     @Test
-    public void testV2Decryption() throws StorageCryptoException, StorageClientException {
+    void testV2Decryption() throws StorageCryptoException, StorageClientException {
         CryptoImpl crypto = new CryptoImpl(() -> secretsData);
         String encrypted = "2:MyAeMDU3wnlWiqooUM4aStpDvW7JKU0oKBQN4WI0Wyl2vSuSmTIu8TY7Z9ljYeaLfg8ti3mhIJhbLSBNu/AmvMPBZsl6CmSC1KcbZ4kATJQtmZolidyXUGBlXC52xvAnFFGnk2s=";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
@@ -99,7 +99,7 @@ public class CryptoTest {
     }
 
     @Test
-    public void testVPTDecryptionWithoutEnc() throws StorageCryptoException, StorageClientException {
+    void testVPTDecryptionWithoutEnc() throws StorageCryptoException, StorageClientException {
         Crypto crypto = new CryptoImpl("");
         String encrypted = "pt:SW5Db3VudHJ5";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
@@ -107,7 +107,7 @@ public class CryptoTest {
     }
 
     @Test
-    public void testVPTDecryptionWithEnc() throws StorageCryptoException, StorageClientException {
+    void testVPTDecryptionWithEnc() throws StorageCryptoException, StorageClientException {
         Crypto crypto = new CryptoImpl(() -> secretsData, "");
         String encrypted = "pt:SW5Db3VudHJ5";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
@@ -116,28 +116,28 @@ public class CryptoTest {
     }
 
     @Test
-    public void testDecryptionErrorOnSecretMismatch() throws StorageClientException {
+    void testDecryptionErrorOnSecretMismatch() throws StorageClientException {
         secret = "otherpassword";
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
-        secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
+        secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         CryptoImpl crypto = new CryptoImpl(() -> secretsData);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
         assertThrows(StorageCryptoException.class, () -> crypto.decrypt(encrypted, keyVersion));
     }
 
     @Test
-    public void testSecretKeyWithNegativeVersion() {
+    void testSecretKeyWithNegativeVersion() {
         assertThrows(StorageClientException.class, () -> new SecretKey(secret, -1, false));
     }
 
     @Test
-    public void testSecreKeyDatatWithNegativeVersion() {
+    void testSecreKeyDatatWithNegativeVersion() {
         assertThrows(StorageClientException.class, () -> new SecretsData(new ArrayList<>(), -2));
     }
 
     @Test
-    public void testIncorrectKeyAccessor() {
+    void testIncorrectKeyAccessor() {
         SecretKeyAccessor accessor1 = () -> null;
         SecretKeyAccessor accessor2 = () -> SecretsDataGenerator.fromPassword("");
         assertThrows(StorageClientException.class, () -> StorageImpl.getInstance("envId", "apiKey", "Http://fakeEndpoint", accessor1));

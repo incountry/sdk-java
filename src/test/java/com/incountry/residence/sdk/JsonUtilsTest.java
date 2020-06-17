@@ -7,10 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class JsonUtilsTest {
+class JsonUtilsTest {
 
     @Test
-    public void testBetweenFilter() throws StorageClientException {
+    void testBetweenFilter() throws StorageClientException {
         String expected = "{\"filter\":{\"range_key\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
         String fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, 9).build(), null);
         assertEquals(expected, fact);
