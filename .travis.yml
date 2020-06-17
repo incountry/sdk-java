@@ -25,6 +25,5 @@ before_install:
   - gradle -v
 
 script:
-  - gradle build --rerun-tasks
-  - gradle sonarqube
-  - gradle integrationTest --rerun-tasks
+  - gradle build jacocoTestReport sonarqube
+  - gradle integrationTest
