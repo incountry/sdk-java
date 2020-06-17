@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SecretsDataGeneratorTest {
+class SecretsDataGeneratorTest {
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
+    void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
         String secret = "password__password__password__32";
         int version = 1;
         boolean isKey = true;
@@ -44,7 +44,7 @@ public class SecretsDataGeneratorTest {
     }
 
     @Test
-    public void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
+    void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
         String secret = "user_password";
         int version = 0;
         int currentVersion = 0;
@@ -57,7 +57,7 @@ public class SecretsDataGeneratorTest {
     }
 
     @Test
-    public void testIsJson() throws StorageClientException {
+    void testIsJson() throws StorageClientException {
         JsonObject jsonWithoutSecretsDataFields = new JsonObject();
         jsonWithoutSecretsDataFields.addProperty("body", "test");
         jsonWithoutSecretsDataFields.addProperty("key", "write_key");
@@ -93,7 +93,7 @@ public class SecretsDataGeneratorTest {
     }
 
     @Test
-    public void testWrongJson() {
+    void testWrongJson() {
         String secretDataWrongJson = "{\n" +
                 "  \"secrets\": [\n" +
                 "    {\n" +
@@ -109,7 +109,7 @@ public class SecretsDataGeneratorTest {
     }
 
     @Test
-    public void testValidationOfSecretsData() throws StorageClientException {
+    void testValidationOfSecretsData() throws StorageClientException {
         SecretKey secretKey1 = new SecretKey("password1", 0, false);
         SecretKey secretKey2 = new SecretKey("password2", 1, false);
         SecretKey secretKey3 = new SecretKey("password3", 0, false);

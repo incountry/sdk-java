@@ -10,11 +10,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FilterStringParamTest {
+class FilterStringParamTest {
 
 
     @Test
-    public void toJSONStringTestWithCrypto() throws StorageClientException {
+    void toJSONStringTestWithCrypto() throws StorageClientException {
         String filterValue = "filterValue";
         Crypto crypto = new CryptoImpl("envId");
         FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
@@ -23,7 +23,7 @@ public class FilterStringParamTest {
     }
 
     @Test
-    public void toJSONStringWithCryptoNullTest() throws StorageClientException {
+    void toJSONStringWithCryptoNullTest() throws StorageClientException {
         String filterValue = "filterValue";
         FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
         JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, null);
@@ -31,7 +31,7 @@ public class FilterStringParamTest {
     }
 
     @Test
-    public void toJSONIntTest() throws StorageClientException {
+    void toJSONIntTest() throws StorageClientException {
         int filterValue = 1;
         FilterStringParam filterStringParam = new FilterStringParam(new String[]{Integer.toString(filterValue)});
         JsonArray jsonArray = JsonUtils.toJsonInt(filterStringParam);
