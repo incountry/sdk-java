@@ -29,9 +29,10 @@ class AuthTest {
     private static final String ENDPOINT_MASK = "localhost";
     private static final String AUDIENCE_URL = "https://localhost";
     private static final String COUNTRY = "us";
+    private static final int POOL_SIZE = 5;
 
-    private TokenClient getTokenClient() {
-        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+    private TokenClient getTokenClient() throws StorageServerException {
+        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
     }
 
     @RepeatedTest(3)
@@ -69,7 +70,7 @@ class AuthTest {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -82,10 +83,11 @@ class AuthTest {
     void defaultAuthClientNegativeTest() throws IOException {
         int respCode = 401;
         String error = "error";
+        String expectedErrorMassage = "401 Unauthorized\nerror";
         FakeHttpServer server = new FakeHttpServer(error, respCode, PORT);
         server.start();
         StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
-        assertEquals(error, ex.getMessage());
+        assertEquals(expectedErrorMassage, ex.getMessage());
         server.stop(0);
     }
 
@@ -120,11 +122,11 @@ class AuthTest {
     }
 
     @Test
-    void negativeTestAccessTokenEmpty() throws IOException {
+    void negativeTestAccessTokenEmpty() throws IOException, StorageServerException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -134,11 +136,11 @@ class AuthTest {
     }
 
     @Test
-    void negativeTestTokenTypeNotEqualBearer() throws IOException {
+    void negativeTestTokenTypeNotEqualBearer() throws IOException, StorageServerException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='test', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -148,11 +150,11 @@ class AuthTest {
     }
 
     @Test
-    void negativeTestWrongScope() throws IOException {
+    void negativeTestWrongScope() throws IOException, StorageServerException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + "test" + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();

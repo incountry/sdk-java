@@ -45,6 +45,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
     private static final Integer DEFAULT_TIMEOUT = 30;
+    private static final Integer DEFAULT_POOL_SIZE = 5;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -171,7 +172,9 @@ public class StorageImpl implements Storage {
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),
-                        httpTimeout);
+                        httpTimeout,
+                        getPollSize(config)
+                        );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
@@ -185,10 +188,15 @@ public class StorageImpl implements Storage {
                     config.getEndpointMask(),
                     config.getCountriesEndpoint(),
                     tokenClient,
-                    httpTimeout);
+                    httpTimeout,
+                    getPollSize(config));
         } else {
             return dao;
         }
+    }
+
+    private static Integer getPollSize(StorageConfig config) {
+        return config.getPoolSize() != null ? config.getPoolSize() : DEFAULT_POOL_SIZE;
     }
 
     private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {

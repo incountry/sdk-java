@@ -30,31 +30,32 @@ class HttpAgentImplTest {
     private static final String ENDPOINT = "http://localhost:" + PORT;
     private static final Integer TIMEOUT_IN_MS = 30_000;
     private static final TokenClient TOKEN_CLIENT = new ApiKeyTokenClient("<api_key>");
+    private static final int POOL_SIZE = 5;
 
     @Test
-    void testNullEndpointException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+    void testNullEndpointException() throws StorageServerException {
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }
 
     @Test
-    void testNullApiKeyException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+    void testNullApiKeyException() throws StorageServerException {
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }
 
     @Test
-    void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+    void testNullEnvIdException() throws StorageServerException {
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }
 
     @Test
-    void testFakeEndpointException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+    void testFakeEndpointException() throws StorageServerException {
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost",
                 "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
@@ -66,21 +67,23 @@ class HttpAgentImplTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         assertNotNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, 0));
         assertNotNull(agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, null, 0));
         server.stop(0);
     }
 
     @Test
-    void testWithFakeHttpServerBadCode() throws IOException {
+    void testWithFakeHttpServerBadCode() throws IOException, StorageServerException {
         int respCode = 555;
         String content = "{}";
+        String method = "POST";
+        String expectedErrorString = String.format("Code=%d, endpoint=[%s], content=[%d %s]", respCode, ENDPOINT, respCode, content);
         FakeHttpServer server = new FakeHttpServer(content, respCode, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, 0));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", respCode, ENDPOINT, content), ex.getMessage());
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, 0));
+        assertEquals(expectedErrorString, ex.getMessage());
         server.stop(0);
     }
 
@@ -89,15 +92,17 @@ class HttpAgentImplTest {
         List<Integer> respCodeList = Arrays.asList(401, 401, 401, 401, 401, 200);
         int errorCode = 401;
         String content = "{}";
+        String method = "POST";
+        String expectedErrorString = String.format("Code=%d, endpoint=[%s], content=[%d Unauthorized%s]", errorCode, ENDPOINT, errorCode, content);
         FakeHttpServer server = new FakeHttpServer(content, respCodeList, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex1 = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, 0));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", errorCode, ENDPOINT, content), ex1.getMessage());
+                agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, 0));
+        assertEquals(expectedErrorString, ex1.getMessage());
         StorageServerException ex2 = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, 2));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", errorCode, ENDPOINT, content), ex2.getMessage());
+                agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, 2));
+        assertEquals(expectedErrorString, ex2.getMessage());
         assertEquals(content, agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, 1));
         server.stop(0);
     }
@@ -107,21 +112,33 @@ class HttpAgentImplTest {
         int respCode = 404;
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         assertNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.READ, null, 0));
         server.stop(0);
     }
 
     @Test
-    void testExpectedExceptionInsteadOfNPE() throws IOException {
+    void testExpectedExceptionInsteadOfNPE() throws IOException, StorageServerException {
         int respCode = 201;
         String response = "ok";
         FakeHttpServer server = new FakeHttpServer(response, respCode, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, ()
                 -> agent.request(ENDPOINT, "GET", "someBody", new HashMap<>(), null, 0));
         assertEquals(String.format("Code=%d, endpoint=[%s], content=[]", respCode, ENDPOINT), ex.getMessage());
         server.stop(0);
+    }
+
+    @Test
+    void negativeTestWithIllegalPoolSize() {
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0));
+        assertEquals("Illegal connections pool size.", ex.getMessage());
+
+        StorageServerException ex2 = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0));
+        assertEquals("Illegal connections pool size.", ex2.getMessage());
+
+        StorageServerException ex3 = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0));
+        assertEquals("Illegal connections pool size.", ex3.getMessage());
     }
 }

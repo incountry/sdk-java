@@ -1,20 +1,20 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
+import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -29,9 +29,10 @@ public class HttpAgentImpl implements HttpAgent {
     private final Charset charset;
     private final String userAgent;
     private final Integer timeout;
+    private final HttpRequestFactory requestFactory;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs) {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, Integer poolSize) throws StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
                     tokenClient,
@@ -44,6 +45,19 @@ public class HttpAgentImpl implements HttpAgent {
         this.charset = charset;
         this.timeout = timeoutInMs;
         this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
+        this.requestFactory = HttpUtils.provideHttpRequestFactory(poolSize);
+    }
+
+    private HttpRequest addHeaders(HttpRequest request, String audience) throws StorageServerException {
+        HttpHeaders headers = request.getHeaders();
+        if (audience != null) {
+            headers.setAuthorization("Bearer " + tokenClient.getToken(audience));
+        }
+        headers.setContentType("application/json");
+        headers.set("x-env-id", environmentId);
+        headers.set("User-Agent", userAgent);
+        request.setHeaders(headers);
+        return request;
     }
 
     @Override
@@ -55,61 +69,51 @@ public class HttpAgentImpl implements HttpAgent {
                     method,
                     codeMap);
         }
+
+        HttpResponse response = null;
+        String result = "";
         try {
-            HttpURLConnection connection = initConnection(url, method, audience);
-            if (body != null) {
-                connection.setDoOutput(true);
-                OutputStream os = connection.getOutputStream();
-                os.write(body.getBytes(charset));
-                os.flush();
-                os.close();
+            if (body == null) {
+                body = "";
             }
-            int status = connection.getResponseCode();
+            HttpRequest request = HttpUtils.buildRequest(requestFactory, url, method, body, timeout);
+            request = addHeaders(request, audience);
+
+            int status = 0;
+            String errorMassage = "";
+            try {
+                response = request.execute();
+                status = response.getStatusCode();
+            } catch (HttpResponseException ex) {
+                status = ex.getStatusCode();
+                errorMassage = ex.getMessage();
+            }
+
             ApiResponse params = codeMap.get(status);
-            InputStream responseStream;
             if (params != null && !params.isError()) {
-                responseStream = connection.getInputStream();
+                result = response.parseAsString();
             } else if (params == null || !canRetry(params, retryCount)) {
-                responseStream = connection.getErrorStream();
+                result = errorMassage;
             } else {
                 tokenClient.refreshToken(true, audience);
                 return request(url, method, body, codeMap, audience, retryCount - 1);
             }
-            StringBuilder content = new StringBuilder();
-            if (responseStream != null) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream, charset));
-                String inputLine;
-                while ((inputLine = reader.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                reader.close();
-            }
+
             if (params != null && params.isIgnored()) {
                 return null;
             }
             if (params == null || params.isError()) {
-                String errorMessage = String.format(MSG_ERR_CONTENT, status, url, content.toString()).replaceAll("[\r\n]", "");
+                String errorMessage = String.format(MSG_ERR_CONTENT, status, url, result).replaceAll("[\r\n]", "");
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
-            return content.toString();
+            return result;
+
         } catch (IOException ex) {
             throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
+        } catch (IllegalArgumentException ex) {
+            throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
-    }
-
-    private HttpURLConnection initConnection(String url, String method, String audience) throws IOException, StorageServerException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-        connection.setRequestMethod(method);
-        connection.setConnectTimeout(timeout);
-        connection.setReadTimeout(timeout);
-        if (audience != null) {
-            connection.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audience));
-        }
-        connection.setRequestProperty("x-env-id", environmentId);
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setRequestProperty("User-Agent", userAgent);
-        return connection;
     }
 
     private boolean canRetry(ApiResponse params, int retryCount) {

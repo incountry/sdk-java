@@ -31,6 +31,7 @@ public class StorageConfig {
     private String endpointMask;
     private String countriesEndpoint;
     private Integer httpTimeout;
+    private Integer poolSize;
 
     public String getEnvId() {
         return envId;
@@ -246,6 +247,15 @@ public class StorageConfig {
     public StorageConfig setHttpTimeout(Integer httpTimeout) {
         this.httpTimeout = httpTimeout;
         return this;
+    }
+
+    public StorageConfig setPoolSize(Integer poolSize) {
+        this.poolSize = poolSize;
+        return this;
+    }
+
+    public Integer getPoolSize() {
+        return poolSize;
     }
 
     public String getEndpointMask() {

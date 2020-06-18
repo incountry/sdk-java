@@ -40,6 +40,7 @@ public class OAuthTest {
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final Integer HTTP_TIMEOUT = 30_000;
+    private static final Integer POOL_SIZE = 5;
 
     private final SecretKeyAccessor accessor;
 
@@ -78,7 +79,7 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT));
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT, POOL_SIZE));
         assertNotNull(tokenClient.getToken(END_POINT));
         assertNotNull(tokenClient.getToken(END_POINT));
         assertNotNull(tokenClient.refreshToken(true, END_POINT));

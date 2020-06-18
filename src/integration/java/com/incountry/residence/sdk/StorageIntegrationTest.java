@@ -54,6 +54,7 @@ public class StorageIntegrationTest {
     private static final Integer BATCH_WRITE_RANGE_KEY = 2;
     private static final Integer WRITE_RANGE_KEY = 1;
     private static final String RECORD_BODY = "test";
+    private static final Integer POOL_SIZE = 5;
 
     private static final String SECRET = "123456789_123456789_1234567890Ab";
     private static final int VERSION = 0;
@@ -79,7 +80,8 @@ public class StorageIntegrationTest {
                 .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
                 .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setNormalizeKeys(true);
+                .setNormalizeKeys(true)
+                .setPoolSize(POOL_SIZE);
         storageIgnoreCase = StorageImpl.getInstance(config);
     }
 
