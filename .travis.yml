@@ -14,13 +14,13 @@ notifications:
   email: false
 
 before_install:
-#  for sonar test coverage metric
+  # for sonar test coverage metric
   - git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/develop:refs/remotes/origin/develop
   - git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/master:refs/remotes/origin/master
-  #  for using gradle 6.3 instead of default 5 in travis
-  - wget https://services.gradle.org/distributions/gradle-6.4.1-all.zip
-  - unzip -qq gradle-6.4.1-all.zip
-  - export GRADLE_HOME=$PWD/gradle-6.4.1
+  # for using gradle 6.5 instead of default 5 in travis
+  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
+  - unzip -qq gradle-6.5-bin.zip
+  - export GRADLE_HOME=$PWD/gradle-6.5
   - export PATH=$GRADLE_HOME/bin:$PATH
   - gradle -v
 
