@@ -1,24 +1,25 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import com.github.spotbugs.snom.SpotBugsTask
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.owasp:dependency-check-gradle:5.2.1'
+        classpath "org.owasp:dependency-check-gradle:${dependencyCheckVersion}"
     }
 }
 
 plugins {
-    id 'io.codearte.nexus-staging' version '0.11.0'
-    id "org.sonarqube" version "2.7.1"
+    id 'io.codearte.nexus-staging' version "${nexusStagingVersion}"
+    id "org.sonarqube" version "${sonarQubeVersion}"
     id 'jacoco'
+    id "com.github.spotbugs" version "${spotbugsVersion}"
 }
 
 apply plugin: 'maven'
 apply plugin: 'java'
-apply plugin: 'groovy'
 apply plugin: 'signing'
 
 group group
@@ -35,11 +36,66 @@ sourceSets {
         compileClasspath += main.output + test.output
         runtimeClasspath += main.output + test.output
     }
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
 }
 
 configurations {
     integrationImplementation.extendsFrom testImplementation
     integrationRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
+    integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
+    compile group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
+    compile "com.google.code.gson:gson:${gsonVersion}"
+    compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
+}
+
+apply plugin: 'org.owasp.dependencycheck'
+dependencyCheck {
+    failOnError = true
+    failBuildOnCVSS = 10
+}
+
+check.dependsOn dependencyCheckAnalyze
+
+apply plugin: 'com.github.spotbugs'
+spotbugs {
+    excludeFilter = file("$projectDir/config/spotbugs/exclude.xml")
+    ignoreFailures = false
+    effort = "max"
+}
+
+tasks.withType(SpotBugsTask.class) {
+    reports { result ->
+        xml.enabled = false
+        html {
+            enabled = true
+            println("REPORT FILE [" + getTask() + "]: " + getDestination())
+        }
+    }
+}
+
+apply plugin: 'checkstyle'
+checkstyle {
+    toolVersion "${checkStyleVersion}"
+    configFile file("$projectDir/config/checkstyle/checkstyle.xml")
+}
+checkstyleMain {
+    source = 'src/main/java'
+}
+checkstyleTest {
+    source = 'src/test/java'
 }
 
 sonarqube {
@@ -48,6 +104,21 @@ sonarqube {
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.organization", "incountry"
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/test/jacocoTestReport.xml"
+    }
+}
+
+jacoco {
+    toolVersion = "${jacocoVersion}"
+    reportsDir = file("$buildDir/jacoco")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.enabled true
     }
 }
 
@@ -65,7 +136,7 @@ uploadArchives {
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: nexusUsername, password: nexusPassword )
+                authentication(userName: nexusUsername, password: nexusPassword)
             }
 
             pom.project {
@@ -89,9 +160,9 @@ uploadArchives {
 
                 developers {
                     developer {
-                        id 'RommeroInCountry'
-                        name 'Roman Semin'
-                        email 'roman.semin@incountry.com'
+                        id 'sdks'
+                        name 'InCountrySDKs'
+                        email 'sdks@incountry.com'
                     }
                 }
             }
@@ -99,40 +170,35 @@ uploadArchives {
     }
 }
 
-dependencies {
-    testCompile "junit:junit:${junitVersion}"
-    testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
-    testCompile "org.spockframework:spock-core:${spockVersion}"
-    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    compile "com.google.http-client:google-http-client:${httpClientVersion}"
-    compile "com.google.http-client:google-http-client-jackson2:${httpClientVersion}"
-    compile "com.google.http-client:google-http-client-apache-v2:${httpClientVersion}"
-    compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    compile group: 'org.json', name: 'json', version: "${jsonVersion}"
-    compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
+test {
+    useJUnitPlatform()
 }
 
 jar {
     manifest {
         attributes("Implementation-Title": "${rootProject.group}:${rootProject.name}",
-                "Implementation-Version": version,
-                "Implementation-Vendor": "InCounty INC")
+                "Implementation-Version": project.version,
+                "Implementation-Vendor": "InCountry INC")
     }
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    getArchiveClassifier().set('javadoc')
     from javadoc
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    getArchiveClassifier().set('sources')
     from sourceSets.main.allSource
 }
 
 task integrationTest(type: Test) {
     testClassesDirs = sourceSets.integration.output.classesDirs
     classpath = sourceSets.integration.runtimeClasspath
+}
+
+integrationTest {
+    useJUnitPlatform()
 }
 
 artifacts {
@@ -185,3 +251,10 @@ tasks.withType(Test) {
     }
 }
 
+
+task generateVersionClass(type: Copy) {
+    from "${projectDir}/config/template"
+    into "${projectDir}/src/main/java/com/incountry/residence/sdk/version/"
+    filter { line -> line.replaceAll('DEV-SNAPSHOT', "${project.version}") }
+}
+compileJava.dependsOn generateVersionClass

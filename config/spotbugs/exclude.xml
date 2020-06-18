@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <Match>
+        <Class name="com.incountry.residence.sdk.tools.JsonUtils$TransferPop"/>
+        <Bug code="NP,SIC,SS,ST,UrF,UuF,UwF"/>
+    </Match>
+</FindBugsFilter>
