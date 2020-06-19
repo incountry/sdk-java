@@ -93,7 +93,7 @@ class AuthTest {
     }
 
     @Test
-    void defaultAuthClientNegativeTestBadToken() throws IOException {
+    void defaultAuthClientNegativeTestBadToken() throws IOException, StorageServerException {
         Map<String, String> responsesWithExpectedExceptions = new HashMap<String, String>() {{
             put("{'access_token'='1234567889' , 'expires_in'='0' , 'token_type'='bearer'}", "Token TTL is invalid");
             put("{'access_token'='1234567889' , 'expires_in'='-1' , 'token_type'='bearer'}", "Token TTL is invalid");
@@ -115,8 +115,9 @@ class AuthTest {
         List<String> responseList = new ArrayList<>(responsesWithExpectedExceptions.keySet());
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
+        TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < responseList.size(); i++) {
-            StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
+            StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
             assertEquals(responsesWithExpectedExceptions.get(responseList.get(i)), ex.getMessage());
         }
         server.stop(0);
