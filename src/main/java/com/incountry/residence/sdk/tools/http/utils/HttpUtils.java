@@ -44,7 +44,7 @@ public class HttpUtils {
                 .setReadTimeout(timeoutInMs);
     }
 
-    static public RequestResult executeRequest(HttpRequest request) throws IOException {
+    public static RequestResult executeRequest(HttpRequest request) throws IOException {
         try {
             HttpResponse response = request.execute();
             Integer status = response.getStatusCode();
