@@ -334,11 +334,28 @@ class HttpDaoImplTests {
 
     @Test
     void testLoadCountriesPopApiResponse() throws StorageServerException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse, "StringNotJson"));
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse,
+                "StringNotJson",
+                countryLoadBadResponseNullName,
+                countryLoadBadResponseEmptyName,
+                countryLoadBadResponseNullId,
+                countryLoadBadResponseEmptyId,
+                countryLoadBadResponseEmptyCountries));
         Dao dao = new HttpDaoImpl(null, null, null, agent);
         assertNotNull(dao);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
         assertEquals("Response error", ex.getMessage());
+        assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        assertEquals("Response error: country name is empty TransferPop{name='null', id='null', status='null', region='null', direct=true}", ex.getMessage());
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        assertEquals("Response error: country name is empty TransferPop{name='', id='null', status='null', region='null', direct=true}", ex.getMessage());
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        assertEquals("Response error: country id is empty TransferPop{name='USA', id='null', status='null', region='null', direct=false}", ex.getMessage());
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        assertEquals("Response error: country id is empty TransferPop{name='USA', id='', status='null', region='null', direct=false}", ex.getMessage());
+        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
+        assertEquals("Response error: country list is empty", ex.getMessage());
     }
 
     @RepeatedTest(3)
@@ -432,10 +449,12 @@ class HttpDaoImplTests {
     void popTest() {
         String name = "us";
         String host = "http://localhost";
-        POP pop = new POP(host, name);
+        String region = "amer";
+        POP pop = new POP(host, name, region);
         assertEquals(name, pop.getName());
         assertEquals(host, pop.getHost());
-        assertEquals("PoP{host='" + host + "', name='" + name + "'}", pop.toString());
+        assertEquals(region, pop.getRegion(null));
+        assertEquals("POP{host='" + host + "', name='" + name + "', region='" + region + "'}", pop.toString());
     }
 
     @Test
@@ -508,6 +527,12 @@ class HttpDaoImplTests {
 
     }
 
+    private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";
+    private String countryLoadBadResponseEmptyName = "{ \"countries\": [{\"direct\":true, \"name\": \"\" } ] }";
+    private String countryLoadBadResponseNullId = "{ \"countries\": [{\"name\":\"USA\" } ] }";
+    private String countryLoadBadResponseEmptyId = "{ \"countries\": [{\"name\":\"USA\",\"id\":\"\" } ] }";
+    private String countryLoadBadResponseEmptyCountries = "{ \"countries\": [ ] }";
+
     private String countryLoadResponse = "{\n" +
             "  \"countries\": [\n" +
             "    {\n" +
@@ -546,7 +571,6 @@ class HttpDaoImplTests {
             "      \"latitude\": 61.52401,\n" +
             "      \"longitude\": 105.318756,\n" +
             "      \"name\": \"Russia\",\n" +
-            "      \"region\": \"EMEA\",\n" +
             "      \"status\": \"active\",\n" +
             "      \"type\": \"mid\"\n" +
             "    },\n" +

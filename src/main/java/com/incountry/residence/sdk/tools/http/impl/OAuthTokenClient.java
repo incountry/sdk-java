@@ -27,7 +27,16 @@ public class OAuthTokenClient implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
     private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audience={}";
-    private static final String DEFAULT_AUTH_URL = "https://auth.incountry.com/oauth2/token";
+    private static final String DEFAULT_APAC_AUTH_URL = "https://auth-apac.incountry.com/oauth2/token";
+    private static final String DEFAULT_EMEA_AUTH_URL = "https://auth-emea.incountry.com/oauth2/token";
+
+    private static final String DEFAULT_AUTH_PREFIX = "https://auth-";
+    private static final String DEFAULT_AUTH_POSTFIX = "/oauth2/token";
+
+    private static final String APAC = "apac";
+    private static final String EMEA = "emea";
+    private static final String AMER = "amer";
+
     //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
@@ -48,39 +57,53 @@ public class OAuthTokenClient implements TokenClient {
     private static final String APPLICATION_URLENCODED = "application/x-www-form-urlencoded";
 
     private final String basicAuthToken;
-    private final String authEndpoint;
     private final String scope;
     private final Integer timeoutInMs;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
+    private final Map<String, String> regionMap = new HashMap<>();
 
-    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret, Integer timeoutInMs) {
-        this.authEndpoint = authEndpoint != null ? authEndpoint : DEFAULT_AUTH_URL;
+    public OAuthTokenClient(String authEndpoint, String endPointMask, String scope, String clientId, String secret, Integer timeoutInMs) {
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
         this.timeoutInMs = timeoutInMs;
+        if (authEndpoint == null && endPointMask == null) {
+            regionMap.put(APAC, DEFAULT_APAC_AUTH_URL);
+            regionMap.put(EMEA, DEFAULT_EMEA_AUTH_URL);
+            //AMER uses EMEA
+            regionMap.put(AMER, DEFAULT_EMEA_AUTH_URL);
+        } else if (authEndpoint != null) {
+            regionMap.put(APAC, authEndpoint);
+            regionMap.put(EMEA, authEndpoint);
+            regionMap.put(AMER, authEndpoint);
+        } else {
+            regionMap.put(APAC, DEFAULT_AUTH_PREFIX + APAC + "." + endPointMask + DEFAULT_AUTH_POSTFIX);
+            regionMap.put(EMEA, DEFAULT_AUTH_PREFIX + EMEA + "." + endPointMask + DEFAULT_AUTH_POSTFIX);
+            //AMER uses EMEA
+            regionMap.put(AMER, DEFAULT_AUTH_PREFIX + EMEA + "." + endPointMask + DEFAULT_AUTH_POSTFIX);
+        }
     }
 
     @Override
-    public String getToken(String audience) throws StorageServerException {
-        return refreshToken(false, audience);
+    public String getToken(String audience, String region) throws StorageServerException {
+        return refreshToken(false, audience, region);
     }
 
-    public synchronized String refreshToken(final boolean force, final String audience) throws StorageServerException {
+    public synchronized String refreshToken(final boolean force, final String audience, String region) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace(MSG_REFRESH_TOKEN, force, audience);
         }
         Map.Entry<String, Long> token = tokenMap.get(audience);
         if (force || token == null || token.getValue() < System.currentTimeMillis()) {
-            token = newToken(audience);
+            token = newToken(audience, region);
             tokenMap.put(audience, token);
         }
         return token.getKey();
     }
 
-    private Map.Entry<String, Long> newToken(String audience) throws StorageServerException {
+    private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
         try {
             String body = String.format(BODY, audience, scope);
-            HttpURLConnection con = getConnection();
+            HttpURLConnection con = getConnection(region);
             con.setReadTimeout(timeoutInMs);
             con.setConnectTimeout(timeoutInMs);
             OutputStream os = con.getOutputStream();
@@ -135,8 +158,12 @@ public class OAuthTokenClient implements TokenClient {
         throw new StorageServerException(message);
     }
 
-    private HttpURLConnection getConnection() throws IOException {
-        URL url = new URL(authEndpoint);
+    private HttpURLConnection getConnection(String region) throws IOException {
+        String authUrl = regionMap.get(region);
+        if (authUrl == null) {
+            authUrl = regionMap.get(EMEA);
+        }
+        URL url = new URL(authUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(POST);
         connection.setRequestProperty(AUTHORIZATION, basicAuthToken);

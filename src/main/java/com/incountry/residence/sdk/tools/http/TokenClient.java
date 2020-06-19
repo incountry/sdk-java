@@ -4,7 +4,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 
 public interface TokenClient {
 
-    String getToken(String audience) throws StorageServerException;
+    String getToken(String audience, String region) throws StorageServerException;
 
-    String refreshToken(boolean force, String audience) throws StorageServerException;
+    String refreshToken(boolean force, String audience, String region) throws StorageServerException;
 }

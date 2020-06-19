@@ -290,7 +290,7 @@ public class JsonUtils {
         TransferPopList.validatePopList(popList);
         for (TransferPop transferPop : popList.getCountries()) {
             if (transferPop.isDirect()) {
-                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName()));
+                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName(), transferPop.getRegion()));
             }
         }
         return result;
