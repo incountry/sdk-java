@@ -80,13 +80,14 @@ class AuthTest {
     }
 
     @Test
-    void defaultAuthClientNegativeTest() throws IOException {
+    void defaultAuthClientNegativeTest() throws IOException, StorageServerException {
         int respCode = 401;
         String error = "error";
         String expectedErrorMassage = "401 Unauthorized\nerror";
         FakeHttpServer server = new FakeHttpServer(error, respCode, PORT);
+        TokenClient tokenClient = getTokenClient();
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
         assertEquals(expectedErrorMassage, ex.getMessage());
         server.stop(0);
     }
