@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Collections;
 import java.util.List;
@@ -82,11 +83,14 @@ class AuthTest {
     @Test
     void defaultAuthClientNegativeTest() throws IOException {
         int respCode = 401;
-        String error = "error";
-        FakeHttpServer server = new FakeHttpServer(error, respCode, PORT);
+        String errorMessage = "someError";
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(errorMessage, null), respCode, PORT);
         server.start();
         StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, null));
-        assertEquals(error, ex.getMessage());
+        assertEquals("Error in parsing authorization response: '" + errorMessage + "'", ex.getMessage());
+
+        ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, null));
+        assertEquals("Error in parsing authorization response: ''", ex.getMessage());
         server.stop(0);
     }
 

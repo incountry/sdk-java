@@ -43,7 +43,7 @@ public class OAuthTokenClient implements TokenClient {
     private static final String MSG_ERR_EXPIRES = "Token TTL is invalid";
     private static final String MSG_ERR_INVALID_TYPE = "Token type is invalid";
     private static final String MSG_ERR_INVALID_SCOPE = "Token scope is invalid";
-    private static final String MSG_ERR_JSON = "Error in parsing authorization response";
+    private static final String MSG_RESPONSE_ERR = "Error in parsing authorization response";
 
     private static final String USER_AGENT = "User-Agent";
     private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
@@ -121,7 +121,7 @@ public class OAuthTokenClient implements TokenClient {
             }
             reader.close();
             if (!isSuccess) {
-                logAndThrowException(content.toString());
+                throw createAndLogException(MSG_RESPONSE_ERR + ": '" + content.toString() + "'");
             }
             return validateAndGet(content.toString());
         } catch (IOException ex) {
@@ -136,26 +136,27 @@ public class OAuthTokenClient implements TokenClient {
                     .create()
                     .fromJson(response, TransferToken.class);
             if (token.accessToken == null || token.accessToken.isEmpty()) {
-                logAndThrowException(MSG_ERR_NULL_TOKEN);
+                throw createAndLogException(MSG_ERR_NULL_TOKEN);
             }
             if (token.expiresIn == null || token.expiresIn < 1) {
-                logAndThrowException(MSG_ERR_EXPIRES);
+                throw createAndLogException(MSG_ERR_EXPIRES);
             }
             if (!BEARER_TOKEN_TYPE.equals(token.tokenType)) {
-                logAndThrowException(MSG_ERR_INVALID_TYPE);
+                throw createAndLogException(MSG_ERR_INVALID_TYPE);
             }
             if (!scope.equals(token.scope)) {
-                logAndThrowException(MSG_ERR_INVALID_SCOPE);
+                throw createAndLogException(MSG_ERR_INVALID_SCOPE);
             }
             return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn);
         } catch (JsonSyntaxException jsonSyntaxException) {
-            throw new StorageServerException(MSG_ERR_JSON, jsonSyntaxException);
+            throw new StorageServerException(MSG_RESPONSE_ERR, jsonSyntaxException);
         }
     }
 
-    private void logAndThrowException(String message) throws StorageServerException {
+    private StorageServerException createAndLogException(String message) {
+        message = message.replaceAll("[\r\n]", "");
         LOG.error(message);
-        throw new StorageServerException(message);
+        return new StorageServerException(message);
     }
 
     private HttpURLConnection getConnection(String region) throws IOException {
