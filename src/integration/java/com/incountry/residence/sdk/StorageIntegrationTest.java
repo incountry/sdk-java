@@ -21,6 +21,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -306,5 +312,55 @@ public class StorageIntegrationTest {
         assertNull(record);
         record = storageIgnoreCase.read(COUNTRY, WRITE_KEY_IGNORE_CASE.toLowerCase());
         assertNull(record);
+    }
+
+    @Test
+    @Order(800)
+    public void connectionPoolTest() throws StorageException, InterruptedException {
+        SecretKey secretKey = new SecretKey(SECRET, VERSION, false);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(secretKey);
+        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
+        SecretKeyAccessor mySecretKeyAccessor = () -> secretsData;
+
+        StorageConfig config = new StorageConfig()
+                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
+                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
+                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+                .setSecretKeyAccessor(mySecretKeyAccessor)
+                .setNormalizeKeys(true)
+                .setPoolSize(POOL_SIZE);
+        Storage myStorage = StorageImpl.getInstance(config);
+
+        Callable<Boolean> callableTask = () -> {
+            try {
+                String randomKey = UUID.randomUUID().toString();
+                Record record = new Record(randomKey, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
+                myStorage.write(COUNTRY, record);
+                Record incomingRecord = myStorage.read(COUNTRY, WRITE_KEY);
+                assertEquals(WRITE_KEY, incomingRecord.getKey());
+                assertEquals(RECORD_BODY, incomingRecord.getBody());
+                assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
+                assertEquals(KEY_2, incomingRecord.getKey2());
+                assertEquals(KEY_3, incomingRecord.getKey3());
+                myStorage.delete(COUNTRY, WRITE_KEY);
+                return true;
+            } catch (StorageException e) {
+                e.printStackTrace();
+            }
+            return false;
+        };
+
+        List<Callable<Boolean>> callableTasks = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            callableTasks.add(callableTask);
+        }
+        ExecutorService executorService =
+                new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<Runnable>());
+        List<Future<Boolean>> futures = executorService.invokeAll(callableTasks);
+        futures.forEach(item -> {
+            assertTrue(item.isDone());
+        });
     }
 }

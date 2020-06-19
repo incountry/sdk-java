@@ -17,25 +17,28 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpUtils {
 
+    private HttpUtils() {
+
+    }
+
     public static HttpRequestFactory provideHttpRequestFactory(int poolSize) throws StorageServerException {
         final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        try {
+        try  {
             cm.setMaxTotal(poolSize);
-        } catch (IllegalArgumentException ex) {
+        }
+        catch (IllegalArgumentException ex) {
             throw new StorageServerException("Illegal connections pool size.", ex);
         }
-
         final CloseableHttpClient httpClient = HttpClients.createMinimal(cm);
         final HttpTransport httpTransport = new ApacheHttpTransport(httpClient);
         return httpTransport.createRequestFactory();
     }
 
-    public static HttpRequest buildRequest(HttpRequestFactory requestFactory, String url, String method, String body, Integer timeoutInMs) throws IOException, IllegalArgumentException {
+    public static HttpRequest buildRequest(HttpRequestFactory requestFactory, String url, String method, String body, Integer timeoutInMs) throws IOException {
         HttpContent requestContent = new ByteArrayContent("application/json", body.getBytes(StandardCharsets.UTF_8));
-        HttpRequest request = requestFactory
+        return requestFactory
                 .buildRequest(method, new GenericUrl(url), method.equals("POST") ? requestContent : null)
                 .setConnectTimeout(timeoutInMs)
                 .setReadTimeout(timeoutInMs);
-        return request;
     }
 }

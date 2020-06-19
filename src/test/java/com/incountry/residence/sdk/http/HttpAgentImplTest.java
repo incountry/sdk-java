@@ -126,7 +126,7 @@ class HttpAgentImplTest {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, ()
                 -> agent.request(ENDPOINT, "GET", "someBody", new HashMap<>(), null, 0));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[]", respCode, ENDPOINT), ex.getMessage());
+        assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", respCode, ENDPOINT, response), ex.getMessage());
         server.stop(0);
     }
 

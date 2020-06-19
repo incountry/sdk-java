@@ -52,6 +52,7 @@ class StorageTest {
     private static final String PROFILE_KEY = "profileKey";
     private static final Integer RANGE_KEY = 1;
     private static final String BODY = "body";
+    private static final Integer POOL_SIZE = 5;
 
     private CryptoManager cryptoManager;
     private SecretKeyAccessor secretKeyAccessor;
@@ -532,7 +533,8 @@ class StorageTest {
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
-                .setEnvId("<envId>");
+                .setEnvId("<envId>")
+                .setPoolSize(POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
         assertTrue(storage.delete(COUNTRY, KEY));
         server.stop(0);
@@ -544,7 +546,8 @@ class StorageTest {
                 .setEnvId(ENVIRONMENT_ID)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setApiKey("<apiKey>")
-                .setHttpTimeout(0);
+                .setHttpTimeout(0)
+                .setPoolSize(POOL_SIZE);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Connection timeout can't be <1", ex.getMessage());
     }
@@ -557,7 +560,8 @@ class StorageTest {
                 .setHttpTimeout(1)
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
-                .setEnvId("<envId>");
+                .setEnvId("<envId>")
+                .setPoolSize(POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
         assertEquals("Server request error: DELETE", ex.getMessage());
