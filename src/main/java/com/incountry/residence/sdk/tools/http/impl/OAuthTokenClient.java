@@ -3,14 +3,13 @@ package com.incountry.residence.sdk.tools.http.impl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpResponseException;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
+import com.incountry.residence.sdk.tools.http.utils.RequestResult;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,8 +41,6 @@ public class OAuthTokenClient implements TokenClient {
     private static final String BEARER_TOKEN_TYPE = "bearer";
     private static final String BASIC = "Basic ";
     private static final String POST = "POST";
-    private static final String AUTHORIZATION = "Authorization";
-    private static final String CONTENT_TYPE = "Content-Type";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String APPLICATION_URLENCODED = "application/x-www-form-urlencoded";
 
@@ -51,7 +48,6 @@ public class OAuthTokenClient implements TokenClient {
     private final String authEndpoint;
     private final String scope;
     private final Integer timeoutInMs;
-//    private final Integer poolSize;
     private final HttpRequestFactory requestFactory;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
 
@@ -60,7 +56,6 @@ public class OAuthTokenClient implements TokenClient {
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
         this.timeoutInMs = timeoutInMs;
-//        this.poolSize = poolSize;
         this.requestFactory = HttpUtils.provideHttpRequestFactory(poolSize);
     }
 
@@ -92,28 +87,20 @@ public class OAuthTokenClient implements TokenClient {
 
     private Map.Entry<String, Long> newToken(String audience) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
-        HttpResponse response = null;
         try {
             HttpRequest request = HttpUtils.buildRequest(requestFactory, authEndpoint, POST, body, timeoutInMs);
             request = addHeaders(request);
-            int status = 0;
-            String result = "";
-            String errorMassage = "";
-            try {
-                response = request.execute();
-                status = response.getStatusCode();
-            } catch (HttpResponseException ex) {
-                status = ex.getStatusCode();
-                errorMassage = ex.getMessage();
-            }
+
+            RequestResult requestResult = HttpUtils.executeRequest(request);
+            Integer status = requestResult.first;
+            String response = requestResult.second;
+
             boolean isSuccess = status == 200;
 
-            result = isSuccess ? response.parseAsString() : errorMassage;
-
             if (!isSuccess) {
-                logAndThrowException(result);
+                logAndThrowException(response);
             }
-            return validateAndGet(result);
+            return validateAndGet(response);
 
         } catch (IOException ex) {
             throw new StorageServerException(MSG_ERR_AUTH, ex);

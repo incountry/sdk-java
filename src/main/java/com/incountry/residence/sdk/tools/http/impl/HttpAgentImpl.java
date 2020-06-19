@@ -3,13 +3,12 @@ package com.incountry.residence.sdk.tools.http.impl;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpResponseException;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
+import com.incountry.residence.sdk.tools.http.utils.RequestResult;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -78,7 +77,7 @@ public class HttpAgentImpl implements HttpAgent {
             HttpRequest request = HttpUtils.buildRequest(requestFactory, url, method, body, timeout);
             request = addHeaders(request, audience);
 
-            RequestResult requestResult = executeRequest(request);
+            RequestResult requestResult = HttpUtils.executeRequest(request);
             Integer status = requestResult.first;
             String response = requestResult.second;
 
@@ -108,29 +107,8 @@ public class HttpAgentImpl implements HttpAgent {
         }
     }
 
-    private RequestResult executeRequest(HttpRequest request) throws IOException {
-        try {
-            HttpResponse response = request.execute();
-            Integer status = response.getStatusCode();
-            return new RequestResult(status, response.parseAsString());
-        } catch (HttpResponseException ex) {
-            Integer status = ex.getStatusCode();
-            String errorMassage = ex.getMessage();
-            return new RequestResult(status, errorMassage);
-        }
-    }
-
     private boolean canRetry(ApiResponse params, int retryCount) {
         return params.isCanRetry() && retryCount > 0;
     }
 
-    static class RequestResult {
-        public Integer first;
-        public String second;
-
-        RequestResult(Integer first, String second) {
-            this.first = first;
-            this.second = second;
-        }
-    }
 }

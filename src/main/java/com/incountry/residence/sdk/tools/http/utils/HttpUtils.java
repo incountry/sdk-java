@@ -5,6 +5,8 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.apache.ApacheHttpTransport;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -40,5 +42,17 @@ public class HttpUtils {
                 .buildRequest(method, new GenericUrl(url), method.equals("POST") ? requestContent : null)
                 .setConnectTimeout(timeoutInMs)
                 .setReadTimeout(timeoutInMs);
+    }
+
+    static public RequestResult executeRequest(HttpRequest request) throws IOException {
+        try {
+            HttpResponse response = request.execute();
+            Integer status = response.getStatusCode();
+            return new RequestResult(status, response.parseAsString());
+        } catch (HttpResponseException ex) {
+            Integer status = ex.getStatusCode();
+            String errorMassage = ex.getMessage();
+            return new RequestResult(status, errorMassage);
+        }
     }
 }
