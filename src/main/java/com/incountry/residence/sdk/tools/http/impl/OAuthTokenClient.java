@@ -101,10 +101,8 @@ public class OAuthTokenClient implements TokenClient {
                 logAndThrowException(response);
             }
             return validateAndGet(response);
-
+            
         } catch (IOException ex) {
-            throw new StorageServerException(MSG_ERR_AUTH, ex);
-        } catch (IllegalArgumentException ex) {
             throw new StorageServerException(MSG_ERR_AUTH, ex);
         }
     }
