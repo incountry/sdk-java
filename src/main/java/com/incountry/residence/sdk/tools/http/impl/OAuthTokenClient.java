@@ -147,7 +147,7 @@ public class OAuthTokenClient implements TokenClient {
             if (!scope.equals(token.scope)) {
                 throw createAndLogException(MSG_ERR_INVALID_SCOPE);
             }
-            return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn);
+            return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn * 1_000L);
         } catch (JsonSyntaxException jsonSyntaxException) {
             throw new StorageServerException(MSG_RESPONSE_ERR, jsonSyntaxException);
         }
