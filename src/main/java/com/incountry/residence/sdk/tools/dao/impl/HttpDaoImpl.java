@@ -26,12 +26,12 @@ import java.util.Map;
 
 public class HttpDaoImpl implements Dao {
 
-    private static final String DEFAULT_ENDPOINT = "https://us.api.incountry.io";
+    private static final String DEFAULT_ENDPOINT = "https://us-mt-01.api.incountry.io";
     private static final int RETRY_CNT = 1;
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
     private static final String DEFAULT_COUNTRY_ENDPOINT = "https://portal-backend.incountry.com/countries";
-    private static final String DEFAULT_ENDPOINT_MASK = "api.incountry.io";
+    private static final String DEFAULT_ENDPOINT_MASK = "-mt-01.api.incountry.io";
     private static final String DEFAULT_COUNTRY = "us";
     private static final String DEFAULT_REGION = "emea";
     private static final String STORAGE_URL = "/v2/storage/records/";
@@ -80,7 +80,7 @@ public class HttpDaoImpl implements Dao {
     private String initUsingDefaultEndpoint(boolean defaultEndpoint, String mask) {
         String resultMask = null;
         if (defaultEndpoint) {
-            resultMask = "." + (mask != null ? mask : DEFAULT_ENDPOINT_MASK);
+            resultMask = (mask != null ? mask : DEFAULT_ENDPOINT_MASK);
         }
         return resultMask;
     }
@@ -139,7 +139,7 @@ public class HttpDaoImpl implements Dao {
         if (mask == null) {
             return mainUrl;
         } else {
-            String secondaryUrl = URI_HTTPS + country + "." + mask;
+            String secondaryUrl = URI_HTTPS + country + mask;
             String resultAudience = mainUrl;
             if (!mainUrl.equals(secondaryUrl)) {
                 resultAudience += " " + secondaryUrl;
