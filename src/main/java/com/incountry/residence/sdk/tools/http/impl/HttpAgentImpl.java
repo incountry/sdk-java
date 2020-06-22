@@ -72,8 +72,8 @@ public class HttpAgentImpl implements HttpAgent {
             } else if (params == null || !canRetry(params, retryCount)) {
                 responseStream = connection.getErrorStream();
             } else {
-                tokenClient.refreshToken(true, audience, null);
-                return request(url, method, body, codeMap, audience, null, retryCount - 1);
+                tokenClient.refreshToken(true, audience, region);
+                return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
             StringBuilder content = new StringBuilder();
             if (responseStream != null) {
