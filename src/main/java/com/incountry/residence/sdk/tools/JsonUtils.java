@@ -279,7 +279,7 @@ public class JsonUtils {
         return result;
     }
 
-    public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
+    public static Map<String, POP> getMidiPops(String response, String uriStart, String uriEnd) throws StorageServerException {
         TransferPopList popList;
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);

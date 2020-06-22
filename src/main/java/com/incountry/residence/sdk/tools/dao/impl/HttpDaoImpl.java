@@ -80,7 +80,7 @@ public class HttpDaoImpl implements Dao {
     private String initUsingDefaultEndpoint(boolean defaultEndpoint, String mask) {
         String resultMask = null;
         if (defaultEndpoint) {
-            resultMask = (mask != null ? mask : DEFAULT_ENDPOINT_MASK);
+            resultMask = mask != null ? mask : DEFAULT_ENDPOINT_MASK;
         }
         return resultMask;
     }
@@ -93,7 +93,7 @@ public class HttpDaoImpl implements Dao {
         synchronized (popMap) {
             popMap.clear();
             content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
-            popMap.putAll(JsonUtils.getCountries(content, URI_HTTPS, usingDefaultEndpoint));
+            popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, usingDefaultEndpoint));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {

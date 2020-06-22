@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class StorageIntegrationTest {
 
     public static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
-    private static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
+    public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
     private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
     private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
 
