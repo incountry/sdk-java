@@ -103,22 +103,24 @@ public class HttpDaoImpl implements Dao {
 
     private EndPoint getEndpoint(String country) throws StorageServerException {
         if (isDefaultEndpoint) {
-            //update country list cache every 1 min
-            POP pop;
-            synchronized (popMap) {
-                if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
-                    loadCountries();
-                }
-                pop = popMap.get(country);
-            }
+            POP pop = getPopIfCountryIsMidPop(country);
             if (pop != null) { //mid pop for default endpoint
                 return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
-            } else if (endPointMask != null) {
-                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + endPointMask;
-                return new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country), DEFAULT_REGION);
             }
+            String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpointMask;
+            return new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country), DEFAULT_REGION);
         }
         return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
+    }
+
+    private POP getPopIfCountryIsMidPop(String country) throws StorageServerException {
+        synchronized (popMap) {
+            //update country list cache every 1 min
+            if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
+                loadCountries();
+            }
+            return popMap.get(country);
+        }
     }
 
     private String getAudienceForMiniPop(String mainUrl, String country) {
