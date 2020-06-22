@@ -50,7 +50,7 @@ public class HttpDaoImpl implements Dao {
     private final HttpAgent httpAgent;
     private final String endPointUrl;
     private final String endPointMask;
-    private final String usingDefaultEndpoint;
+    private final String usingDefaultEndpointMask;
     private final boolean isDefaultEndpoint;
     private final String countriesEndpoint;
     private long lastLoadedTime;
@@ -71,7 +71,7 @@ public class HttpDaoImpl implements Dao {
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
         this.endPointMask = endpointMask;
         this.httpAgent = agent;
-        this.usingDefaultEndpoint = initUsingDefaultEndpoint(isDefaultEndpoint, endpointMask);
+        this.usingDefaultEndpointMask = initUsingDefaultEndpoint(isDefaultEndpoint, endpointMask);
         if (isDefaultEndpoint) {
             loadCountries();
         }
@@ -93,7 +93,7 @@ public class HttpDaoImpl implements Dao {
         synchronized (popMap) {
             popMap.clear();
             content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
-            popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, usingDefaultEndpoint));
+            popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, usingDefaultEndpointMask));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
@@ -111,24 +111,14 @@ public class HttpDaoImpl implements Dao {
                 }
                 pop = popMap.get(country);
             }
-            return getDefaultEndpointForPop(pop, country);
-        }
-        return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
-    }
-
-    private EndPoint getDefaultEndpointForPop(POP pop, String country) {
-        EndPoint resultEndpoint;
-        if (pop != null) { //mid pop for default endpoint
-            resultEndpoint = new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
-        } else { //minipop for default endpoint
-            if (endPointMask == null) {
-                resultEndpoint = new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
-            } else {
-                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpoint;
-                resultEndpoint = new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country), DEFAULT_REGION);
+            if (pop != null) { //mid pop for default endpoint
+                return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
+            } else if (endPointMask != null) {
+                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpointMask;
+                return new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country), DEFAULT_REGION);
             }
         }
-        return resultEndpoint;
+        return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
     }
 
     private String getAudienceForMiniPop(String mainUrl, String country) {
