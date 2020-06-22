@@ -114,7 +114,7 @@ public class HttpDaoImpl implements Dao {
             if (pop != null) { //mid pop for default endpoint
                 return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
             } else if (endPointMask != null) {
-                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpointMask;
+                String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + endPointMask;
                 return new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country), DEFAULT_REGION);
             }
         }
