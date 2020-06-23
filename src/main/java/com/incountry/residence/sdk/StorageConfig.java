@@ -263,7 +263,7 @@ public class StorageConfig {
     }
 
     /**
-     * Parameter endpointMask is used for switching from `default` InCountry host family (api.incountry.io) to a different one.
+     * Parameter endpointMask is used for switching from `default` InCountry host family (-mt-01.api.incountry.io) to a different one.
      *
      * @param endpointMask template
      * @return StorageConfig

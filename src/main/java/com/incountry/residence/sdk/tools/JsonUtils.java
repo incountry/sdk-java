@@ -279,7 +279,7 @@ public class JsonUtils {
         return result;
     }
 
-    public static Map<String, POP> getCountries(String response, String uriStart, String uriEnd) throws StorageServerException {
+    public static Map<String, POP> getMidiPops(String response, String uriStart, String uriEnd) throws StorageServerException {
         TransferPopList popList;
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
@@ -290,7 +290,7 @@ public class JsonUtils {
         TransferPopList.validatePopList(popList);
         for (TransferPop transferPop : popList.getCountries()) {
             if (transferPop.isDirect()) {
-                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName()));
+                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName(), transferPop.getRegion()));
             }
         }
         return result;

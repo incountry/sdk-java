@@ -40,11 +40,10 @@ public class StorageIntegrationTest {
     private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
     private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
 
-    private static final String TEMP = new StringBuilder("-javasdk-")
-            .append(new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()))
-            .append("-")
-            .append(UUID.randomUUID().toString().replace("-", ""))
-            .toString();
+    private static final String TEMP = "-javasdk-" +
+            new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) +
+            "-" +
+            UUID.randomUUID().toString().replace("-", "");
 
     private final Storage storage;
     private final Storage storageIgnoreCase;

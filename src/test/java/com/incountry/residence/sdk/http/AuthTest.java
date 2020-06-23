@@ -31,8 +31,8 @@ class AuthTest {
     private static final String COUNTRY = "us";
     private static final int POOL_SIZE = 5;
 
-    private TokenClient getTokenClient() throws StorageServerException {
-        return new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+    private TokenClient getTokenClient() {
+        return new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, , POOL_SIZE);
     }
 
     @RepeatedTest(3)
@@ -61,7 +61,7 @@ class AuthTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(getTokenClient().getToken(AUDIENCE_URL));
+        assertNotNull(getTokenClient().getToken(AUDIENCE_URL, null));
         server.stop(0);
     }
 
@@ -70,30 +70,31 @@ class AuthTest {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(tokenClient.getToken(AUDIENCE_URL));
-        assertNotNull(tokenClient.getToken(AUDIENCE_URL));
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
         server.stop(0);
     }
 
     @Test
-    void defaultAuthClientNegativeTest() throws IOException, StorageServerException {
+    void defaultAuthClientNegativeTest() throws IOException {
         int respCode = 401;
-        String error = "error";
-        String expectedErrorMassage = "401 Unauthorized\nerror";
-        FakeHttpServer server = new FakeHttpServer(error, respCode, PORT);
-        TokenClient tokenClient = getTokenClient();
+        String errorMessage = "someError";
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(errorMessage, null), respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
-        assertEquals(expectedErrorMassage, ex.getMessage());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, null));
+        assertEquals("Error in parsing authorization response: '" + errorMessage + "'", ex.getMessage());
+
+        ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, null));
+        assertEquals("Error in parsing authorization response: ''", ex.getMessage());
         server.stop(0);
     }
 
     @Test
-    void defaultAuthClientNegativeTestBadToken() throws IOException, StorageServerException {
+    void defaultAuthClientNegativeTestBadToken() throws IOException {
         Map<String, String> responsesWithExpectedExceptions = new HashMap<String, String>() {{
             put("{'access_token'='1234567889' , 'expires_in'='0' , 'token_type'='bearer'}", "Token TTL is invalid");
             put("{'access_token'='1234567889' , 'expires_in'='-1' , 'token_type'='bearer'}", "Token TTL is invalid");
@@ -116,52 +117,69 @@ class AuthTest {
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
         TokenClient tokenClient = getTokenClient();
-        for (int i = 0; i < responseList.size(); i++) {
-            StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
-            assertEquals(responsesWithExpectedExceptions.get(responseList.get(i)), ex.getMessage());
+        for (String s : responseList) {
+            StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+            assertEquals(responsesWithExpectedExceptions.get(s), ex.getMessage());
         }
         server.stop(0);
     }
 
     @Test
-    void negativeTestAccessTokenEmpty() throws IOException, StorageServerException {
+    void negativeTestAccessTokenEmpty() throws IOException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
         assertEquals("Token is null", ex.getMessage());
         server.stop(0);
     }
 
     @Test
-    void negativeTestTokenTypeNotEqualBearer() throws IOException, StorageServerException {
+    void negativeTestTokenTypeNotEqualBearer() throws IOException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='test', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
         assertEquals("Token type is invalid", ex.getMessage());
         server.stop(0);
     }
 
     @Test
-    void negativeTestWrongScope() throws IOException, StorageServerException {
+    void negativeTestWrongScope() throws IOException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + "test" + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
         assertEquals("Token scope is invalid", ex.getMessage());
         server.stop(0);
+    }
+
+    @Test
+    void testCreationWithMask() {
+        TokenClient tokenClient = new OAuthTokenClient(null, "localhost:" + PORT, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
+        assertEquals("Unexpected exception during authorization", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
+        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
+        assertEquals("auth-apac.localhost", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
+        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
+        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
     }
 }

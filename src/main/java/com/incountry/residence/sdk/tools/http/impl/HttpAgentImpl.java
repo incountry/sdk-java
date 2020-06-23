@@ -60,8 +60,13 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          String audience, int retryCount) throws StorageServerException {
-
+                          String audience, String region, int retryCount) throws StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
+                    url,
+                    method,
+                    codeMap);
+        }
         try {
             CloseableHttpClient client = HttpUtils.buildHttpClient(timeout, poolSize);
             HttpRequestBase request = HttpUtils.createRequest(url, method, body);
@@ -77,8 +82,8 @@ public class HttpAgentImpl implements HttpAgent {
                     || (params == null || !canRetry(params, retryCount))) {
                 result = responseContent;
             } else {
-                tokenClient.refreshToken(true, audience);
-                return request(url, method, body, codeMap, audience, retryCount - 1);
+                tokenClient.refreshToken(true, audience, region);
+                return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
 
             if (params != null && params.isIgnored()) {
@@ -99,5 +104,4 @@ public class HttpAgentImpl implements HttpAgent {
     private boolean canRetry(ApiResponse params, int retryCount) {
         return params.isCanRetry() && retryCount > 0;
     }
-
 }

@@ -169,6 +169,7 @@ public class StorageImpl implements Storage {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
                 tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
+                        config.getEndpointMask(),
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),

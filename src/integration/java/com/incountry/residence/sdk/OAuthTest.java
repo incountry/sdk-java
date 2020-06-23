@@ -19,6 +19,7 @@ import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OAuthTest {
     private static final String INT_INC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
@@ -40,7 +41,6 @@ public class OAuthTest {
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final Integer HTTP_TIMEOUT = 30_000;
-    private static final Integer POOL_SIZE = 5;
 
     private final SecretKeyAccessor accessor;
 
@@ -79,10 +79,48 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT, POOL_SIZE));
-        assertNotNull(tokenClient.getToken(END_POINT));
-        assertNotNull(tokenClient.getToken(END_POINT));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT));
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(AUTH_URL, null, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT, POOL_SIZE));
+        assertNotNull(tokenClient.getToken(END_POINT, null));
+        assertNotNull(tokenClient.getToken(END_POINT, null));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
+        assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
+    }
+
+    @Test
+    public void authRegionTest() throws StorageServerException, StorageClientException {
+        StorageConfig config = new StorageConfig()
+                .setEnvId("envId")
+                .setClientId("clientId")
+                .setClientSecret("clientSecret")
+                .setEndpointMask("localhost:8765");
+        Storage prodStorage = StorageImpl.getInstance(config);
+        String errorMessage = "Unexpected exception during authorization";
+        Record record = new Record("someKey", "someBody");
+
+        //IN mid APAC -> APAC auth
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
+        assertEquals(errorMessage, ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals("auth-apac.localhost", ex.getCause().getMessage());
+
+
+        String authEmeaUrl = "auth-emea.localhost";
+        //AE mid EMEA -> EMEA auth
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
+        assertEquals(errorMessage, ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals(authEmeaUrl, ex.getCause().getMessage());
+
+        //US mid AMER -> EMEA auth
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
+        assertEquals(errorMessage, ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals(authEmeaUrl, ex.getCause().getMessage());
+
+        //Minipop - > EMEA auth
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
+        assertEquals(errorMessage, ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals(authEmeaUrl, ex.getCause().getMessage());
     }
 }

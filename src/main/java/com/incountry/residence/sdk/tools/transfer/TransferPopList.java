@@ -16,12 +16,12 @@ public class TransferPopList {
 
     List<TransferPop> countries;
 
-    public static void validatePopList(TransferPopList one) throws StorageServerException {
-        if (one == null || one.countries == null || one.countries.isEmpty()) {
+    public static void validatePopList(TransferPopList popList) throws StorageServerException {
+        if (popList == null || popList.countries == null || popList.countries.isEmpty()) {
             LOG.error(MSG_ERR_NULL_POPLIST);
             throw new StorageServerException(MSG_ERR_NULL_POPLIST);
         }
-        for (TransferPop pop : one.countries) {
+        for (TransferPop pop : popList.countries) {
             if (pop.getName() == null || pop.getName().isEmpty()) {
                 String message = String.format(MSG_ERR_NULL_POPNAME, pop.toString());
                 LOG.error(message);
