@@ -48,7 +48,7 @@ public class HttpAgentImpl implements HttpAgent {
 
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          String audience, int retryCount) throws StorageServerException {
+                          String audience, String region, int retryCount) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
                     url,
@@ -56,7 +56,7 @@ public class HttpAgentImpl implements HttpAgent {
                     codeMap);
         }
         try {
-            HttpURLConnection connection = initConnection(url, method, audience);
+            HttpURLConnection connection = initConnection(url, method, audience, region);
             if (body != null) {
                 connection.setDoOutput(true);
                 OutputStream os = connection.getOutputStream();
@@ -72,8 +72,8 @@ public class HttpAgentImpl implements HttpAgent {
             } else if (params == null || !canRetry(params, retryCount)) {
                 responseStream = connection.getErrorStream();
             } else {
-                tokenClient.refreshToken(true, audience);
-                return request(url, method, body, codeMap, audience, retryCount - 1);
+                tokenClient.refreshToken(true, audience, region);
+                return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
             StringBuilder content = new StringBuilder();
             if (responseStream != null) {
@@ -98,13 +98,13 @@ public class HttpAgentImpl implements HttpAgent {
         }
     }
 
-    private HttpURLConnection initConnection(String url, String method, String audience) throws IOException, StorageServerException {
+    private HttpURLConnection initConnection(String url, String method, String audience, String region) throws IOException, StorageServerException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setRequestMethod(method);
         connection.setConnectTimeout(timeout);
         connection.setReadTimeout(timeout);
         if (audience != null) {
-            connection.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audience));
+            connection.setRequestProperty("Authorization", "Bearer " + tokenClient.getToken(audience, region));
         }
         connection.setRequestProperty("x-env-id", environmentId);
         connection.setRequestProperty("Content-Type", "application/json");

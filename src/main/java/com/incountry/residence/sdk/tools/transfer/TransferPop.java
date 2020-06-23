@@ -4,6 +4,7 @@ public class TransferPop {
     String name;
     String id;
     String status;
+    String region;
     boolean direct;
 
     @Override
@@ -12,12 +13,13 @@ public class TransferPop {
                 "name='" + name + '\'' +
                 ", id='" + id + '\'' +
                 ", status='" + status + '\'' +
+                ", region='" + region + '\'' +
                 ", direct=" + direct +
                 '}';
     }
 
     public String getId() {
-        return id.toLowerCase();
+        return id != null ? id.toLowerCase() : null;
     }
 
     public String getName() {
@@ -26,5 +28,9 @@ public class TransferPop {
 
     public boolean isDirect() {
         return direct;
+    }
+
+    public String getRegion() {
+        return region != null ? region.toLowerCase() : null;
     }
 }

@@ -58,20 +58,20 @@ class JsonUtilsTest {
     }
 
     @Test
-    void negativeTestIncorrectJson() throws StorageServerException {
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getCountries("json", "https://app.start", "end.com"));
+    void negativeTestIncorrectJson() {
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getMidiPops("json", "https://app.start", "end.com"));
         assertEquals("Response error", ex.getMessage());
     }
 
     @Test
     void negativeTestEmptyStringJson() {
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getCountries("", "https://app.start", "end.com"));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getMidiPops("", "https://app.start", "end.com"));
         assertEquals("Response error: country list is empty", ex.getMessage());
     }
 
     @Test
     void negativeTestNullStringJson() {
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getCountries(null, "https://app.start", "end.com"));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getMidiPops(null, "https://app.start", "end.com"));
         assertEquals("Response error: country list is empty", ex.getMessage());
     }
 
