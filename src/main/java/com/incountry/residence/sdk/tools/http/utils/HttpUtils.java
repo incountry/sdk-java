@@ -1,21 +1,16 @@
 package com.incountry.residence.sdk.tools.http.utils;
 
-import com.google.api.client.http.ByteArrayContent;
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpResponseException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.apache.ApacheHttpTransport;
-import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 
 public class HttpUtils {
 
@@ -23,36 +18,28 @@ public class HttpUtils {
 
     }
 
-    public static HttpRequestFactory provideHttpRequestFactory(int poolSize) throws StorageServerException {
-        final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        try  {
-            cm.setMaxTotal(poolSize);
-        }
-        catch (IllegalArgumentException ex) {
-            throw new StorageServerException("Illegal connections pool size.", ex);
-        }
-        final CloseableHttpClient httpClient = HttpClients.createMinimal(cm);
-        final HttpTransport httpTransport = new ApacheHttpTransport(httpClient);
-        return httpTransport.createRequestFactory();
+    public static CloseableHttpClient buildHttpClient(Integer timeout, Integer poolSize) {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(poolSize);
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(timeout)
+                .build();
+        return HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
     }
 
-    public static HttpRequest buildRequest(HttpRequestFactory requestFactory, String url, String method, String body, Integer timeoutInMs) throws IOException {
-        HttpContent requestContent = new ByteArrayContent("application/json", body.getBytes(StandardCharsets.UTF_8));
-        return requestFactory
-                .buildRequest(method, new GenericUrl(url), method.equals("POST") ? requestContent : null)
-                .setConnectTimeout(timeoutInMs)
-                .setReadTimeout(timeoutInMs);
-    }
-
-    public static RequestResult executeRequest(HttpRequest request) throws IOException {
-        try {
-            HttpResponse response = request.execute();
-            Integer status = response.getStatusCode();
-            return new RequestResult(status, response.parseAsString());
-        } catch (HttpResponseException ex) {
-            Integer status = ex.getStatusCode();
-            String errorMassage = ex.getMessage();
-            return new RequestResult(status, errorMassage);
+    public static HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException {
+        if (method.equals("POST")) {
+            HttpPost request = new HttpPost(url);
+            StringEntity entity = new StringEntity(body);
+            request.setEntity(entity);
+            return request;
+        } else if (method.equals("GET")) {
+            return new HttpGet(url);
+        } else {
+            return new HttpDelete(url);
         }
     }
 }

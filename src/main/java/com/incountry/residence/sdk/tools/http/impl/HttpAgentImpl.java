@@ -1,15 +1,15 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
-import com.incountry.residence.sdk.tools.http.utils.RequestResult;
 import com.incountry.residence.sdk.version.Version;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -28,10 +28,10 @@ public class HttpAgentImpl implements HttpAgent {
     private final Charset charset;
     private final String userAgent;
     private final Integer timeout;
-    private final HttpRequestFactory requestFactory;
+    private final Integer poolSize;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, Integer poolSize) throws StorageServerException {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, Integer poolSize) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
                     tokenClient,
@@ -44,47 +44,38 @@ public class HttpAgentImpl implements HttpAgent {
         this.charset = charset;
         this.timeout = timeoutInMs;
         this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
-        this.requestFactory = HttpUtils.provideHttpRequestFactory(poolSize);
+        this.poolSize = poolSize;
     }
 
-    private HttpRequest addHeaders(HttpRequest request, String audience) throws StorageServerException {
-        HttpHeaders headers = request.getHeaders();
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience) throws StorageServerException {
         if (audience != null) {
-            headers.setAuthorization("Bearer " + tokenClient.getToken(audience));
+            request.addHeader("Authorization", "Bearer " + tokenClient.getToken(audience));
         }
-        headers.setContentType("application/json");
-        headers.set("x-env-id", environmentId);
-        headers.set("User-Agent", userAgent);
-        request.setHeaders(headers);
+        request.addHeader("Content-Type", "application/json");
+        request.addHeader("x-env-id", environmentId);
+        request.addHeader("User-Agent", userAgent);
+
         return request;
     }
 
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
                           String audience, int retryCount) throws StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
-                    url,
-                    method,
-                    codeMap);
-        }
 
-        String result;
         try {
-            if (body == null) {
-                body = "";
-            }
-            HttpRequest request = HttpUtils.buildRequest(requestFactory, url, method, body, timeout);
+            CloseableHttpClient client = HttpUtils.buildHttpClient(timeout, poolSize);
+            HttpRequestBase request = HttpUtils.createRequest(url, method, body);
             request = addHeaders(request, audience);
 
-            RequestResult requestResult = HttpUtils.executeRequest(request);
-            Integer status = requestResult.first;
-            String response = requestResult.second;
+            HttpResponse response = client.execute(request);
 
+            Integer status = response.getStatusLine().getStatusCode();
+            String responseContent = EntityUtils.toString(response.getEntity());
+            String result;
             ApiResponse params = codeMap.get(status);
-            if ((params != null && !params.isError() && response != null)
+            if ((params != null && !params.isError() && responseContent != null)
                     || (params == null || !canRetry(params, retryCount))) {
-                result = response;
+                result = responseContent;
             } else {
                 tokenClient.refreshToken(true, audience);
                 return request(url, method, body, codeMap, audience, retryCount - 1);
@@ -101,8 +92,6 @@ public class HttpAgentImpl implements HttpAgent {
             return result;
 
         } catch (IOException ex) {
-            throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
-        } catch (IllegalArgumentException ex) {
             throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
     }

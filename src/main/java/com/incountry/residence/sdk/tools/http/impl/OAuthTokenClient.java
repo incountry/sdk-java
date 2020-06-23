@@ -1,16 +1,16 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
-import com.google.api.client.http.HttpHeaders;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
-import com.incountry.residence.sdk.tools.http.utils.RequestResult;
 import com.incountry.residence.sdk.version.Version;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,15 +48,15 @@ public class OAuthTokenClient implements TokenClient {
     private final String authEndpoint;
     private final String scope;
     private final Integer timeoutInMs;
-    private final HttpRequestFactory requestFactory;
+    private final Integer poolSize;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
 
-    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret, Integer timeoutInMs, Integer poolSize) throws StorageServerException {
+    public OAuthTokenClient(String authEndpoint, String scope, String clientId, String secret, Integer timeoutInMs, Integer poolSize) {
         this.authEndpoint = authEndpoint != null ? authEndpoint : DEFAULT_AUTH_URL;
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
         this.timeoutInMs = timeoutInMs;
-        this.requestFactory = HttpUtils.provideHttpRequestFactory(poolSize);
+        this.poolSize = poolSize;
     }
 
     @Override
@@ -76,31 +76,31 @@ public class OAuthTokenClient implements TokenClient {
         return token.getKey();
     }
 
-    private HttpRequest addHeaders(HttpRequest request) {
-        HttpHeaders headers = request.getHeaders();
-        headers.setAuthorization(basicAuthToken);
-        headers.setContentType(APPLICATION_URLENCODED);
-        headers.set(USER_AGENT, USER_AGENT_VALUE);
-        request.setHeaders(headers);
-        return request;
+    private HttpRequestBase addHeaders(HttpRequestBase request) {
+        request.addHeader("Authorization", basicAuthToken);
+        request.addHeader("Content-Type", APPLICATION_URLENCODED);
+        request.addHeader(USER_AGENT, USER_AGENT_VALUE);
+       return request;
     }
 
     private Map.Entry<String, Long> newToken(String audience) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
         try {
-            HttpRequest request = HttpUtils.buildRequest(requestFactory, authEndpoint, POST, body, timeoutInMs);
+            CloseableHttpClient client = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
+            HttpRequestBase request = HttpUtils.createRequest(authEndpoint, POST, body);
             request = addHeaders(request);
 
-            RequestResult requestResult = HttpUtils.executeRequest(request);
-            Integer status = requestResult.first;
-            String response = requestResult.second;
+
+            HttpResponse response = client.execute(request);
+            Integer status = response.getStatusLine().getStatusCode();
+            String responseContent = EntityUtils.toString(response.getEntity());
 
             boolean isSuccess = status == 200;
 
             if (!isSuccess) {
-                logAndThrowException(response);
+                logAndThrowException(responseContent);
             }
-            return validateAndGet(response);
+            return validateAndGet(responseContent);
 
         } catch (IOException ex) {
             throw new StorageServerException(MSG_ERR_AUTH, ex);

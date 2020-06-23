@@ -60,7 +60,7 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
-    compile group: 'com.google.http-client', name: 'google-http-client-apache', version:"${googleHttpClient}"
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: "${apacheHttpClient}"
 }
 
 apply plugin: 'org.owasp.dependencycheck'
