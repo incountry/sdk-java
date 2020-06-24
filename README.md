@@ -11,7 +11,7 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>2.0.0</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
@@ -766,7 +766,7 @@ The following is a list of compile dependencies for this project. These dependen
 | **GroupId**              | **ArtifactId**       | **Version** | **Type** |
 | :---:                    | :---:                | :---:       | :---:    |
 | javax.xml.bind           | jaxb-api             | 2.3.1       | jar      |
-| javax.activation         | javax.activation-api | 1.14        | jar      |
+| javax.activation         | javax.activation-api | 1.2.0        | jar      |
 | commons-codec            | commons-codec        | 1.14        | jar      |
 | org.apache.logging.log4j | log4j-api            | 2.13.2      | jar      |
 | org.apache.logging.log4j | log4j-core           | 2.13.2      | jar      |

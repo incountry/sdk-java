@@ -10,14 +10,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FindFilterTest {
+class FindFilterTest {
 
     private String version = "0";
     public String key = "key1";
     public String profileKey = "profileKey";
 
     @Test
-    public void testToJsonObject() throws StorageClientException {
+    void testToJsonObject() throws StorageClientException {
         FilterStringParam versionFilterParam = new FilterStringParam(new String[]{version}, true);
         FilterStringParam keyFilterParam = new FilterStringParam(new String[]{key}, true);
         FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey}, true);
@@ -35,7 +35,7 @@ public class FindFilterTest {
 
 
     @Test
-    public void testErrorArgs() {
+    void testErrorArgs() {
         FindFilter findFilter = new FindFilter();
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> findFilter.setLimit(0));
         assertEquals("Limit must be more than 1", ex1.getMessage());
