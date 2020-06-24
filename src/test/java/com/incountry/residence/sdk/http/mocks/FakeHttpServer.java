@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class FakeHttpServer {
-    private HttpServer server;
+    private final HttpServer server;
 
     public FakeHttpServer(String response, int responseCode, int port) throws IOException {
         server = HttpServer.create();

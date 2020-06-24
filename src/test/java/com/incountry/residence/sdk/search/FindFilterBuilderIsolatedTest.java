@@ -12,17 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FindFilterBuilderIsolatedTest {
+class FindFilterBuilderIsolatedTest {
 
     @Test
-    public void defaultPositiveTest() throws StorageClientException {
+    void defaultPositiveTest() throws StorageClientException {
         FindFilter filter = FindFilterBuilder.create().build();
         assertEquals(100, filter.getLimit());
         assertEquals(0, filter.getOffset());
     }
 
     @Test
-    public void clearTest() throws StorageClientException {
+    void clearTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         FindFilter filter1 = builder.build();
         FindFilter filter2 = builder.clear().build();
@@ -30,7 +30,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void toStringPositiveTest() throws StorageClientException {
+    void toStringPositiveTest() throws StorageClientException {
         String string = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
                 .keyEq("3", "4")
@@ -53,7 +53,7 @@ public class FindFilterBuilderIsolatedTest {
 
 
     @Test
-    public void negativeTestIllegalArgs() {
+    void negativeTestIllegalArgs() {
         String nullString = null;
         String[] nullArrayString = null;
         //key
@@ -116,7 +116,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void positiveKeyTest() throws StorageClientException {
+    void positiveKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.keyEq("1").build().getKeyFilter().getValues().get(0));
         assertEquals("2", builder.keyEq("1", "2").build().getKeyFilter().getValues().get(1));
@@ -127,7 +127,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void positiveKey2Test() throws StorageClientException {
+    void positiveKey2Test() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.key2Eq("1").build().getKey2Filter().getValues().get(0));
         assertEquals("2", builder.key2Eq("1", "2").build().getKey2Filter().getValues().get(1));
@@ -138,7 +138,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void positiveKey3Test() throws StorageClientException {
+    void positiveKey3Test() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.key3Eq("1").build().getKey3Filter().getValues().get(0));
         assertEquals("2", builder.key3Eq("1", "2").build().getKey3Filter().getValues().get(1));
@@ -149,7 +149,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void positiveProfileTest() throws StorageClientException {
+    void positiveProfileTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.profileKeyEq("1").build().getProfileKeyFilter().getValues().get(0));
         assertEquals("2", builder.profileKeyEq("1", "2").build().getProfileKeyFilter().getValues().get(1));
@@ -160,7 +160,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void positiveVersionTest() throws StorageClientException {
+    void positiveVersionTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals("1", builder.versionEq("1").build().getVersionFilter().getValues().get(0));
         assertEquals("2", builder.versionEq("1", "2").build().getVersionFilter().getValues().get(1));
@@ -171,7 +171,7 @@ public class FindFilterBuilderIsolatedTest {
     }
 
     @Test
-    public void positiveRangeKeyTest() throws StorageClientException {
+    void positiveRangeKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         assertEquals(1, builder.rangeKeyEq(1).build().getRangeKeyFilter().getValues()[0]);
         assertEquals(2, builder.rangeKeyEq(1, 2).build().getRangeKeyFilter().getValues()[1]);
