@@ -50,7 +50,6 @@ public class HttpDaoImpl implements Dao {
     private final HttpAgent httpAgent;
     private final String endPointUrl;
     private final String endPointMask;
-    private final String usingDefaultEndpointMask;
     private final boolean isDefaultEndpoint;
     private final String countriesEndpoint;
     private long lastLoadedTime;
@@ -72,18 +71,9 @@ public class HttpDaoImpl implements Dao {
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
         this.endPointMask = endpointMask;
         this.httpAgent = agent;
-        this.usingDefaultEndpointMask = initUsingDefaultEndpoint(isDefaultEndpoint, endpointMask);
         if (isDefaultEndpoint) {
             loadCountries();
         }
-    }
-
-    private String initUsingDefaultEndpoint(boolean defaultEndpoint, String mask) {
-        String resultMask = null;
-        if (defaultEndpoint) {
-            resultMask = mask != null ? mask : DEFAULT_ENDPOINT_MASK;
-        }
-        return resultMask;
     }
 
     private void loadCountries() throws StorageServerException {
@@ -94,7 +84,7 @@ public class HttpDaoImpl implements Dao {
         synchronized (popMap) {
             popMap.clear();
             content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
-            popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, usingDefaultEndpointMask));
+            popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
             lastLoadedTime = System.currentTimeMillis();
         }
         if (LOG.isDebugEnabled()) {
@@ -108,7 +98,7 @@ public class HttpDaoImpl implements Dao {
             if (pop != null) { //mid pop for default endpoint
                 return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
             }
-            String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + usingDefaultEndpointMask;
+            String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + (endPointMask == null ? DEFAULT_ENDPOINT_MASK : endPointMask);
             return new EndPoint(mainUrl, getAudienceForMiniPop(mainUrl, country), DEFAULT_REGION);
         }
         return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
