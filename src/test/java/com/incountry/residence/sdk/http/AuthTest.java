@@ -4,11 +4,13 @@ import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
+import org.apache.http.conn.HttpHostConnectException;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +21,7 @@ import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthTest {
 
@@ -32,7 +35,7 @@ class AuthTest {
     private static final int POOL_SIZE = 5;
 
     private TokenClient getTokenClient() {
-        return new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, , POOL_SIZE);
+        return new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
     }
 
     @RepeatedTest(3)
@@ -46,10 +49,10 @@ class AuthTest {
         server.start();
         TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
-            assertNotNull(tokenClient.getToken(AUDIENCE_URL));
+            assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
         }
-        tokenClient.refreshToken(false, AUDIENCE_URL);
-        tokenClient.refreshToken(true, AUDIENCE_URL);
+        tokenClient.refreshToken(false, AUDIENCE_URL, null);
+        tokenClient.refreshToken(true, AUDIENCE_URL, null);
         server.stop(0);
     }
 
@@ -168,18 +171,19 @@ class AuthTest {
 
     @Test
     void testCreationWithMask() {
-        TokenClient tokenClient = new OAuthTokenClient(null, "localhost:" + PORT, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(null, "localhost:" + PORT, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+        String authEmeaUrl = "Connect to auth-emea.localhost:8765";
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
         assertEquals("Unexpected exception during authorization", ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
-        assertEquals("auth-apac.localhost", ex.getCause().getMessage());
+        assertTrue(ex.getCause().getMessage().startsWith("Connect to auth-apac.localhost:8765"));
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
     }
 }

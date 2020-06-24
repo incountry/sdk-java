@@ -10,6 +10,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
+import org.apache.http.conn.HttpHostConnectException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -20,6 +21,7 @@ import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OAuthTest {
     private static final String INT_INC_AUTH_ENDPOINT = "INT_INC_AUTH_ENDPOINT";
@@ -39,6 +41,7 @@ public class OAuthTest {
     private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
     private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
+    private static final Integer POOL_SIZE = 5;
 
     private static final Integer HTTP_TIMEOUT = 30_000;
 
@@ -100,27 +103,27 @@ public class OAuthTest {
         //IN mid APAC -> APAC auth
         StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals("auth-apac.localhost", ex.getCause().getMessage());
+        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
+        assertTrue(ex.getCause().getMessage().startsWith("Connect to auth-apac.localhost:8765"));
 
 
-        String authEmeaUrl = "auth-emea.localhost";
+        String authEmeaUrl = "Connect to auth-emea.localhost:8765";
         //AE mid EMEA -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals(authEmeaUrl, ex.getCause().getMessage());
+        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
 
         //US mid AMER -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals(authEmeaUrl, ex.getCause().getMessage());
+        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
 
         //Minipop - > EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals(authEmeaUrl, ex.getCause().getMessage());
+        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
+        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
     }
 }

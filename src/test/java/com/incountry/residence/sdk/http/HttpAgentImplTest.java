@@ -48,7 +48,7 @@ class HttpAgentImplTest {
 
     @Test
     void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }
@@ -69,7 +69,10 @@ class HttpAgentImplTest {
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         assertNotNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
-        assertNotNull(agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, null, null, 0));
+        assertNotNull(agent.request(ENDPOINT, "POST", "", ApiResponse.DELETE, null, null, 0));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, null, null, 0));
+        assertEquals("Server request error: POST", ex.getMessage());
+        assertEquals("Body must not be null.", ex.getCause().getMessage());
         server.stop(0);
     }
 
@@ -78,7 +81,6 @@ class HttpAgentImplTest {
         int respCode = 555;
         String content = "{}";
         String method = "POST";
-        String expectedErrorString = String.format("Code=%d, endpoint=[%s], content=[%d %s]", respCode, ENDPOINT, respCode, content);
         FakeHttpServer server = new FakeHttpServer(content, respCode, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
@@ -93,16 +95,16 @@ class HttpAgentImplTest {
         int errorCode = 401;
         String content = "{}";
         String method = "POST";
-        String expectedErrorString = String.format("Code=%d, endpoint=[%s], content=[%d Unauthorized%s]", errorCode, ENDPOINT, errorCode, content);
+        String expectedErrorString = String.format("Code=%d, endpoint=[%s], content=[%s]", errorCode, ENDPOINT, content);
         FakeHttpServer server = new FakeHttpServer(content, respCodeList, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex1 = assertThrows(StorageServerException.class, () ->
                 agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", errorCode, ENDPOINT, content), ex1.getMessage());
+        assertEquals(expectedErrorString, ex1.getMessage());
         StorageServerException ex2 = assertThrows(StorageServerException.class, () ->
                 agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 2));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", errorCode, ENDPOINT, content), ex2.getMessage());
+        assertEquals(expectedErrorString, ex2.getMessage());
         assertEquals(content, agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 1));
         server.stop(0);
     }
@@ -126,19 +128,22 @@ class HttpAgentImplTest {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
         StorageServerException ex = assertThrows(StorageServerException.class, ()
                 -> agent.request(ENDPOINT, "GET", "someBody", new HashMap<>(), null, null, 0));
-        assertEquals(String.format("Code=%d, endpoint=[%s], content=[]", respCode, ENDPOINT), ex.getMessage());
+        assertEquals(String.format("Code=%d, endpoint=[%s], content=[ok]", respCode, ENDPOINT), ex.getMessage());
         server.stop(0);
     }
 
     @Test
     void negativeTestWithIllegalPoolSize() {
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0));
-        assertEquals("Illegal connections pool size.", ex.getMessage());
+        HttpAgentImpl agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, null);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
+        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex.getMessage());
 
-        StorageServerException ex2 = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0));
-        assertEquals("Illegal connections pool size.", ex2.getMessage());
+        HttpAgentImpl agent1 = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0);
+        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> agent1.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
+        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex1.getMessage());
 
-        StorageServerException ex3 = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, 0));
-        assertEquals("Illegal connections pool size.", ex3.getMessage());
+        HttpAgentImpl agent2 = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, -5);
+        StorageServerException ex2 = assertThrows(StorageServerException.class, () -> agent2.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
+        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex2.getMessage());
     }
 }

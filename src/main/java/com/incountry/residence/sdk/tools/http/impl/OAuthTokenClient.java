@@ -102,17 +102,21 @@ public class OAuthTokenClient implements TokenClient {
     }
 
     private HttpRequestBase addHeaders(HttpRequestBase request) {
-        request.addHeader("Authorization", basicAuthToken);
-        request.addHeader("Content-Type", APPLICATION_URLENCODED);
+        request.addHeader(AUTHORIZATION, basicAuthToken);
+        request.addHeader(CONTENT_TYPE, APPLICATION_URLENCODED);
         request.addHeader(USER_AGENT, USER_AGENT_VALUE);
        return request;
     }
 
-    private Map.Entry<String, Long> newToken(String audience) throws StorageServerException {
+    private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
         try {
             CloseableHttpClient client = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
-            HttpRequestBase request = HttpUtils.createRequest(authEndpoint, POST, body);
+            String url = regionMap.get(region);
+            if (url == null) {
+                url = regionMap.get(EMEA);
+            }
+            HttpRequestBase request = HttpUtils.createRequest(url, POST, body);
             request = addHeaders(request);
 
 
@@ -123,7 +127,7 @@ public class OAuthTokenClient implements TokenClient {
             boolean isSuccess = status == 200;
 
             if (!isSuccess) {
-                throw createAndLogException(MSG_RESPONSE_ERR + ": '" + content.toString() + "'");
+                throw createAndLogException(MSG_RESPONSE_ERR + ": '" + responseContent + "'");
             }
             return validateAndGet(responseContent);
 

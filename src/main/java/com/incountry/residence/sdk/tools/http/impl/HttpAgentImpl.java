@@ -47,9 +47,9 @@ public class HttpAgentImpl implements HttpAgent {
         this.poolSize = poolSize;
     }
 
-    private HttpRequestBase addHeaders(HttpRequestBase request, String audience) throws StorageServerException {
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience,  String region) throws StorageServerException {
         if (audience != null) {
-            request.addHeader("Authorization", "Bearer " + tokenClient.getToken(audience));
+            request.addHeader("Authorization", "Bearer " + tokenClient.getToken(audience, region));
         }
         request.addHeader("Content-Type", "application/json");
         request.addHeader("x-env-id", environmentId);
@@ -68,9 +68,13 @@ public class HttpAgentImpl implements HttpAgent {
                     codeMap);
         }
         try {
+            if (url == null) {
+                throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException("Url must not be null."));
+            }
+
             CloseableHttpClient client = HttpUtils.buildHttpClient(timeout, poolSize);
             HttpRequestBase request = HttpUtils.createRequest(url, method, body);
-            request = addHeaders(request, audience);
+            request = addHeaders(request, audience, region);
 
             HttpResponse response = client.execute(request);
 
