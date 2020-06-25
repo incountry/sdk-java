@@ -49,6 +49,10 @@ class AuthTest {
         for (int i = 0; i < 1_000; i++) {
             assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
         }
+        for (int i = 0; i < 1_000; i++) {
+            assertNotNull(tokenClient.getToken(AUDIENCE_URL, "amer"));
+        }
+
         tokenClient.refreshToken(false, AUDIENCE_URL, null);
         tokenClient.refreshToken(true, AUDIENCE_URL, null);
         server.stop(0);
@@ -81,15 +85,16 @@ class AuthTest {
     }
 
     @Test
-    void defaultAuthClientNegativeTest() throws IOException {
+    void defaultAuthClientNegativeTest() throws IOException, StorageServerException {
         int respCode = 401;
         String errorMessage = "someError";
         FakeHttpServer server = new FakeHttpServer(Arrays.asList(errorMessage, null), respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, null));
+        TokenClient tokenClient = getTokenClient();
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
         assertEquals("Error in parsing authorization response: '" + errorMessage + "'", ex.getMessage());
 
-        ex = assertThrows(StorageServerException.class, () -> getTokenClient().getToken(AUDIENCE_URL, null));
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
         assertEquals("Error in parsing authorization response: ''", ex.getMessage());
         server.stop(0);
     }
@@ -170,18 +175,7 @@ class AuthTest {
     @Test
     void testCreationWithMask() throws StorageServerException {
         TokenClient tokenClient = new OAuthTokenClient(null, "localhost:" + PORT, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
-//        String authEmeaUrl = "Connect to auth-emea.localhost:8765";
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
         assertEquals("Unexpected exception during authorization", ex.getMessage());
-//        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
-//        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
-//        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
-//        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
-//        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
-//        assertTrue(ex.getCause().getMessage().startsWith("Connect to auth-apac.localhost:8765"));
-//        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
-//        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
-//        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
-//        assertTrue(ex.getCause().getMessage().startsWith(authEmeaUrl));
     }
 }
