@@ -72,9 +72,9 @@ StorageConfig config = new StorageConfig()
    //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
    .setClientId(CLIENT_ID)  
    //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
-   .setClientSecret(SECRET) 
-   //can be also set via environment variable INC_AUTH_ENDPOINT with {@link #getInstance()}
-   .setAuthEndPoint(AUTH_URL) 
+   .setClientSecret(SECRET)
+   .setAuthEndpoints(authEndpointsMap)    
+   .setDefaultAuthEndpoint(AUTH_URL) 
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID);                                
 Storage storage = StorageImpl.getInstance(config);

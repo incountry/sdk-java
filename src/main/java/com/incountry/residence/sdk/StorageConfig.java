@@ -213,11 +213,11 @@ public class StorageConfig {
     }
 
     /**
-     * Set custom OAuth authorization server URLs for different regions
+     * Set custom endpoints regional map to use for fetching oAuth tokens
      * Can be used only with {@link #setDefaultAuthEndpoint(String)}
      * Format: key = region, value = authorization server URL for region
      *
-     * @param authEndpoints map with custom authorisation endpoints for different regions
+     * @param authEndpoints custom endpoints regional map
      * @return StorageConfig
      */
     public StorageConfig setAuthEndpoints(Map<String, String> authEndpoints) {
