@@ -65,7 +65,7 @@ public class OAuthTokenClient implements TokenClient {
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
                             String secret, Integer timeoutInMs) throws StorageClientException {
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
-            if (defaultAuthEndpoint == null) {
+            if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
             }
             if (authEndpointMap.entrySet().stream().anyMatch(entry -> isEmpty(entry.getKey()) || isEmpty(entry.getValue()))) {
@@ -78,8 +78,10 @@ public class OAuthTokenClient implements TokenClient {
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
-            regionMap.put(APAC, DEFAULT_APAC_AUTH_URL);
-            regionMap.put(EMEA, DEFAULT_EMEA_AUTH_URL);
+            if (defaultAuthEndpoint == null) {
+                regionMap.put(APAC, DEFAULT_APAC_AUTH_URL);
+                regionMap.put(EMEA, DEFAULT_EMEA_AUTH_URL);
+            }
         } else {
             authEndpointMap.forEach((key, value) -> regionMap.put(key.toLowerCase(), value));
         }

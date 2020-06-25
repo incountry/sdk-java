@@ -12,7 +12,9 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.junit.jupiter.api.Test;
 
-import java.net.UnknownHostException;
+import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
@@ -89,11 +91,17 @@ public class OAuthTest {
 
     @Test
     public void authRegionTest() throws StorageServerException, StorageClientException {
+        Map<String, String> authEndpoints = new HashMap<>();
+        authEndpoints.put("emea", "emea.localhost");
+        authEndpoints.put("apac", "apac.localhost");
         StorageConfig config = new StorageConfig()
                 .setEnvId("envId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
-                .setEndpointMask("-localhost.localhost:8765");
+                .setEndpointMask("-localhost.localhost:8765")
+                .setAuthEndpoints(authEndpoints)
+                .setDefaultAuthEndpoint("emea.localhost");
+
         Storage prodStorage = StorageImpl.getInstance(config);
         String errorMessage = "Unexpected exception during authorization";
         Record record = new Record("someKey", "someBody");
@@ -101,27 +109,26 @@ public class OAuthTest {
         //IN mid APAC -> APAC auth
         StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals("auth-apac-localhost.localhost", ex.getCause().getMessage());
+        assertEquals(MalformedURLException.class, ex.getCause().getClass());
+        assertEquals("no protocol: apac.localhost", ex.getCause().getMessage());
 
-
-        String authEmeaUrl = "auth-emea-localhost.localhost";
+        String authEmeaUrl = "no protocol: emea.localhost";
         //AE mid EMEA -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals(MalformedURLException.class, ex.getCause().getClass());
         assertEquals(authEmeaUrl, ex.getCause().getMessage());
 
         //US mid AMER -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals(MalformedURLException.class, ex.getCause().getClass());
         assertEquals(authEmeaUrl, ex.getCause().getMessage());
 
         //Minipop - > EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
         assertEquals(errorMessage, ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals(MalformedURLException.class, ex.getCause().getClass());
         assertEquals(authEmeaUrl, ex.getCause().getMessage());
     }
 }
