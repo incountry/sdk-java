@@ -186,4 +186,34 @@ class TokenClientTest {
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
         assertEquals("no protocol: auth-emea-localhost.localhost", ex.getCause().getMessage());
     }
+
+    @Test
+    void testNegativeTokenClientCreation() {
+        Map<String, String> fakeMap = new HashMap<>();
+        fakeMap.put("key", null);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient(null, fakeMap, null, null, null, 1));
+        assertEquals("Can't use param 'authEndpoints' without setting 'defaultAuthEndpoint'", ex.getMessage());
+
+        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1));
+        assertEquals("Parameter 'authEndpoints' contains null keys/values", ex.getMessage());
+
+        fakeMap.clear();
+        fakeMap.put(null, "value");
+        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1));
+        assertEquals("Parameter 'authEndpoints' contains null keys/values", ex.getMessage());
+
+        fakeMap.clear();
+        fakeMap.put("key", "");
+        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1));
+        assertEquals("Parameter 'authEndpoints' contains null keys/values", ex.getMessage());
+    }
+
+    @Test
+    void testPositiveTokenClientCreation() throws StorageClientException {
+        TokenClient tokenClient = new OAuthTokenClient(null, new HashMap<>(), null, null, null, 0);
+        assertNotNull(tokenClient);
+
+        tokenClient = new OAuthTokenClient(null, null, null, null, null, 0);
+        assertNotNull(tokenClient);
+    }
 }
