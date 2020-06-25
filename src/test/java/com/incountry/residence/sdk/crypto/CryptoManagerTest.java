@@ -27,59 +27,46 @@ class CryptoManagerTest {
     private String secret;
     private Integer keyVersion;
 
+    private String[] plainTexts = {"",
+            "Hello", // <-- English
+            "Добрый день", // <-- Russian
+            "مرحبا", // <-- Arabic
+            "हाय", // <-- Hindi
+            "안녕", // <-- Korean
+            "こんにちは", // Japanese
+            "你好", // <- Chinese
+    };
+
     @BeforeEach
     public void init() throws StorageClientException {
         secret = "password";
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
-
     }
 
     @Test
     void testWithNormalEncryption() throws StorageClientException, StorageCryptoException {
         CryptoManager cryptoManager = new CryptoManager(() -> secretsData, null, null, false);
-
-        String[] plainTexts = {"",
-                "Howdy", // <-- English
-                "Привет медвед", // <-- Russian
-                "مرحبا", // <-- Arabic
-                "हाय", // <-- Hindi
-                "안녕", // <-- Korean
-                "こんにちは", // Japanese
-                "你好", // <- Chinese
-        };
-
         for (String plainText : plainTexts) {
             Map.Entry<String, Integer> encrypted = cryptoManager.encrypt(plainText);
             String decrypted = cryptoManager.decrypt(encrypted.getKey(), encrypted.getValue());
             assertEquals(plainText, decrypted);
-            assertNotEquals(plainText, encrypted);
+            assertNotEquals(plainText, encrypted.getKey());
         }
     }
 
     @Test
     void testWithPTEncryption() throws StorageClientException, StorageCryptoException {
         CryptoManager crypto = new CryptoManager(null, "", null, false);
-
-        String[] plainTexts = {"",
-                "Howdy", // <-- English
-                "Привет медвед", // <-- Russian
-                "مرحبا", // <-- Arabic
-                "हाय", // <-- Hindi
-                "안녕", // <-- Korean
-                "こんにちは", // Japanese
-                "你好", // <- Chinese
-        };
         String expectedVersion = "pt";
-
         for (String plainText : plainTexts) {
             Map.Entry<String, Integer> encrypted = crypto.encrypt(plainText);
             String decrypted = crypto.decrypt(encrypted.getKey(), encrypted.getValue());
             String actualVersion = encrypted.getKey().split(":")[0];
             assertEquals(expectedVersion, actualVersion);
             assertEquals(plainText, decrypted);
-            assertNotEquals(plainText, encrypted);
+            assertNotEquals(plainText, encrypted.getKey());
         }
     }
 
