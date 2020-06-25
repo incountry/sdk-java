@@ -27,11 +27,10 @@ public class HttpAgentImpl implements HttpAgent {
     private final String environmentId;
     private final Charset charset;
     private final String userAgent;
-    private final Integer timeout;
-    private final Integer poolSize;
+    private final CloseableHttpClient httpClient;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, Integer poolSize) {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, Integer poolSize) throws StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
                     tokenClient,
@@ -42,9 +41,8 @@ public class HttpAgentImpl implements HttpAgent {
         this.tokenClient = tokenClient;
         this.environmentId = environmentId;
         this.charset = charset;
-        this.timeout = timeoutInMs;
         this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
-        this.poolSize = poolSize;
+        this.httpClient = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
     }
 
     private HttpRequestBase addHeaders(HttpRequestBase request, String audience,  String region) throws StorageServerException {
@@ -72,11 +70,10 @@ public class HttpAgentImpl implements HttpAgent {
                 throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException("Url must not be null."));
             }
 
-            CloseableHttpClient client = HttpUtils.buildHttpClient(timeout, poolSize);
             HttpRequestBase request = HttpUtils.createRequest(url, method, body);
             request = addHeaders(request, audience, region);
 
-            HttpResponse response = client.execute(request);
+            HttpResponse response = httpClient.execute(request);
 
             Integer status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());

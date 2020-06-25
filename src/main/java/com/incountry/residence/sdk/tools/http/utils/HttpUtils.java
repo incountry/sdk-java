@@ -17,13 +17,20 @@ import java.net.URISyntaxException;
 
 public class HttpUtils {
 
+    private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
+    private static final String URL_ERROR = "Url error.";
+    private static final String SERVER_ERROR = "Server request error: %s";
+    private static final String NULL_BODY = "Body must not be null";
+    private static final String POST = "POST";
+    private static final String GET = "GET";
+
     private HttpUtils() {
 
     }
 
     public static CloseableHttpClient buildHttpClient(Integer timeout, Integer poolSize) throws StorageServerException {
         if (poolSize == null || poolSize < 0 || poolSize == 0) {
-            throw new StorageServerException("Illegal connections pool size. Pool size must be not null, zero or negative.");
+            throw new StorageServerException(CONNECTION_PULL_ERROR);
         }
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(poolSize);
@@ -42,18 +49,18 @@ public class HttpUtils {
         try {
             uri = new URI(url);
         } catch (URISyntaxException ex) {
-            throw new StorageServerException("Url error.", ex);
+            throw new StorageServerException(URL_ERROR, ex);
         }
 
-        if (method.equals("POST")) {
+        if (method.equals(POST)) {
             if (body == null) {
-                throw new StorageServerException("Server request error: POST", new NullPointerException("Body must not be null."));
+                throw new StorageServerException(String.format(SERVER_ERROR, method), new NullPointerException(NULL_BODY));
             }
             HttpPost request = new HttpPost(uri);
             StringEntity entity = new StringEntity(body);
             request.setEntity(entity);
             return request;
-        } else if (method.equals("GET")) {
+        } else if (method.equals(GET)) {
             return new HttpGet(uri);
         } else {
             return new HttpDelete(uri);

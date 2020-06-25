@@ -57,16 +57,14 @@ public class OAuthTokenClient implements TokenClient {
 
     private final String basicAuthToken;
     private final String scope;
-    private final Integer timeoutInMs;
-    private final Integer poolSize;
+    private final CloseableHttpClient httpClient;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
     private final Map<String, String> regionMap = new HashMap<>();
 
-    public OAuthTokenClient(String authEndpoint, String endPointMask, String scope, String clientId, String secret, Integer timeoutInMs, Integer poolSize) {
+    public OAuthTokenClient(String authEndpoint, String endPointMask, String scope, String clientId, String secret, Integer timeoutInMs, Integer poolSize) throws StorageServerException {
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.timeoutInMs = timeoutInMs;
-        this.poolSize = poolSize;
+        this.httpClient = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
         if (authEndpoint == null && endPointMask == null) {
             regionMap.put(APAC, DEFAULT_APAC_AUTH_URL);
             regionMap.put(EMEA, DEFAULT_EMEA_AUTH_URL);
@@ -111,7 +109,6 @@ public class OAuthTokenClient implements TokenClient {
     private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
         try {
-            CloseableHttpClient client = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
             String url = regionMap.get(region);
             if (url == null) {
                 url = regionMap.get(EMEA);
@@ -120,7 +117,7 @@ public class OAuthTokenClient implements TokenClient {
             request = addHeaders(request);
 
 
-            HttpResponse response = client.execute(request);
+            HttpResponse response = httpClient.execute(request);
             Integer status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());
 
