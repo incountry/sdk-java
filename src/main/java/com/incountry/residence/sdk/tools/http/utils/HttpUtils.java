@@ -18,7 +18,7 @@ import java.net.URISyntaxException;
 public class HttpUtils {
 
     private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
-    private static final String URL_ERROR = "Url error.";
+    private static final String URL_ERROR = "Url error";
     private static final String SERVER_ERROR = "Server request error: %s";
     private static final String NULL_BODY = "Body must not be null";
     private static final String POST = "POST";

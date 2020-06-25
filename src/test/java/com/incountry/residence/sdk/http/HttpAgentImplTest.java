@@ -143,4 +143,17 @@ class HttpAgentImplTest {
         StorageServerException ex2 = assertThrows(StorageServerException.class, () -> new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, -5));
         assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex2.getMessage());
     }
+
+    @Test
+    void negativeTestWithIllegalUrl() throws IOException, StorageServerException {
+        int respCode = 201;
+        String response = "ok";
+        FakeHttpServer server = new FakeHttpServer(response, respCode, PORT);
+        server.start();
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", StandardCharsets.UTF_8, TIMEOUT_IN_MS, POOL_SIZE);
+        StorageServerException ex = assertThrows(StorageServerException.class, ()
+                -> agent.request(" ", "GET", "someBody", new HashMap<>(), null, null, 0));
+        assertEquals("Url error", ex.getMessage());
+        server.stop(0);
+    }
 }
