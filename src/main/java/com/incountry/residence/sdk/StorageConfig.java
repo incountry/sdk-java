@@ -209,7 +209,7 @@ public class StorageConfig {
     }
 
     public Map<String, String> getAuthEndpoints() {
-        return authEndpoints == null ? null : new HashMap<>(authEndpoints);
+        return authEndpoints != null ? new HashMap<>(authEndpoints) : null;
     }
 
     /**
