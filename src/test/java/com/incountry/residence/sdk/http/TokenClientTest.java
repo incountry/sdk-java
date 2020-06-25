@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.http;
 
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
@@ -9,7 +10,7 @@ import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Collections;
@@ -22,22 +23,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AuthTest {
+class TokenClientTest {
 
     private static final int PORT = 8765;
     private static final int TIMEOUT_IN_MS = 30_000;
     private static final String ENV_ID = "envId";
-    private static final String AUTH_URL = "http://localhost:" + PORT;
+    private static final String DEFAULT_AUTH_ENDPOINT = "http://localhost:" + PORT;
     private static final String ENDPOINT_MASK = "localhost";
     private static final String AUDIENCE_URL = "https://localhost";
     private static final String COUNTRY = "us";
 
-    private TokenClient getTokenClient() {
-        return new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+    private TokenClient getTokenClient() throws StorageClientException {
+        return new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
     }
 
     @RepeatedTest(3)
-    void tokenGeneratorTest(RepetitionInfo repeatInfo) throws StorageServerException, IOException {
+    void tokenGeneratorTest(RepetitionInfo repeatInfo) throws StorageServerException, IOException, StorageClientException {
         iterateLogLevel(repeatInfo, OAuthTokenClient.class);
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
@@ -55,7 +56,7 @@ class AuthTest {
     }
 
     @Test
-    void defaultAuthClientPositiveTest() throws IOException, StorageServerException {
+    void defaultAuthClientPositiveTest() throws IOException, StorageServerException, StorageClientException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
@@ -67,11 +68,11 @@ class AuthTest {
     }
 
     @Test
-    void defaultAuthClientPositiveTestWithoutMask() throws IOException, StorageServerException {
+    void defaultAuthClientPositiveTestWithoutMask() throws IOException, StorageServerException, StorageClientException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -125,11 +126,11 @@ class AuthTest {
     }
 
     @Test
-    void negativeTestAccessTokenEmpty() throws IOException {
+    void negativeTestAccessTokenEmpty() throws IOException, StorageClientException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -139,11 +140,11 @@ class AuthTest {
     }
 
     @Test
-    void negativeTestTokenTypeNotEqualBearer() throws IOException {
+    void negativeTestTokenTypeNotEqualBearer() throws IOException, StorageClientException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='test', 'scope'='" + ENV_ID + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -153,11 +154,11 @@ class AuthTest {
     }
 
     @Test
-    void negativeTestWrongScope() throws IOException {
+    void negativeTestWrongScope() throws IOException, StorageClientException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + "test" + "'}"
         );
-        TokenClient tokenClient = new OAuthTokenClient(AUTH_URL, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
@@ -167,19 +168,22 @@ class AuthTest {
     }
 
     @Test
-    void testCreationWithMask() {
-        TokenClient tokenClient = new OAuthTokenClient(null, "localhost:" + PORT, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
+    void testCreationWithMask() throws StorageClientException {
+        Map<String, String> authEndpoints = new HashMap<>();
+        authEndpoints.put("emea", "auth-emea-localhost.localhost");
+        authEndpoints.put("apac", "auth-apac-localhost.localhost");
+        TokenClient tokenClient = new OAuthTokenClient("auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
         assertEquals("Unexpected exception during authorization", ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertEquals(MalformedURLException.class, ex.getCause().getClass());
+        assertEquals("no protocol: auth-emea-localhost.localhost", ex.getCause().getMessage());
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertEquals("no protocol: auth-emea-localhost.localhost", ex.getCause().getMessage());
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
-        assertEquals("auth-apac.localhost", ex.getCause().getMessage());
+        assertEquals("no protocol: auth-apac-localhost.localhost", ex.getCause().getMessage());
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertEquals("no protocol: auth-emea-localhost.localhost", ex.getCause().getMessage());
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+        assertEquals("no protocol: auth-emea-localhost.localhost", ex.getCause().getMessage());
     }
 }

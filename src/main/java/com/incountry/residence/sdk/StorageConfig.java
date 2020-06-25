@@ -3,7 +3,10 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * container with Storage configuration, using pattern 'builder'
@@ -17,7 +20,6 @@ public class StorageConfig {
     public static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     public static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
     public static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
-    public static final String PARAM_AUTH_ENDPOINT = "INC_AUTH_ENDPOINT";
 
     private String envId;
     private String apiKey;
@@ -27,10 +29,11 @@ public class StorageConfig {
     private boolean normalizeKeys;
     private String clientId;
     private String clientSecret;
-    private String authEndPoint;
     private String endpointMask;
     private String countriesEndpoint;
     private Integer httpTimeout;
+    private Map<String, String> authEndpoints;
+    private String defaultAuthEndpoint;
 
     public String getEnvId() {
         return envId;
@@ -124,7 +127,7 @@ public class StorageConfig {
     }
 
     public List<Crypto> getCustomEncryptionConfigsList() {
-        return customEncryptionConfigsList;
+        return customEncryptionConfigsList == null ? null : new ArrayList<>(customEncryptionConfigsList);
     }
 
     /**
@@ -205,30 +208,36 @@ public class StorageConfig {
         return this;
     }
 
-    public String getAuthEndPoint() {
-        return authEndPoint;
+    public Map<String, String> getAuthEndpoints() {
+        return authEndpoints == null ? null : new HashMap<>(authEndpoints);
     }
 
     /**
-     * Set custom oAuth authorization server URL, can be also set via environment variable INC_AUTH_ENDPOINT.
-     * If null - default authorization server will be used.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     * Set custom OAuth authorization server URLs for different regions
+     * Can be used only with {@link #setDefaultAuthEndpoint(String)}
+     * Format: key = region, value = authorization server URL for region
      *
-     * @param authEndPoint custom authorization server URL
+     * @param authEndpoints map with custom authorisation endpoints for different regions
      * @return StorageConfig
      */
-    public StorageConfig setAuthEndPoint(String authEndPoint) {
-        this.authEndPoint = authEndPoint;
+    public StorageConfig setAuthEndpoints(Map<String, String> authEndpoints) {
+        this.authEndpoints = authEndpoints;
         return this;
     }
 
+    public String getDefaultAuthEndpoint() {
+        return defaultAuthEndpoint;
+    }
+
     /**
-     * load authEndPoint from env variable 'INC_AUTH_ENDPOINT'
+     * Set custom oAuth authorization server URL, will be used as default one.
+     * Can't be null when {@link #setAuthEndpoints(Map)} is used
      *
+     * @param defaultAuthEndpoint custom authorisation endpoint
      * @return StorageConfig
      */
-    public StorageConfig useAuthEndPointFromEnv() {
-        this.authEndPoint = loadFromEnv(PARAM_AUTH_ENDPOINT);
+    public StorageConfig setDefaultAuthEndpoint(String defaultAuthEndpoint) {
+        this.defaultAuthEndpoint = defaultAuthEndpoint;
         return this;
     }
 
@@ -288,10 +297,11 @@ public class StorageConfig {
         newInstance.setNormalizeKeys(isNormalizeKeys());
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
-        newInstance.setAuthEndPoint(getAuthEndPoint());
         newInstance.setEndpointMask(getEndpointMask());
         newInstance.setCountriesEndpoint(getCountriesEndpoint());
         newInstance.setHttpTimeout(getHttpTimeout());
+        newInstance.setAuthEndpoints(getAuthEndpoints());
+        newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
         return newInstance;
     }
 
@@ -306,9 +316,10 @@ public class StorageConfig {
                 ", ignoreKeyCase=" + normalizeKeys +
                 ", clientId='" + hideParam(clientId) + '\'' +
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +
-                ", authEndPoint='" + authEndPoint + '\'' +
                 ", endpointMask='" + endpointMask + '\'' +
                 ", countriesEndpoint='" + countriesEndpoint + '\'' +
+                ", authEndpointMap='" + authEndpoints + '\'' +
+                ", defaultAuthEndpoint='" + defaultAuthEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
                 '}';
     }
