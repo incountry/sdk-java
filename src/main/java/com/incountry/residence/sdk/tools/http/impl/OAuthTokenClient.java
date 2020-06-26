@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
@@ -30,12 +31,8 @@ public class OAuthTokenClient implements TokenClient {
     private static final String DEFAULT_APAC_AUTH_URL = "https://auth-apac.incountry.com/oauth2/token";
     private static final String DEFAULT_EMEA_AUTH_URL = "https://auth-emea.incountry.com/oauth2/token";
 
-    private static final String DEFAULT_AUTH_PREFIX = "https://auth-";
-    private static final String DEFAULT_AUTH_POSTFIX = "/oauth2/token";
-
     private static final String APAC = "apac";
     private static final String EMEA = "emea";
-    private static final String AMER = "amer";
 
     //error messages
     private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
@@ -44,6 +41,8 @@ public class OAuthTokenClient implements TokenClient {
     private static final String MSG_ERR_INVALID_TYPE = "Token type is invalid";
     private static final String MSG_ERR_INVALID_SCOPE = "Token scope is invalid";
     private static final String MSG_RESPONSE_ERR = "Error in parsing authorization response";
+    private static final String MSG_ERR_PARAMS = "Can't use param 'authEndpoints' without setting 'defaultAuthEndpoint'";
+    private static final String MSG_ERR_ILLEGAL_AUTH_ENDPOINTS = "Parameter 'authEndpoints' contains null keys/values";
 
     private static final String USER_AGENT = "User-Agent";
     private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
@@ -61,26 +60,35 @@ public class OAuthTokenClient implements TokenClient {
     private final Integer timeoutInMs;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
     private final Map<String, String> regionMap = new HashMap<>();
+    private final String defaultAuthEndpoint;
 
-    public OAuthTokenClient(String authEndpoint, String endPointMask, String scope, String clientId, String secret, Integer timeoutInMs) {
+    public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
+                            String secret, Integer timeoutInMs) throws StorageClientException {
+        if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
+            if (isEmpty(defaultAuthEndpoint)) {
+                throw new StorageClientException(MSG_ERR_PARAMS);
+            }
+            if (authEndpointMap.entrySet().stream().anyMatch(entry -> isEmpty(entry.getKey()) || isEmpty(entry.getValue()))) {
+                throw new StorageClientException(MSG_ERR_ILLEGAL_AUTH_ENDPOINTS);
+            }
+        }
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
         this.timeoutInMs = timeoutInMs;
-        if (authEndpoint == null && endPointMask == null) {
-            regionMap.put(APAC, DEFAULT_APAC_AUTH_URL);
-            regionMap.put(EMEA, DEFAULT_EMEA_AUTH_URL);
-            //AMER uses EMEA
-            regionMap.put(AMER, DEFAULT_EMEA_AUTH_URL);
-        } else if (authEndpoint != null) {
-            regionMap.put(APAC, authEndpoint);
-            regionMap.put(EMEA, authEndpoint);
-            regionMap.put(AMER, authEndpoint);
+        this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
+
+        if (authEndpointMap == null || authEndpointMap.isEmpty()) {
+            if (defaultAuthEndpoint == null) {
+                regionMap.put(APAC, DEFAULT_APAC_AUTH_URL);
+                regionMap.put(EMEA, DEFAULT_EMEA_AUTH_URL);
+            }
         } else {
-            regionMap.put(APAC, DEFAULT_AUTH_PREFIX + APAC + "." + endPointMask + DEFAULT_AUTH_POSTFIX);
-            regionMap.put(EMEA, DEFAULT_AUTH_PREFIX + EMEA + "." + endPointMask + DEFAULT_AUTH_POSTFIX);
-            //AMER uses EMEA
-            regionMap.put(AMER, DEFAULT_AUTH_PREFIX + EMEA + "." + endPointMask + DEFAULT_AUTH_POSTFIX);
+            authEndpointMap.forEach((key, value) -> regionMap.put(key.toLowerCase(), value));
         }
+    }
+
+    private boolean isEmpty(String row) {
+        return row == null || row.isEmpty();
     }
 
     @Override
@@ -162,7 +170,7 @@ public class OAuthTokenClient implements TokenClient {
     private HttpURLConnection getConnection(String region) throws IOException {
         String authUrl = regionMap.get(region);
         if (authUrl == null) {
-            authUrl = regionMap.get(EMEA);
+            authUrl = defaultAuthEndpoint;
         }
         URL url = new URL(authUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
