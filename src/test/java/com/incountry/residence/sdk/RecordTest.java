@@ -34,7 +34,7 @@ class RecordTest {
     public String profileKey;
     @Expose
     @SerializedName("range_key")
-    public int rangeKey;
+    public long rangeKey;
     @Expose
     public String key2;
     @Expose
@@ -78,7 +78,7 @@ class RecordTest {
         assertEquals(newKey, resultRecord.getKey());
         assertEquals(newBody, resultRecord.getBody());
         assertEquals(newProfileKey, resultRecord.getProfileKey());
-        assertEquals((Integer) rangeKey, resultRecord.getRangeKey());
+        assertEquals((Long) rangeKey, resultRecord.getRangeKey());
         assertEquals(newKey2, resultRecord.getKey2());
         assertEquals(key3, resultRecord.getKey3());
     }
@@ -99,7 +99,7 @@ class RecordTest {
         assertEquals(jsonObject.get("key").getAsString(), record.getKey());
         assertEquals(jsonObject.get("body").getAsString(), record.getBody());
         assertEquals(jsonObject.get("profile_key").getAsString(), record.getProfileKey());
-        assertEquals(jsonObject.get("range_key").getAsNumber(), record.getRangeKey());
+        assertEquals(jsonObject.get("range_key").getAsLong(), record.getRangeKey());
         assertEquals(jsonObject.get("key2").getAsString(), record.getKey2());
         assertEquals(jsonObject.get("key3").getAsString(), record.getKey3());
     }

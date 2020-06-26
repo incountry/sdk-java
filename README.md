@@ -237,7 +237,7 @@ public class Record {
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */
-    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3)
+    public Record(String key, String body, String profileKey, Long rangeKey, String key2, String key3)
     //...
 }
 ```
@@ -247,10 +247,10 @@ Below is the example of how you may use `write` method:
 key = "user_1";
 body = "some PII data";
 profileKey = "customer";
-rangeKey = 10000;
+rangeKey = 10000l;
 key2 = "english";
 key3 = "insurance";
-Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
+Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
 storage.write("us", record);
 ```
 
@@ -262,7 +262,7 @@ public class Record {
     private String key;          // hashed
     private String body;         // encrypted
     private String profileKey;   // hashed
-    private Integer rangeKey;    // plain
+    private Long rangeKey;       // plain
     private String key2;         // hashed
     private String key3;         // hashed
     //...
@@ -363,7 +363,7 @@ Below is the example how to use `find` method along with `FindFilterBuilder`:
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .key2Eq("someKey")
                   .key3Eq("firstValue","secondValue")
-                  .rangeKeyBetween(123, 456);
+                  .rangeKeyBetween(123l, 456l);
 
 BatchRecord findResult = storage.find("us", builder);
 if (findResult.getCount() > 0) {
@@ -458,7 +458,7 @@ Here is the example of how `findOne` method can be used:
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("someKey")
                 .key3Eq("firstValue", "secondValue")
-                .rangeKeyBetween(123, 456);
+                .rangeKeyBetween(123l, 456l);
 
 Record record = storage.findOne("us", builder);
 //...

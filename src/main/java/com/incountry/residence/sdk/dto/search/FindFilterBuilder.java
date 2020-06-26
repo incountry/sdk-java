@@ -98,36 +98,36 @@ public class FindFilterBuilder {
     }
 
     //rangeKey
-    public FindFilterBuilder rangeKeyEq(Integer... keys) throws StorageClientException {
+    public FindFilterBuilder rangeKeyEq(Long... keys) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(keys));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyGT(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyGT(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_GT, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyGTE(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyGTE(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_GTE, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyLT(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyLT(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_LT, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyLTE(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyLTE(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_LTE, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyBetween(int fromValue, int toValue) throws StorageClientException {
+    public FindFilterBuilder rangeKeyBetween(long fromValue, long toValue) throws StorageClientException {
         return rangeKeyBetween(fromValue, true, toValue, true);
     }
 
-    public FindFilterBuilder rangeKeyBetween(int fromValue, boolean includeFrom, int toValue, boolean includeTo) throws StorageClientException {
+    public FindFilterBuilder rangeKeyBetween(long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
                 fromValue,
                 includeTo ? OPER_LTE : OPER_LT,
