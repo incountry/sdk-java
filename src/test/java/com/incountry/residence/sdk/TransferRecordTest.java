@@ -51,11 +51,11 @@ class TransferRecordTest {
     void testValidateNullKey() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.validate());
+        StorageServerException ex = assertThrows(StorageServerException.class, transferRecord::validate);
         assertEquals("Null required record fields: key", ex.getMessage());
 
         transferRecord.setKey("");
-        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> transferRecord.validate());
+        StorageServerException ex1 = assertThrows(StorageServerException.class, transferRecord::validate);
         assertEquals("Null required record fields: key", ex1.getMessage());
     }
 
@@ -64,10 +64,10 @@ class TransferRecordTest {
         Record record = new Record("some_key", null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody(null);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.validate());
+        StorageServerException ex = assertThrows(StorageServerException.class, transferRecord::validate);
         assertEquals("Null required record fields: body", ex.getMessage());
         transferRecord.setBody("");
-        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> transferRecord.validate());
+        StorageServerException ex1 = assertThrows(StorageServerException.class, transferRecord::validate);
         assertEquals("Null required record fields: body", ex1.getMessage());
     }
 
@@ -76,7 +76,7 @@ class TransferRecordTest {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody(null);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.validate());
+        StorageServerException ex = assertThrows(StorageServerException.class, transferRecord::validate);
         assertEquals("Null required record fields: key, body", ex.getMessage());
     }
 
