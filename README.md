@@ -69,9 +69,9 @@ SDK also supports oAuth authentication credentials instead of plain API key auth
 Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
 ```java
 Map<String, String> authEndpointsMap = new HashMap<>();
-authEndpoints.put("emea", "https://auth-server-emea.com");
-authEndpoints.put("apac", "https://auth-server-apac.com");
-authEndpoints.put("amer", "https://auth-server-amer.com");
+authEndpointsMap.put("emea", "https://auth-server-emea.com");
+authEndpointsMap.put("apac", "https://auth-server-apac.com");
+authEndpointsMap.put("amer", "https://auth-server-amer.com");
 
 StorageConfig config = new StorageConfig()
    //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
