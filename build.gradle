@@ -163,9 +163,9 @@ uploadArchives {
 
                 developers {
                     developer {
-                        id 'RommeroInCountry'
-                        name 'Roman Semin'
-                        email 'roman.semin@incountry.com'
+                        id 'sdks'
+                        name 'InCountrySDKs'
+                        email 'sdks@incountry.com'
                     }
                 }
             }

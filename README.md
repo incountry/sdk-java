@@ -11,13 +11,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>2.0.0</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:2.0.0"
+compile "com.incountry:incountry-java-client:2.1.0"
 ```
 
 Countries List
@@ -68,13 +68,18 @@ SDK also supports oAuth authentication credentials instead of plain API key auth
 
 Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
 ```java
+Map<String, String> authEndpointsMap = new HashMap<>();
+authEndpoints.put("emea", "https://auth-server-emea.com");
+authEndpoints.put("apac", "https://auth-server-apac.com");
+authEndpoints.put("amer", "https://auth-server-amer.com");
+
 StorageConfig config = new StorageConfig()
    //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
    .setClientId(CLIENT_ID)  
    //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
-   .setClientSecret(SECRET) 
-   //can be also set via environment variable INC_AUTH_ENDPOINT with {@link #getInstance()}
-   .setAuthEndPoint(AUTH_URL) 
+   .setClientSecret(SECRET)
+   .setAuthEndpoints(authEndpointsMap)    
+   .setDefaultAuthEndpoint("https://auth-server-default.com") 
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID);                                
 Storage storage = StorageImpl.getInstance(config);
@@ -766,7 +771,7 @@ The following is a list of compile dependencies for this project. These dependen
 | **GroupId**              | **ArtifactId**       | **Version** | **Type** |
 | :---:                    | :---:                | :---:       | :---:    |
 | javax.xml.bind           | jaxb-api             | 2.3.1       | jar      |
-| javax.activation         | javax.activation-api | 1.14        | jar      |
+| javax.activation         | javax.activation-api | 1.2.0        | jar      |
 | commons-codec            | commons-codec        | 1.14        | jar      |
 | org.apache.logging.log4j | log4j-api            | 2.13.2      | jar      |
 | org.apache.logging.log4j | log4j-core           | 2.13.2      | jar      |

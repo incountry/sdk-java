@@ -80,8 +80,7 @@ public class StorageImpl implements Storage {
                 .useApiKeyFromEnv()
                 .useEndPointFromEnv()
                 .useClientIdFromEnv()
-                .useClientSecretFromEnv()
-                .useAuthEndPointFromEnv();
+                .useClientSecretFromEnv();
         return getInstance(config);
     }
 
@@ -168,8 +167,8 @@ public class StorageImpl implements Storage {
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
-                tokenClient = new OAuthTokenClient(config.getAuthEndPoint(),
-                        config.getEndpointMask(),
+                tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(),
+                        config.getAuthEndpoints(),
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),

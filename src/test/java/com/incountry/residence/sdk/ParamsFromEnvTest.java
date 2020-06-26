@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import static com.incountry.residence.sdk.StorageConfig.PARAM_API_KEY;
-import static com.incountry.residence.sdk.StorageConfig.PARAM_AUTH_ENDPOINT;
 import static com.incountry.residence.sdk.StorageConfig.PARAM_CLIENT_ID;
 import static com.incountry.residence.sdk.StorageConfig.PARAM_CLIENT_SECRET;
 import static com.incountry.residence.sdk.StorageConfig.PARAM_ENDPOINT;
@@ -30,27 +29,22 @@ class ParamsFromEnvTest {
         setEnv(PARAM_CLIENT_ID, clientId);
         String clientSecret = "<clientSecret>";
         setEnv(PARAM_CLIENT_SECRET, clientSecret);
-        String authEndPoint = "<authEndpoint>";
-        setEnv(PARAM_AUTH_ENDPOINT, authEndPoint);
         StorageConfig config = new StorageConfig()
                 .useEnvIdFromEnv()
                 .useApiKeyFromEnv()
                 .useEndPointFromEnv()
                 .useClientIdFromEnv()
-                .useClientSecretFromEnv()
-                .useAuthEndPointFromEnv();
+                .useClientSecretFromEnv();
         assertEquals(envId, config.getEnvId());
         assertEquals(apiKey, config.getApiKey());
         assertEquals(endPoint, config.getEndPoint());
         assertEquals(clientId, config.getClientId());
         assertEquals(clientSecret, config.getClientSecret());
-        assertEquals(authEndPoint, config.getAuthEndPoint());
         unsetEnv(PARAM_ENV_ID);
         unsetEnv(PARAM_API_KEY);
         unsetEnv(PARAM_ENDPOINT);
         unsetEnv(PARAM_CLIENT_ID);
         unsetEnv(PARAM_CLIENT_SECRET);
-        unsetEnv(PARAM_AUTH_ENDPOINT);
     }
 
     @Test
