@@ -78,14 +78,14 @@ class HttpDaoImplTests {
                 Arguments.of("us", "key1", "body", "key2", null, null, null, true, true),
                 Arguments.of("us", "key1", "body", "key2", "key3", null, null, true, false),
                 Arguments.of("us", "key1", "body", "key2", "key3", "profileKey", null, true, false),
-                Arguments.of("us", "key1", "body", "key2", "key3", "profileKey", 1, true, false),
+                Arguments.of("us", "key1", "body", "key2", "key3", "profileKey", 1L, true, false),
 
                 Arguments.of("us", "key1", null, null, null, null, null, false, false),
                 Arguments.of("us", "key1", "body", null, null, null, null, false, false),
                 Arguments.of("us", "key1", "body", "key2", null, null, null, false, false),
                 Arguments.of("us", "key1", "body", "key2", "key3", null, null, false, true),
                 Arguments.of("us", "key1", "body", "key2", "key3", "profileKey", null, false, true),
-                Arguments.of("us", "key1", "body", "key2", "key3", "profileKey", 1, false, true)
+                Arguments.of("us", "key1", "body", "key2", "key3", "profileKey", 1L, false, true)
         );
     }
 
@@ -97,7 +97,7 @@ class HttpDaoImplTests {
                    String key2,
                    String key3,
                    String profileKey,
-                   Integer rangeKey,
+                   Long rangeKey,
                    boolean isKey,
                    boolean encrypt) throws StorageException, MalformedURLException {
         FakeHttpAgent agent = new FakeHttpAgent("OK");
@@ -139,7 +139,7 @@ class HttpDaoImplTests {
                   String key2,
                   String key3,
                   String profileKey,
-                  Integer rangeKey,
+                  Long rangeKey,
                   boolean isKey,
                   boolean encrypt) throws StorageException, MalformedURLException {
 
@@ -169,7 +169,7 @@ class HttpDaoImplTests {
                     String key2,
                     String key3,
                     String profileKey,
-                    Integer rangeKey,
+                    Long rangeKey,
                     boolean isKey,
                     boolean encrypt) throws StorageException, IOException {
 
@@ -201,7 +201,7 @@ class HttpDaoImplTests {
                         String key2,
                         String key3,
                         String profileKey,
-                        Integer rangeKey,
+                        Long rangeKey,
                         boolean isKey,
                         boolean encrypt) throws StorageException {
 
