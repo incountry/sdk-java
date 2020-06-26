@@ -2,6 +2,7 @@ package com.incountry.residence.sdk.http;
 
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Collections;
@@ -29,17 +29,15 @@ class TokenClientTest {
     private static final int TIMEOUT_IN_MS = 30_000;
     private static final String ENV_ID = "envId";
     private static final String DEFAULT_AUTH_ENDPOINT = "http://localhost:" + PORT;
-    private static final String ENDPOINT_MASK = "localhost";
     private static final String AUDIENCE_URL = "https://localhost";
-    private static final String COUNTRY = "us";
     private static final int POOL_SIZE = 5;
 
-    private TokenClient getTokenClient() throws StorageServerException {
+    private TokenClient getTokenClient() throws StorageException {
         return new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
     }
 
     @RepeatedTest(3)
-    void tokenGeneratorTest(RepetitionInfo repeatInfo) throws StorageServerException, IOException, StorageClientException {
+    void tokenGeneratorTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
         iterateLogLevel(repeatInfo, OAuthTokenClient.class);
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
@@ -61,7 +59,7 @@ class TokenClientTest {
     }
 
     @Test
-    void defaultAuthClientPositiveTest() throws IOException, StorageServerException, StorageClientException {
+    void defaultAuthClientPositiveTest() throws StorageException, IOException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
@@ -73,7 +71,7 @@ class TokenClientTest {
     }
 
     @Test
-    void defaultAuthClientPositiveTestWithoutMask() throws IOException, StorageServerException, StorageClientException {
+    void defaultAuthClientPositiveTestWithoutMask() throws StorageException, IOException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
@@ -87,7 +85,7 @@ class TokenClientTest {
     }
 
     @Test
-    void defaultAuthClientNegativeTest() throws IOException, StorageServerException {
+    void defaultAuthClientNegativeTest() throws StorageException, IOException {
         int respCode = 401;
         String errorMessage = "someError";
         FakeHttpServer server = new FakeHttpServer(Arrays.asList(errorMessage, null), respCode, PORT);
@@ -102,7 +100,7 @@ class TokenClientTest {
     }
 
     @Test
-    void defaultAuthClientNegativeTestBadToken() throws IOException, StorageServerException {
+    void defaultAuthClientNegativeTestBadToken() throws StorageException, IOException {
         Map<String, String> responsesWithExpectedExceptions = new HashMap<String, String>() {{
             put("{'access_token'='1234567889' , 'expires_in'='0' , 'token_type'='bearer'}", "Token TTL is invalid");
             put("{'access_token'='1234567889' , 'expires_in'='-1' , 'token_type'='bearer'}", "Token TTL is invalid");
@@ -133,7 +131,7 @@ class TokenClientTest {
     }
 
     @Test
-    void negativeTestAccessTokenEmpty() throws IOException, StorageClientException {
+    void negativeTestAccessTokenEmpty() throws IOException, StorageException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
@@ -147,7 +145,7 @@ class TokenClientTest {
     }
 
     @Test
-    void negativeTestTokenTypeNotEqualBearer() throws IOException, StorageClientException {
+    void negativeTestTokenTypeNotEqualBearer() throws IOException, StorageException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='test', 'scope'='" + ENV_ID + "'}"
         );
@@ -161,7 +159,7 @@ class TokenClientTest {
     }
 
     @Test
-    void negativeTestWrongScope() throws IOException, StorageClientException {
+    void negativeTestWrongScope() throws IOException, StorageException {
         List<String> responseList = Collections.singletonList(
                 "{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer', 'scope'='" + "test" + "'}"
         );
@@ -175,49 +173,41 @@ class TokenClientTest {
     }
 
     @Test
-    void testCreationWithMask() throws StorageClientException {
-        TokenClient tokenClient = new OAuthTokenClient(null, "localhost:" + PORT, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
-        assertEquals("Unexpected exception during authorization", ex.getMessage());
-        assertEquals(UnknownHostException.class, ex.getCause().getClass());
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
-        assertEquals("auth-apac.localhost", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
-        assertEquals("auth-emea.localhost", ex.getCause().getMessage());
+    void testCreationWithMask() throws StorageException {
+        Map<String, String> authEndpoints = new HashMap<>();
+        authEndpoints.put("emea", "auth-emea-localhost.localhost");
+        authEndpoints.put("apac", "auth-apac-localhost.localhost");
+        TokenClient tokenClient = new OAuthTokenClient("auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", TIMEOUT_IN_MS, POOL_SIZE);
+        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
     }
 
     @Test
     void testNegativeTokenClientCreation() {
         Map<String, String> fakeMap = new HashMap<>();
         fakeMap.put("key", null);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient(null, fakeMap, null, null, null, 1));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient(null, fakeMap, null, null, null, 1, POOL_SIZE));
         assertEquals("Can't use param 'authEndpoints' without setting 'defaultAuthEndpoint'", ex.getMessage());
 
-        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1));
+        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1, POOL_SIZE));
         assertEquals("Parameter 'authEndpoints' contains null keys/values", ex.getMessage());
 
         fakeMap.clear();
         fakeMap.put(null, "value");
-        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1));
+        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1, POOL_SIZE));
         assertEquals("Parameter 'authEndpoints' contains null keys/values", ex.getMessage());
 
         fakeMap.clear();
         fakeMap.put("key", "");
-        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1));
+        ex = assertThrows(StorageClientException.class, () -> new OAuthTokenClient("defaultEndPoint", fakeMap, null, null, null, 1, POOL_SIZE));
         assertEquals("Parameter 'authEndpoints' contains null keys/values", ex.getMessage());
     }
 
     @Test
-    void testPositiveTokenClientCreation() throws StorageClientException {
-        TokenClient tokenClient = new OAuthTokenClient(null, new HashMap<>(), null, null, null, 0);
+    void testPositiveTokenClientCreation() throws StorageException {
+        TokenClient tokenClient = new OAuthTokenClient(null, new HashMap<>(), null, null, null, 0, POOL_SIZE);
         assertNotNull(tokenClient);
 
-        tokenClient = new OAuthTokenClient(null, null, null, null, null, 0);
+        tokenClient = new OAuthTokenClient(null, null, null, null, null, 0, POOL_SIZE);
         assertNotNull(tokenClient);
     }
 }

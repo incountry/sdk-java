@@ -3,7 +3,10 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * container with Storage configuration, using pattern 'builder'

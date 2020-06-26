@@ -62,7 +62,7 @@ public class OAuthTokenClient implements TokenClient {
     private final String defaultAuthEndpoint;
 
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
-                            String secret, Integer timeoutInMs) throws StorageClientException {
+                            String secret, Integer timeoutInMs, Integer poolSize) throws StorageClientException, StorageServerException {
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
             if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
@@ -73,7 +73,7 @@ public class OAuthTokenClient implements TokenClient {
         }
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.timeoutInMs = timeoutInMs;
+        this.httpClient = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
@@ -117,13 +117,13 @@ public class OAuthTokenClient implements TokenClient {
     private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
         try {
-            String url = regionMap.get(region);
-            if (url == null) {
-                url = regionMap.get(EMEA);
+            String authUrl = regionMap.get(region);
+            if (authUrl == null) {
+                authUrl = defaultAuthEndpoint;
             }
-            HttpRequestBase request = HttpUtils.createRequest(url, POST, body);
-            request = addHeaders(request);
 
+            HttpRequestBase request = HttpUtils.createRequest(authUrl, POST, body);
+            request = addHeaders(request);
 
             HttpResponse response = httpClient.execute(request);
             Integer status = response.getStatusLine().getStatusCode();
