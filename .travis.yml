@@ -25,5 +25,6 @@ before_install:
 
 script:
   - gradle build jacocoTestReport
-  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then gradle sonarqube; fi'
+  - gradle sonarqube
+  #- 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then gradle sonarqube; fi'
   - gradle integrationTest
