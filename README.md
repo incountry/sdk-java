@@ -1,7 +1,5 @@
 InCountry Storage SDK
 ===========
-[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=alert_status)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
-[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 Installation
 -----
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
@@ -32,8 +30,8 @@ public class StorageImpl implements Storage {
   /**
    * creating Storage instance
    *
-   * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY 
-                              with {@link #getInstance()} 
+   * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
+                              with {@link #getInstance()}
    * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
                               with {@link #getInstance()}
    * @param endpoint          Optional. Defines API URL.
@@ -75,22 +73,22 @@ authEndpointsMap.put("amer", "https://auth-server-amer.com");
 
 StorageConfig config = new StorageConfig()
    //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
-   .setClientId(CLIENT_ID)  
+   .setClientId(CLIENT_ID)
    //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
    .setClientSecret(SECRET)
-   .setAuthEndpoints(authEndpointsMap)    
-   .setDefaultAuthEndpoint("https://auth-server-default.com") 
+   .setAuthEndpoints(authEndpointsMap)
+   .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
-   .setEnvId(ENV_ID);                                
+   .setEnvId(ENV_ID);
 Storage storage = StorageImpl.getInstance(config);
 ```
 
 Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`-private.incountry.io` will make all further requests to be sent to `https://{COUNTRY_CODE}-private.incountry.io`
-If your PoPAPI configuration relies on a custom PoPAPI server (rather than the default one) use `countriesEndpoint` option to specify the endpoint responsible for fetching supported countries list.  
+If your PoPAPI configuration relies on a custom PoPAPI server (rather than the default one) use `countriesEndpoint` option to specify the endpoint responsible for fetching supported countries list.
 ```java
 StorageConfig config = new StorageConfig()
-   .setCountriesEndpoint(countriesEndpoint)  
-   //...                                
+   .setCountriesEndpoint(countriesEndpoint)
+   //...
 Storage storage = StorageImpl.getInstance(config);
 ```
 
@@ -634,7 +632,7 @@ public interface Crypto {
      * @throws StorageClientException when parameters validation fails
      * @throws StorageCryptoException when decryption fails
      */
-    String encrypt(String text, SecretKey secretKey) 
+    String encrypt(String text, SecretKey secretKey)
             throws StorageClientException, StorageCryptoException;
 
     /**
@@ -646,7 +644,7 @@ public interface Crypto {
      * @throws StorageClientException when parameters validation fails
      * @throws StorageCryptoException when decryption fails
      */
-    String decrypt(String cipherText, SecretKey secretKey) 
+    String decrypt(String cipherText, SecretKey secretKey)
             throws StorageClientException, StorageCryptoException;
 
     /**
@@ -657,7 +655,7 @@ public interface Crypto {
     String getVersion();
 
     /**
-     * only one CustomCrypto can be current. This parameter 
+     * only one CustomCrypto can be current. This parameter
      * used only during {@link com.incountry.residence.sdk.Storage}
      * initialisation. Changing this parameter will be ignored after initialization
      *
@@ -677,9 +675,9 @@ public class SecretKey {
      * @param secret secret/key
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
-     * @param isForCustomEncryption should be True for using this key in custom encryption 
-     *                              implementations. Either ({@link #isKey} or 
-     *                              {@link #isForCustomEncryption}) can be True at the same 
+     * @param isForCustomEncryption should be True for using this key in custom encryption
+     *                              implementations. Either ({@link #isKey} or
+     *                              {@link #isForCustomEncryption}) can be True at the same
      *                              moment, not both
      * @throws StorageClientException when parameter validation fails
      */
@@ -740,7 +738,7 @@ public class FernetCrypto implements Crypto {
     }
 
     @Override
-    public String decrypt(String cipherText, SecretKey secretKey) 
+    public String decrypt(String cipherText, SecretKey secretKey)
             throws StorageCryptoException {
         try {
             Key key = new Key(secretKey.getSecret());
