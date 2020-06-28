@@ -16,7 +16,7 @@ public class FullMigrationExample {
                 "    ],\n" +
                 "}";
         SecretKeyAccessor secretKeyAccessor = () -> SecretsDataGenerator.fromJson(secretsDataInJson);
-        String endPoint = "https://us.api.incountry.example";
+        String endPoint = "https://us-mt-01.api.incountry.example";
         String country = "US";
         String envId = "someEnvironmentId";
         String apiKey = "someApiKey";

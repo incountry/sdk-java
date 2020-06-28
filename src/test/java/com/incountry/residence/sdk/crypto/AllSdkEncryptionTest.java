@@ -6,8 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.crypto.impl.CryptoImpl;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -27,27 +26,27 @@ class AllSdkEncryptionTest {
             "    \"key2\": \"abcb2ad9e9e0b1787f262b014f517ad1136f868e7a015b1d5aa545b2f575640d\",\n" +
             "    \"key3\": \"1102ae53e55f0ce1d802cc8bb66397e7ea749fd8d05bd2d4d0f697cedaf138e3\",\n" +
             "    \"profile_key\": \"f5b5ae4914972ace070fa51b410789324abe063dbe2bb09801410d9ab54bf833\",\n" +
-            "    \"range_key\": 100500,\n" +
+            "    \"range_key\": 6275438399,\n" +
             "    \"version\": 0\n" +
             "}";
 
-    private final Crypto crypto;
+    private final CryptoManager cryptoManager;
     private final Record originalRecord;
 
     AllSdkEncryptionTest() throws StorageClientException {
-        crypto = new CryptoImpl(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID);
-        originalRecord = new Record("InCountryKey", "{\"data\": \"InCountryBody\"}", "InCountryPK", 100500, "InCountryKey2", "InCountryKey3");
+        cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false);
+        originalRecord = new Record("InCountryKey", "{\"data\": \"InCountryBody\"}", "InCountryPK", 6275438399L, "InCountryKey2", "InCountryKey3");
     }
 
     @Test
     void testDecryptionFromOtherSDK() throws StorageServerException, StorageClientException, StorageCryptoException {
-        Record record = JsonUtils.recordFromString(RESPONSE, crypto);
+        Record record = JsonUtils.recordFromString(RESPONSE, cryptoManager);
         assertEquals(originalRecord, record);
     }
 
     @Test
     void testEncryptionFromOtherSDK() throws StorageClientException, StorageCryptoException {
-        String recordJsonString = JsonUtils.toJsonString(originalRecord, crypto);
+        String recordJsonString = JsonUtils.toJsonString(originalRecord, cryptoManager);
         JsonObject jsonObject = getGson().fromJson(recordJsonString, JsonObject.class);
         JsonObject originalJsonObject = getGson().fromJson(RESPONSE, JsonObject.class);
         assertEquals(originalJsonObject.get("key"), jsonObject.get("key"));

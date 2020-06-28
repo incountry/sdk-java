@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <Match>
-        <Class name="com.incountry.residence.sdk.tools.JsonUtils$TransferPop"/>
+        <Or>
+            <Class name="com.incountry.residence.sdk.tools.transfer.TransferPop"/>
+            <Class name="com.incountry.residence.sdk.StorageImpl"/>
+        </Or>
         <Bug code="NP,SIC,SS,ST,UrF,UuF,UwF"/>
     </Match>
+
+    <Match>
+        <Or>
+            <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl"/>
+            <Class name="com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient"/>
+        </Or>
+        <Bug pattern="URLCONNECTION_SSRF_FD"/>
+    </Match>
+
 </FindBugsFilter>

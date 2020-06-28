@@ -5,6 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GT;
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GTE;
@@ -23,22 +25,27 @@ public class FilterNumberParam {
     private static final String ERR_CONDITION_RESTR = String.format("Operator in number filter can by only in [%s,%s,%s,%s,%s]",
             OPER_LT, OPER_LTE, OPER_GT, OPER_GTE, OPER_NOT);
 
-    private Integer[] values;
-    private String operator1;
-    private String operator2;
+    private final Long[] values;
+    private final String operator1;
+    private final String operator2;
 
-    private FilterNumberParam() {
+    private FilterNumberParam(Long[] values, String operator1, String operator2) {
+        this.values = Arrays.copyOf(values, values.length);
+        this.operator1 = operator1;
+        this.operator2 = operator2;
     }
 
-    public FilterNumberParam(Integer[] values) throws StorageClientException {
-        if (values == null || values.length == 0 || (values.length == 1 && values[0] == null)) {
+    public FilterNumberParam(Long[] values) throws StorageClientException {
+        if (values == null || values.length == 0 || (Stream.of(values).anyMatch(Objects::isNull))) {
             LOG.error(ERR_NULL_VALUE);
             throw new StorageClientException(ERR_NULL_VALUE);
         }
         this.values = Arrays.copyOf(values, values.length);
+        this.operator1 = null;
+        this.operator2 = null;
     }
 
-    public FilterNumberParam(String operator, Integer value) throws StorageClientException {
+    public FilterNumberParam(String operator, Long value) throws StorageClientException {
         if (operator == null || notIn(operator, OPER_GT, OPER_GTE, OPER_NOT, OPER_LT, OPER_LTE)) {
             LOG.error(ERR_CONDITION_RESTR);
             throw new StorageClientException(ERR_CONDITION_RESTR);
@@ -47,11 +54,12 @@ public class FilterNumberParam {
             LOG.error(ERR_NULL_VALUE);
             throw new StorageClientException(ERR_NULL_VALUE);
         }
-        this.values = new Integer[]{value};
+        this.values = new Long[]{value};
         this.operator1 = operator;
+        this.operator2 = null;
     }
 
-    public FilterNumberParam(String operator1, Integer value1, String operator2, Integer value2) throws StorageClientException {
+    public FilterNumberParam(String operator1, Long value1, String operator2, Long value2) throws StorageClientException {
         if (operator1 == null || notIn(operator1, OPER_GT, OPER_GTE)) {
             LOG.error(ERR_OPER1_RESTR);
             throw new StorageClientException(ERR_OPER1_RESTR);
@@ -68,14 +76,15 @@ public class FilterNumberParam {
             LOG.error(ERR_RANGE_RESTR);
             throw new StorageClientException(ERR_RANGE_RESTR);
         }
-        this.values = new Integer[]{value1, value2};
+        this.values = new Long[]{value1, value2};
         this.operator1 = operator1;
         this.operator2 = operator2;
     }
 
+
     private boolean notIn(String operator, String... permitted) {
-        for (String one : permitted) {
-            if (one.equals(operator)) {
+        for (String value : permitted) {
+            if (value.equals(operator)) {
                 return false;
             }
         }
@@ -90,11 +99,11 @@ public class FilterNumberParam {
         return operator2 != null && operator1 != null;
     }
 
-    public Integer[] getValues() {
+    public Long[] getValues() {
         if (values != null && values.length > 0) {
             return Arrays.copyOf(values, values.length);
         }
-        return new Integer[]{};
+        return new Long[]{};
     }
 
     public String getOperator1() {
@@ -106,11 +115,7 @@ public class FilterNumberParam {
     }
 
     public FilterNumberParam copy() {
-        FilterNumberParam clone = new FilterNumberParam();
-        clone.values = getValues();
-        clone.operator1 = operator1;
-        clone.operator2 = operator2;
-        return clone;
+        return new FilterNumberParam(getValues(), getOperator1(), getOperator2());
     }
 
     @Override

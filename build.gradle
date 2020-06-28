@@ -53,6 +53,7 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
     integrationRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}"
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: "${jupiterVersion}"
+    testCompile group: "com.macasaet.fernet", name: "fernet-java8", version: "${fernetVersion}"
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: "${jaxbApiVersion}"
     compile group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
     compile "com.google.code.gson:gson:${gsonVersion}"
@@ -64,13 +65,13 @@ dependencies {
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
     failOnError = true
-    failBuildOnCVSS = 10
 }
 
 check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
 spotbugs {
+    toolVersion = "${spotBugsToolVersion}"
     excludeFilter = file("$projectDir/config/spotbugs/exclude.xml")
     ignoreFailures = false
     effort = "max"
@@ -121,6 +122,7 @@ jacocoTestReport {
         html.enabled true
     }
 }
+
 
 repositories {
     mavenCentral()

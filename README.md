@@ -1,6 +1,5 @@
 InCountry Storage SDK
-============
-
+===========
 Installation
 -----
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
@@ -10,13 +9,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>2.0.0</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:2.0.0"
+compile "com.incountry:incountry-java-client:2.1.0"
 ```
 
 Countries List
@@ -32,7 +31,9 @@ public class StorageImpl implements Storage {
    * creating Storage instance
    *
    * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
+                              with {@link #getInstance()}
    * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
+                              with {@link #getInstance()}
    * @param endpoint          Optional. Defines API URL.
    *                          Default endpoint will be used if this param is null
    * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
@@ -46,17 +47,49 @@ public class StorageImpl implements Storage {
 }
 ```
 
-Parameters `apiKey` and `environmentID` can be fetched from your dashboard on `Incountry` site.
+Parameters `environmentID` and `apiKey` (or `clientId` and `clientSecret` instead of `apiKey`) can be fetched from your dashboard on `Incountry` site.
 
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
 Below is an example how to create a storage instance:
 ```java
 SecretKeyAccessor secretKeyAccessor = () -> SecretsDataGenerator.fromPassword("<password>");
-String endPoint = "https://us.api.incountry.io";
+String endPoint = "https://us-mt-01.api.incountry.io";
 String envId = "<env_id>";
 String apiKey = "<api_key>";
 Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
+```
+
+#### oAuth Authentication
+
+SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
+
+Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+```java
+Map<String, String> authEndpointsMap = new HashMap<>();
+authEndpointsMap.put("emea", "https://auth-server-emea.com");
+authEndpointsMap.put("apac", "https://auth-server-apac.com");
+authEndpointsMap.put("amer", "https://auth-server-amer.com");
+
+StorageConfig config = new StorageConfig()
+   //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
+   .setClientId(CLIENT_ID)
+   //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
+   .setClientSecret(SECRET)
+   .setAuthEndpoints(authEndpointsMap)
+   .setDefaultAuthEndpoint("https://auth-server-default.com")
+   .setEndpointMask(ENDPOINT_MASK)
+   .setEnvId(ENV_ID);
+Storage storage = StorageImpl.getInstance(config);
+```
+
+Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`-private.incountry.io` will make all further requests to be sent to `https://{COUNTRY_CODE}-private.incountry.io`
+If your PoPAPI configuration relies on a custom PoPAPI server (rather than the default one) use `countriesEndpoint` option to specify the endpoint responsible for fetching supported countries list.
+```java
+StorageConfig config = new StorageConfig()
+   .setCountriesEndpoint(countriesEndpoint)
+   //...
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 ### Encryption key/secret
@@ -202,7 +235,7 @@ public class Record {
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */
-    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3)
+    public Record(String key, String body, String profileKey, Long rangeKey, String key2, String key3)
     //...
 }
 ```
@@ -212,10 +245,10 @@ Below is the example of how you may use `write` method:
 key = "user_1";
 body = "some PII data";
 profileKey = "customer";
-rangeKey = 10000;
+rangeKey = 10000l;
 key2 = "english";
 key3 = "insurance";
-Record record = new Record(key, body, profileKey, batchWriteRangeKey, key2, key3);
+Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
 storage.write("us", record);
 ```
 
@@ -227,7 +260,7 @@ public class Record {
     private String key;          // hashed
     private String body;         // encrypted
     private String profileKey;   // hashed
-    private Integer rangeKey;    // plain
+    private Long rangeKey;       // plain
     private String key2;         // hashed
     private String key3;         // hashed
     //...
@@ -328,7 +361,7 @@ Below is the example how to use `find` method along with `FindFilterBuilder`:
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .key2Eq("someKey")
                   .key3Eq("firstValue","secondValue")
-                  .rangeKeyBetween(123, 456);
+                  .rangeKeyBetween(123l, 456l);
 
 BatchRecord findResult = storage.find("us", builder);
 if (findResult.getCount() > 0) {
@@ -358,6 +391,10 @@ EQUALS         (FindFilterBuilder::keyEq)
                (FindFilterBuilder::key2Eq)
                (FindFilterBuilder::key3Eq)
                (FindFilterBuilder::profileKeyEq)
+NOT_EQUALS     (FindFilterBuilder::keyNotEq)
+               (FindFilterBuilder::key2NotEq)
+               (FindFilterBuilder::key3NotEq)
+               (FindFilterBuilder::profileKeyNotEq)
 ```
 
 You can use the following builder methods for filtering by numerical `rangeKey` field:
@@ -419,7 +456,7 @@ Here is the example of how `findOne` method can be used:
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("someKey")
                 .key3Eq("firstValue", "secondValue")
-                .rangeKeyBetween(123, 456);
+                .rangeKeyBetween(123l, 456l);
 
 Record record = storage.findOne("us", builder);
 //...
@@ -520,27 +557,229 @@ public void test() {
 }
 ```
 
+Custom Encryption Support
+-----
+SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
+One of the overloaded versions of the method `getInstance` in class `StorageImpl` allows you to pass a list of custom encryption implementations:
+
+```java
+/**
+  * creating Storage instance
+  *
+  * @param config Configuration for Storage initialization
+  * @return instance of Storage
+  * @throws StorageClientException if configuration validation finished with errors
+  * @throws StorageCryptoException if custom encryption fails during initialization
+  * @throws StorageServerException if server connection failed or server response error
+  */
+public static Storage getInstance(StorageConfig config)
+              throws StorageClientException, StorageServerException {...}
+```
+
+Class `StorageConfig` is a container with Storage configuration, using Builder pattern. Use method `setCustomEncryptionConfigsList` for passing a list of custom encryption implementations:
+
+```java
+public class StorageConfig {
+   private String envId;
+       private String apiKey;
+       private String endPoint;
+       private SecretKeyAccessor secretKeyAccessor;
+       private List<Crypto> customEncryptionConfigsList;
+       private boolean normalizeKeys;
+       private String clientId;
+       private String clientSecret;
+       private String authEndPoint;
+       private Integer httpTimeout;
+    //...
+
+    /**
+     * for custom encryption
+     *
+     * @param customEncryptionConfigsList List with custom encryption functions
+     * @return StorageConfig
+     */
+    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
+        this.customEncryptionConfigsList = customEncryptionConfigsList;
+        return this;
+    }
+
+    /**
+     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Default value is 30 seconds.
+     *
+     * @param httpTimeout timeout in seconds
+     * @return StorageConfig
+     */
+    public StorageConfig setHttpTimeout(Integer httpTimeout) {
+        this.httpTimeout = httpTimeout;
+        return this;
+    }
+
+
+    //...
+}
+```
+
+For using of custom encryption you need to implement the following interface:
+```java
+public interface Crypto {
+    /**
+     * encrypts data with secret
+     *
+     * @param text      data for encryption
+     * @param secretKey secret
+     * @return encrypted data as String
+     * @throws StorageClientException when parameters validation fails
+     * @throws StorageCryptoException when decryption fails
+     */
+    String encrypt(String text, SecretKey secretKey)
+            throws StorageClientException, StorageCryptoException;
+
+    /**
+     * decrypts data with Secret
+     *
+     * @param cipherText encrypted data
+     * @param secretKey  secret
+     * @return decrypted data as String
+     * @throws StorageClientException when parameters validation fails
+     * @throws StorageCryptoException when decryption fails
+     */
+    String decrypt(String cipherText, SecretKey secretKey)
+            throws StorageClientException, StorageCryptoException;
+
+    /**
+     * version of encryption algorithm as String
+     *
+     * @return version
+     */
+    String getVersion();
+
+    /**
+     * only one CustomCrypto can be current. This parameter
+     * used only during {@link com.incountry.residence.sdk.Storage}
+     * initialisation. Changing this parameter will be ignored after initialization
+     *
+     * @return is current or not
+     */
+    boolean isCurrent();
+}
+```
+
+---
+**NOTE**
+
+You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKeyAccessor`. This secret should have flag `isForCustomEncryption` set to `true` and flag `isKey` set to `false`:
+```java
+public class SecretKey {
+    /**
+     * @param secret secret/key
+     * @param version secret version, should be a non-negative integer
+     * @param isKey should be True only for user-defined encryption keys
+     * @param isForCustomEncryption should be True for using this key in custom encryption
+     *                              implementations. Either ({@link #isKey} or
+     *                              {@link #isForCustomEncryption}) can be True at the same
+     *                              moment, not both
+     * @throws StorageClientException when parameter validation fails
+     */
+    public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
+              throws StorageClientException {...}
+    //...
+}
+```
+
+You can set `isForCustomEncryption` using `SecretsData` JSON format as well:
+```javascript
+secrets_data = {
+  "secrets": [{
+       "secret": "<secret for custom encryption>",
+       "version": 1,
+       "isForCustomEncryption": true,
+    }
+  }],
+  "currentVersion": 1,
+}
+```
+---
+
+`version` attribute is used to differ one custom encryption from another and from the default encryption as well.
+This way SDK will be able to successfully decrypt any old data if encryption changes with time.
+
+`isCurrent` attribute allows to specify one of the custom encryption implementations that will be used for encryption. Only one implementation can be set as `isCurrent() == true`.
+
+If none of the configurations have `isCurrent() == true` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
+
+Here's an example of how you can set up SDK to use custom encryption (using Fernet encryption from https://github.com/l0s/fernet-java8 )
+
+```java
+/**
+ * Example of custom implementation of {@link Crypto} using Fernet algorithm
+ */
+public class FernetCrypto implements Crypto {
+    private static final String VERSION = "fernet custom encryption";
+    private boolean current;
+    private Validator<String> validator;
+
+    public FernetCrypto(boolean current) {
+        this.current = current;
+        this.validator = new StringValidator() {
+        };
+    }
+
+    @Override
+    public String encrypt(String text, SecretKey secretKey)
+            throws StorageCryptoException {
+        try {
+            Key key = new Key(secretKey.getSecret());
+            Token result = Token.generate(key, text);
+            return result.serialise();
+        } catch (IllegalStateException ex) {
+            throw new StorageCryptoException("Encryption error", ex);
+        }
+    }
+
+    @Override
+    public String decrypt(String cipherText, SecretKey secretKey)
+            throws StorageCryptoException {
+        try {
+            Key key = new Key(secretKey.getSecret());
+            Token result = Token.fromString(cipherText);
+            return result.validateAndDecrypt(key, validator);
+        } catch (PayloadValidationException ex) {
+            throw new StorageCryptoException("Decryption error", ex);
+        }
+    }
+
+    @Override
+    public String getVersion() {
+        return VERSION;
+    }
+
+    @Override
+    public boolean isCurrent() {
+        return current;
+    }
+}
+```
+
 Project dependencies
 -----
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 
-| **GroupId**              | **ArtifactId** | **Version** | **Type** |
-| :---:                    | :---:          | :---:       | :---:    |
-| javax.xml.bind           | jaxb-api       | 2.2.4       | jar      |
-| javax.xml.stream         | stax-api       | 1.0-2       | jar      |
-| javax.activation         | activation     | 1.1         | jar      |
-| commons-codec            | commons-codec  | 1.14        | jar      |
-| org.apache.logging.log4j | log4j-api      | 2.13.2      | jar      |
-| org.apache.logging.log4j | log4j-core     | 2.13.2      | jar      |
-| com.google.code.gson     | gson           | 2.8.6       | jar      |
+| **GroupId**              | **ArtifactId**       | **Version** | **Type** |
+| :---:                    | :---:                | :---:       | :---:    |
+| javax.xml.bind           | jaxb-api             | 2.3.1       | jar      |
+| javax.activation         | javax.activation-api | 1.2.0        | jar      |
+| commons-codec            | commons-codec        | 1.14        | jar      |
+| org.apache.logging.log4j | log4j-api            | 2.13.2      | jar      |
+| org.apache.logging.log4j | log4j-core           | 2.13.2      | jar      |
+| com.google.code.gson     | gson                 | 2.8.6       | jar      |
 
 #### Dependency Tree
 ```
 compileClasspath
-+--- javax.xml.bind:jaxb-api:2.2.4
-|    +--- javax.xml.stream:stax-api:1.0-2
-|    \--- javax.activation:activation:1.1
++--- javax.xml.bind:jaxb-api:2.3.1
+|    \--- javax.activation:javax.activation-api:1.2.0
 +--- commons-codec:commons-codec:1.14
 +--- org.apache.logging.log4j:log4j-api:2.13.2
 +--- org.apache.logging.log4j:log4j-core:2.13.2

@@ -42,9 +42,14 @@ public class FindFilterBuilder {
         return this;
     }
 
-    //key2
+    //key
     public FindFilterBuilder keyEq(String... keys) throws StorageClientException {
         filter.setKeyFilter(new FilterStringParam(keys));
+        return this;
+    }
+
+    public FindFilterBuilder keyNotEq(String... keys) throws StorageClientException {
+        filter.setKeyFilter(new FilterStringParam(keys, true));
         return this;
     }
 
@@ -54,15 +59,30 @@ public class FindFilterBuilder {
         return this;
     }
 
+    public FindFilterBuilder key2NotEq(String... keys) throws StorageClientException {
+        filter.setKey2Filter(new FilterStringParam(keys, true));
+        return this;
+    }
+
     //key3
     public FindFilterBuilder key3Eq(String... keys) throws StorageClientException {
         filter.setKey3Filter(new FilterStringParam(keys));
         return this;
     }
 
+    public FindFilterBuilder key3NotEq(String... keys) throws StorageClientException {
+        filter.setKey3Filter(new FilterStringParam(keys, true));
+        return this;
+    }
+
     //profileKey
     public FindFilterBuilder profileKeyEq(String... keys) throws StorageClientException {
         filter.setProfileKeyFilter(new FilterStringParam(keys));
+        return this;
+    }
+
+    public FindFilterBuilder profileKeyNotEq(String... keys) throws StorageClientException {
+        filter.setProfileKeyFilter(new FilterStringParam(keys, true));
         return this;
     }
 
@@ -78,36 +98,36 @@ public class FindFilterBuilder {
     }
 
     //rangeKey
-    public FindFilterBuilder rangeKeyEq(Integer... keys) throws StorageClientException {
+    public FindFilterBuilder rangeKeyEq(Long... keys) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(keys));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyGT(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyGT(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_GT, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyGTE(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyGTE(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_GTE, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyLT(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyLT(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_LT, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyLTE(int key) throws StorageClientException {
+    public FindFilterBuilder rangeKeyLTE(long key) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(OPER_LTE, key));
         return this;
     }
 
-    public FindFilterBuilder rangeKeyBetween(int fromValue, int toValue) throws StorageClientException {
+    public FindFilterBuilder rangeKeyBetween(long fromValue, long toValue) throws StorageClientException {
         return rangeKeyBetween(fromValue, true, toValue, true);
     }
 
-    public FindFilterBuilder rangeKeyBetween(int fromValue, boolean includeFrom, int toValue, boolean includeTo) throws StorageClientException {
+    public FindFilterBuilder rangeKeyBetween(long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
         filter.setRangeKeyFilter(new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
                 fromValue,
                 includeTo ? OPER_LTE : OPER_LT,

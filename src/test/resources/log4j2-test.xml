@@ -12,6 +12,7 @@
         </Root>
 
         <Logger name="com.incountry.residence.sdk" level="trace"/>
+        <Logger name="com.incountry.residence.sdk.ProxyUtilsTest" level="info"/>
 
     </Loggers>
 </Configuration>

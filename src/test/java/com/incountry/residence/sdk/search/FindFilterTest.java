@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.search;
 
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
@@ -20,7 +20,7 @@ class FindFilterTest {
     void testToJsonObject() throws StorageClientException {
         FilterStringParam versionFilterParam = new FilterStringParam(new String[]{version}, true);
         FilterStringParam keyFilterParam = new FilterStringParam(new String[]{key}, true);
-        FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey});
+        FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey}, true);
 
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionFilter(versionFilterParam);
@@ -30,15 +30,18 @@ class FindFilterTest {
 
         assertEquals(String.format("{\"$not\":[%s]}", version), jsonObject.get("version").toString());
         assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
-        assertEquals(String.format("[\"%s\"]", profileKey), jsonObject.get("profile_key").toString());
+        assertEquals(String.format("{\"$not\":[\"%s\"]}", profileKey), jsonObject.get("profile_key").toString());
     }
 
 
     @Test
     void testErrorArgs() {
         FindFilter findFilter = new FindFilter();
-        assertThrows(StorageClientException.class, () -> findFilter.setLimit(0));
-        assertThrows(StorageClientException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
-        assertThrows(StorageClientException.class, () -> findFilter.setOffset(-1));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> findFilter.setLimit(0));
+        assertEquals("Limit must be more than 1", ex1.getMessage());
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> findFilter.setLimit(Integer.MAX_VALUE));
+        assertEquals("Max limit is 100. Use offset to populate more", ex2.getMessage());
+        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> findFilter.setOffset(-1));
+        assertEquals("Offset must be more than 0", ex3.getMessage());
     }
 }

@@ -1,0 +1,46 @@
+package com.incountry.residence.sdk.tools.transfer;
+
+import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+
+import java.util.List;
+
+public class TransferBatch {
+
+    private static final String MSG_ERR_NULL_META = "Response error: Meta is null";
+    private static final String MSG_ERR_NEGATIVE_META = "Response error: negative values in batch metadata";
+    private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
+    private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then received";
+
+    BatchRecord meta;
+    List<TransferRecord> data;
+
+    public void validate() throws StorageServerException {
+        if (meta == null) {
+            throw new StorageServerException(MSG_ERR_NULL_META);
+        } else if (meta.getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0) {
+            throw new StorageServerException(MSG_ERR_NEGATIVE_META);
+            } else if (meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount())
+                || meta.getCount() == 0 && !data.isEmpty()) {
+            throw new StorageServerException(MSG_ERR_INCORRECT_COUNT);
+        } else if (meta.getCount() > meta.getTotal()) {
+            throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);
+        }
+    }
+
+    public BatchRecord getMeta() {
+        return meta;
+    }
+
+    public void setMeta(BatchRecord meta) {
+        this.meta = meta;
+    }
+
+    public List<TransferRecord> getData() {
+        return data;
+    }
+
+    public void setData(List<TransferRecord> data) {
+        this.data = data;
+    }
+}
