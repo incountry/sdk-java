@@ -7,7 +7,7 @@ public class Record {
     private String key2;
     private String key3;
     private String profileKey;
-    private Integer rangeKey;
+    private Long rangeKey;
     private String body;
 
 
@@ -35,7 +35,7 @@ public class Record {
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */
-    public Record(String key, String body, String profileKey, Integer rangeKey, String key2, String key3) {
+    public Record(String key, String body, String profileKey, Long rangeKey, String key2, String key3) {
         this.key = key;
         this.body = body;
         this.profileKey = profileKey;
@@ -59,7 +59,7 @@ public class Record {
         String mergedKey = mergeKeys(base.getKey(), merged.getKey());
         String mergedBody = mergeKeys(base.getBody(), merged.getBody());
         String mergedProfileKey = mergeKeys(base.getProfileKey(), merged.getProfileKey());
-        Integer mergedRangeKey = mergeKeys(base.getRangeKey(), merged.getRangeKey());
+        Long mergedRangeKey = mergeKeys(base.getRangeKey(), merged.getRangeKey());
         String mergedKey2 = mergeKeys(base.getKey2(), merged.getKey2());
         String mergedKey3 = mergeKeys(base.getKey3(), merged.getKey3());
 
@@ -98,11 +98,11 @@ public class Record {
         this.profileKey = profileKey;
     }
 
-    public Integer getRangeKey() {
+    public Long getRangeKey() {
         return rangeKey;
     }
 
-    public void setRangeKey(Integer rangeKey) {
+    public void setRangeKey(Long rangeKey) {
         this.rangeKey = rangeKey;
     }
 

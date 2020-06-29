@@ -50,7 +50,7 @@ class StorageTest {
     private static final String KEY_2 = "key2";
     private static final String KEY_3 = "key3";
     private static final String PROFILE_KEY = "profileKey";
-    private static final Integer RANGE_KEY = 1;
+    private static final Long RANGE_KEY = 1L;
     private static final String BODY = "body";
 
     private CryptoManager cryptoManager;
@@ -285,7 +285,7 @@ class StorageTest {
         assertNull(json.get("range_key"));
         assertNull(json.get("profile_key"));
 
-        builder.clear().rangeKeyEq(123321);
+        builder.clear().rangeKeyEq(123321L);
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");

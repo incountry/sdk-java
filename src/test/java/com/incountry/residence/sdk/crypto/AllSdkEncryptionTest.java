@@ -26,7 +26,7 @@ class AllSdkEncryptionTest {
             "    \"key2\": \"abcb2ad9e9e0b1787f262b014f517ad1136f868e7a015b1d5aa545b2f575640d\",\n" +
             "    \"key3\": \"1102ae53e55f0ce1d802cc8bb66397e7ea749fd8d05bd2d4d0f697cedaf138e3\",\n" +
             "    \"profile_key\": \"f5b5ae4914972ace070fa51b410789324abe063dbe2bb09801410d9ab54bf833\",\n" +
-            "    \"range_key\": 100500,\n" +
+            "    \"range_key\": 6275438399,\n" +
             "    \"version\": 0\n" +
             "}";
 
@@ -35,7 +35,7 @@ class AllSdkEncryptionTest {
 
     AllSdkEncryptionTest() throws StorageClientException {
         cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false);
-        originalRecord = new Record("InCountryKey", "{\"data\": \"InCountryBody\"}", "InCountryPK", 100500, "InCountryKey2", "InCountryKey3");
+        originalRecord = new Record("InCountryKey", "{\"data\": \"InCountryBody\"}", "InCountryPK", 6275438399L, "InCountryKey2", "InCountryKey3");
     }
 
     @Test

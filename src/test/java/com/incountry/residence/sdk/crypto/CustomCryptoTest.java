@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CustomCryptoTest {
+class CustomCryptoTest {
 
     private static final String CUSTOM_PASSWORD_1 = "123456789_123456789_123456789_12";
     private static final String CUSTOM_PASSWORD_2 = "123456789!123456789_123456789%Ab";
@@ -40,7 +41,7 @@ public class CustomCryptoTest {
     private static final String BODY_FOR_ENCRYPTION = "SomeSecretBody!234567=!@#$%^&**()_+|";
 
     @Test
-    public void positiveStorageInitTest() throws StorageClientException, StorageServerException {
+    void positiveStorageInitTest() throws StorageClientException, StorageServerException {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretKey key2 = new SecretKey(CUSTOM_PASSWORD_2, 2, false, true);
@@ -61,32 +62,32 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void customEncryptionTestPositive() throws StorageClientException {
-        List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true));
+    void customEncryptionTestPositive() throws StorageClientException {
+        List<Crypto> cryptoList = Collections.singletonList(new CryptoStub(true));
         int keyVersion = 1;
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
+        SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false);
         assertNotNull(cryptoManager);
     }
 
     @Test
-    public void customEncryptionTestNegative() throws StorageClientException {
-        List<Crypto> cryptoList = Arrays.asList(new InvalidCrypto(true));
+    void customEncryptionTestNegative() throws StorageClientException {
+        List<Crypto> cryptoList = Collections.singletonList(new InvalidCrypto(true));
         int keyVersion = 1;
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData secretsData = new SecretsData(Arrays.asList(secretKey), keyVersion);
+        SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false));
         assertTrue(ex.getMessage().startsWith("Validation failed for custom encryption config with version"));
     }
 
     @Test
-    public void negativeNullCryptoVersionTest() throws StorageClientException {
-        List<Crypto> cryptoList1 = Arrays.asList(new DefaultCryptoWithCustomVersion(null));
+    void negativeNullCryptoVersionTest() throws StorageClientException {
+        List<Crypto> cryptoList1 = Collections.singletonList(new DefaultCryptoWithCustomVersion(null));
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), 1);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
@@ -96,16 +97,16 @@ public class CustomCryptoTest {
                 .setCustomEncryptionConfigsList(cryptoList1);
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Custom encryption has null version", ex1.getMessage());
-        List<Crypto> cryptoList2 = Arrays.asList(new DefaultCryptoWithCustomVersion(""));
+        List<Crypto> cryptoList2 = Collections.singletonList(new DefaultCryptoWithCustomVersion(""));
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomEncryptionConfigsList(cryptoList2)));
         assertEquals("Custom encryption has null version", ex2.getMessage());
     }
 
     @Test
-    public void negativeNullCryptoTest() throws StorageClientException {
+    void negativeNullCryptoTest() throws StorageClientException {
         List<Crypto> cryptoList = Arrays.asList(null, new PseudoCustomCrypto(true));
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), 1);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
@@ -118,8 +119,8 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestWithoutEncWithCustomCrypto() {
-        List<Crypto> cryptoList = Arrays.asList(new PseudoCustomCrypto(true));
+    void negativeTestWithoutEncWithCustomCrypto() {
+        List<Crypto> cryptoList = Collections.singletonList(new PseudoCustomCrypto(true));
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
                 .setApiKey(API_KEY)
@@ -131,13 +132,13 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestCustomCryptoSameVersions() throws StorageClientException {
+    void negativeTestCustomCryptoSameVersions() throws StorageClientException {
         String cryptoVersion = "someVersion";
         Crypto crypto1 = new DefaultCryptoWithCustomVersion(cryptoVersion, true);
         Crypto crypto2 = new DefaultCryptoWithCustomVersion(cryptoVersion, false);
         List<Crypto> cryptoList = Arrays.asList(crypto1, crypto2);
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), 1);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
@@ -150,12 +151,12 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestCustomCryptoMultipleCurrent() throws StorageClientException {
+    void negativeTestCustomCryptoMultipleCurrent() throws StorageClientException {
         Crypto crypto1 = new DefaultCryptoWithCustomVersion("first", true);
         Crypto crypto2 = new CryptoStub(true);
         List<Crypto> cryptoList = Arrays.asList(crypto1, crypto2);
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), 1);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
@@ -168,11 +169,11 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestCustomCryptoWithoutKey() throws StorageClientException {
+    void negativeTestCustomCryptoWithoutKey() throws StorageClientException {
         Crypto crypto = new CryptoStub(true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, false);
-        SecretsData data = new SecretsData(Arrays.asList(key1), 1);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
@@ -185,12 +186,12 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void positiveEncryptDecrypt() throws StorageClientException, StorageCryptoException {
+    void positiveEncryptDecrypt() throws StorageClientException, StorageCryptoException {
         Crypto crypto = new CryptoStub(true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
@@ -201,12 +202,12 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeDecryptFormat() throws StorageClientException, StorageCryptoException {
+    void negativeDecryptFormat() throws StorageClientException, StorageCryptoException {
         Crypto crypto = new CryptoStub(true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
 
@@ -220,7 +221,7 @@ public class CustomCryptoTest {
         assertEquals("Unknown cipher format", ex2.getMessage());
 
         Crypto anotherCrypto = new PseudoCustomCrypto(true);
-        cryptoList = Arrays.asList(anotherCrypto);
+        cryptoList = Collections.singletonList(anotherCrypto);
         CryptoManager anotherManager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String encryptedAnother = anotherManager.encrypt(BODY_FOR_ENCRYPTION).getKey();
         StorageCryptoException ex3 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(encryptedAnother, keyVersion));
@@ -228,12 +229,12 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestWithCryptoExceptions() throws StorageClientException, StorageCryptoException {
+    void negativeTestWithCryptoExceptions() throws StorageClientException, StorageCryptoException {
         Crypto crypto = new PseudoCustomCrypto(true, 2, 1, true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
@@ -245,24 +246,24 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestWithCryptoExceptionsInInit() throws StorageClientException {
+    void negativeTestWithCryptoExceptionsInInit() throws StorageClientException {
         Crypto crypto = new PseudoCustomCrypto(true, 0, 0, true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList, false));
         assertTrue(ex.getMessage().startsWith("Validation failed for custom encryption config with version"));
     }
 
     @Test
-    public void negativeTestWithUnexpectedExceptions() throws StorageClientException, StorageCryptoException {
+    void negativeTestWithUnexpectedExceptions() throws StorageClientException, StorageCryptoException {
         Crypto crypto = new PseudoCustomCrypto(true, 2, 1, false);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         String text = BODY_FOR_ENCRYPTION;
@@ -276,12 +277,12 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeTestWithWrongCipher() throws StorageClientException {
+    void negativeTestWithWrongCipher() throws StorageClientException {
         Crypto crypto = new PseudoCustomCrypto(true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
@@ -291,12 +292,12 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void negativeDecryptWrongVersion() throws StorageClientException, StorageCryptoException {
+    void negativeDecryptWrongVersion() throws StorageClientException, StorageCryptoException {
         Crypto crypto = new CryptoStub(true);
-        List<Crypto> cryptoList = Arrays.asList(crypto);
+        List<Crypto> cryptoList = Collections.singletonList(crypto);
         int keyVersion = 1;
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
-        SecretsData data = new SecretsData(Arrays.asList(key1), keyVersion);
+        SecretsData data = new SecretsData(Collections.singletonList(key1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
         CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
         Map.Entry<String, Integer> result = manager.encrypt(BODY_FOR_ENCRYPTION);
@@ -308,13 +309,13 @@ public class CustomCryptoTest {
     }
 
     @Test
-    public void defaultCryptoTest() {
+    void defaultCryptoTest() {
         DefaultCrypto crypto = new DefaultCrypto(StandardCharsets.UTF_8);
         assertTrue(crypto.isCurrent());
     }
 
     @Test
-    public void negativeTestPteAndCustomEnc() {
+    void negativeTestPteAndCustomEnc() {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)

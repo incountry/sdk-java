@@ -50,8 +50,8 @@ public class StorageIntegrationTest {
     private static final String PROFILE_KEY = "ProfileKey" + TEMP;
     private static final String KEY_2 = "Key2" + TEMP;
     private static final String KEY_3 = "Key3" + TEMP;
-    private static final Integer BATCH_WRITE_RANGE_KEY = 2;
-    private static final Integer WRITE_RANGE_KEY = 1;
+    private static final Long BATCH_WRITE_RANGE_KEY = 2L;
+    private static final Long WRITE_RANGE_KEY = 1L;
     private static final String RECORD_BODY = "test";
 
     private static final String SECRET = "123456789_123456789_1234567890Ab";
