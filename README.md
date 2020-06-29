@@ -1,8 +1,3 @@
-[![Build Status](https://travis-ci.com/incountry/sdk-java.svg?branch=master)](https://travis-ci.com/incountry/sdk-java)
-[![javadoc](https://javadoc.io/badge2/com.incountry/incountry-java-client/javadoc.svg)](https://javadoc.io/doc/com.incountry/incountry-java-client)
-[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=alert_status)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
-[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
-
 InCountry Storage SDK
 ===========
 Installation
