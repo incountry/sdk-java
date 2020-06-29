@@ -250,7 +250,7 @@ Below is the example of how you may use `write` method:
 key = "user_1";
 body = "some PII data";
 profileKey = "customer";
-rangeKey = 10000l;
+rangeKey = 10000L;
 key2 = "english";
 key3 = "insurance";
 Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
@@ -366,7 +366,7 @@ Below is the example how to use `find` method along with `FindFilterBuilder`:
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .key2Eq("someKey")
                   .key3Eq("firstValue","secondValue")
-                  .rangeKeyBetween(123l, 456l);
+                  .rangeKeyBetween(123L, 456L);
 
 BatchRecord findResult = storage.find("us", builder);
 if (findResult.getCount() > 0) {
@@ -461,7 +461,7 @@ Here is the example of how `findOne` method can be used:
 FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq("someKey")
                 .key3Eq("firstValue", "secondValue")
-                .rangeKeyBetween(123l, 456l);
+                .rangeKeyBetween(123L, 456L);
 
 Record record = storage.findOne("us", builder);
 //...
