@@ -15,7 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class HttpUtils {
+public class HttpConnection {
 
     private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
     private static final String URL_ERROR = "Url error";
@@ -24,11 +24,12 @@ public class HttpUtils {
     private static final String POST = "POST";
     private static final String GET = "GET";
 
-    private HttpUtils() {
+    private CloseableHttpClient httpClient;
 
-    }
-
-    public static CloseableHttpClient buildHttpClient(Integer timeout, Integer poolSize) throws StorageServerException {
+    public CloseableHttpClient buildHttpClient(Integer timeout, Integer poolSize) throws StorageServerException {
+        if (httpClient != null) {
+            return httpClient;
+        }
         if (poolSize == null || poolSize < 0 || poolSize == 0) {
             throw new StorageServerException(CONNECTION_PULL_ERROR);
         }
@@ -38,13 +39,14 @@ public class HttpUtils {
                 .setConnectTimeout(timeout)
                 .setSocketTimeout(timeout)
                 .build();
-        return HttpClients.custom()
+        httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)
                 .setDefaultRequestConfig(requestConfig)
                 .build();
+        return httpClient;
     }
 
-    public static HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
+    public HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
         URI uri;
         try {
             uri = new URI(url);

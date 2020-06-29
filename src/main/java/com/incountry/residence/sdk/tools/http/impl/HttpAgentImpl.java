@@ -4,7 +4,7 @@ import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
+import com.incountry.residence.sdk.tools.http.utils.HttpConnection;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -27,6 +27,7 @@ public class HttpAgentImpl implements HttpAgent {
     private final String environmentId;
     private final Charset charset;
     private final String userAgent;
+    private final HttpConnection connection;
     private final CloseableHttpClient httpClient;
 
 
@@ -42,7 +43,8 @@ public class HttpAgentImpl implements HttpAgent {
         this.environmentId = environmentId;
         this.charset = charset;
         this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
-        this.httpClient = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
+        this.connection = tokenClient.getHttpConnection();
+        this.httpClient = connection.buildHttpClient(timeoutInMs, poolSize);
     }
 
     private HttpRequestBase addHeaders(HttpRequestBase request, String audience,  String region) throws StorageServerException {
@@ -70,7 +72,7 @@ public class HttpAgentImpl implements HttpAgent {
                 throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException("Url must not be null."));
             }
 
-            HttpRequestBase request = HttpUtils.createRequest(url, method, body);
+            HttpRequestBase request = connection.createRequest(url, method, body);
             request = addHeaders(request, audience, region);
 
             HttpResponse response = httpClient.execute(request);

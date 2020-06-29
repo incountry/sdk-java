@@ -6,7 +6,7 @@ import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.utils.HttpUtils;
+import com.incountry.residence.sdk.tools.http.utils.HttpConnection;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -56,10 +56,11 @@ public class OAuthTokenClient implements TokenClient {
 
     private final String basicAuthToken;
     private final String scope;
-    private final CloseableHttpClient httpClient;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
     private final Map<String, String> regionMap = new HashMap<>();
     private final String defaultAuthEndpoint;
+    private final HttpConnection connection;
+    private final CloseableHttpClient httpClient;
 
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
                             String secret, Integer timeoutInMs, Integer poolSize) throws StorageClientException, StorageServerException {
@@ -71,9 +72,10 @@ public class OAuthTokenClient implements TokenClient {
                 throw new StorageClientException(MSG_ERR_ILLEGAL_AUTH_ENDPOINTS);
             }
         }
+        this.connection = new HttpConnection();
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.httpClient = HttpUtils.buildHttpClient(timeoutInMs, poolSize);
+        this.httpClient = connection.buildHttpClient(timeoutInMs, poolSize);
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
@@ -93,6 +95,11 @@ public class OAuthTokenClient implements TokenClient {
     @Override
     public String getToken(String audience, String region) throws StorageServerException {
         return refreshToken(false, audience, region);
+    }
+
+    @Override
+    public HttpConnection getHttpConnection() {
+        return connection;
     }
 
     public synchronized String refreshToken(final boolean force, final String audience, String region) throws StorageServerException {
@@ -122,7 +129,7 @@ public class OAuthTokenClient implements TokenClient {
                 authUrl = defaultAuthEndpoint;
             }
 
-            HttpRequestBase request = HttpUtils.createRequest(authUrl, POST, body);
+            HttpRequestBase request = connection.createRequest(authUrl, POST, body);
             request = addHeaders(request);
 
             HttpResponse response = httpClient.execute(request);
