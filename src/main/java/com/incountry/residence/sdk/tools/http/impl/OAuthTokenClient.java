@@ -27,6 +27,7 @@ public class OAuthTokenClient implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
     private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audience={}";
+    private static final String MSG_AUTH_URL = "auth URL={}";
     private static final String DEFAULT_APAC_AUTH_URL = "https://auth-apac.incountry.com/oauth2/token";
     private static final String DEFAULT_EMEA_AUTH_URL = "https://auth-emea.incountry.com/oauth2/token";
 
@@ -127,6 +128,10 @@ public class OAuthTokenClient implements TokenClient {
             String authUrl = regionMap.get(region);
             if (authUrl == null) {
                 authUrl = defaultAuthEndpoint;
+            }
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(MSG_AUTH_URL, authUrl);
             }
 
             HttpRequestBase request = connection.createRequest(authUrl, POST, body);

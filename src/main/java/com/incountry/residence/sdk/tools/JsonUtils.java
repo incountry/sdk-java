@@ -186,7 +186,7 @@ public class JsonUtils {
             return null;
         }
         JsonArray array = new JsonArray();
-        for (int i : range.getValues()) {
+        for (long i : range.getValues()) {
             array.add(i);
         }
         return array;
