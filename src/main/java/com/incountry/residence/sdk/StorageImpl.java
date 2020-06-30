@@ -235,9 +235,7 @@ public class StorageImpl implements Storage {
     public MigrateResult migrate(String country, int limit) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("migrate params (country={} , limit={})",
-                    country,
-                    limit);
+            LOG.trace("migrate params (country={} , limit={})", country, limit);
         }
         if (!encrypted) {
             LOG.error(MSG_ERR_MIGR_NOT_SUPPORT);
