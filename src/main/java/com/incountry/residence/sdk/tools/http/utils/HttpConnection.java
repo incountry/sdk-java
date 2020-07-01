@@ -17,7 +17,6 @@ import java.net.URISyntaxException;
 
 public class HttpConnection {
 
-    private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
     private static final String URL_ERROR = "Url error";
     private static final String SERVER_ERROR = "Server request error: %s";
     private static final String NULL_BODY = "Body must not be null";
@@ -26,15 +25,11 @@ public class HttpConnection {
 
     private CloseableHttpClient httpClient;
 
-    public CloseableHttpClient buildHttpClient(Integer timeout, Integer poolSize) throws StorageServerException {
+    public CloseableHttpClient buildHttpClient(Integer timeout, PoolingHttpClientConnectionManager connectionManager) {
         if (httpClient != null) {
             return httpClient;
         }
-        if (poolSize == null || poolSize < 0 || poolSize == 0) {
-            throw new StorageServerException(CONNECTION_PULL_ERROR);
-        }
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(poolSize);
+
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(timeout)
                 .setSocketTimeout(timeout)

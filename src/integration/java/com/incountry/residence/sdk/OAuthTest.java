@@ -10,6 +10,8 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -41,7 +43,6 @@ public class OAuthTest {
     private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
     private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
-    private static final Integer POOL_SIZE = 5;
 
     private static final Integer HTTP_TIMEOUT = 30_000;
 
@@ -82,7 +83,9 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT, POOL_SIZE));
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(5);
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT, connectionManager));
         assertNotNull(tokenClient.getToken(END_POINT, null));
         assertNotNull(tokenClient.getToken(END_POINT, null));
         assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
@@ -109,17 +112,21 @@ public class OAuthTest {
         //IN mid APAC -> APAC auth
         StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
         assertEquals(errorMessage, ex.getMessage());
+        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
 
         //AE mid EMEA -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
         assertEquals(errorMessage, ex.getMessage());
+        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
 
         //US mid AMER -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
         assertEquals(errorMessage, ex.getMessage());
+        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
 
         //Minipop - > EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
         assertEquals(errorMessage, ex.getMessage());
+        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
     }
 }

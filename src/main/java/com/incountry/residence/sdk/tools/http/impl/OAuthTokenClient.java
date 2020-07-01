@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,7 +65,7 @@ public class OAuthTokenClient implements TokenClient {
     private final CloseableHttpClient httpClient;
 
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
-                            String secret, Integer timeoutInMs, Integer poolSize) throws StorageClientException, StorageServerException {
+                            String secret, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) throws StorageClientException, StorageServerException {
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
             if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
@@ -76,7 +77,7 @@ public class OAuthTokenClient implements TokenClient {
         this.connection = new HttpConnection();
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.httpClient = connection.buildHttpClient(timeoutInMs, poolSize);
+        this.httpClient = connection.buildHttpClient(timeoutInMs, connectionManager);
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
@@ -144,7 +145,7 @@ public class OAuthTokenClient implements TokenClient {
             boolean isSuccess = status == 200;
 
             if (!isSuccess) {
-                throw createAndLogException(MSG_RESPONSE_ERR + ": '" + responseContent + "'");
+                throw createAndLogException(String.format("%s: '%s'", MSG_RESPONSE_ERR, responseContent));
             }
             return validateAndGet(responseContent);
 

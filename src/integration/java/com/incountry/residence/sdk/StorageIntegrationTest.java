@@ -11,6 +11,8 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -24,9 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -39,6 +39,14 @@ public class StorageIntegrationTest {
     public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
     private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
     private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
+    private static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
+    private static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
+    private static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
+    private static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
+    private static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
+    private static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
+
+    private static final Logger LOG = LogManager.getLogger(StorageImpl.class);
 
     private static final String TEMP = "-javasdk-" +
             new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) +
@@ -49,7 +57,7 @@ public class StorageIntegrationTest {
     private final Storage storageIgnoreCase;
     private final SecretKeyAccessor secretKeyAccessor;
 
-    private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
+//    private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
     private static final String BATCH_WRITE_KEY = "BatchWriteKey" + TEMP;
     private static final String WRITE_KEY = "Write_Key" + TEMP;
     private static final String WRITE_KEY_IGNORE_CASE = WRITE_KEY + "_IgnorE_CasE";
@@ -59,9 +67,22 @@ public class StorageIntegrationTest {
     private static final Long BATCH_WRITE_RANGE_KEY = 2L;
     private static final Long WRITE_RANGE_KEY = 1L;
     private static final String RECORD_BODY = "test";
-    private static final Integer POOL_SIZE = 5;
+    private static final Integer HTTP_POOL_SIZE = 5;
 
-    private static final String SECRET = "123456789_123456789_1234567890Ab";
+    private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
+
+    private static final String END_POINT = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
+
+    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
+//    private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
+    private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
+
+    private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
+    private static final String ENV_ID = loadFromEnv(INTEGR_ENV_KEY_ENVID);
+
+//    private static final String SECRET = "123456789_123456789_1234567890Ab";
+    private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
+    private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
     private static final int VERSION = 0;
 
     public static String loadFromEnv(String key) {
@@ -80,13 +101,30 @@ public class StorageIntegrationTest {
                 loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
                 secretKeyAccessor);
 
+        String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
+        String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
+        String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
+        String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
+        String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_HYDRA);
+        String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
-                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
-                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
+                .setEndpointMask(ENDPOINT_MASK)
+                .setEnvId(ENV_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setNormalizeKeys(true)
-                .setPoolSize(POOL_SIZE);
+                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT);
+
+
+//        StorageConfig config = new StorageConfig()
+//                .setEnvId(ENV_ID)
+//                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
+//                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+//                .setSecretKeyAccessor(secretKeyAccessor)
+//                .setNormalizeKeys(true)
+//                .setHttpPoolSize(HTTP_POOL_SIZE);
+
         storageIgnoreCase = StorageImpl.getInstance(config);
     }
 
@@ -259,12 +297,22 @@ public class StorageIntegrationTest {
         SecretKeyAccessor customAccessor = () -> anotherSecretsData;
         List<Crypto> cryptoList = new ArrayList<>();
         cryptoList.add(new FernetCrypto(true));
+
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
-                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
-                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
-                .setSecretKeyAccessor(customAccessor)
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setEndPoint(END_POINT)
+                .setEnvId(ENV_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
                 .setCustomEncryptionConfigsList(cryptoList);
+
+
+//        StorageConfig config = new StorageConfig()
+//                .setEnvId(ENV_ID)
+//                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
+//                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+//                .setSecretKeyAccessor(customAccessor)
+//                .setCustomEncryptionConfigsList(cryptoList);
         Storage storage2 = StorageImpl.getInstance(config);
         //write record with custom enc
         String customRecordKey = WRITE_KEY + "_custom";
@@ -323,12 +371,21 @@ public class StorageIntegrationTest {
         SecretKeyAccessor mySecretKeyAccessor = () -> secretsData;
 
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
-                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
-                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
-                .setSecretKeyAccessor(mySecretKeyAccessor)
-                .setNormalizeKeys(true)
-                .setPoolSize(POOL_SIZE);
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setEndPoint(END_POINT)
+                .setEnvId(ENV_ID)
+                .setSecretKeyAccessor(secretKeyAccessor);
+
+
+
+//        StorageConfig config = new StorageConfig()
+//                .setEnvId(ENV_ID)
+//                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
+//                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+//                .setSecretKeyAccessor(mySecretKeyAccessor)
+//                .setNormalizeKeys(true)
+//                .setHttpPoolSize(HTTP_POOL_SIZE);
         Storage myStorage = StorageImpl.getInstance(config);
 
         Callable<Boolean> callableTask = () -> {
@@ -336,27 +393,25 @@ public class StorageIntegrationTest {
                 String randomKey = UUID.randomUUID().toString();
                 Record record = new Record(randomKey, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
                 myStorage.write(COUNTRY, record);
-                Record incomingRecord = myStorage.read(COUNTRY, WRITE_KEY);
-                assertEquals(WRITE_KEY, incomingRecord.getKey());
+                Record incomingRecord = myStorage.read(COUNTRY, randomKey);
+                assertEquals(randomKey, incomingRecord.getKey());
                 assertEquals(RECORD_BODY, incomingRecord.getBody());
                 assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
                 assertEquals(KEY_2, incomingRecord.getKey2());
                 assertEquals(KEY_3, incomingRecord.getKey3());
-                myStorage.delete(COUNTRY, WRITE_KEY);
+                myStorage.delete(COUNTRY, randomKey);
                 return true;
             } catch (StorageException e) {
-                e.printStackTrace();
+                LOG.error(e.getMessage());
             }
             return false;
         };
 
         List<Callable<Boolean>> callableTasks = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < HTTP_POOL_SIZE * 10; i++) {
             callableTasks.add(callableTask);
         }
-        ExecutorService executorService =
-                new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<Runnable>());
+        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE * 5);
         List<Future<Boolean>> futures = executorService.invokeAll(callableTasks);
         futures.forEach(item -> {
             assertTrue(item.isDone());

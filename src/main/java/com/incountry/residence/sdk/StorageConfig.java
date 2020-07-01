@@ -34,7 +34,7 @@ public class StorageConfig {
     private Integer httpTimeout;
     private Map<String, String> authEndpoints;
     private String defaultAuthEndpoint;
-    private Integer poolSize;
+    private Integer httpPoolSize;
 
     public String getEnvId() {
         return envId;
@@ -258,13 +258,18 @@ public class StorageConfig {
         return this;
     }
 
-    public StorageConfig setPoolSize(Integer poolSize) {
-        this.poolSize = poolSize;
-        return this;
+    public Integer getHttpPoolSize() {
+        return httpPoolSize;
     }
 
-    public Integer getPoolSize() {
-        return poolSize;
+    /**
+     * Parameter httpPoolSize is used for set connection pool size during http connection
+     * @param httpPoolSize pool size
+     * @return StorageConfig
+     */
+    public StorageConfig setHttpPoolSize(Integer httpPoolSize) {
+        this.httpPoolSize = httpPoolSize;
+        return this;
     }
 
     public String getEndpointMask() {
@@ -312,6 +317,7 @@ public class StorageConfig {
         newInstance.setHttpTimeout(getHttpTimeout());
         newInstance.setAuthEndpoints(getAuthEndpoints());
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
+        newInstance.setHttpPoolSize(getHttpPoolSize());
         return newInstance;
     }
 
@@ -331,6 +337,7 @@ public class StorageConfig {
                 ", authEndpointMap='" + authEndpoints + '\'' +
                 ", defaultAuthEndpoint='" + defaultAuthEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
+                ", httpPoolSize='" + httpPoolSize + '\'' +
                 '}';
     }
 

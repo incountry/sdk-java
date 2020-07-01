@@ -9,6 +9,7 @@ import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +32,7 @@ public class HttpAgentImpl implements HttpAgent {
     private final CloseableHttpClient httpClient;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, Integer poolSize) throws StorageServerException {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) throws StorageServerException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
                     tokenClient,
@@ -44,7 +45,7 @@ public class HttpAgentImpl implements HttpAgent {
         this.charset = charset;
         this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
         this.connection = tokenClient.getHttpConnection();
-        this.httpClient = connection.buildHttpClient(timeoutInMs, poolSize);
+        this.httpClient = connection.buildHttpClient(timeoutInMs, connectionManager);
     }
 
     private HttpRequestBase addHeaders(HttpRequestBase request, String audience,  String region) throws StorageServerException {

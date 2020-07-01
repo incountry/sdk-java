@@ -13,8 +13,6 @@ import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -52,11 +50,10 @@ class StorageTest {
     private static final String PROFILE_KEY = "profileKey";
     private static final Long RANGE_KEY = 1L;
     private static final String BODY = "body";
-    private static final Integer POOL_SIZE = 5;
+    private static final Integer HTTP_POOL_SIZE = 5;
 
     private CryptoManager cryptoManager;
     private SecretKeyAccessor secretKeyAccessor;
-    private final TokenClient tokenClient = new ApiKeyTokenClient("<apiKey>");
 
     @BeforeEach
     public void initializeAccessorAndCrypto() throws StorageClientException {
@@ -533,8 +530,7 @@ class StorageTest {
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
-                .setEnvId("<envId>")
-                .setPoolSize(POOL_SIZE);
+                .setEnvId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
         assertTrue(storage.delete(COUNTRY, KEY));
         server.stop(0);
@@ -547,7 +543,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setApiKey("<apiKey>")
                 .setHttpTimeout(0)
-                .setPoolSize(POOL_SIZE);
+                .setHttpPoolSize(HTTP_POOL_SIZE);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Connection timeout can't be <1", ex.getMessage());
     }
@@ -561,7 +557,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>")
-                .setPoolSize(POOL_SIZE);
+                .setHttpPoolSize(HTTP_POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
         assertEquals("Server request error: DELETE", ex.getMessage());

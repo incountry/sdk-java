@@ -15,6 +15,7 @@ import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -41,11 +42,12 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
+    private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
     private static final Integer DEFAULT_TIMEOUT = 30;
-    private static final Integer DEFAULT_POOL_SIZE = 5;
+    private static final Integer DEFAULT_HTTP_POOL_SIZE = 20;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -164,6 +166,9 @@ public class StorageImpl implements Storage {
             }
             httpTimeout *= 1000; //expected value in ms
             TokenClient tokenClient;
+            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+            connectionManager.setMaxTotal(getPollSize(config));
+
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
@@ -173,7 +178,7 @@ public class StorageImpl implements Storage {
                         config.getClientId(),
                         config.getClientSecret(),
                         httpTimeout,
-                        getPollSize(config)
+                        connectionManager
                         );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
             } else if (config.getApiKey() != null) {
@@ -189,14 +194,21 @@ public class StorageImpl implements Storage {
                     config.getCountriesEndpoint(),
                     tokenClient,
                     httpTimeout,
-                    getPollSize(config));
+                    connectionManager);
         } else {
             return dao;
         }
     }
 
-    private static Integer getPollSize(StorageConfig config) {
-        return config.getPoolSize() != null ? config.getPoolSize() : DEFAULT_POOL_SIZE;
+    private static Integer getPollSize(StorageConfig config) throws StorageClientException {
+        Integer poolSize = config.getHttpPoolSize();
+        if (poolSize == null) {
+            return DEFAULT_HTTP_POOL_SIZE;
+        }
+        if (poolSize < 0 || poolSize == 0) {
+            throw new StorageClientException(CONNECTION_PULL_ERROR);
+        }
+        return config.getHttpPoolSize();
     }
 
     private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {
