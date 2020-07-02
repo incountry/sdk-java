@@ -32,7 +32,7 @@ public class HttpAgentImpl implements HttpAgent {
     private final CloseableHttpClient httpClient;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) throws StorageServerException {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
                     tokenClient,
@@ -73,12 +73,10 @@ public class HttpAgentImpl implements HttpAgent {
                 throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException("Url must not be null."));
             }
 
-            HttpRequestBase request = connection.createRequest(url, method, body);
-            request = addHeaders(request, audience, region);
-
+            HttpRequestBase request = addHeaders(connection.createRequest(url, method, body), audience, region);
             HttpResponse response = httpClient.execute(request);
 
-            Integer status = response.getStatusLine().getStatusCode();
+            int status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());
             String result;
             ApiResponse params = codeMap.get(status);

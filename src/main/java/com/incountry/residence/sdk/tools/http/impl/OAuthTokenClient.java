@@ -65,7 +65,7 @@ public class OAuthTokenClient implements TokenClient {
     private final CloseableHttpClient httpClient;
 
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
-                            String secret, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) throws StorageClientException, StorageServerException {
+                            String secret, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) throws StorageClientException {
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
             if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
@@ -135,11 +135,10 @@ public class OAuthTokenClient implements TokenClient {
                 LOG.trace(MSG_AUTH_URL, authUrl);
             }
 
-            HttpRequestBase request = connection.createRequest(authUrl, POST, body);
-            request = addHeaders(request);
-
+            HttpRequestBase request = addHeaders(connection.createRequest(authUrl, POST, body));
             HttpResponse response = httpClient.execute(request);
-            Integer status = response.getStatusLine().getStatusCode();
+
+            int status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());
 
             boolean isSuccess = status == 200;
