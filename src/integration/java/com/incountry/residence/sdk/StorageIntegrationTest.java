@@ -381,7 +381,7 @@ public class StorageIntegrationTest {
         };
 
         List<Callable<Boolean>> callableTasks = new ArrayList<>();
-        for (int i = 0; i < HTTP_POOL_SIZE * 3; i++) {
+        for (int i = 0; i < HTTP_POOL_SIZE; i++) {
             callableTasks.add(callableTask);
         }
         ExecutorService executorService = Executors.newFixedThreadPool(10);
