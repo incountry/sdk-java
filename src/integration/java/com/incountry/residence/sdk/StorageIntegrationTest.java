@@ -392,7 +392,7 @@ public class StorageIntegrationTest {
                 assertEquals(KEY_3, incomingRecord.getKey3());
                 storage.delete(COUNTRY, randomKey);
             } catch (StorageException exception) {
-                LOG.error(exception);
+                LOG.error("Exception in connectionPoolTest", exception);
                 return exception;
             }
             return null;
