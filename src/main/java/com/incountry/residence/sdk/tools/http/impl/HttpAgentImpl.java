@@ -5,8 +5,11 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
@@ -48,7 +51,7 @@ public class HttpAgentImpl implements HttpAgent {
         this.httpClient = httpClient;
     }
 
-    private HttpRequestBase addHeaders(HttpRequestBase request, String audience,  String region) throws StorageServerException {
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region) throws StorageServerException {
         if (audience != null) {
             request.addHeader("Authorization", "Bearer " + tokenClient.getToken(audience, region));
         }
@@ -74,9 +77,6 @@ public class HttpAgentImpl implements HttpAgent {
             }
             HttpRequestBase request = addHeaders(createRequest(url, method, body), audience, region);
             CloseableHttpResponse response = httpClient.execute(request);
-//            response.close();
-//            HttpResponse response = httpClient.execute(request);
-//            response.
 
             int status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());

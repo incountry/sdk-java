@@ -46,7 +46,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
     private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
-    private static final String MSG_ERR_HTTP_CONFIG = "HTTP client configuration error";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
