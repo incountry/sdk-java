@@ -24,9 +24,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -64,7 +66,7 @@ public class StorageIntegrationTest {
     private static final Long BATCH_WRITE_RANGE_KEY = 2L;
     private static final Long WRITE_RANGE_KEY = 1L;
     private static final String RECORD_BODY = "test";
-    private static final Integer HTTP_POOL_SIZE = 5;
+    private static final Integer HTTP_POOL_SIZE = 2;
 
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
     private static final String CRYPTO_SECRET = "123456789_123456789_1234567890Ab";
@@ -342,7 +344,7 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(800)
-    public void connectionPoolTest() throws StorageException, InterruptedException {
+    public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
         SecretKey secretKey = new SecretKey(CRYPTO_SECRET, VERSION, false);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
@@ -359,33 +361,41 @@ public class StorageIntegrationTest {
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
                 .setHttpPoolSize(HTTP_POOL_SIZE);
 
-        Storage myStorage = StorageImpl.getInstance(config);
+        Storage customStorage = StorageImpl.getInstance(config);
+        //http pool size < concurrent threads < count of threads
+        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE * 2);
+        List<Future<StorageException>> futureList = new ArrayList<>();
+        for (int i = 0; i < HTTP_POOL_SIZE * 10; i++) {
+            futureList.add(executorService.submit(createCallableTask(customStorage, i)));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
+        for (Future<StorageException> one : futureList) {
+            assertTrue(one.isDone());
+            assertNull(one.get());
+        }
+    }
 
-        Callable<Boolean> callableTask = () -> {
+    private Callable<StorageException> createCallableTask(final Storage storage, final int numb) {
+        return () -> {
             try {
-                String randomKey = UUID.randomUUID().toString();
+                String randomKey = WRITE_KEY + UUID.randomUUID().toString();
+                Thread currentThread = Thread.currentThread();
+                currentThread.setName("connectionPoolTest #" + numb);
                 Record record = new Record(randomKey, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
-                myStorage.write(COUNTRY, record);
-                Record incomingRecord = myStorage.read(COUNTRY, randomKey);
+                storage.write(COUNTRY, record);
+                Record incomingRecord = storage.read(COUNTRY, randomKey);
                 assertEquals(randomKey, incomingRecord.getKey());
                 assertEquals(RECORD_BODY, incomingRecord.getBody());
                 assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
                 assertEquals(KEY_2, incomingRecord.getKey2());
                 assertEquals(KEY_3, incomingRecord.getKey3());
-                myStorage.delete(COUNTRY, randomKey);
-                return true;
+                storage.delete(COUNTRY, randomKey);
             } catch (StorageException e) {
                 LOG.error(e.getMessage());
+                return e;
             }
-            return false;
+            return null;
         };
-
-        List<Callable<Boolean>> callableTasks = new ArrayList<>();
-        for (int i = 0; i < HTTP_POOL_SIZE; i++) {
-            callableTasks.add(callableTask);
-        }
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-        List<Future<Boolean>> futures = executorService.invokeAll(callableTasks);
-        futures.forEach(item -> assertTrue(item.isDone()));
     }
 }
