@@ -391,9 +391,9 @@ public class StorageIntegrationTest {
                 assertEquals(KEY_2, incomingRecord.getKey2());
                 assertEquals(KEY_3, incomingRecord.getKey3());
                 storage.delete(COUNTRY, randomKey);
-            } catch (StorageException e) {
-                LOG.error(e.getMessage());
-                return e;
+            } catch (StorageException exception) {
+                LOG.error(exception);
+                return exception;
             }
             return null;
         };
