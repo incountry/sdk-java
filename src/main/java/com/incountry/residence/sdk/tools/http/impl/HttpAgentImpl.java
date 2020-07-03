@@ -4,18 +4,19 @@ import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.utils.HttpConnection;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 public class HttpAgentImpl implements HttpAgent {
@@ -23,29 +24,28 @@ public class HttpAgentImpl implements HttpAgent {
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error: %s";
     private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
+    private static final String MSG_ERR_URL = "URL error";
+    private static final String MSG_ERR_SERVER_REQUES = "Server request error: %s";
+    private static final String MSG_ERR_NULL_BODY = "Body must not be null";
+    private static final String POST = "POST";
+    private static final String GET = "GET";
 
     private final TokenClient tokenClient;
     private final String environmentId;
-    private final Charset charset;
     private final String userAgent;
-    private final HttpConnection connection;
     private final CloseableHttpClient httpClient;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, Charset charset, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) {
+    public HttpAgentImpl(TokenClient tokenClient, String environmentId, CloseableHttpClient httpClient) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={} , charset={}, timeoutInMs={})",
+            LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={})",
                     tokenClient,
-                    environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null,
-                    charset,
-                    timeoutInMs);
+                    environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null);
         }
         this.tokenClient = tokenClient;
         this.environmentId = environmentId;
-        this.charset = charset;
         this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
-        this.connection = tokenClient.getHttpConnection();
-        this.httpClient = connection.buildHttpClient(timeoutInMs, connectionManager);
+        this.httpClient = httpClient;
     }
 
     private HttpRequestBase addHeaders(HttpRequestBase request, String audience,  String region) throws StorageServerException {
@@ -72,9 +72,11 @@ public class HttpAgentImpl implements HttpAgent {
             if (url == null) {
                 throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException("Url must not be null."));
             }
-
-            HttpRequestBase request = addHeaders(connection.createRequest(url, method, body), audience, region);
-            HttpResponse response = httpClient.execute(request);
+            HttpRequestBase request = addHeaders(createRequest(url, method, body), audience, region);
+            CloseableHttpResponse response = httpClient.execute(request);
+//            response.close();
+//            HttpResponse response = httpClient.execute(request);
+//            response.
 
             int status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());
@@ -89,6 +91,7 @@ public class HttpAgentImpl implements HttpAgent {
             }
 
             if (params != null && params.isIgnored()) {
+                response.close();
                 return null;
             }
             if (params == null || params.isError()) {
@@ -96,6 +99,7 @@ public class HttpAgentImpl implements HttpAgent {
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
+            response.close();
             return result;
 
         } catch (IOException ex) {
@@ -105,5 +109,29 @@ public class HttpAgentImpl implements HttpAgent {
 
     private boolean canRetry(ApiResponse params, int retryCount) {
         return params.isCanRetry() && retryCount > 0;
+    }
+
+    public static HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException ex) {
+            throw new StorageServerException(MSG_ERR_URL, ex);
+        }
+
+        if (method.equals(POST)) {
+            if (body == null) {
+                LOG.error(MSG_ERR_NULL_BODY);
+                throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new NullPointerException(MSG_ERR_NULL_BODY));
+            }
+            HttpPost request = new HttpPost(uri);
+            StringEntity entity = new StringEntity(body);
+            request.setEntity(entity);
+            return request;
+        } else if (method.equals(GET)) {
+            return new HttpGet(uri);
+        } else {
+            return new HttpDelete(uri);
+        }
     }
 }

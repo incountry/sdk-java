@@ -1,7 +1,6 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.utils.HttpConnection;
 
 public class ApiKeyTokenClient implements TokenClient {
 
@@ -19,10 +18,5 @@ public class ApiKeyTokenClient implements TokenClient {
     @Override
     public String refreshToken(boolean force, String audience, String region) {
         return apiKey;
-    }
-
-    @Override
-    public HttpConnection getHttpConnection() {
-        return new HttpConnection();
     }
 }

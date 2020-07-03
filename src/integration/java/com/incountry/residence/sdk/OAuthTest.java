@@ -11,6 +11,9 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.junit.jupiter.api.Test;
 
@@ -65,6 +68,20 @@ public class OAuthTest {
         return StorageImpl.getInstance(config);
     }
 
+    private CloseableHttpClient initHttpClient() {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(5);
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(HTTP_TIMEOUT)
+                .setSocketTimeout(HTTP_TIMEOUT)
+                .build();
+        return HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+    }
+
     @Test
     public void testStorageWithAuthClient() throws StorageServerException, StorageClientException, StorageCryptoException {
         Storage storage = initStorage();
@@ -83,9 +100,7 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(5);
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HTTP_TIMEOUT, connectionManager));
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, initHttpClient()));
         assertNotNull(tokenClient.getToken(END_POINT, null));
         assertNotNull(tokenClient.getToken(END_POINT, null));
         assertNotNull(tokenClient.refreshToken(true, END_POINT, null));

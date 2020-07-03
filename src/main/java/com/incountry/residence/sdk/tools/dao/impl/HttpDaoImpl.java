@@ -14,12 +14,10 @@ import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +42,6 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_BATCH_WRITE = "/batchWrite";
     private static final String URI_DELIMITER = "/";
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
-    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final Map<String, POP> popMap = new HashMap<>();
 
@@ -55,15 +52,13 @@ public class HttpDaoImpl implements Dao {
     private final String countriesEndpoint;
     private long lastLoadedTime;
 
-    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, Integer httpTimeout, PoolingHttpClientConnectionManager connectionManager) throws StorageServerException {
+    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) throws StorageServerException {
         this(endPoint, endpointMask, countriesEndpoint,
                 ProxyUtils.createLoggingProxyForPublicMethods(
                         new HttpAgentImpl(
                                 ProxyUtils.createLoggingProxyForPublicMethods(tokenClient),
                                 environmentId,
-                                CHARSET,
-                                httpTimeout,
-                                connectionManager)));
+                                httpClient)));
     }
 
     public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) throws StorageServerException {

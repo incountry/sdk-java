@@ -6,12 +6,10 @@ import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.utils.HttpConnection;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,11 +59,10 @@ public class OAuthTokenClient implements TokenClient {
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
     private final Map<String, String> regionMap = new HashMap<>();
     private final String defaultAuthEndpoint;
-    private final HttpConnection connection;
     private final CloseableHttpClient httpClient;
 
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
-                            String secret, Integer timeoutInMs, PoolingHttpClientConnectionManager connectionManager) throws StorageClientException {
+                            String secret, CloseableHttpClient httpClient) throws StorageClientException {
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
             if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
@@ -74,10 +71,9 @@ public class OAuthTokenClient implements TokenClient {
                 throw new StorageClientException(MSG_ERR_ILLEGAL_AUTH_ENDPOINTS);
             }
         }
-        this.connection = new HttpConnection();
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.httpClient = connection.buildHttpClient(timeoutInMs, connectionManager);
+        this.httpClient = httpClient;
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
@@ -97,11 +93,6 @@ public class OAuthTokenClient implements TokenClient {
     @Override
     public String getToken(String audience, String region) throws StorageServerException {
         return refreshToken(false, audience, region);
-    }
-
-    @Override
-    public HttpConnection getHttpConnection() {
-        return connection;
     }
 
     public synchronized String refreshToken(final boolean force, final String audience, String region) throws StorageServerException {
@@ -135,7 +126,7 @@ public class OAuthTokenClient implements TokenClient {
                 LOG.trace(MSG_AUTH_URL, authUrl);
             }
 
-            HttpRequestBase request = addHeaders(connection.createRequest(authUrl, POST, body));
+            HttpRequestBase request = addHeaders(HttpAgentImpl.createRequest(authUrl, POST, body));
             HttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
