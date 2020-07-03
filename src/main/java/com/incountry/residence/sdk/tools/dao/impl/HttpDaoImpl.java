@@ -50,7 +50,7 @@ public class HttpDaoImpl implements Dao {
     private final String endPointMask;
     private final boolean isDefaultEndpoint;
     private final String countriesEndpoint;
-    private long lastLoadedTime;
+    private volatile long lastLoadedTime;
 
     public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) throws StorageServerException {
         this(endPoint, endpointMask, countriesEndpoint,
@@ -68,21 +68,25 @@ public class HttpDaoImpl implements Dao {
         this.endPointMask = endpointMask;
         this.httpAgent = agent;
         if (isDefaultEndpoint) {
-            loadCountries();
+            synchronized (popMap) {
+                loadCountries();
+            }
         }
     }
 
     private void loadCountries() throws StorageServerException {
+        //update country list cache every 1 min
+        if (System.currentTimeMillis() - lastLoadedTime < DEFAULT_UPDATE_INTERVAL) {
+            return;
+        }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Start loading country list");
         }
         String content;
-        synchronized (popMap) {
-            popMap.clear();
-            content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
-            popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
-            lastLoadedTime = System.currentTimeMillis();
-        }
+        popMap.clear();
+        content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
+        popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
+        lastLoadedTime = System.currentTimeMillis();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded country list: {}", popMap.keySet());
         }
@@ -102,10 +106,7 @@ public class HttpDaoImpl implements Dao {
 
     private POP getPopIfCountryIsMidPop(String country) throws StorageServerException {
         synchronized (popMap) {
-            //update country list cache every 1 min
-            if (System.currentTimeMillis() - lastLoadedTime > DEFAULT_UPDATE_INTERVAL) {
-                loadCountries();
-            }
+            loadCountries();
             return popMap.get(country);
         }
     }
