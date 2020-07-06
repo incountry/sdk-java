@@ -2,6 +2,7 @@ package com.incountry.residence.sdk.http;
 
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
@@ -34,13 +35,14 @@ class HttpAgentImplTest {
     private static final String ENDPOINT = "http://localhost:" + PORT;
     private static final Integer TIMEOUT_IN_MS = 30_000;
     private static final TokenClient TOKEN_CLIENT = new ApiKeyTokenClient("<api_key>");
+    private static final Integer HTTP_POOL_SIZE = 2;
 
     private CloseableHttpClient httpClient;
 
     @BeforeEach
     public void initializeHttpConnectionsPool() {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(5);
+        connectionManager.setMaxTotal(HTTP_POOL_SIZE);
 
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(TIMEOUT_IN_MS)
@@ -82,7 +84,7 @@ class HttpAgentImplTest {
     }
 
     @RepeatedTest(3)
-    void testWithFakeHttpServer(RepetitionInfo repeatInfo) throws IOException, StorageServerException {
+    void testWithFakeHttpServer(RepetitionInfo repeatInfo) throws IOException, StorageException {
         iterateLogLevel(repeatInfo, HttpAgentImpl.class);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
@@ -92,7 +94,6 @@ class HttpAgentImplTest {
         assertNotNull(agent.request(ENDPOINT, "POST", "", ApiResponse.DELETE, null, null, 0));
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, null, null, 0));
         assertEquals("Server request error: POST", ex.getMessage());
-        assertEquals("Body must not be null", ex.getCause().getMessage());
         server.stop(0);
     }
 

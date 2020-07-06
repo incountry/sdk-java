@@ -55,7 +55,6 @@ public class StorageImpl implements Storage {
     private CryptoManager cryptoManager;
     private Dao dao;
     private boolean encrypted;
-    private PoolingHttpClientConnectionManager connectionManager;
 
     private StorageImpl() {
     }
@@ -152,16 +151,15 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_AUTH_DUPL);
             throw new StorageClientException(MSG_ERR_AUTH_DUPL);
         }
-
         StorageImpl instance = new StorageImpl();
-        instance.connectionManager = new PoolingHttpClientConnectionManager();
-        instance.dao = initDao(config, dao, instance.connectionManager);
+        instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
         instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    private static CloseableHttpClient initHttpClient(Integer timeout, Integer poolSize, PoolingHttpClientConnectionManager connectionManager) {
+    private static CloseableHttpClient initHttpClient(Integer timeout, Integer poolSize) {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(poolSize);
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(timeout)
@@ -173,7 +171,7 @@ public class StorageImpl implements Storage {
                 .build();
     }
 
-    private static Dao initDao(StorageConfig config, Dao dao, PoolingHttpClientConnectionManager connectionManager) throws StorageServerException, StorageClientException {
+    private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
             if (httpTimeout != null && httpTimeout < 1) {
@@ -185,7 +183,7 @@ public class StorageImpl implements Storage {
             httpTimeout *= 1000; //expected value in ms
             TokenClient tokenClient;
 
-            CloseableHttpClient httpClient = initHttpClient(httpTimeout, getPoolSize(config), connectionManager);
+            CloseableHttpClient httpClient = initHttpClient(httpTimeout, getPoolSize(config));
 
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);

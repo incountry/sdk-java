@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
@@ -26,12 +27,19 @@ public class HttpAgentImpl implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
     private static final String MSG_SERVER_ERROR = "Server request error: %s";
+    private static final String MSG_URL_NULL_ERR = "URL can't be null";
     private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
     private static final String MSG_ERR_URL = "URL error";
     private static final String MSG_ERR_SERVER_REQUES = "Server request error: %s";
-    private static final String MSG_ERR_NULL_BODY = "Body must not be null";
+    private static final String MSG_ERR_NULL_BODY = "Body can't be null";
     private static final String POST = "POST";
     private static final String GET = "GET";
+    private static final String BEARER = "Bearer ";
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String ENV_ID = "x-env-id";
+    private static final String USER_AGENT = "User-Agent";
+    private static final String APPLICATION_JSON = "application/json";
 
     private final TokenClient tokenClient;
     private final String environmentId;
@@ -53,11 +61,11 @@ public class HttpAgentImpl implements HttpAgent {
 
     private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region) throws StorageServerException {
         if (audience != null) {
-            request.addHeader("Authorization", "Bearer " + tokenClient.getToken(audience, region));
+            request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
         }
-        request.addHeader("Content-Type", "application/json");
-        request.addHeader("x-env-id", environmentId);
-        request.addHeader("User-Agent", userAgent);
+        request.addHeader(CONTENT_TYPE, APPLICATION_JSON);
+        request.addHeader(ENV_ID, environmentId);
+        request.addHeader(USER_AGENT, userAgent);
 
         return request;
     }
@@ -73,7 +81,7 @@ public class HttpAgentImpl implements HttpAgent {
         }
         try {
             if (url == null) {
-                throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException("Url must not be null."));
+                throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException(MSG_URL_NULL_ERR));
             }
             HttpRequestBase request = addHeaders(createRequest(url, method, body), audience, region);
             CloseableHttpResponse response = httpClient.execute(request);
@@ -85,8 +93,10 @@ public class HttpAgentImpl implements HttpAgent {
             if ((params != null && !params.isError() && responseContent != null)
                     || (params == null || !canRetry(params, retryCount))) {
                 result = responseContent;
+                response.close();
             } else {
                 tokenClient.refreshToken(true, audience, region);
+                response.close();
                 return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
 
@@ -99,7 +109,6 @@ public class HttpAgentImpl implements HttpAgent {
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
-            response.close();
             return result;
 
         } catch (IOException ex) {
@@ -122,7 +131,7 @@ public class HttpAgentImpl implements HttpAgent {
         if (method.equals(POST)) {
             if (body == null) {
                 LOG.error(MSG_ERR_NULL_BODY);
-                throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new NullPointerException(MSG_ERR_NULL_BODY));
+                throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
             }
             HttpPost request = new HttpPost(uri);
             StringEntity entity = new StringEntity(body);

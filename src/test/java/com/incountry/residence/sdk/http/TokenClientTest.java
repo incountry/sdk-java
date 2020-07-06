@@ -6,6 +6,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -35,13 +36,14 @@ class TokenClientTest {
     private static final String ENV_ID = "envId";
     private static final String DEFAULT_AUTH_ENDPOINT = "http://localhost:" + PORT;
     private static final String AUDIENCE_URL = "https://localhost";
+    private static final Integer HTTP_POOL_SIZE = 2;
 
     private CloseableHttpClient httpClient;
 
     @BeforeEach
     public void initializeHttpConnectionsPool() {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(5);
+        connectionManager.setMaxTotal(HTTP_POOL_SIZE);
 
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(TIMEOUT_IN_MS)
@@ -69,9 +71,6 @@ class TokenClientTest {
         TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
             assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
-        }
-        for (int i = 0; i < 1_000; i++) {
-            assertNotNull(tokenClient.getToken(AUDIENCE_URL, "amer"));
         }
 
         tokenClient.refreshToken(false, AUDIENCE_URL, null);
@@ -199,7 +198,13 @@ class TokenClientTest {
         authEndpoints.put("emea", "auth-emea-localhost.localhost");
         authEndpoints.put("apac", "auth-apac-localhost.localhost");
         TokenClient tokenClient = new OAuthTokenClient("auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", httpClient);
-        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
+        assertEquals("Unexpected exception during authorization", ex.getMessage());
+        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
+        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
+        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
+        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
+        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
     }
 
     @Test

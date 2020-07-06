@@ -263,7 +263,8 @@ public class StorageConfig {
     }
 
     /**
-     * Parameter httpPoolSize is used for set connection pool size during http connection
+     * Set HTTP pool size. Parameter is optional. Default value=20.
+     *
      * @param httpPoolSize pool size
      * @return StorageConfig
      */

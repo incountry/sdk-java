@@ -23,19 +23,19 @@ import java.util.UUID;
 
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENDPOINT;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_COUNTRIES_LIST_ENDPOINT;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_ID;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_SECRET;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_DEFAULT_AUTH_ENDPOINT;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENPOINT_MASK;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENVIRONMENT_ID_HYDRA;
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OAuthTest {
-    private static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
-    private static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
-    private static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
-    private static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
     private static final String INT_MINIPOP_COUNTRY = "INT_MINIPOP_COUNTRY";
-    private static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
-    private static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
 
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);

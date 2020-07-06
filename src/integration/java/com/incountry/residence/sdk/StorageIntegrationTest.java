@@ -39,12 +39,12 @@ public class StorageIntegrationTest {
 
     public static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
     public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
-    private static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
-    private static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
-    private static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
-    private static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
-    private static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
-    private static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
+    public static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
+    public static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
+    public static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
+    public static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
+    public static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
+    public static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
 
     private static final Logger LOG = LogManager.getLogger(StorageIntegrationTest.class);
 
@@ -69,7 +69,7 @@ public class StorageIntegrationTest {
     private static final Integer HTTP_POOL_SIZE = 2;
 
     private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
-    private static final String CRYPTO_SECRET = "123456789_123456789_1234567890Ab";
+    private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
     private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
@@ -85,7 +85,7 @@ public class StorageIntegrationTest {
 
 
     public StorageIntegrationTest() throws StorageServerException, StorageClientException {
-        SecretKey secretKey = new SecretKey(CRYPTO_SECRET, VERSION, false);
+        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
@@ -276,7 +276,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(600)
     public void customEncryptionTest() throws StorageException {
-        SecretKey customSecretKey = new SecretKey(CRYPTO_SECRET, VERSION + 1, false, true);
+        SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION + 1, false, true);
         List<SecretKey> secretKeyList = new ArrayList<>(secretKeyAccessor.getSecretsData().getSecrets());
         secretKeyList.add(customSecretKey);
         SecretsData anotherSecretsData = new SecretsData(secretKeyList, customSecretKey.getVersion());
@@ -345,7 +345,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(800)
     public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
-        SecretKey secretKey = new SecretKey(CRYPTO_SECRET, VERSION, false);
+        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);

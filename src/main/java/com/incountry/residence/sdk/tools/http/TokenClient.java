@@ -7,5 +7,4 @@ public interface TokenClient {
     String getToken(String audience, String region) throws StorageServerException;
 
     String refreshToken(boolean force, String audience, String region) throws StorageServerException;
-
 }
