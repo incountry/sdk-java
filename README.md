@@ -80,7 +80,7 @@ StorageConfig config = new StorageConfig()
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID)
-   // integet value, represents size of http connections pool (is optional)
+   // integet value, represents size of http connections pool (is optional, default value=20)
    .setHttpPoolSize(HTTP_POOL_SIZE);
 Storage storage = StorageImpl.getInstance(config);
 ```
