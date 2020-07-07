@@ -70,7 +70,7 @@ class HttpAgentImplTest {
 
     @Test
     void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", httpClient);
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, null, httpClient);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
         assertEquals("Server request error: GET", ex.getMessage());
     }

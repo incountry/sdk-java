@@ -39,7 +39,7 @@ public class StorageIntegrationTest {
 
     public static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
     public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
-    public static final String INT_INC_ENVIRONMENT_ID_HYDRA = "INT_INC_ENVIRONMENT_ID_HYDRA";
+    public static final String INT_INC_ENVIRONMENT_ID_OAUTH = "INT_INC_ENVIRONMENT_ID_OAUTH";
     public static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
     public static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
     public static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
@@ -74,7 +74,7 @@ public class StorageIntegrationTest {
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
     private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
     private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
-    private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_HYDRA);
+    private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_OAUTH);
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final int VERSION = 0;

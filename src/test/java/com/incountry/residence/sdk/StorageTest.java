@@ -564,4 +564,25 @@ class StorageTest {
         assertEquals("Read timed out", ex.getCause().getMessage());
         server.stop(0);
     }
+
+    @Test
+    void negativeTestWithIllegalPoolSize() {
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(1)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>")
+                .setHttpPoolSize(0);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex.getMessage());
+        StorageConfig config1 = new StorageConfig()
+                .setHttpTimeout(1)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>")
+                .setHttpPoolSize(-1);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config1));
+        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex.getMessage());
+    }
+
 }
