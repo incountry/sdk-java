@@ -10,6 +10,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
+import org.apache.http.ProtocolException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -128,20 +129,28 @@ public class OAuthTest {
         StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
         assertEquals(errorMessage, ex.getMessage());
         assertEquals(ClientProtocolException.class, ex.getCause().getClass());
+        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
+        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
 
         //AE mid EMEA -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
         assertEquals(errorMessage, ex.getMessage());
         assertEquals(ClientProtocolException.class, ex.getCause().getClass());
+        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
+        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
 
         //US mid AMER -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
         assertEquals(errorMessage, ex.getMessage());
         assertEquals(ClientProtocolException.class, ex.getCause().getClass());
+        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
+        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
 
         //Minipop - > EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
         assertEquals(errorMessage, ex.getMessage());
         assertEquals(ClientProtocolException.class, ex.getCause().getClass());
+        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
+        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
     }
 }

@@ -12,7 +12,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
@@ -37,10 +37,10 @@ class HttpAgentImplTest {
     private static final TokenClient TOKEN_CLIENT = new ApiKeyTokenClient("<api_key>");
     private static final Integer HTTP_POOL_SIZE = 2;
 
-    private static CloseableHttpClient httpClient;
+    private CloseableHttpClient httpClient;
 
-    @BeforeAll
-    public static void initializeHttpConnectionsPool() {
+    @BeforeEach
+    public void initializeHttpConnectionsPool() {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(HTTP_POOL_SIZE);
 

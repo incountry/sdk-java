@@ -109,6 +109,7 @@ public class HttpAgentImpl implements HttpAgent {
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
+            response.close();
             return result;
 
         } catch (IOException ex) {
