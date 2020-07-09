@@ -37,8 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageIntegrationTest {
 
-    public static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
-    public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
+    public static final String INT_INC_COUNTRY = "INT_INC_COUNTRY";
+    public static final String INT_INC_ENDPOINT = "INT_INC_ENDPOINT";
+    private static final String INT_INC_ENVIRONMENT_ID = "INT_INC_ENVIRONMENT_ID";
+    private static final String INT_INC_API_KEY = "INT_INC_API_KEY";
     public static final String INT_INC_ENVIRONMENT_ID_OAUTH = "INT_INC_ENVIRONMENT_ID_OAUTH";
     public static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
     public static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
@@ -68,7 +70,7 @@ public class StorageIntegrationTest {
     private static final String RECORD_BODY = "test";
     private static final Integer HTTP_POOL_SIZE = 2;
 
-    private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
+    private static final String COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
@@ -90,27 +92,17 @@ public class StorageIntegrationTest {
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
         secretKeyAccessor = () -> secretsData;
-        storage = StorageImpl.getInstance(
-                new StorageConfig()
-                        .setClientId(CLIENT_ID)
-                        .setClientSecret(SECRET)
-                        .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
-                        .setEndpointMask(ENDPOINT_MASK)
-                        .setEnvId(ENV_ID)
-                        .setSecretKeyAccessor(secretKeyAccessor)
-                        .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
-        );
+        storage = StorageImpl.getInstance(loadFromEnv(INT_INC_ENVIRONMENT_ID),
+                loadFromEnv(INT_INC_API_KEY),
+                loadFromEnv(INT_INC_ENDPOINT),
+                secretKeyAccessor);
 
         StorageConfig config = new StorageConfig()
-                .setClientId(CLIENT_ID)
-                .setClientSecret(SECRET)
-                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
-                .setEndpointMask(ENDPOINT_MASK)
-                .setEnvId(ENV_ID)
-                .setNormalizeKeys(true)
+                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setApiKey(loadFromEnv(INT_INC_API_KEY))
+                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT);
-
+                .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
     }
 
@@ -285,13 +277,10 @@ public class StorageIntegrationTest {
         cryptoList.add(new FernetCrypto(true));
 
         StorageConfig config = new StorageConfig()
-                .setClientId(CLIENT_ID)
-                .setClientSecret(SECRET)
-                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
-                .setEndpointMask(ENDPOINT_MASK)
-                .setEnvId(ENV_ID)
+                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setApiKey(loadFromEnv(INT_INC_API_KEY))
+                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(customAccessor)
-                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
                 .setCustomEncryptionConfigsList(cryptoList);
 
         Storage storage2 = StorageImpl.getInstance(config);

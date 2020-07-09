@@ -18,8 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_COUNTRY;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INTEGR_ENV_KEY_ENDPOINT;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_COUNTRY;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENDPOINT;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_COUNTRIES_LIST_ENDPOINT;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_ID;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_SECRET;
@@ -38,9 +38,9 @@ public class OAuthTest {
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
     private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
-    private static final String END_POINT = loadFromEnv(INTEGR_ENV_KEY_ENDPOINT);
+    private static final String END_POINT = loadFromEnv(INT_INC_ENDPOINT);
     private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_OAUTH);
-    private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
+    private static final String COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
     private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
