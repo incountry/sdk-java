@@ -124,8 +124,8 @@ class TokenClientTest {
         Map<String, String> responsesWithExpectedExceptions = new HashMap<String, String>() {{
             put("{'access_token'='1234567889' , 'expires_in'='0' , 'token_type'='bearer'}", "Token TTL is invalid");
             put("{'access_token'='1234567889' , 'expires_in'='-1' , 'token_type'='bearer'}", "Token TTL is invalid");
-            put("{'access_token'='1234567889' , 'expires_in'='abcd' , 'token_type'='bearer'}", "Error in parsing authorization response");
-            put("{'access_token'='1234567889' , 'expires_in'='' , 'token_type'='bearer'}", "Error in parsing authorization response");
+            put("{'access_token'='1234567889' , 'expires_in'='abcd' , 'token_type'='bearer'}", "Error in parsing authorization response: '{'access_token'='1234567889' , 'expires_in'='abcd' , 'token_type'='bearer'}'");
+            put("{'access_token'='1234567889' , 'expires_in'='' , 'token_type'='bearer'}", "Error in parsing authorization response: '{'access_token'='1234567889' , 'expires_in'='' , 'token_type'='bearer'}'");
             put("{'access_token'='1234567889' , 'expires_in'=null , 'token_type'='bearer'}", "Token TTL is invalid");
             put("{'access_token'='1234567889' , 'token_type'='bearer'}", "Token TTL is invalid");
             put("{'access_token'='1234567889' , 'expires_in'='1000' , 'token_type'='bearer1'}", "Token type is invalid");
@@ -199,7 +199,7 @@ class TokenClientTest {
         authEndpoints.put("apac", "auth-apac-localhost.localhost");
         TokenClient tokenClient = new OAuthTokenClient("auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", httpClient);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
-        assertEquals("Unexpected exception during authorization", ex.getMessage());
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=auth-emea-localhost.localhost, audience=audience-null]", ex.getMessage());
         assertEquals(ClientProtocolException.class, ex.getCause().getClass());
         assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
         assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));

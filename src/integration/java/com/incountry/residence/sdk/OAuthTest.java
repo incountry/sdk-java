@@ -10,14 +10,13 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
-import org.apache.http.ProtocolException;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.junit.jupiter.api.Test;
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -111,46 +110,42 @@ public class OAuthTest {
     @Test
     public void authRegionTest() throws StorageServerException, StorageClientException {
         Map<String, String> authEndpoints = new HashMap<>();
-        authEndpoints.put("emea", "emea.localhost");
-        authEndpoints.put("apac", "apac.localhost");
+        authEndpoints.put("emea", "https://emea.localhost");
+        authEndpoints.put("apac", "https://apac.localhost");
         StorageConfig config = new StorageConfig()
                 .setEnvId("envId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setEndpointMask("-localhost.localhost:8765")
                 .setAuthEndpoints(authEndpoints)
-                .setDefaultAuthEndpoint("emea.localhost");
+                .setDefaultAuthEndpoint("https://emea.localhost");
 
         Storage prodStorage = StorageImpl.getInstance(config);
-        String errorMessage = "Unexpected exception during authorization";
+        String errorMessage = "Unexpected exception during authorization, params [OAuth URL=";
         Record record = new Record("someKey", "someBody");
 
         //IN mid APAC -> APAC auth
         StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
-        assertEquals(errorMessage, ex.getMessage());
-        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
-        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
-        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
+        assertEquals(errorMessage + "https://apac.localhost, audience=https://in-localhost.localhost:8765]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals("apac.localhost: nodename nor servname provided, or not known", ex.getCause().getMessage());
 
         //AE mid EMEA -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
-        assertEquals(errorMessage, ex.getMessage());
-        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
-        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
-        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
+        assertEquals(errorMessage + "https://emea.localhost, audience=https://ae-localhost.localhost:8765]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals("emea.localhost: nodename nor servname provided, or not known", ex.getCause().getMessage());
 
         //US mid AMER -> EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
-        assertEquals(errorMessage, ex.getMessage());
-        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
-        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
-        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
+        assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals("emea.localhost", ex.getCause().getMessage());
 
         //Minipop - > EMEA auth
         ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
-        assertEquals(errorMessage, ex.getMessage());
-        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
-        assertEquals(ProtocolException.class, ex.getCause().getCause().getClass());
-        assertEquals("Target host is not specified", ex.getCause().getCause().getMessage());
+        assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765 https://some_minipop_country-localhost.localhost:8765]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+        assertEquals("emea.localhost", ex.getCause().getMessage());
     }
 }

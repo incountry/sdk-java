@@ -34,12 +34,12 @@ public class OAuthTokenClient implements TokenClient {
     private static final String EMEA = "emea";
 
     //error messages
-    private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
+    private static final String MSG_ERR_AUTH = "Unexpected exception during authorization, params [OAuth URL=%s, audience=%s]";
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
     private static final String MSG_ERR_EXPIRES = "Token TTL is invalid";
     private static final String MSG_ERR_INVALID_TYPE = "Token type is invalid";
     private static final String MSG_ERR_INVALID_SCOPE = "Token scope is invalid";
-    private static final String MSG_RESPONSE_ERR = "Error in parsing authorization response";
+    private static final String MSG_RESPONSE_ERR = "Error in parsing authorization response: '%s'";
     private static final String MSG_ERR_PARAMS = "Can't use param 'authEndpoints' without setting 'defaultAuthEndpoint'";
     private static final String MSG_ERR_ILLEGAL_AUTH_ENDPOINTS = "Parameter 'authEndpoints' contains null keys/values";
 
@@ -111,13 +111,14 @@ public class OAuthTokenClient implements TokenClient {
         request.addHeader(AUTHORIZATION, basicAuthToken);
         request.addHeader(CONTENT_TYPE, APPLICATION_URLENCODED);
         request.addHeader(USER_AGENT, USER_AGENT_VALUE);
-       return request;
+        return request;
     }
 
     private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
+        String authUrl = null;
         try {
-            String authUrl = regionMap.get(region);
+            authUrl = regionMap.get(region);
             if (authUrl == null) {
                 authUrl = defaultAuthEndpoint;
             }
@@ -135,12 +136,13 @@ public class OAuthTokenClient implements TokenClient {
             boolean isSuccess = status == 200;
 
             if (!isSuccess) {
-                throw createAndLogException(String.format("%s: '%s'", MSG_RESPONSE_ERR, responseContent));
+                throw createAndLogException(String.format(MSG_RESPONSE_ERR, responseContent));
             }
             return validateAndGet(responseContent);
-
         } catch (IOException ex) {
-            throw new StorageServerException(MSG_ERR_AUTH, ex);
+            String errorMessage = String.format(MSG_ERR_AUTH, authUrl, audience);
+            LOG.error(errorMessage);
+            throw new StorageServerException(errorMessage, ex);
         }
     }
 
@@ -164,7 +166,9 @@ public class OAuthTokenClient implements TokenClient {
             }
             return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn * 1_000L);
         } catch (JsonSyntaxException jsonSyntaxException) {
-            throw new StorageServerException(MSG_RESPONSE_ERR, jsonSyntaxException);
+            String errorMessage = String.format(MSG_RESPONSE_ERR, response);
+            LOG.error(errorMessage);
+            throw new StorageServerException(errorMessage, jsonSyntaxException);
         }
     }
 
