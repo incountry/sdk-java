@@ -59,6 +59,7 @@ dependencies {
     compile "com.google.code.gson:gson:${gsonVersion}"
     compile "org.apache.logging.log4j:log4j-api:${log4jVersion}"
     compile "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    compile "org.apache.logging.log4j:log4j-jcl:${log4jVersion}"
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: "${apacheHttpClientVersion}"
 }

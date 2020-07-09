@@ -12,6 +12,7 @@
         </Root>
 
         <Logger name="com.incountry.residence.sdk" level="info"/>
+        <Logger name="org.apache.http.impl.conn.PoolingHttpClientConnectionManager" level="info"/>
 
     </Loggers>
 </Configuration>
