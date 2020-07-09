@@ -7,7 +7,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
-import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
@@ -128,11 +128,11 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
             }
 
             HttpRequestBase request = addHeaders(createRequest(authUrl, POST, body));
-            HttpResponse response = httpClient.execute(request);
+            CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());
-
+            response.close();
             boolean isSuccess = status == 200;
 
             if (!isSuccess) {
