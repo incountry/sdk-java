@@ -113,10 +113,9 @@ class HttpAgentImplTest {
     @Test
     void testWithFakeHttpServerBadCodeRefreshToken() throws IOException, StorageServerException {
         List<Integer> respCodeList = Arrays.asList(401, 401, 401, 401, 401, 200);
-        int errorCode = 401;
         String content = "{}";
         String method = "POST";
-        String expectedErrorString = String.format("Code=%d, endpoint=[%s], content=[%s]", errorCode, ENDPOINT, content);
+        String expectedErrorString = String.format("Code=401, endpoint=[%s], content=[%s]", ENDPOINT, content);
         FakeHttpServer server = new FakeHttpServer(content, respCodeList, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", httpClient);

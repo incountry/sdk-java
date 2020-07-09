@@ -32,6 +32,7 @@ public class HttpAgentImpl implements HttpAgent {
     private static final String MSG_ERR_URL = "URL error";
     private static final String MSG_ERR_SERVER_REQUES = "Server request error: %s";
     private static final String MSG_ERR_NULL_BODY = "Body can't be null";
+
     private static final String POST = "POST";
     private static final String GET = "GET";
     private static final String BEARER = "Bearer ";
@@ -59,17 +60,6 @@ public class HttpAgentImpl implements HttpAgent {
         this.httpClient = httpClient;
     }
 
-    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region) throws StorageServerException {
-        if (audience != null) {
-            request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
-        }
-        request.addHeader(CONTENT_TYPE, APPLICATION_JSON);
-        request.addHeader(ENV_ID, environmentId);
-        request.addHeader(USER_AGENT, userAgent);
-
-        return request;
-    }
-
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
                           String audience, String region, int retryCount) throws StorageServerException {
@@ -87,12 +77,13 @@ public class HttpAgentImpl implements HttpAgent {
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
-            String responseContent = EntityUtils.toString(response.getEntity());
+            String actualResponseContent = EntityUtils.toString(response.getEntity());
+            ApiResponse expectedResponse = codeMap.get(status);
             String result;
-            ApiResponse params = codeMap.get(status);
-            if ((params != null && !params.isError() && responseContent != null)
-                    || (params == null || !canRetry(params, retryCount))) {
-                result = responseContent;
+            if ((expectedResponse != null && !expectedResponse.isError() && actualResponseContent != null)
+                    || expectedResponse == null
+                    || !canRetry(expectedResponse, retryCount)) {
+                result = actualResponseContent;
                 response.close();
             } else {
                 tokenClient.refreshToken(true, audience, region);
@@ -100,21 +91,30 @@ public class HttpAgentImpl implements HttpAgent {
                 return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
 
-            if (params != null && params.isIgnored()) {
-                response.close();
+            if (expectedResponse != null && expectedResponse.isIgnored()) {
                 return null;
             }
-            if (params == null || params.isError()) {
+            if (expectedResponse == null || expectedResponse.isError()) {
                 String errorMessage = String.format(MSG_ERR_CONTENT, status, url, result).replaceAll("[\r\n]", "");
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
-            response.close();
             return result;
 
         } catch (IOException ex) {
             throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
         }
+    }
+
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region) throws StorageServerException {
+        if (audience != null) {
+            request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
+        }
+        request.addHeader(CONTENT_TYPE, APPLICATION_JSON);
+        request.addHeader(ENV_ID, environmentId);
+        request.addHeader(USER_AGENT, userAgent);
+
+        return request;
     }
 
     private boolean canRetry(ApiResponse params, int retryCount) {
