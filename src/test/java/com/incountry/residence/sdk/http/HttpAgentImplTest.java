@@ -18,6 +18,7 @@ import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +49,7 @@ class HttpAgentImplTest {
                 .setConnectTimeout(TIMEOUT_IN_MS)
                 .setSocketTimeout(TIMEOUT_IN_MS)
                 .build();
-        httpClient =  HttpClients.custom()
+        httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)
                 .setDefaultRequestConfig(requestConfig)
                 .build();
@@ -153,15 +154,13 @@ class HttpAgentImplTest {
     }
 
     @Test
-    void negativeTestWithIllegalUrl() throws IOException {
-        int respCode = 201;
-        String response = "ok";
-        FakeHttpServer server = new FakeHttpServer(response, respCode, PORT);
-        server.start();
+    void negativeTestWithIllegalUrl() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", httpClient);
+        String url = " ";
         StorageServerException ex = assertThrows(StorageServerException.class, ()
-                -> agent.request(" ", "GET", "someBody", new HashMap<>(), null, null, 0));
+                -> agent.request(url, "GET", "someBody", new HashMap<>(), null, null, 0));
         assertEquals("URL error", ex.getMessage());
-        server.stop(0);
+        assertEquals(URISyntaxException.class, ex.getCause().getClass());
+        assertEquals("Illegal character in path at index 0: " + url, ex.getCause().getMessage());
     }
 }
