@@ -34,7 +34,8 @@ public class StorageConfig {
     private Integer httpTimeout;
     private Map<String, String> authEndpoints;
     private String defaultAuthEndpoint;
-    private Integer httpPoolSize;
+    private Integer maxHttpPoolSize;
+    private Integer maxHttpConnectionsPerRoute;
 
     public String getEnvId() {
         return envId;
@@ -258,23 +259,44 @@ public class StorageConfig {
         return this;
     }
 
-    public Integer getHttpPoolSize() {
-        return httpPoolSize;
+    public Integer getMaxHttpPoolSize() {
+        return maxHttpPoolSize;
     }
 
     /**
-     * Set HTTP pool size. Parameter is optional. Default value=20.
+     * Set HTTP pool size. Parameter is optional. Expected value - null or positive number. Default value == null.
+     * When value is positive number - a pool of HTTP connections will service connection requests from multiple execution
+     * threads. A request for a route which already the manager has persistent connections for available in the pool will
+     * be services by leasing a connection from the pool rather than creating a brand new connection.
      *
-     * @param httpPoolSize pool size
+     * @param maxHttpPoolSize pool size
      * @return StorageConfig
      */
-    public StorageConfig setHttpPoolSize(Integer httpPoolSize) {
-        this.httpPoolSize = httpPoolSize;
+    public StorageConfig setMaxHttpPoolSize(Integer maxHttpPoolSize) {
+        this.maxHttpPoolSize = maxHttpPoolSize;
         return this;
     }
 
     public String getEndpointMask() {
         return endpointMask;
+    }
+
+    public Integer getMaxHttpConnectionsPerRoute() {
+        return maxHttpConnectionsPerRoute;
+    }
+
+    /**
+     * Set maximum count of HTTP connections per route. Parameter is optional. Expected value - null or positive number.
+     * Default value == null.
+     * Per default this implementation will create no more than than 2 concurrent connections per used route.
+     * This parameter is used only with positive value of {@link #maxHttpPoolSize}
+     *
+     * @param maxHttpConnectionsPerRoute pool size
+     * @return StorageConfig
+     */
+    public StorageConfig setMaxHttpConnectionsPerRoute(Integer maxHttpConnectionsPerRoute) {
+        this.maxHttpConnectionsPerRoute = maxHttpConnectionsPerRoute;
+        return this;
     }
 
     /**
@@ -318,7 +340,7 @@ public class StorageConfig {
         newInstance.setHttpTimeout(getHttpTimeout());
         newInstance.setAuthEndpoints(getAuthEndpoints());
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
-        newInstance.setHttpPoolSize(getHttpPoolSize());
+        newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
         return newInstance;
     }
 
@@ -338,7 +360,7 @@ public class StorageConfig {
                 ", authEndpointMap='" + authEndpoints + '\'' +
                 ", defaultAuthEndpoint='" + defaultAuthEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
-                ", httpPoolSize='" + httpPoolSize + '\'' +
+                ", httpPoolSize='" + maxHttpPoolSize + '\'' +
                 '}';
     }
 

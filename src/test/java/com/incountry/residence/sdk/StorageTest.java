@@ -543,9 +543,9 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setApiKey("<apiKey>")
                 .setHttpTimeout(0)
-                .setHttpPoolSize(HTTP_POOL_SIZE);
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Connection timeout can't be <1", ex.getMessage());
+        assertEquals("Connection timeout can't be <1. Expected 'null' or positive value, received=0", ex.getMessage());
     }
 
     @Test
@@ -557,7 +557,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>")
-                .setHttpPoolSize(HTTP_POOL_SIZE);
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
         assertEquals("Server request error: DELETE", ex.getMessage());
@@ -572,17 +572,17 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>")
-                .setHttpPoolSize(0);
+                .setMaxHttpPoolSize(0);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex.getMessage());
+        assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
         StorageConfig config1 = new StorageConfig()
                 .setHttpTimeout(1)
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>")
-                .setHttpPoolSize(-1);
+                .setMaxHttpPoolSize(-1);
         ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config1));
-        assertEquals("Illegal connections pool size. Pool size must be not null, zero or negative.", ex.getMessage());
+        assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
     }
 
 }

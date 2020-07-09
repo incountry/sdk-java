@@ -17,6 +17,7 @@ import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
@@ -40,17 +41,19 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
-    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
     private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
-    private static final String CONNECTION_PULL_ERROR = "Illegal connections pool size. Pool size must be not null, zero or negative.";
+    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_ILLEGAL_HTTP_PARAMS = "Parameter 'MaxHttpConnectionsPerRoute' is used only with positive value of parameter 'MaxHttpPoolSize'";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
-    private static final Integer DEFAULT_TIMEOUT = 30;
-    private static final Integer DEFAULT_HTTP_POOL_SIZE = 20;
+    private static final int DEFAULT_TIMEOUT = 30;
+    private static final int DEFAULT_MAX_CONNECTION_PER_ROUTE = 2;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -158,33 +161,39 @@ public class StorageImpl implements Storage {
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    private static CloseableHttpClient initHttpClient(Integer timeout, Integer poolSize) {
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(poolSize);
+    private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
+        if (httpTimeout == null) {
+            httpTimeout = DEFAULT_TIMEOUT;
+        }
+        httpTimeout *= 1000; //expected value in ms
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(timeout)
-                .setSocketTimeout(timeout)
+                .setConnectTimeout(httpTimeout)
+                .setSocketTimeout(httpTimeout)
                 .build();
-        return HttpClients.custom()
-                .setConnectionManager(connectionManager)
-                .setDefaultRequestConfig(requestConfig)
-                .build();
+        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
+        if (poolSize != null) {
+            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+            connectionManager.setMaxTotal(poolSize);
+            connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : DEFAULT_MAX_CONNECTION_PER_ROUTE);
+            builder.setConnectionManager(connectionManager);
+        }
+        return builder.build();
     }
 
     private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
-            if (httpTimeout != null && httpTimeout < 1) {
-                LOG.error(MSG_ERR_ILLEGAL_TIMEOUT);
-                throw new StorageClientException(MSG_ERR_ILLEGAL_TIMEOUT);
-            } else if (httpTimeout == null) {
-                httpTimeout = DEFAULT_TIMEOUT;
+            checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
+            Integer httpPoolSize = config.getMaxHttpPoolSize();
+            checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
+            Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
+            checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
+            if (httpPoolSize == null && connectionsPerRoute != null) {
+                LOG.error(MSG_ERR_ILLEGAL_HTTP_PARAMS);
+                throw new StorageClientException(MSG_ERR_ILLEGAL_HTTP_PARAMS);
             }
-            httpTimeout *= 1000; //expected value in ms
+            CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
-
-            CloseableHttpClient httpClient = initHttpClient(httpTimeout, getPoolSize(config));
-
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
                 checkNotNull(config.getClientSecret(), MSG_ERR_PASS_CLIENT_SECRET);
@@ -194,7 +203,7 @@ public class StorageImpl implements Storage {
                         config.getClientId(),
                         config.getClientSecret(),
                         httpClient
-                        );
+                );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
@@ -214,15 +223,12 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private static Integer getPoolSize(StorageConfig config) throws StorageClientException {
-        Integer poolSize = config.getHttpPoolSize();
-        if (poolSize == null) {
-            return DEFAULT_HTTP_POOL_SIZE;
+    private static void checkPositiveOrNull(Integer intValue, String errorMessage) throws StorageClientException {
+        if (intValue != null && intValue < 1) {
+            String errMessage = String.format(errorMessage, intValue);
+            LOG.error(errMessage);
+            throw new StorageClientException(errMessage);
         }
-        if (poolSize < 0 || poolSize == 0) {
-            throw new StorageClientException(CONNECTION_PULL_ERROR);
-        }
-        return config.getHttpPoolSize();
     }
 
     private static void checkNotNull(Object parameter, String nullErrorMessage) throws StorageClientException {

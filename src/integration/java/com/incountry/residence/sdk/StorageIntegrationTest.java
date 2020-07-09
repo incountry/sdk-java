@@ -359,13 +359,13 @@ public class StorageIntegrationTest {
                 .setEnvId(ENV_ID)
                 .setSecretKeyAccessor(mySecretKeyAccessor)
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
-                .setHttpPoolSize(HTTP_POOL_SIZE);
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE);
 
         Storage customStorage = StorageImpl.getInstance(config);
         //http pool size < concurrent threads < count of threads
         ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE * 2);
         List<Future<StorageException>> futureList = new ArrayList<>();
-        for (int i = 0; i < HTTP_POOL_SIZE * 10; i++) {
+        for (int i = 0; i < HTTP_POOL_SIZE * 4; i++) {
             futureList.add(executorService.submit(createCallableTask(customStorage, i)));
         }
         executorService.shutdown();
