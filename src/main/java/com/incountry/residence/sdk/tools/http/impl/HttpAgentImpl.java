@@ -1,40 +1,27 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
-import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
-public class HttpAgentImpl implements HttpAgent {
+public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
+
     private static final String MSG_SERVER_ERROR = "Server request error: %s";
     private static final String MSG_URL_NULL_ERR = "URL can't be null";
     private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
-    private static final String MSG_ERR_URL = "URL error";
-    private static final String MSG_ERR_SERVER_REQUES = "Server request error: %s";
-    private static final String MSG_ERR_NULL_BODY = "Body can't be null";
-
-    private static final String POST = "POST";
-    private static final String GET = "GET";
     private static final String BEARER = "Bearer ";
     private static final String AUTHORIZATION = "Authorization";
     private static final String CONTENT_TYPE = "Content-Type";
@@ -119,29 +106,5 @@ public class HttpAgentImpl implements HttpAgent {
 
     private boolean canRetry(ApiResponse params, int retryCount) {
         return params.isCanRetry() && retryCount > 0;
-    }
-
-    public static HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_URL, ex);
-        }
-
-        if (method.equals(POST)) {
-            if (body == null) {
-                LOG.error(MSG_ERR_NULL_BODY);
-                throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
-            }
-            HttpPost request = new HttpPost(uri);
-            StringEntity entity = new StringEntity(body);
-            request.setEntity(entity);
-            return request;
-        } else if (method.equals(GET)) {
-            return new HttpGet(uri);
-        } else {
-            return new HttpDelete(uri);
-        }
     }
 }

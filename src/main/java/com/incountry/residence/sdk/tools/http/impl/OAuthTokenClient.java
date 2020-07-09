@@ -22,7 +22,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuthTokenClient implements TokenClient {
+public class OAuthTokenClient extends AbstractHttpRequestCreator implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
     private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audience={}";
@@ -127,7 +127,7 @@ public class OAuthTokenClient implements TokenClient {
                 LOG.trace(MSG_AUTH_URL, authUrl);
             }
 
-            HttpRequestBase request = addHeaders(HttpAgentImpl.createRequest(authUrl, POST, body));
+            HttpRequestBase request = addHeaders(createRequest(authUrl, POST, body));
             HttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
