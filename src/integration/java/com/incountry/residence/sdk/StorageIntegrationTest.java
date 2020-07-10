@@ -76,7 +76,7 @@ public class StorageIntegrationTest {
     private static final Long BATCH_WRITE_RANGE_KEY = 2L;
     private static final Long WRITE_RANGE_KEY = 1L;
     private static final String RECORD_BODY = "test";
-    private static final Integer HTTP_POOL_SIZE = 8;
+    private static final Integer HTTP_POOL_SIZE = 4;
 
     private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
