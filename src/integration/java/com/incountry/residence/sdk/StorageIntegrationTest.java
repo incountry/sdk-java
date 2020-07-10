@@ -373,7 +373,7 @@ public class StorageIntegrationTest {
         }
         Storage customStorage = StorageImpl.getInstance(config);
         //http pool size < concurrent threads < count of threads
-        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE / 4);
+        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE / 2);
         List<Future<StorageException>> futureList = new ArrayList<>();
         Long startTime = System.currentTimeMillis();
         int taskCount = HTTP_POOL_SIZE * 2;
