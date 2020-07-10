@@ -76,7 +76,7 @@ public class StorageIntegrationTest {
     private static final Long BATCH_WRITE_RANGE_KEY = 2L;
     private static final Long WRITE_RANGE_KEY = 1L;
     private static final String RECORD_BODY = "test";
-    private static final Integer HTTP_POOL_SIZE = 4;
+    private static final Integer HTTP_POOL_SIZE = 8;
 
     private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
@@ -366,16 +366,17 @@ public class StorageIntegrationTest {
                 .setEnvId(ENV_ID)
                 .setSecretKeyAccessor(mySecretKeyAccessor)
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
-                .setMaxHttpPoolSize(HTTP_POOL_SIZE);
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE)
+                .setMaxHttpConnectionsPerRoute(HTTP_POOL_SIZE / 2);
         if (!authMap.isEmpty()) {
             config.setAuthEndpoints(authMap);
         }
         Storage customStorage = StorageImpl.getInstance(config);
         //http pool size < concurrent threads < count of threads
-        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE);
+        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE / 4);
         List<Future<StorageException>> futureList = new ArrayList<>();
         Long startTime = System.currentTimeMillis();
-        int taskCount = HTTP_POOL_SIZE * 4;
+        int taskCount = HTTP_POOL_SIZE * 2;
         for (int i = 0; i < taskCount; i++) {
             futureList.add(executorService.submit(createCallableTask(customStorage, i)));
         }

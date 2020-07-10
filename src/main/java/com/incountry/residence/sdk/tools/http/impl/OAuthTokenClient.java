@@ -14,7 +14,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
@@ -139,7 +138,9 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
                 throw createAndLogException(String.format(MSG_RESPONSE_ERR, responseContent));
             }
             return validateAndGet(responseContent);
-        } catch (IOException ex) {
+        } catch (StorageServerException ex) {
+            throw ex;
+        } catch (Exception ex) {
             String errorMessage = String.format(MSG_ERR_AUTH, authUrl, audience);
             LOG.error(errorMessage);
             throw new StorageServerException(errorMessage, ex);
