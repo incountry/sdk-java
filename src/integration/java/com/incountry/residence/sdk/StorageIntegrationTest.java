@@ -21,7 +21,9 @@ import org.junit.jupiter.api.TestMethodOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -46,6 +48,8 @@ public class StorageIntegrationTest {
     public static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
     public static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
     public static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
+    public static final String INT_INC_EMEA_AUTH_ENDPOINT = "INT_INC_EMEA_AUTH_ENDPOINT";
+    public static final String INT_INC_APAC_AUTH_ENDPOINT = "INT_INC_APAC_AUTH_ENDPOINT";
     public static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
     public static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
 
@@ -56,10 +60,13 @@ public class StorageIntegrationTest {
             "-" +
             UUID.randomUUID().toString().replace("-", "");
 
+
     private final Storage storage;
     private final Storage storageIgnoreCase;
     private final SecretKeyAccessor secretKeyAccessor;
 
+    private static final String EMEA = "emea";
+    private static final String APAC = "apac";
     private static final String BATCH_WRITE_KEY = "BatchWriteKey" + TEMP;
     private static final String WRITE_KEY = "Write_Key" + TEMP;
     private static final String WRITE_KEY_IGNORE_CASE = WRITE_KEY + "_IgnorE_CasE";
@@ -75,6 +82,8 @@ public class StorageIntegrationTest {
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
     private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
+    private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
+    private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
     private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
     private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
@@ -342,6 +351,13 @@ public class StorageIntegrationTest {
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
         SecretKeyAccessor mySecretKeyAccessor = () -> secretsData;
 
+        Map<String, String> authMap = new HashMap<>();
+        if (EMEA_AUTH_ENDPOINT != null && !EMEA_AUTH_ENDPOINT.isEmpty()) {
+            authMap.put(EMEA, EMEA_AUTH_ENDPOINT);
+        }
+        if (APAC_AUTH_ENDPOINT != null && !APAC_AUTH_ENDPOINT.isEmpty()) {
+            authMap.put(APAC, APAC_AUTH_ENDPOINT);
+        }
         StorageConfig config = new StorageConfig()
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
@@ -351,17 +367,20 @@ public class StorageIntegrationTest {
                 .setSecretKeyAccessor(mySecretKeyAccessor)
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
-
+        if (!authMap.isEmpty()) {
+            config.setAuthEndpoints(authMap);
+        }
         Storage customStorage = StorageImpl.getInstance(config);
         //http pool size < concurrent threads < count of threads
-        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE * 2);
+        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE);
         List<Future<StorageException>> futureList = new ArrayList<>();
+        Long startTime = System.currentTimeMillis();
         int taskCount = HTTP_POOL_SIZE * 4;
         for (int i = 0; i < taskCount; i++) {
             futureList.add(executorService.submit(createCallableTask(customStorage, i)));
         }
         executorService.shutdown();
-        executorService.awaitTermination(5, TimeUnit.MINUTES);
+        executorService.awaitTermination(1, TimeUnit.HOURS);
         int successfulTaskCount = 0;
         for (Future<StorageException> one : futureList) {
             assertTrue(one.isDone());
@@ -369,6 +388,8 @@ public class StorageIntegrationTest {
                 successfulTaskCount += 1;
             }
         }
+        Long finishTime = System.currentTimeMillis();
+        LOG.debug("connectionPoolTest duration time = {} ms, average speed = {} ms per 1 task", finishTime - startTime, (finishTime - startTime) / taskCount);
         assertEquals(taskCount, successfulTaskCount);
     }
 
