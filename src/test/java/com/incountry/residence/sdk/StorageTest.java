@@ -594,6 +594,12 @@ class StorageTest {
                 .setMaxHttpConnectionsPerRoute(-1);
         ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
-    }
 
+        StorageConfig config4 = config
+                .copy()
+                .setMaxHttpPoolSize(null)
+                .setMaxHttpConnectionsPerRoute(5);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config4));
+        assertEquals("Parameter 'MaxHttpConnectionsPerRoute' is used only with positive value of parameter 'MaxHttpPoolSize'", ex.getMessage());
+    }
 }
