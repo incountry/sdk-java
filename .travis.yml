@@ -2,6 +2,10 @@ addons:
   sonarcloud:
     organization: "incountry"
 
+cache:
+  directories:
+    - incountry/sdk-java/dependencyCheck
+
 language:
   java
 

@@ -66,6 +66,9 @@ dependencies {
 
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
+    data {
+        directory="$projectDir/dependencyCheck"
+    }
     failOnError = true
 }
 
