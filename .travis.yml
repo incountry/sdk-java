@@ -4,7 +4,7 @@ addons:
 
 cache:
   directories:
-    - incountry/sdk-java/dependencyCheck
+    - dependencyCheck
 
 language:
   java
