@@ -1,7 +1,11 @@
 package com.incountry.residence.sdk.http;
 
+import com.incountry.residence.sdk.Storage;
+import com.incountry.residence.sdk.StorageConfig;
+import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
@@ -9,24 +13,35 @@ import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpAgentImplTest {
+
+    private static final Logger LOG = LogManager.getLogger(HttpAgentImplTest.class);
 
     private static final int PORT = 8769;
     private static final String ENDPOINT = "http://localhost:" + PORT;
@@ -140,5 +155,59 @@ class HttpAgentImplTest {
         assertEquals("URL error", ex.getMessage());
         assertEquals(URISyntaxException.class, ex.getCause().getClass());
         assertEquals("Illegal character in path at index 0: " + url, ex.getCause().getMessage());
+    }
+
+    @Test
+    void positiveHttpPoolTest() throws IOException, StorageClientException, StorageServerException, InterruptedException, ExecutionException {
+        String envId = "envId";
+        List<String> responseList = Arrays.asList(
+                "{'access_token'='1234567889' , 'expires_in'='300' , 'token_type'='bearer', 'scope'='" + envId + "'}",
+                "ok"
+        );
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+
+        int poolSize = 12;
+
+        StorageConfig config = new StorageConfig()
+                .setDefaultAuthEndpoint("http://localhost:" + PORT)
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvId(envId)
+                .setClientId("<clientId>")
+                .setClientSecret("<clientSecret>")
+                .setMaxHttpPoolSize(poolSize)
+                .setMaxHttpConnectionsPerRoute(poolSize / 3);
+        final Storage multipleConnectionStorage = StorageImpl.getInstance(config);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(poolSize / 2);
+        List<Future<StorageException>> futureList = new ArrayList<>();
+        int taskCount = poolSize * 10;
+        for (int i = 0; i < taskCount; i++) {
+            final int numb = i;
+            futureList.add(executorService.submit(() -> {
+                try {
+                    Thread currentThread = Thread.currentThread();
+                    currentThread.setName("positiveHttpPoolTest #" + numb);
+                    LOG.trace("Run thread {}", currentThread.getName());
+                    multipleConnectionStorage.delete("us", "someKey");
+                } catch (StorageException exception) {
+                    LOG.error("Exception in positiveHttpPoolTest", exception);
+                    return exception;
+                }
+                return null;
+            }));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
+        int successfulTaskCount = 0;
+        for (Future<StorageException> one : futureList) {
+            assertTrue(one.isDone());
+            if (one.get() == null) {
+                successfulTaskCount += 1;
+            }
+        }
+        assertEquals(taskCount, successfulTaskCount);
+        server.stop(0);
     }
 }

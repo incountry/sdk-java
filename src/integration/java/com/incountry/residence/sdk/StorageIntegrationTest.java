@@ -381,7 +381,7 @@ public class StorageIntegrationTest {
             futureList.add(executorService.submit(createCallableTask(customStorage, i)));
         }
         executorService.shutdown();
-        executorService.awaitTermination(1, TimeUnit.HOURS);
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
         int successfulTaskCount = 0;
         for (Future<StorageException> one : futureList) {
             assertTrue(one.isDone());

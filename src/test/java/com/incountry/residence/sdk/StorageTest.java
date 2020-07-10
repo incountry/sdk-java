@@ -575,14 +575,25 @@ class StorageTest {
                 .setMaxHttpPoolSize(0);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
-        StorageConfig config1 = new StorageConfig()
-                .setHttpTimeout(1)
-                .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
-                .setEnvId("<envId>")
+
+        StorageConfig config1 = config
+                .copy()
                 .setMaxHttpPoolSize(-1);
         ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config1));
         assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
+
+        StorageConfig config2 = config
+                .copy()
+                .setMaxHttpPoolSize(20)
+                .setMaxHttpConnectionsPerRoute(0);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config2));
+        assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
+
+        StorageConfig config3 = config2
+                .copy()
+                .setMaxHttpConnectionsPerRoute(-1);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
+        assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
     }
 
 }
