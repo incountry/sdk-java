@@ -537,6 +537,21 @@ class StorageTest {
     }
 
     @Test
+    void negativeTestNullResponse() throws StorageException, IOException {
+        FakeHttpServer server = new FakeHttpServer((String) null, 200, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.read(COUNTRY, KEY));
+        assertEquals("Received record is null", ex.getMessage());
+        server.stop(0);
+    }
+
+    @Test
     void negativeTestIllegalTimeout() {
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)

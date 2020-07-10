@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAgent {
 
@@ -67,7 +68,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             String actualResponseContent = EntityUtils.toString(response.getEntity());
             ApiResponse expectedResponse = codeMap.get(status);
             String result;
-            if ((expectedResponse != null && !expectedResponse.isError() && actualResponseContent != null)
+            if ((expectedResponse != null && !expectedResponse.isError() && !Objects.requireNonNull(actualResponseContent).isEmpty())
                     || expectedResponse == null
                     || !canRetry(expectedResponse, retryCount)) {
                 result = actualResponseContent;
