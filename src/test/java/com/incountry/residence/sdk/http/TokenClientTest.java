@@ -6,13 +6,13 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Collections;
@@ -172,16 +172,29 @@ class TokenClientTest {
     @Test
     void testCreationWithMask() throws StorageException {
         Map<String, String> authEndpoints = new HashMap<>();
-        authEndpoints.put("emea", "auth-emea-localhost.localhost");
-        authEndpoints.put("apac", "auth-apac-localhost.localhost");
-        TokenClient tokenClient = new OAuthTokenClient("auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", HttpClients.createDefault());
+        authEndpoints.put("emea", "https://auth-emea-localhost.localhost");
+        authEndpoints.put("apac", "https://auth-apac-localhost.localhost");
+        TokenClient tokenClient = new OAuthTokenClient("https://auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", HttpClients.createDefault());
+
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
-        assertEquals("Unexpected exception during authorization, params [OAuth URL=auth-emea-localhost.localhost, audience=audience-null]", ex.getMessage());
-        assertEquals(ClientProtocolException.class, ex.getCause().getClass());
-        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
-        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
-        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
-        assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-null]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-emea]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-apac-localhost.localhost, audience=audience-apac]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-amer]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
+
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-wrong_value]", ex.getMessage());
+        assertEquals(UnknownHostException.class, ex.getCause().getClass());
     }
 
     @Test
