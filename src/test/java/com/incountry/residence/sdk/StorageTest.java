@@ -575,7 +575,7 @@ class StorageTest {
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
-        assertEquals("Server request error: DELETE", ex.getMessage());
+        assertEquals("Server request error: [URL=http://localhost:8767/v2/storage/records/us/463ca9fb48993ae6c598d58aa4a5e6c4e66610e869aff32916ba643387ad4afa, method=DELETE]", ex.getMessage());
         assertEquals("Read timed out", ex.getCause().getMessage());
         server.stop(0);
     }

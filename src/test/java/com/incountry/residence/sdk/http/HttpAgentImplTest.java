@@ -51,30 +51,31 @@ class HttpAgentImplTest {
     @Test
     void testNullEndpointException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
-        assertEquals("Server request error: GET", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
+        assertEquals("URL can't be null", ex.getMessage());
     }
 
     @Test
     void testNullApiKeyException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
-        assertEquals("Server request error: GET", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
+        assertEquals("URL can't be null", ex.getMessage());
     }
 
     @Test
     void testNullEnvIdException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, null, HttpClients.createDefault());
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
-        assertEquals("Server request error: GET", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
+        assertEquals("URL can't be null", ex.getMessage());
     }
 
     @Test
     void testFakeEndpointException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request("https://" + UUID.randomUUID().toString() + "localhost",
+        String url = "https://" + UUID.randomUUID().toString() + ".localhost";
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(url,
                 "GET", "someBody", new HashMap<>(), null, null, 0));
-        assertEquals("Server request error: GET", ex.getMessage());
+        assertEquals("Server request error: [URL=" + url + ", method=GET]", ex.getMessage());
     }
 
     @RepeatedTest(3)
@@ -105,7 +106,7 @@ class HttpAgentImplTest {
     }
 
     @Test
-    void testWithFakeHttpServerBadCodeRefreshToken() throws IOException, StorageServerException {
+    void testWithFakeHttpServerBadCodeRefreshToken() throws IOException, StorageServerException, StorageClientException {
         List<Integer> respCodeList = Arrays.asList(401, 401, 401, 401, 401, 200);
         String content = "{}";
         String method = "POST";
@@ -124,7 +125,7 @@ class HttpAgentImplTest {
     }
 
     @Test
-    void testWithFakeHttpServerIgnoredStatus() throws IOException, StorageServerException {
+    void testWithFakeHttpServerIgnoredStatus() throws IOException, StorageServerException, StorageClientException {
         int respCode = 404;
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();

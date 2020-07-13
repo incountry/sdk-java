@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
@@ -20,7 +21,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
 
-    private static final String MSG_SERVER_ERROR = "Server request error: %s";
+    private static final String MSG_SERVER_ERROR = "Server request error: [URL=%s, method=%s]";
     private static final String MSG_URL_NULL_ERR = "URL can't be null";
     private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
     private static final String BEARER = "Bearer ";
@@ -50,17 +51,17 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
     @Override
     public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap,
-                          String audience, String region, int retryCount) throws StorageServerException {
+                          String audience, String region, int retryCount) throws StorageServerException, StorageClientException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
                     url,
                     method,
                     codeMap);
         }
+        if (url == null) {
+            throw new StorageClientException(MSG_URL_NULL_ERR);
+        }
         try {
-            if (url == null) {
-                throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), new NullPointerException(MSG_URL_NULL_ERR));
-            }
             HttpRequestBase request = addHeaders(createRequest(url, method, body), audience, region);
             CloseableHttpResponse response = httpClient.execute(request);
 
@@ -88,9 +89,9 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 throw new StorageServerException(errorMessage);
             }
             return result;
-
         } catch (IOException ex) {
-            throw new StorageServerException(String.format(MSG_SERVER_ERROR, method), ex);
+            String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
+            throw new StorageServerException(errorMessage, ex);
         }
     }
 

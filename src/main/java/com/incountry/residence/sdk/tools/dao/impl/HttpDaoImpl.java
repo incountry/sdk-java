@@ -52,7 +52,7 @@ public class HttpDaoImpl implements Dao {
     private final String countriesEndpoint;
     private volatile long lastLoadedTime;
 
-    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) throws StorageServerException {
+    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) throws StorageServerException, StorageClientException {
         this(endPoint, endpointMask, countriesEndpoint,
                 ProxyUtils.createLoggingProxyForPublicMethods(
                         new HttpAgentImpl(
@@ -61,7 +61,7 @@ public class HttpDaoImpl implements Dao {
                                 httpClient)));
     }
 
-    public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) throws StorageServerException {
+    public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) throws StorageServerException, StorageClientException {
         isDefaultEndpoint = (endPoint == null);
         this.endPointUrl = isDefaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
@@ -74,7 +74,7 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private void loadCountries() throws StorageServerException {
+    private void loadCountries() throws StorageServerException, StorageClientException {
         //update country list cache every 1 min
         if (System.currentTimeMillis() - lastLoadedTime < DEFAULT_UPDATE_INTERVAL) {
             return;
@@ -92,7 +92,7 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private EndPoint getEndpoint(String country) throws StorageServerException {
+    private EndPoint getEndpoint(String country) throws StorageServerException, StorageClientException {
         if (isDefaultEndpoint) {
             POP pop = getPopIfCountryIsMidPop(country);
             if (pop != null) { //mid pop for default endpoint
@@ -104,7 +104,7 @@ public class HttpDaoImpl implements Dao {
         return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
     }
 
-    private POP getPopIfCountryIsMidPop(String country) throws StorageServerException {
+    private POP getPopIfCountryIsMidPop(String country) throws StorageServerException, StorageClientException {
         synchronized (popMap) {
             loadCountries();
             return popMap.get(country);
@@ -161,7 +161,7 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void delete(String country, String key, CryptoManager cryptoManager) throws StorageServerException {
+    public void delete(String country, String key, CryptoManager cryptoManager) throws StorageServerException, StorageClientException {
         String lowerCountry = country.toLowerCase();
         String recordHash = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         EndPoint endPoint = getEndpoint(lowerCountry);
