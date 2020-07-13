@@ -48,12 +48,11 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
-    private static final String MSG_ERR_ILLEGAL_HTTP_PARAMS = "Parameter 'MaxHttpConnectionsPerRoute' is used only with positive value of parameter 'MaxHttpPoolSize'";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
-    private static final int DEFAULT_TIMEOUT = 30;
-    private static final int DEFAULT_MAX_CONNECTION_PER_ROUTE = 2;
+    private static final int DEFAULT_HTTP_TIMEOUT = 30;
+    private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -163,7 +162,7 @@ public class StorageImpl implements Storage {
 
     private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
         if (httpTimeout == null) {
-            httpTimeout = DEFAULT_TIMEOUT;
+            httpTimeout = DEFAULT_HTTP_TIMEOUT;
         }
         httpTimeout *= 1000; //expected value in ms
         RequestConfig requestConfig = RequestConfig.custom()
@@ -171,12 +170,14 @@ public class StorageImpl implements Storage {
                 .setSocketTimeout(httpTimeout)
                 .build();
         HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
-        if (poolSize != null) {
-            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-            connectionManager.setMaxTotal(poolSize);
-            connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : DEFAULT_MAX_CONNECTION_PER_ROUTE);
-            builder.setConnectionManager(connectionManager);
+        if (poolSize == null) {
+            poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
         }
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(poolSize);
+        connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
+        builder.setConnectionManager(connectionManager);
+
         return builder.build();
     }
 
@@ -188,10 +189,6 @@ public class StorageImpl implements Storage {
             checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
             Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
             checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
-            if (httpPoolSize == null && connectionsPerRoute != null) {
-                LOG.error(MSG_ERR_ILLEGAL_HTTP_PARAMS);
-                throw new StorageClientException(MSG_ERR_ILLEGAL_HTTP_PARAMS);
-            }
             CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {

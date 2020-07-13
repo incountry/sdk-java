@@ -85,9 +85,9 @@ StorageConfig config = new StorageConfig()
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID)
-   //integer value, represents max size of HTTP connections pool (is optional, default value=20)
+   //integer value, represents max size of HTTP connections pool (is optional, default value == 20)
    .setMaxHttpPoolSize(32)
-   //integer value, represents max size of HTTP per route (is optional, default value=2)
+   //integer value, represents max size of HTTP per route (is optional, default value == MaxHttpPoolSize )
    .setMaxHttpConnectionsPerRoute(8);
 Storage storage = StorageImpl.getInstance(config);
 ```
