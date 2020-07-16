@@ -15,7 +15,6 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 
 public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAgent {
 
@@ -70,25 +69,21 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             String actualResponseContent = EntityUtils.toString(response.getEntity());
             response.close();
             ApiResponse expectedResponse = codeMap.get(status);
-            String result;
-            boolean isFinish = expectedResponse != null && !expectedResponse.isError() && !Objects.requireNonNull(actualResponseContent).isEmpty()
-                    || expectedResponse == null
-                    || !canRetry(expectedResponse, retryCount);
+            boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
+            boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse, retryCount);
             if (!isFinish) {
                 tokenClient.refreshToken(true, audience, region);
                 return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
-            result = actualResponseContent;
-
             if (expectedResponse != null && expectedResponse.isIgnored()) {
                 return null;
             }
             if (expectedResponse == null || expectedResponse.isError()) {
-                String errorMessage = String.format(MSG_ERR_CONTENT, status, url, result).replaceAll("[\r\n]", "");
+                String errorMessage = String.format(MSG_ERR_CONTENT, status, url, actualResponseContent).replaceAll("[\r\n]", "");
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
-            return result;
+            return actualResponseContent;
         } catch (IOException ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
             throw new StorageServerException(errorMessage, ex);
