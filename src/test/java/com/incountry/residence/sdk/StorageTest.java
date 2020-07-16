@@ -13,8 +13,6 @@ import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -52,10 +50,10 @@ class StorageTest {
     private static final String PROFILE_KEY = "profileKey";
     private static final Long RANGE_KEY = 1L;
     private static final String BODY = "body";
+    private static final Integer HTTP_POOL_SIZE = 5;
 
     private CryptoManager cryptoManager;
     private SecretKeyAccessor secretKeyAccessor;
-    private final TokenClient tokenClient = new ApiKeyTokenClient("<apiKey>");
 
     @BeforeEach
     public void initializeAccessorAndCrypto() throws StorageClientException {
@@ -539,14 +537,30 @@ class StorageTest {
     }
 
     @Test
+    void negativeTestNullResponse() throws StorageException, IOException {
+        FakeHttpServer server = new FakeHttpServer((String) null, 200, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.read(COUNTRY, KEY));
+        assertEquals("Received record is null", ex.getMessage());
+        server.stop(0);
+    }
+
+    @Test
     void negativeTestIllegalTimeout() {
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setApiKey("<apiKey>")
-                .setHttpTimeout(0);
+                .setHttpTimeout(0)
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Connection timeout can't be <1", ex.getMessage());
+        assertEquals("Connection timeout can't be <1. Expected 'null' or positive value, received=0", ex.getMessage());
     }
 
     @Test
@@ -557,11 +571,43 @@ class StorageTest {
                 .setHttpTimeout(1)
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
-                .setEnvId("<envId>");
+                .setEnvId("<envId>")
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
-        assertEquals("Server request error: DELETE", ex.getMessage());
+        assertEquals("Server request error: [URL=http://localhost:8767/v2/storage/records/us/463ca9fb48993ae6c598d58aa4a5e6c4e66610e869aff32916ba643387ad4afa, method=DELETE]", ex.getMessage());
         assertEquals("Read timed out", ex.getCause().getMessage());
         server.stop(0);
+    }
+
+    @Test
+    void negativeTestWithIllegalPoolSize() {
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(1)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>")
+                .setMaxHttpPoolSize(0);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
+
+        StorageConfig config1 = config
+                .copy()
+                .setMaxHttpPoolSize(-1);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config1));
+        assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
+
+        StorageConfig config2 = config
+                .copy()
+                .setMaxHttpPoolSize(20)
+                .setMaxHttpConnectionsPerRoute(0);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config2));
+        assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
+
+        StorageConfig config3 = config2
+                .copy()
+                .setMaxHttpConnectionsPerRoute(-1);
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
+        assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
     }
 }

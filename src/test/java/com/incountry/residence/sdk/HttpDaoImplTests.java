@@ -333,7 +333,7 @@ class HttpDaoImplTests {
     }
 
     @Test
-    void testLoadCountriesPopApiResponse() throws StorageServerException {
+    void testLoadCountriesPopApiResponse() throws StorageServerException, StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse,
                 "StringNotJson",
                 countryLoadBadResponseNullName,

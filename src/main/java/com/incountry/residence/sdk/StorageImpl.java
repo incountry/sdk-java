@@ -15,6 +15,11 @@ import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -36,15 +41,18 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
-    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
     private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
+    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
-    private static final Integer DEFAULT_TIMEOUT = 30;
+    private static final int DEFAULT_HTTP_TIMEOUT = 30;
+    private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -152,16 +160,37 @@ public class StorageImpl implements Storage {
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
+    private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
+        if (httpTimeout == null) {
+            httpTimeout = DEFAULT_HTTP_TIMEOUT;
+        }
+        httpTimeout *= 1000; //expected value in ms
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(httpTimeout)
+                .setSocketTimeout(httpTimeout)
+                .build();
+        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
+        if (poolSize == null) {
+            poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
+        }
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(poolSize);
+        connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
+        builder.setConnectionManager(connectionManager);
+
+        return builder.build();
+    }
+
     private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
-            if (httpTimeout != null && httpTimeout < 1) {
-                LOG.error(MSG_ERR_ILLEGAL_TIMEOUT);
-                throw new StorageClientException(MSG_ERR_ILLEGAL_TIMEOUT);
-            } else if (httpTimeout == null) {
-                httpTimeout = DEFAULT_TIMEOUT;
-            }
-            httpTimeout *= 1000; //expected value in ms
+            Integer httpPoolSize = config.getMaxHttpPoolSize();
+            Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
+            checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
+            checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
+            checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
+
+            CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
@@ -171,7 +200,8 @@ public class StorageImpl implements Storage {
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),
-                        httpTimeout);
+                        httpClient
+                );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
@@ -185,9 +215,17 @@ public class StorageImpl implements Storage {
                     config.getEndpointMask(),
                     config.getCountriesEndpoint(),
                     tokenClient,
-                    httpTimeout);
+                    httpClient);
         } else {
             return dao;
+        }
+    }
+
+    private static void checkPositiveOrNull(Integer intValue, String errorMessage) throws StorageClientException {
+        if (intValue != null && intValue < 1) {
+            String errMessage = String.format(errorMessage, intValue);
+            LOG.error(errMessage);
+            throw new StorageClientException(errMessage);
         }
     }
 
@@ -197,7 +235,6 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(nullErrorMessage);
         }
     }
-
 
     private void checkParameters(String country, String key) throws StorageClientException {
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);

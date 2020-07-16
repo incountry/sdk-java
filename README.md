@@ -84,7 +84,11 @@ StorageConfig config = new StorageConfig()
    .setAuthEndpoints(authEndpointsMap)
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
-   .setEnvId(ENV_ID);
+   .setEnvId(ENV_ID)
+   //HTTP connections pool size, optional, defaults to 20
+   .setMaxHttpPoolSize(32)
+   //max HTTP connections per route, optional, defaults to MaxHttpPoolSize
+   .setMaxHttpConnectionsPerRoute(8);
 Storage storage = StorageImpl.getInstance(config);
 ```
 
@@ -771,14 +775,18 @@ Project dependencies
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 
-| **GroupId**              | **ArtifactId**       | **Version** | **Type** |
-| :---:                    | :---:                | :---:       | :---:    |
-| javax.xml.bind           | jaxb-api             | 2.3.1       | jar      |
-| javax.activation         | javax.activation-api | 1.2.0        | jar      |
-| commons-codec            | commons-codec        | 1.14        | jar      |
-| org.apache.logging.log4j | log4j-api            | 2.13.2      | jar      |
-| org.apache.logging.log4j | log4j-core           | 2.13.2      | jar      |
-| com.google.code.gson     | gson                 | 2.8.6       | jar      |
+| **GroupId**               | **ArtifactId**       | **Version** | **Type** |
+| :---:                     | :---:                | :---:       | :---:    |
+| javax.xml.bind            | jaxb-api             | 2.3.1       | jar      |
+| javax.activation          | javax.activation-api | 1.2.0       | jar      |
+| commons-codec             | commons-codec        | 1.14        | jar      |
+| commons-logging           | commons-logging      | 1.2         | jar      |
+| org.apache.logging.log4j  | log4j-api            | 2.13.3      | jar      |
+| org.apache.logging.log4j  | log4j-core           | 2.13.3      | jar      |
+| org.apache.logging.log4j  | log4j-core-jcl       | 2.13.3      | jar      |
+| org.apache.httpcomponents | httpclient           | 4.5.12      | jar      |
+| org.apache.httpcomponents | httpcore             | 4.4.13      | jar      |
+| com.google.code.gson      | gson                 | 2.8.6       | jar      |
 
 #### Dependency Tree
 ```
@@ -786,10 +794,17 @@ compileClasspath
 +--- javax.xml.bind:jaxb-api:2.3.1
 |    \--- javax.activation:javax.activation-api:1.2.0
 +--- commons-codec:commons-codec:1.14
-+--- org.apache.logging.log4j:log4j-api:2.13.2
-+--- org.apache.logging.log4j:log4j-core:2.13.2
-|    \--- org.apache.logging.log4j:log4j-api:2.13.2
-\--- com.google.code.gson:gson:2.8.6
++--- com.google.code.gson:gson:2.8.6
++--- org.apache.logging.log4j:log4j-api:2.13.3
++--- org.apache.logging.log4j:log4j-core:2.13.3
+|    \--- org.apache.logging.log4j:log4j-api:2.13.3
++--- org.apache.logging.log4j:log4j-jcl:2.13.3
+|    +--- commons-logging:commons-logging:1.2
+|    \--- org.apache.logging.log4j:log4j-api:2.13.3
+\--- org.apache.httpcomponents:httpclient:4.5.12
+     +--- org.apache.httpcomponents:httpcore:4.4.13
+     +--- commons-logging:commons-logging:1.2
+     \--- commons-codec:commons-codec:1.11 -> 1.14
 ```
 
 ### Minimal JVM memory options

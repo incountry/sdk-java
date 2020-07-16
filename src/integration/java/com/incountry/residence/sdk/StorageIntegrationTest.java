@@ -11,6 +11,8 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,16 @@ import org.junit.jupiter.api.TestMethodOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,21 +39,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageIntegrationTest {
 
-    public static final String INTEGR_ENV_KEY_COUNTRY = "INT_INC_COUNTRY";
-    public static final String INTEGR_ENV_KEY_ENDPOINT = "INT_INC_ENDPOINT";
-    private static final String INTEGR_ENV_KEY_ENVID = "INT_INC_ENVIRONMENT_ID";
-    private static final String INTEGR_ENV_KEY_APIKEY = "INT_INC_API_KEY";
+    public static final String INT_INC_COUNTRY = "INT_INC_COUNTRY";
+    public static final String INT_INC_COUNTRY_2 = "INT_INC_COUNTRY_2";
+    public static final String INT_INC_ENDPOINT = "INT_INC_ENDPOINT";
+    private static final String INT_INC_ENVIRONMENT_ID = "INT_INC_ENVIRONMENT_ID";
+    private static final String INT_INC_API_KEY = "INT_INC_API_KEY";
+    public static final String INT_INC_ENVIRONMENT_ID_OAUTH = "INT_INC_ENVIRONMENT_ID_OAUTH";
+    public static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
+    public static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
+    public static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
+    public static final String INT_INC_EMEA_AUTH_ENDPOINT = "INT_INC_EMEA_AUTH_ENDPOINT";
+    public static final String INT_INC_APAC_AUTH_ENDPOINT = "INT_INC_APAC_AUTH_ENDPOINT";
+    public static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
+    public static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
+
+    private static final Logger LOG = LogManager.getLogger(StorageIntegrationTest.class);
 
     private static final String TEMP = "-javasdk-" +
             new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) +
             "-" +
             UUID.randomUUID().toString().replace("-", "");
 
+
     private final Storage storage;
     private final Storage storageIgnoreCase;
     private final SecretKeyAccessor secretKeyAccessor;
 
-    private static final String COUNTRY = loadFromEnv(INTEGR_ENV_KEY_COUNTRY);
+    private static final String EMEA = "emea";
+    private static final String APAC = "apac";
     private static final String BATCH_WRITE_KEY = "BatchWriteKey" + TEMP;
     private static final String WRITE_KEY = "Write_Key" + TEMP;
     private static final String WRITE_KEY_IGNORE_CASE = WRITE_KEY + "_IgnorE_CasE";
@@ -53,8 +76,20 @@ public class StorageIntegrationTest {
     private static final Long BATCH_WRITE_RANGE_KEY = 2L;
     private static final Long WRITE_RANGE_KEY = 1L;
     private static final String RECORD_BODY = "test";
+    private static final Integer HTTP_POOL_SIZE = 4;
 
-    private static final String SECRET = "123456789_123456789_1234567890Ab";
+    private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
+    private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
+    private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
+    private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
+    private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
+    private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
+    private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
+    private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
+    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
+    private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_OAUTH);
+    private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
+
     private static final int VERSION = 0;
 
     public static String loadFromEnv(String key) {
@@ -63,20 +98,20 @@ public class StorageIntegrationTest {
 
 
     public StorageIntegrationTest() throws StorageServerException, StorageClientException {
-        SecretKey secretKey = new SecretKey(SECRET, VERSION, false);
+        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
         secretKeyAccessor = () -> secretsData;
-        storage = StorageImpl.getInstance(loadFromEnv(INTEGR_ENV_KEY_ENVID),
-                loadFromEnv(INTEGR_ENV_KEY_APIKEY),
-                loadFromEnv(INTEGR_ENV_KEY_ENDPOINT),
+        storage = StorageImpl.getInstance(loadFromEnv(INT_INC_ENVIRONMENT_ID),
+                loadFromEnv(INT_INC_API_KEY),
+                loadFromEnv(INT_INC_ENDPOINT),
                 secretKeyAccessor);
 
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
-                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
-                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setApiKey(loadFromEnv(INT_INC_API_KEY))
+                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
@@ -87,20 +122,20 @@ public class StorageIntegrationTest {
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
         records.add(new Record(BATCH_WRITE_KEY, RECORD_BODY, PROFILE_KEY, BATCH_WRITE_RANGE_KEY, KEY_2, KEY_3));
-        storage.batchWrite(COUNTRY, records);
+        storage.batchWrite(MIDIPOP_COUNTRY, records);
     }
 
     @Test
     @Order(200)
     public void writeTest() throws StorageException {
         Record record = new Record(WRITE_KEY, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
-        storage.write(COUNTRY, record);
+        storage.write(MIDIPOP_COUNTRY, record);
     }
 
     @Test
     @Order(300)
     public void readTest() throws StorageException {
-        Record incomingRecord = storage.read(COUNTRY, WRITE_KEY);
+        Record incomingRecord = storage.read(MIDIPOP_COUNTRY, WRITE_KEY);
         assertEquals(WRITE_KEY, incomingRecord.getKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
@@ -112,16 +147,16 @@ public class StorageIntegrationTest {
     @Order(301)
     public void readIgnoreCaseTest() throws StorageException {
         Record record = new Record(WRITE_KEY_IGNORE_CASE, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
-        storageIgnoreCase.write(COUNTRY, record);
+        storageIgnoreCase.write(MIDIPOP_COUNTRY, record);
 
-        Record incomingRecord = storageIgnoreCase.read(COUNTRY, WRITE_KEY_IGNORE_CASE.toLowerCase());
+        Record incomingRecord = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toLowerCase());
         assertEquals(WRITE_KEY_IGNORE_CASE, incomingRecord.getKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
         assertEquals(KEY_2, incomingRecord.getKey2());
         assertEquals(KEY_3, incomingRecord.getKey3());
 
-        incomingRecord = storageIgnoreCase.read(COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
+        incomingRecord = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
         assertEquals(WRITE_KEY_IGNORE_CASE, incomingRecord.getKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
@@ -138,7 +173,7 @@ public class StorageIntegrationTest {
                 .key3Eq(KEY_3)
                 .profileKeyEq(PROFILE_KEY)
                 .rangeKeyEq(WRITE_RANGE_KEY);
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(WRITE_KEY, batchRecord.getRecords().get(0).getKey());
@@ -149,7 +184,7 @@ public class StorageIntegrationTest {
                 .key3Eq(KEY_3)
                 .profileKeyEq(PROFILE_KEY)
                 .rangeKeyEq(BATCH_WRITE_RANGE_KEY);
-        batchRecord = storage.find(COUNTRY, builder);
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey());
@@ -158,7 +193,7 @@ public class StorageIntegrationTest {
                 .key2Eq(KEY_2)
                 .key3Eq(KEY_3)
                 .profileKeyEq(PROFILE_KEY);
-        batchRecord = storage.find(COUNTRY, builder);
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         assertTrue(batchRecord.getRecords().stream().anyMatch(record
@@ -171,7 +206,7 @@ public class StorageIntegrationTest {
                 .key2Eq(KEY_2)
                 .key3Eq(KEY_3)
                 .profileKeyEq(PROFILE_KEY);
-        batchRecord = storage.find(COUNTRY, builder);
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey());
@@ -183,7 +218,7 @@ public class StorageIntegrationTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(KEY_2)
                 .rangeKeyEq(WRITE_RANGE_KEY, BATCH_WRITE_RANGE_KEY, WRITE_RANGE_KEY + BATCH_WRITE_RANGE_KEY + 1);
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         List<String> resultIdList = new ArrayList<>();
@@ -202,7 +237,7 @@ public class StorageIntegrationTest {
                 .key3Eq(KEY_3)
                 .profileKeyEq(PROFILE_KEY)
                 .rangeKeyEq(WRITE_RANGE_KEY);
-        BatchRecord batchRecord = storageIgnoreCase.find(COUNTRY, builder);
+        BatchRecord batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey());
@@ -213,7 +248,7 @@ public class StorageIntegrationTest {
                 .key3Eq(KEY_3.toLowerCase())
                 .profileKeyEq(PROFILE_KEY.toLowerCase())
                 .rangeKeyEq(WRITE_RANGE_KEY);
-        batchRecord = storageIgnoreCase.find(COUNTRY, builder);
+        batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey());
@@ -224,7 +259,7 @@ public class StorageIntegrationTest {
                 .key3Eq(KEY_3.toUpperCase())
                 .profileKeyEq(PROFILE_KEY.toUpperCase())
                 .rangeKeyEq(WRITE_RANGE_KEY);
-        batchRecord = storageIgnoreCase.find(COUNTRY, builder);
+        batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey());
@@ -236,7 +271,7 @@ public class StorageIntegrationTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .key2Eq(KEY_2)
                 .rangeKeyEq(WRITE_RANGE_KEY);
-        Record record = storage.findOne(COUNTRY, builder);
+        Record record = storage.findOne(MIDIPOP_COUNTRY, builder);
         assertEquals(WRITE_KEY, record.getKey());
         assertEquals(RECORD_BODY, record.getBody());
     }
@@ -244,50 +279,52 @@ public class StorageIntegrationTest {
     @Test
     @Order(600)
     public void customEncryptionTest() throws StorageException {
-        SecretKey customSecretKey = new SecretKey(SECRET, VERSION + 1, false, true);
+        SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION + 1, false, true);
         List<SecretKey> secretKeyList = new ArrayList<>(secretKeyAccessor.getSecretsData().getSecrets());
         secretKeyList.add(customSecretKey);
         SecretsData anotherSecretsData = new SecretsData(secretKeyList, customSecretKey.getVersion());
         SecretKeyAccessor customAccessor = () -> anotherSecretsData;
         List<Crypto> cryptoList = new ArrayList<>();
         cryptoList.add(new FernetCrypto(true));
+
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INTEGR_ENV_KEY_ENVID))
-                .setApiKey(loadFromEnv(INTEGR_ENV_KEY_APIKEY))
-                .setEndPoint(loadFromEnv(INTEGR_ENV_KEY_ENDPOINT))
+                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setApiKey(loadFromEnv(INT_INC_API_KEY))
+                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(customAccessor)
                 .setCustomEncryptionConfigsList(cryptoList);
+
         Storage storage2 = StorageImpl.getInstance(config);
         //write record with custom enc
         String customRecordKey = WRITE_KEY + "_custom";
         Record record = new Record(customRecordKey, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
-        storage2.write(COUNTRY, record);
+        storage2.write(MIDIPOP_COUNTRY, record);
         //read record with custom enc
-        Record record1 = storage2.read(COUNTRY, customRecordKey);
+        Record record1 = storage2.read(MIDIPOP_COUNTRY, customRecordKey);
         assertEquals(record, record1);
         //read recorded record with default encryption
-        Record record2 = storage2.read(COUNTRY, WRITE_KEY);
+        Record record2 = storage2.read(MIDIPOP_COUNTRY, WRITE_KEY);
         assertEquals(RECORD_BODY, record2.getBody());
         //find record with custom enc
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq(customRecordKey)
                 .rangeKeyEq(WRITE_RANGE_KEY);
-        Record record3 = storage2.findOne(COUNTRY, builder);
+        Record record3 = storage2.findOne(MIDIPOP_COUNTRY, builder);
         assertEquals(record, record3);
         //delete record with custom enc
-        storage2.delete(COUNTRY, customRecordKey);
-        Record record4 = storage2.read(COUNTRY, customRecordKey);
+        storage2.delete(MIDIPOP_COUNTRY, customRecordKey);
+        Record record4 = storage2.read(MIDIPOP_COUNTRY, customRecordKey);
         assertNull(record4);
     }
 
     @Test
     @Order(700)
     public void deleteTest() throws StorageException {
-        storage.delete(COUNTRY, WRITE_KEY);
-        storage.delete(COUNTRY, BATCH_WRITE_KEY);
+        storage.delete(MIDIPOP_COUNTRY, WRITE_KEY);
+        storage.delete(MIDIPOP_COUNTRY, BATCH_WRITE_KEY);
         // Cannot read deleted record
-        Record writeMethodRecord = storage.read(COUNTRY, WRITE_KEY);
-        Record batchWriteMethodRecord = storage.read(COUNTRY, BATCH_WRITE_KEY);
+        Record writeMethodRecord = storage.read(MIDIPOP_COUNTRY, WRITE_KEY);
+        Record batchWriteMethodRecord = storage.read(MIDIPOP_COUNTRY, BATCH_WRITE_KEY);
         assertNull(writeMethodRecord);
         assertNull(batchWriteMethodRecord);
     }
@@ -295,13 +332,89 @@ public class StorageIntegrationTest {
     @Test
     @Order(701)
     public void deleteIgnoreCaseTest() throws StorageException {
-        storageIgnoreCase.delete(COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
+        storageIgnoreCase.delete(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
         // Cannot read deleted record
-        Record record = storageIgnoreCase.read(COUNTRY, WRITE_KEY_IGNORE_CASE);
+        Record record = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE);
         assertNull(record);
-        record = storageIgnoreCase.read(COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
+        record = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
         assertNull(record);
-        record = storageIgnoreCase.read(COUNTRY, WRITE_KEY_IGNORE_CASE.toLowerCase());
+        record = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toLowerCase());
         assertNull(record);
+    }
+
+    @Test
+    @Order(800)
+    public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
+        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(secretKey);
+        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
+        SecretKeyAccessor mySecretKeyAccessor = () -> secretsData;
+
+        Map<String, String> authMap = new HashMap<>();
+        if (EMEA_AUTH_ENDPOINT != null && !EMEA_AUTH_ENDPOINT.isEmpty()) {
+            authMap.put(EMEA, EMEA_AUTH_ENDPOINT);
+        }
+        if (APAC_AUTH_ENDPOINT != null && !APAC_AUTH_ENDPOINT.isEmpty()) {
+            authMap.put(APAC, APAC_AUTH_ENDPOINT);
+        }
+        StorageConfig config = new StorageConfig()
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
+                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
+                .setEndpointMask(ENDPOINT_MASK)
+                .setEnvId(ENV_ID)
+                .setSecretKeyAccessor(mySecretKeyAccessor)
+                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
+                .setMaxHttpPoolSize(HTTP_POOL_SIZE)
+                .setMaxHttpConnectionsPerRoute(HTTP_POOL_SIZE / 2);
+        if (!authMap.isEmpty()) {
+            config.setAuthEndpoints(authMap);
+        }
+        Storage customStorage = StorageImpl.getInstance(config);
+        //http pool size < concurrent threads < count of threads
+        ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE / 2);
+        List<Future<StorageException>> futureList = new ArrayList<>();
+        Long startTime = System.currentTimeMillis();
+        int taskCount = HTTP_POOL_SIZE * 2;
+        for (int i = 0; i < taskCount; i++) {
+            futureList.add(executorService.submit(createCallableTask(customStorage, i)));
+        }
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.MINUTES);
+        int successfulTaskCount = 0;
+        for (Future<StorageException> one : futureList) {
+            assertTrue(one.isDone());
+            if (one.get() == null) {
+                successfulTaskCount += 1;
+            }
+        }
+        Long finishTime = System.currentTimeMillis();
+        LOG.debug("connectionPoolTest duration time = {} ms, average speed = {} ms per 1 task", finishTime - startTime, (finishTime - startTime) / taskCount);
+        assertEquals(taskCount, successfulTaskCount);
+    }
+
+    private Callable<StorageException> createCallableTask(final Storage storage, final int numb) {
+        return () -> {
+            try {
+                String randomKey = WRITE_KEY + UUID.randomUUID().toString();
+                Thread currentThread = Thread.currentThread();
+                currentThread.setName("connectionPoolTest #" + numb);
+                Record record = new Record(randomKey, RECORD_BODY, PROFILE_KEY, WRITE_RANGE_KEY, KEY_2, KEY_3);
+                String country = (numb % 2 == 0 ? MIDIPOP_COUNTRY : MIDIPOP_COUNTRY_2);
+                storage.write(country, record);
+                Record incomingRecord = storage.read(country, randomKey);
+                assertEquals(randomKey, incomingRecord.getKey());
+                assertEquals(RECORD_BODY, incomingRecord.getBody());
+                assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
+                assertEquals(KEY_2, incomingRecord.getKey2());
+                assertEquals(KEY_3, incomingRecord.getKey3());
+                storage.delete(country, randomKey);
+            } catch (StorageException exception) {
+                LOG.error("Exception in connectionPoolTest", exception);
+                return exception;
+            }
+            return null;
+        };
     }
 }

@@ -121,7 +121,7 @@ public class JsonUtils {
         } catch (JsonSyntaxException ex) {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
-        tempRecord.validate();
+        TransferRecord.validate(tempRecord);
         if (tempRecord.getVersion() == null) {
             tempRecord.setVersion(0);
         }
@@ -167,7 +167,7 @@ public class JsonUtils {
         if (transferBatch.getMeta().getCount() != 0) {
             for (TransferRecord tempRecord : transferBatch.getData()) {
                 try {
-                    tempRecord.validate();
+                    TransferRecord.validate(tempRecord);
                     if (tempRecord.getVersion() == null) {
                         tempRecord.setVersion(0);
                     }

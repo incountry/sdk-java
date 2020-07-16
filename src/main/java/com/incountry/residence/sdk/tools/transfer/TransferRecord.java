@@ -45,13 +45,17 @@ public class TransferRecord extends Record {
         this.version = version;
     }
 
-    public void validate() throws StorageServerException {
+    public static void validate(TransferRecord record) throws StorageServerException {
         StringBuilder builder = null;
-        if (getKey() == null || getKey().length() == 0) {
-            builder = new StringBuilder("Null required record fields: key");
-        }
-        if (getBody() == null || getBody().length() == 0) {
-            builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
+        if (record == null) {
+            builder = new StringBuilder("Received record is null");
+        } else {
+            if (record.getKey() == null || record.getKey().length() == 0) {
+                builder = new StringBuilder("Null required record fields: key");
+            }
+            if (record.getBody() == null || record.getBody().length() == 0) {
+                builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
+            }
         }
         if (builder != null) {
             String message = builder.toString();
@@ -87,25 +91,25 @@ public class TransferRecord extends Record {
         setProfileKey(recordFromMeta.getProfileKey());
     }
 
-        @Override
-        public boolean equals(Object object) {
-            if (this == object) {
-                return true;
-            }
-            if (object == null || getClass() != object.getClass()) {
-                return false;
-            }
-            if (!super.equals(object)) {
-                return false;
-            }
-            TransferRecord that = (TransferRecord) object;
-            return Objects.equals(version, that.version);
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
         }
+        if (object == null || getClass() != object.getClass()) {
+            return false;
+        }
+        if (!super.equals(object)) {
+            return false;
+        }
+        TransferRecord that = (TransferRecord) object;
+        return Objects.equals(version, that.version);
+    }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), version);
-        }
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), version);
+    }
 
     public Record decrypt(CryptoManager cryptoManager, Gson gson) throws StorageClientException, StorageCryptoException, StorageServerException {
         try {

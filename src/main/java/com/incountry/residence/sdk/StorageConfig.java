@@ -34,6 +34,8 @@ public class StorageConfig {
     private Integer httpTimeout;
     private Map<String, String> authEndpoints;
     private String defaultAuthEndpoint;
+    private Integer maxHttpPoolSize;
+    private Integer maxHttpConnectionsPerRoute;
 
     public String getEnvId() {
         return envId;
@@ -257,8 +259,39 @@ public class StorageConfig {
         return this;
     }
 
+    public Integer getMaxHttpPoolSize() {
+        return maxHttpPoolSize;
+    }
+
+    /**
+     * Set HTTP connections pool size. Optional. Expected value - null or positive integer. Defaults to 20.
+     *
+     * @param maxHttpPoolSize pool size
+     * @return StorageConfig
+     */
+    public StorageConfig setMaxHttpPoolSize(Integer maxHttpPoolSize) {
+        this.maxHttpPoolSize = maxHttpPoolSize;
+        return this;
+    }
+
     public String getEndpointMask() {
         return endpointMask;
+    }
+
+    public Integer getMaxHttpConnectionsPerRoute() {
+        return maxHttpConnectionsPerRoute;
+    }
+
+    /**
+     * Set maximum count of HTTP connections per route, optional. Expected value - null or positive integer.
+     * Default value == {@link #maxHttpPoolSize}.
+     *
+     * @param maxHttpConnectionsPerRoute pool size
+     * @return StorageConfig
+     */
+    public StorageConfig setMaxHttpConnectionsPerRoute(Integer maxHttpConnectionsPerRoute) {
+        this.maxHttpConnectionsPerRoute = maxHttpConnectionsPerRoute;
+        return this;
     }
 
     /**
@@ -302,6 +335,7 @@ public class StorageConfig {
         newInstance.setHttpTimeout(getHttpTimeout());
         newInstance.setAuthEndpoints(getAuthEndpoints());
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
+        newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
         return newInstance;
     }
 
@@ -321,6 +355,7 @@ public class StorageConfig {
                 ", authEndpointMap='" + authEndpoints + '\'' +
                 ", defaultAuthEndpoint='" + defaultAuthEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
+                ", httpPoolSize='" + maxHttpPoolSize + '\'' +
                 '}';
     }
 

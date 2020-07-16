@@ -13,6 +13,8 @@
 
         <Logger name="com.incountry.residence.sdk" level="trace"/>
         <Logger name="com.incountry.residence.sdk.ProxyUtilsTest" level="info"/>
+        <Logger name="org.apache.http" level="info"/>
+        <Logger name="org.apache.http.impl.conn.PoolingHttpClientConnectionManager" level="debug"/>
 
     </Loggers>
 </Configuration>
