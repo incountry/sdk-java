@@ -68,19 +68,17 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
             int status = response.getStatusLine().getStatusCode();
             String actualResponseContent = EntityUtils.toString(response.getEntity());
+            response.close();
             ApiResponse expectedResponse = codeMap.get(status);
             String result;
-            boolean notRepeat = expectedResponse != null && !expectedResponse.isError() && !Objects.requireNonNull(actualResponseContent).isEmpty()
+            boolean isFinish = expectedResponse != null && !expectedResponse.isError() && !Objects.requireNonNull(actualResponseContent).isEmpty()
                     || expectedResponse == null
                     || !canRetry(expectedResponse, retryCount);
-            if (notRepeat) {
-                result = actualResponseContent;
-                response.close();
-            } else {
+            if (!isFinish) {
                 tokenClient.refreshToken(true, audience, region);
-                response.close();
                 return request(url, method, body, codeMap, audience, region, retryCount - 1);
             }
+            result = actualResponseContent;
 
             if (expectedResponse != null && expectedResponse.isIgnored()) {
                 return null;
