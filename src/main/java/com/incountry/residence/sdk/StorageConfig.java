@@ -264,10 +264,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set HTTP pool size. Parameter is optional. Expected value - null or positive number. Default value == 20.
-     * A pool of HTTP connections will service connection requests from multiple execution threads. A request
-     * for a route which already the manager has persistent connections for available in the pool will
-     * be services by leasing a connection from the pool rather than creating a brand new connection.
+     * Set HTTP connections pool size. Optional. Expected value - null or positive integer. Defaults to 20.
      *
      * @param maxHttpPoolSize pool size
      * @return StorageConfig
@@ -286,7 +283,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set maximum count of HTTP connections per route. Parameter is optional. Expected value - null or positive number.
+     * Set maximum count of HTTP connections per route, optional. Expected value - null or positive integer.
      * Default value == {@link #maxHttpPoolSize}.
      *
      * @param maxHttpConnectionsPerRoute pool size
