@@ -62,7 +62,8 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             throw new StorageClientException(MSG_URL_NULL_ERR);
         }
         try {
-            HttpRequestBase request = addHeaders(createRequest(url, method, body), audience, region);
+            HttpRequestBase request = createRequest(url, method, body);
+            addHeaders(request, audience, region);
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
