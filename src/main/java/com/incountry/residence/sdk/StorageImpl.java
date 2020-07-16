@@ -184,11 +184,12 @@ public class StorageImpl implements Storage {
     private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
-            checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
             Integer httpPoolSize = config.getMaxHttpPoolSize();
-            checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
             Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
+            checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
+            checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
             checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
+
             CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {
