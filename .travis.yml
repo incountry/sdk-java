@@ -5,7 +5,7 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-6.5
+#    - gradle-6.5
 
 
 language:
@@ -23,10 +23,11 @@ before_install:
   # for sonar test coverage metric
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
   # for using gradle 6.5 instead of default 5 in travis
+  - echo $PWD
   - if [ "$(ls -A /gradle-6.5)" ]; then wget https://services.gradle.org/distributions/gradle-6.5-bin.zip; unzip -j gradle-6.5-bin.zip; fi
 #  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
 #  - ls
-#  - echo $PWD
+  - echo $PWD
 #  - unzip gradle-6.5-bin.zip
 #  - ls
 #  - echo $PWD
