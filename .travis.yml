@@ -34,7 +34,7 @@ before_install:
 #  - export GRADLE_HOME=$PWD/gradle-6.5
 #  - export PATH=$GRADLE_HOME/bin:$PATH
   - export GRADLE_HOME=/gradle-6.5
-  - export PATH=/bin:$PATH
+  - export PATH=$GRADLE_HOME/bin:$PATH
   - gradle -v
 
 script:
