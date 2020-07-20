@@ -5,7 +5,7 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - $PWD/gradle-6.5
+    - $HOME/gradle-6.5
 
 
 language:
