@@ -24,7 +24,7 @@ before_install:
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
   # for using gradle 6.5 instead of default 5 in travis
   - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
-  - unzip -qq gradle-6.5-bin.zip
+  - unzip gradle-6.5-bin.zip
   - export GRADLE_HOME=$PWD/gradle-6.5
   - export PATH=$GRADLE_HOME/bin:$PATH
   - gradle -v
