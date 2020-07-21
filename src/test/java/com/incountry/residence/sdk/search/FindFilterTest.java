@@ -1,6 +1,5 @@
 package com.incountry.residence.sdk.search;
 
-import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.tools.JsonUtils;
@@ -26,11 +25,14 @@ class FindFilterTest {
         findFilter.setVersionFilter(versionFilterParam);
         findFilter.setKeyFilter(keyFilterParam);
         findFilter.setProfileKeyFilter(profileKeyFilterParam);
-        JsonObject jsonObject = JsonUtils.toJson(findFilter, null);
+        String jsonString = JsonUtils.toJsonString(findFilter, null);
 
-        assertEquals(String.format("{\"$not\":[%s]}", version), jsonObject.get("version").toString());
-        assertEquals(String.format("{\"$not\":[\"%s\"]}", key), jsonObject.get("key").toString());
-        assertEquals(String.format("{\"$not\":[\"%s\"]}", profileKey), jsonObject.get("profile_key").toString());
+        assertEquals("{\"filter\":" +
+                        "{\"key\":{\"$not\":[\"" + key + "\"]}," +
+                        "\"profile_key\":{\"$not\":[\"" + profileKey + "\"]}," +
+                        "\"version\":{\"$not\":[" + version + "]}}," +
+                        "\"options\":{\"limit\":100,\"offset\":0}}",
+                jsonString);
     }
 
 

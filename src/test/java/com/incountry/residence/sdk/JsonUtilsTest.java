@@ -1,6 +1,5 @@
 package com.incountry.residence.sdk;
 
-import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
@@ -40,21 +39,21 @@ class JsonUtilsTest {
 
     @Test
     void testNullFilterToJson() {
-        JsonObject json = JsonUtils.toJson((FindFilter) null, null);
-        assertEquals("{}", json.toString());
+        String jsonString = JsonUtils.toJsonString((FindFilter) null, null);
+        assertEquals("{\"filter\":{},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }
 
     @Test
     void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
         filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, true));
-        JsonObject json = JsonUtils.toJson(filter, new CryptoManager(null, "envId", null, false));
-        assertEquals("{\"version\":{\"$not\":[1]}}", json.toString());
+        String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
+        assertEquals("{\"filter\":{\"version\":{\"$not\":[1]}},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         filter = new FindFilter();
         filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, false));
-        json = JsonUtils.toJson(filter, new CryptoManager(null, "envId", null, false));
-        assertEquals("{\"version\":[1]}", json.toString());
+        jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
+        assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }
 
     @Test

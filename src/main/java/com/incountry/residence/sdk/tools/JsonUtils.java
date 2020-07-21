@@ -25,6 +25,7 @@ import com.incountry.residence.sdk.tools.transfer.TransferPopList;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +34,30 @@ import java.util.stream.Collectors;
 public class JsonUtils {
 
     private static final String P_BODY = "body";
+    private static final String P_PRECOMMIT = "precommit";
+    private static final String P_ERROR_CORRECTION_KEY_1 = "error_correction_key1";
+    private static final String P_ERROR_CORRECTION_KEY_2 = "error_correction_key2";
     private static final String P_KEY = "key";
     private static final String P_KEY_2 = "key2";
     private static final String P_KEY_3 = "key3";
+    private static final String P_KEY_4 = "key4";
+    private static final String P_KEY_5 = "key5";
+    private static final String P_KEY_6 = "key6";
+    private static final String P_KEY_7 = "key7";
+    private static final String P_KEY_8 = "key8";
+    private static final String P_KEY_9 = "key9";
+    private static final String P_KEY_10 = "key10";
     private static final String P_PROFILE_KEY = "profile_key";
     private static final String P_RANGE_KEY = "range_key";
+    private static final String P_RANGE_KEY_2 = "range_key2";
+    private static final String P_RANGE_KEY_3 = "range_key3";
+    private static final String P_RANGE_KEY_4 = "range_key4";
+    private static final String P_RANGE_KEY_5 = "range_key5";
+    private static final String P_RANGE_KEY_6 = "range_key6";
+    private static final String P_RANGE_KEY_7 = "range_key7";
+    private static final String P_RANGE_KEY_8 = "range_key8";
+    private static final String P_RANGE_KEY_9 = "range_key9";
+    private static final String P_RANGE_KEY_10 = "range_key10";
     private static final String P_PAYLOAD = "payload";
     private static final String P_META = "meta";
     private static final String P_VERSION = "version";
@@ -49,6 +69,9 @@ public class JsonUtils {
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
     private static final String MSG_ERR_RESPONSE = "Response error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
+
+    private static final List<String> REMOVE_KEYS = Arrays.asList(P_RANGE_KEY, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4,
+            P_RANGE_KEY_5, P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_BODY, P_PRECOMMIT);
 
     private JsonUtils() {
     }
@@ -68,9 +91,7 @@ public class JsonUtils {
         if (cryptoManager == null) {
             return recordJsonObj;
         }
-        //store keys in new composite body with encryption
-        recordJsonObj.remove(P_BODY);
-        recordJsonObj.remove(P_RANGE_KEY);
+        REMOVE_KEYS.forEach(recordJsonObj::remove);
         JsonObject bodyJsonObj = new JsonObject();
         if (record.getBody() != null) {
             bodyJsonObj.addProperty(P_PAYLOAD, record.getBody());
@@ -87,20 +108,41 @@ public class JsonUtils {
      * @param cryptoManager crypto object
      * @return JsonObject with properties corresponding to FindFilter object properties
      */
-    public static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
+    private static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject json = new JsonObject();
         if (filter != null) {
             addToJson(json, P_KEY, filter.getKeyFilter(), cryptoManager);
             addToJson(json, P_KEY_2, filter.getKey2Filter(), cryptoManager);
             addToJson(json, P_KEY_3, filter.getKey3Filter(), cryptoManager);
+            addToJson(json, P_KEY_4, filter.getKey4Filter(), cryptoManager);
+            addToJson(json, P_KEY_5, filter.getKey5Filter(), cryptoManager);
+            addToJson(json, P_KEY_6, filter.getKey6Filter(), cryptoManager);
+            addToJson(json, P_KEY_7, filter.getKey7Filter(), cryptoManager);
+            addToJson(json, P_KEY_8, filter.getKey8Filter(), cryptoManager);
+            addToJson(json, P_KEY_9, filter.getKey9Filter(), cryptoManager);
+            addToJson(json, P_KEY_10, filter.getKey10Filter(), cryptoManager);
+            addToJson(json, P_ERROR_CORRECTION_KEY_1, filter.getErrorCorrectionKey1Filter(), cryptoManager);
+            addToJson(json, P_ERROR_CORRECTION_KEY_2, filter.getErrorCorrectionKey2Filter(), cryptoManager);
             addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), cryptoManager);
             addToJson(json, P_VERSION, filter.getVersionFilter(), cryptoManager);
-            FilterNumberParam range = filter.getRangeKeyFilter();
-            if (range != null) {
-                json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
-            }
+            addRangeToJson(json, P_RANGE_KEY, filter.getRangeKeyFilter());
+            addRangeToJson(json, P_RANGE_KEY_2, filter.getRangeKey2Filter());
+            addRangeToJson(json, P_RANGE_KEY_3, filter.getRangeKey3Filter());
+            addRangeToJson(json, P_RANGE_KEY_4, filter.getRangeKey4Filter());
+            addRangeToJson(json, P_RANGE_KEY_5, filter.getRangeKey5Filter());
+            addRangeToJson(json, P_RANGE_KEY_6, filter.getRangeKey6Filter());
+            addRangeToJson(json, P_RANGE_KEY_7, filter.getRangeKey7Filter());
+            addRangeToJson(json, P_RANGE_KEY_8, filter.getRangeKey8Filter());
+            addRangeToJson(json, P_RANGE_KEY_9, filter.getRangeKey9Filter());
+            addRangeToJson(json, P_RANGE_KEY_10, filter.getRangeKey10Filter());
         }
         return json;
+    }
+
+    private static void addRangeToJson(JsonObject json, String jsonKey, FilterNumberParam rangeFilter) {
+        if (rangeFilter != null) {
+            json.add(jsonKey, rangeFilter.isConditional() ? conditionJSON(rangeFilter) : valueJSON(rangeFilter));
+        }
     }
 
     /**
@@ -201,7 +243,13 @@ public class JsonUtils {
         return object;
     }
 
-    private static JsonObject findOptionstoJson(int limit, int offset) {
+    private static JsonObject findOptionstoJson(FindFilter filter) {
+        int limit = FindFilter.MAX_LIMIT;
+        int offset = FindFilter.DEF_OFFSET;
+        if (filter != null) {
+            limit = filter.getLimit();
+            offset = filter.getOffset();
+        }
         JsonObject object = new JsonObject();
         object.addProperty(P_LIMIT, limit);
         object.addProperty(P_OFFSET, offset);
@@ -255,7 +303,7 @@ public class JsonUtils {
     public static String toJsonString(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject object = new JsonObject();
         object.add(P_FILTER, JsonUtils.toJson(filter, cryptoManager));
-        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()));
+        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter));
         return object.toString();
     }
 
