@@ -19,12 +19,13 @@ sudo: false
 notifications:
   email: false
 
+
 before_install:
   # for sonar test coverage metric
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
   # for using gradle 6.5 instead of default 5 in travis
   #  - echo $PWD
-  - if [ ! "$(ls -A gradle-6.5)" ]; then wget https://services.gradle.org/distributions/gradle-6.5-bin.zip; unzip -qq gradle-6.5-bin.zip; fi
+  - if [ ! "$(ls -A gradle-6.5)" ]; then while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\); wget ${gradleUrl}; unzip -qq gradle-6.5-bin.zip; fi
   #  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
   #  - ls
   #  - echo $PWD
