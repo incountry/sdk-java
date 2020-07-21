@@ -5,7 +5,6 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-6.5
 
 
 language:
