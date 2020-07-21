@@ -5,7 +5,8 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-custom
+    - $GRADLE_HOME
+#    - gradle-custom //  попробовать маску адреса
 
 language:
   java
