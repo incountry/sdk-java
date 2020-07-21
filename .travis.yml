@@ -5,7 +5,7 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-6.5
+    - gradle-custom
 
 language:
   java
@@ -25,7 +25,7 @@ before_install:
   # for using gradle 6.5 instead of default 5 in travis
   #  - echo $PWD
   - ls
-  - if [ ! "$(ls -A gradle-6.5)" ]; then while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\); wget ${gradleUrl}; unzip -j gradle-6.5-bin.zip -d gradle-6.5; fi
+  - if [ ! "$(ls -A gradle-custom)" ]; then while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\); wget ${gradleUrl}; unzip -j gradle-6.5-bin.zip -d gradle-custom; fi
   #  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
   #  - ls
   #  - echo $PWD
@@ -34,7 +34,7 @@ before_install:
 #  - ls -d gradle-6.5/*
 #  - echo $PWD
 #  - echo $PWD/gradle-6.5
-  - export GRADLE_HOME=$PWD/gradle-6.5
+  - export GRADLE_HOME=$PWD/gradle-custom
   - export PATH=$GRADLE_HOME/bin:$PATH
   #  - export GRADLE_HOME=/gradle-6.5
   #  - export PATH=$GRADLE_HOME/bin:$PATH
