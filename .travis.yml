@@ -23,19 +23,10 @@ before_install:
   # for sonar test coverage metric
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
   # for using gradle 6.5 instead of default 5 in travis
-#  - echo $PWD
-  - if [ ! "$(ls -A gradle-6.5)" ]; then wget https://services.gradle.org/distributions/gradle-6.5-bin.zip; unzip -j gradle-6.5-bin.zip -d gradle-6.5s; fi
-#  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
-#  - ls
-#  - echo $PWD
-#  - unzip gradle-6.5-bin.zip
-  - ls
-  - echo $PWD
-  - echo $PWD/gradle-6.5
+  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
+  - unzip -qq gradle-6.5-bin.zip
   - export GRADLE_HOME=$PWD/gradle-6.5
   - export PATH=$GRADLE_HOME/bin:$PATH
-#  - export GRADLE_HOME=/gradle-6.5
-#  - export PATH=$GRADLE_HOME/bin:$PATH
   - gradle -v
 
 script:
