@@ -5,7 +5,7 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-6.5
+#    - gradle-6.5
 
 language:
   java
@@ -32,7 +32,7 @@ before_install:
   - arr2=(${gradleZipFile//-bin/ })
   - gradleDirectory=$arr2
   # checking is gradle already exist, if not download it
-  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -j ${gradleZipFile} -d ${gradleDirectory}; fi
+  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   #  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
   #  - ls
   #  - echo $PWD
