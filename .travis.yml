@@ -53,4 +53,6 @@ after_script:
   - ls $PWD/gradle-container
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
+  - ls $PWD/gradle-container
+  - echo $gradleDirectory
 #  - gradleDirectory
