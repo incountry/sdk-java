@@ -5,8 +5,7 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-6.5
-#    - gradle-custom //  попробовать маску адреса
+#    - gradle-6.5
 
 language:
   java
@@ -24,14 +23,16 @@ before_install:
   # for sonar test coverage metric
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
   # for using gradle 6.5 instead of default 5 in travis
-  #  - echo $PWD
-  - ls
+  #  getting 'distributionUrl'property with gradle url from gradle-wrapper.properties file
   - while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\)
+  # getting gradle zip file name
   - arr=(${gradleUrl//// })
   - gradleZipFile=${arr[${#arr[*]}-1]}
+  # getting gradle directory name after unzipping
   - arr2=(${gradleZipFile//-bin/ })
   - gradleDirectory=$arr2
-  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+  # checking is gradle already exist, if not download it
+  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -j gradleZipFile -d gradleDirectory; fi
   #  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
   #  - ls
   #  - echo $PWD
