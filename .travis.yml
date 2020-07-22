@@ -45,11 +45,12 @@ before_install:
 
 
 
-script:
-  - gradle build jacocoTestReport sonarqube
-  - gradle integrationTest
+#script:
+#  - gradle build jacocoTestReport sonarqube
+#  - gradle integrationTest
 
 after_script:
+  - ls $PWD/gradle-container
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
 #  - gradleDirectory
