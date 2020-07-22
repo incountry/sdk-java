@@ -51,6 +51,7 @@ before_install:
 #  - gradle integrationTest
 
 after_script:
+  - ls
   - ls $PWD/gradle-container
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
