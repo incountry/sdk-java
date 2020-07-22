@@ -68,6 +68,7 @@ after_success:
   - echo $gradleDirectory
   - gradleDirectory
 
+
 #after_script:
 #  - ls
 #  - ls $PWD/gradle-container
