@@ -35,6 +35,7 @@ before_install:
   # checking is gradle already exist, if not download it
 #  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
 #  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then ; else fi
+  - ls $PWD/gradle-container
   - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
