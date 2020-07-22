@@ -39,6 +39,7 @@ before_install:
   - ls
   - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   - touch $PWD/gradle-container/rrr.txt
+  - ls
   - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
   - echo ${GRADLE_HOME}
@@ -63,7 +64,7 @@ after_failure:
 after_success:
   - ls
   - ls $PWD/gradle-container
-  - rm -rf $PWD/gradle-container/*
+#  - rm -rf $PWD/gradle-container/*
   - mv $PWD/${gradleDirectory} $PWD/gradle-container
   - ls $PWD/gradle-container
   - echo $gradleDirectory
