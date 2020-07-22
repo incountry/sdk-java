@@ -31,7 +31,7 @@ before_install:
   - gradleZipFile=${arr[${#arr[*]}-1]}
   - arr2=(${gradleZipFile//-bin/ })
   - gradleDirectory=$arr2
-  - if [ ! "$(ls -A ${gradleDirectory})" ]; then ; wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   #  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
   #  - ls
   #  - echo $PWD
