@@ -278,19 +278,6 @@ public class FindFilter {
         return clone;
     }
 
-    private void cloneRangeKeyFilters(FindFilter clone) {
-        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
-        clone.setRangeKey2Filter(getRangeKey2Filter() != null ? getRangeKey2Filter().copy() : null);
-        clone.setRangeKey3Filter(getRangeKey3Filter() != null ? getRangeKey3Filter().copy() : null);
-        clone.setRangeKey4Filter(getRangeKey4Filter() != null ? getRangeKey4Filter().copy() : null);
-        clone.setRangeKey5Filter(getRangeKey5Filter() != null ? getRangeKey5Filter().copy() : null);
-        clone.setRangeKey6Filter(getRangeKey6Filter() != null ? getRangeKey6Filter().copy() : null);
-        clone.setRangeKey7Filter(getRangeKey7Filter() != null ? getRangeKey7Filter().copy() : null);
-        clone.setRangeKey8Filter(getRangeKey8Filter() != null ? getRangeKey8Filter().copy() : null);
-        clone.setRangeKey9Filter(getRangeKey9Filter() != null ? getRangeKey9Filter().copy() : null);
-        clone.setRangeKey10Filter(getRangeKey10Filter() != null ? getRangeKey10Filter().copy() : null);
-    }
-
     private void cloneKeyFilters(FindFilter clone) {
         clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
         clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
@@ -302,6 +289,19 @@ public class FindFilter {
         clone.setKey8Filter(getKey8Filter() != null ? getKey8Filter().copy() : null);
         clone.setKey9Filter(getKey9Filter() != null ? getKey9Filter().copy() : null);
         clone.setKey10Filter(getKey10Filter() != null ? getKey10Filter().copy() : null);
+    }
+
+    private void cloneRangeKeyFilters(FindFilter clone) {
+        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
+        clone.setRangeKey2Filter(getRangeKey2Filter() != null ? getRangeKey2Filter().copy() : null);
+        clone.setRangeKey3Filter(getRangeKey3Filter() != null ? getRangeKey3Filter().copy() : null);
+        clone.setRangeKey4Filter(getRangeKey4Filter() != null ? getRangeKey4Filter().copy() : null);
+        clone.setRangeKey5Filter(getRangeKey5Filter() != null ? getRangeKey5Filter().copy() : null);
+        clone.setRangeKey6Filter(getRangeKey6Filter() != null ? getRangeKey6Filter().copy() : null);
+        clone.setRangeKey7Filter(getRangeKey7Filter() != null ? getRangeKey7Filter().copy() : null);
+        clone.setRangeKey8Filter(getRangeKey8Filter() != null ? getRangeKey8Filter().copy() : null);
+        clone.setRangeKey9Filter(getRangeKey9Filter() != null ? getRangeKey9Filter().copy() : null);
+        clone.setRangeKey10Filter(getRangeKey10Filter() != null ? getRangeKey10Filter().copy() : null);
     }
 
     @Override
