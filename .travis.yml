@@ -5,7 +5,8 @@ addons:
 cache:
   directories:
     - dependencyCheck
-    - gradle-6.5
+    - gradle-container
+#    - gradle-6.5
 
 language:
   java
@@ -32,7 +33,9 @@ before_install:
   - arr2=(${gradleZipFile//-bin/ })
   - gradleDirectory=$arr2
   # checking is gradle already exist, if not download it
-  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+#  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+#  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then ; else fi
+  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
   - echo ${GRADLE_HOME}
@@ -44,3 +47,8 @@ before_install:
 script:
   - gradle build jacocoTestReport sonarqube
   - gradle integrationTest
+
+after_script:
+  - rm -rf $PWD/gradle-container/*
+  - mv $PWD/$gradleDirectory $PWD/gradle-container
+#  - gradleDirectory
