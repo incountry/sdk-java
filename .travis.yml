@@ -5,7 +5,7 @@ addons:
 cache:
   directories:
     - dependencyCheck
-#    - "gradle-container/"
+    - "gradle-container/"
 #    - gradle-6.5
 
 language:
@@ -35,7 +35,7 @@ before_install:
   # checking is gradle already exist, if not download it
 #  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
 #  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then ; else fi
-#  - ls $PWD/gradle-container
+  - ls $PWD/gradle-container
   - ls
   - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   - export GRADLE_HOME=$PWD/${gradleDirectory}
