@@ -40,7 +40,7 @@ before_install:
 #  - ls -d gradle-6.5/*
 #  - echo $PWD
 #  - echo $PWD/gradle-6.5
-  - export GRADLE_HOME=$PWD/gradle-x.x
+  - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
   - echo ${GRADLE_HOME}
   - echo ${PATH}
