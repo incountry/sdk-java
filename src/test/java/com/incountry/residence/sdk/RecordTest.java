@@ -163,7 +163,7 @@ class RecordTest {
         CryptoManager crypto = new CryptoManager(null, "envId", null, false);
         String recordJson = JsonUtils.toJsonString(record, crypto);
         assertEquals("{\"version\":0," +
-                        "\"is_encrypted\":true," +
+                        "\"is_encrypted\":false," +
                         "\"key\":\"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\"," +
                         "\"key2\":\"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\"," +
                         "\"key3\":\"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\"," +

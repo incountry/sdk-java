@@ -53,7 +53,7 @@ public class TransferRecord extends Record {
 
         Map.Entry<String, Integer> encBodyAndVersion = cryptoManager.encrypt(bodyJsonString);
         setBody(encBodyAndVersion.getKey());
-        isEncrypted = cryptoManager.isUsePTEncryption();
+        isEncrypted = !cryptoManager.isUsePTEncryption();
         version = (encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
 
         if (record.getPrecommit() != null) {
@@ -72,6 +72,10 @@ public class TransferRecord extends Record {
 
     public boolean isEncrypted() {
         return isEncrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        isEncrypted = encrypted;
     }
 
     public static void validate(TransferRecord record) throws StorageServerException {

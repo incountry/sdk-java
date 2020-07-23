@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
@@ -17,10 +18,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransferRecordTest {
 
@@ -87,11 +91,14 @@ class TransferRecordTest {
         assertEquals(transferRecord, transferRecord);
     }
 
+    @SuppressWarnings("java:S3415")
     @Test
     void negativeTestEqualsDifferentClassObjects() throws StorageException {
         Record record = new Record(null, null, null, null, null, null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        assertNotEquals(transferRecord, (""));
+        assertNotEquals(transferRecord, null);
+        assertNotEquals(transferRecord, UUID.randomUUID());
+        assertNotEquals(null, transferRecord);
     }
 
     @Test
@@ -155,6 +162,23 @@ class TransferRecordTest {
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody(null);
         assertEquals(recordForComparison, transferRecord.decrypt(cryptoManager, gson));
+    }
+
+    @Test
+    void testIsEncrypted() throws StorageClientException, StorageCryptoException {
+        Record record = new Record("someKey", "someBody");
+        TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
+        assertTrue(transferRecord.isEncrypted());
+
+        CryptoManager cryptoManagerWithoutEnc = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        transferRecord = new TransferRecord(record, cryptoManagerWithoutEnc, "{\"test\":}");
+        assertFalse(transferRecord.isEncrypted());
+
+        transferRecord.setEncrypted(true);
+        assertTrue(transferRecord.isEncrypted());
+
+        transferRecord.setEncrypted(false);
+        assertFalse(transferRecord.isEncrypted());
     }
 
 }
