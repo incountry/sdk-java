@@ -35,10 +35,29 @@ class RecordTest {
     @Expose
     @SerializedName("range_key")
     public long rangeKey;
+    public long rangeKey2;
+    public long rangeKey3;
+    public long rangeKey4;
+    public long rangeKey5;
+    public long rangeKey6;
+    public long rangeKey7;
+    public long rangeKey8;
+    public long rangeKey9;
+    public long rangeKey10;
     @Expose
     public String key2;
     @Expose
     public String key3;
+    public String key4;
+    public String key5;
+    public String key6;
+    public String key7;
+    public String key8;
+    public String key9;
+    public String key10;
+    public String errorCorrectionKey1;
+    public String errorCorrectionKey2;
+    public String precommit;
 
     @BeforeEach
     public void init() {
@@ -46,8 +65,27 @@ class RecordTest {
         body = "body";
         key2 = "key2";
         key3 = "key3";
+        key4 = "key4";
+        key5 = "key5";
+        key6 = "key6";
+        key7 = "key7";
+        key8 = "key8";
+        key9 = "key9";
+        key10 = "key10";
         profileKey = "profileKey";
         rangeKey = 1;
+        rangeKey2 = 2;
+        rangeKey3 = 3;
+        rangeKey4 = 4;
+        rangeKey5 = 5;
+        rangeKey6 = 6;
+        rangeKey7 = 7;
+        rangeKey8 = 8;
+        rangeKey9 = 9;
+        rangeKey10 = 10;
+        precommit = "precommit";
+        errorCorrectionKey1 = "errorCorrectionKey1";
+        errorCorrectionKey2 = "errorCorrectionKey2";
     }
 
     @Test
@@ -164,26 +202,154 @@ class RecordTest {
         assertTrue(str.contains(String.valueOf(record2.hashCode())));
     }
 
+    @SuppressWarnings("java:S3415")
     @Test
-    void testEquals() {
+    void testEquals() throws StorageClientException, StorageCryptoException, StorageServerException {
         Record record1 = new Record(key, body, profileKey, rangeKey, key2, key3);
         Record record2 = new Record(key, body, profileKey, rangeKey, key2, key3);
         assertEquals(record1, record1);
         assertEquals(record1, record2);
         assertEquals(record2, record1);
         assertNotEquals(null, record1);
+        assertNotEquals(record1, null);
         assertNotEquals(record1, UUID.randomUUID());
-        record2 = new Record(key + 1, body, profileKey, rangeKey, key2, key3);
-        assertNotEquals(record1, record2);
-        record2 = new Record(key, body + 1, profileKey, rangeKey, key2, key3);
-        assertNotEquals(record1, record2);
-        record2 = new Record(key, body, profileKey + 1, rangeKey, key2, key3);
-        assertNotEquals(record1, record2);
-        record2 = new Record(key, body, profileKey, rangeKey + 1, key2, key3);
-        assertNotEquals(record1, record2);
-        record2 = new Record(key, body, profileKey, rangeKey, key2 + 1, key3);
-        assertNotEquals(record1, record2);
-        record2 = new Record(key, body, profileKey, rangeKey, key2, key3 + 1);
-        assertNotEquals(record1, record2);
+
+        Record record3 = new Record()
+                .setKey(key)
+                .setKey2(key2)
+                .setKey3(key3)
+                .setKey4(key4)
+                .setKey5(key5)
+                .setKey6(key6)
+                .setKey7(key7)
+                .setKey8(key8)
+                .setKey9(key9)
+                .setKey10(key10)
+                .setProfileKey(profileKey)
+                .setRangeKey(rangeKey)
+                .setRangeKey2(rangeKey2)
+                .setRangeKey3(rangeKey3)
+                .setRangeKey4(rangeKey4)
+                .setRangeKey5(rangeKey5)
+                .setRangeKey6(rangeKey6)
+                .setRangeKey7(rangeKey7)
+                .setRangeKey8(rangeKey8)
+                .setRangeKey9(rangeKey9)
+                .setRangeKey10(rangeKey10)
+                .setBody(body)
+                .setErrorCorrectionKey1(errorCorrectionKey1)
+                .setErrorCorrectionKey2(errorCorrectionKey2)
+                .setPrecommit(precommit);
+
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        String recordString = JsonUtils.toJsonString(record3, cryptoManager);
+        Record record4 = JsonUtils.recordFromString(recordString, cryptoManager);
+        assertEquals(record3, record4);
+
+        record4.setPrecommit(record4.getPrecommit() + UUID.randomUUID());
+        assertNotEquals(record3, record4);
+
+        record4 = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setErrorCorrectionKey1(record4.getErrorCorrectionKey1() + UUID.randomUUID());
+        assertNotEquals(record3, record4);
+
+        record4 = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setErrorCorrectionKey2(record4.getErrorCorrectionKey2() + UUID.randomUUID());
+        assertNotEquals(record3, record4);
+
+        record4 = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setBody(record4.getBody() + UUID.randomUUID());
+        assertNotEquals(record3, record4);
+
+        record4 = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setProfileKey(record4.getProfileKey() + UUID.randomUUID());
+        assertNotEquals(record3, record4);
+
+        checkKeys(record3, recordString, cryptoManager);
+        checkRangeKeys(record3, recordString, cryptoManager);
+    }
+
+    private void checkRangeKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
+        Record newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
+        newRecord.setRangeKey(newRecord.getRangeKey() + 1);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey2(newRecord.getRangeKey2() + 2);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey3(newRecord.getRangeKey3() + 3);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey4(newRecord.getRangeKey4() + 4);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey5(newRecord.getRangeKey5() + 5);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey6(newRecord.getRangeKey6() + 6);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey7(newRecord.getRangeKey7() + 7);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey8(newRecord.getRangeKey8() + 8);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey9(newRecord.getRangeKey9() + 9);
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setRangeKey10(newRecord.getRangeKey10() + 10);
+        assertNotEquals(expectedRecord, newRecord);
+    }
+
+    private void checkKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
+        Record newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
+        newRecord.setKey(newRecord.getKey() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey2(newRecord.getKey2() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey3(newRecord.getKey3() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey4(newRecord.getKey4() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey5(newRecord.getKey5() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey6(newRecord.getKey6() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey7(newRecord.getKey7() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey8(newRecord.getKey8() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey9(newRecord.getKey9() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey10(newRecord.getKey10() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
     }
 }
