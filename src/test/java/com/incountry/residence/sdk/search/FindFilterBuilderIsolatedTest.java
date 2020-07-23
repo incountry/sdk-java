@@ -5,6 +5,10 @@ import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -193,5 +197,117 @@ class FindFilterBuilderIsolatedTest {
         assertEquals(FindFilterBuilder.OPER_LT, builder.build().getRangeKeyFilter().getOperator2());
         assertEquals(19L, builder.build().getRangeKeyFilter().getValues()[0]);
         assertEquals(20L, builder.build().getRangeKeyFilter().getValues()[1]);
+    }
+
+    @Test
+    void positiveKeyFilterReflectionTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, StorageClientException {
+        FindFilterBuilder builder = FindFilterBuilder.create();
+        for (int i = 1; i < 11; i++) {
+            String postfix = i == 1 ? "" : String.valueOf(i);
+            builder.clear();
+            Method methodKeyEq = FindFilterBuilder.class.getMethod("key" + postfix + "Eq", String[].class);
+            String randomValue = UUID.randomUUID().toString();
+            String[] arr = new String[]{randomValue};
+            methodKeyEq.invoke(builder, new Object[]{arr});
+            FindFilter filter = builder.build();
+            Method getMethod = filter.getClass().getMethod("getKey" + postfix + "Filter");
+            assertEquals("FilterStringParam{value=[" + randomValue + "], notCondition=false}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodKeyNotEq = FindFilterBuilder.class.getMethod("key" + postfix + "NotEq", String[].class);
+            methodKeyNotEq.invoke(builder, new Object[]{arr});
+            filter = builder.build();
+            getMethod = filter.getClass().getMethod("getKey" + postfix + "Filter");
+            assertEquals("FilterStringParam{value=[" + randomValue + "], notCondition=true}",
+                    getMethod.invoke(filter).toString());
+        }
+    }
+
+    @Test
+    void positiveRangeKeyFilterReflectionTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, StorageClientException {
+        FindFilterBuilder builder = FindFilterBuilder.create();
+        for (int i = 1; i < 11; i++) {
+            String postfix = i == 1 ? "" : String.valueOf(i);
+            builder.clear();
+            Method methodRangeKeyEq = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "Eq", Long[].class);
+            Long[] arr = new Long[]{(long) i};
+            methodRangeKeyEq.invoke(builder, new Object[]{arr});
+            FindFilter filter = builder.build();
+            Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + "], operator1='null', operator2='null'}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodRangeKeyGT = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "GT", long.class);
+            methodRangeKeyGT.invoke(builder, (long) i);
+            filter = builder.build();
+            //Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + "], operator1='$gt', operator2='null'}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodRangeKeyGTE = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "GTE", long.class);
+            methodRangeKeyGTE.invoke(builder, (long) i);
+            filter = builder.build();
+            //Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + "], operator1='$gte', operator2='null'}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodRangeKeyLT = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "LT", long.class);
+            methodRangeKeyLT.invoke(builder, (long) i);
+            filter = builder.build();
+            //Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + "], operator1='$lt', operator2='null'}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodRangeKeyLTE = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "LTE", long.class);
+            methodRangeKeyLTE.invoke(builder, (long) i);
+            filter = builder.build();
+            //Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + "], operator1='$lte', operator2='null'}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodRangeKeyBetween = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "Between", long.class, long.class);
+            methodRangeKeyBetween.invoke(builder, (long) i, (long) (i + 1));
+            filter = builder.build();
+            //Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + ", " + (i + 1) + "], operator1='$gte', operator2='$lte'}",
+                    getMethod.invoke(filter).toString());
+
+            builder.clear();
+            Method methodRangeKeyBetweenIncluding = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "Between",
+                    long.class, boolean.class, long.class, boolean.class);
+            methodRangeKeyBetweenIncluding.invoke(builder, (long) i, false, (long) (i + 1), false);
+            filter = builder.build();
+            //Method getMethod = filter.getClass().getMethod("getRangeKey" + postfix + "Filter");
+            assertEquals("FilterRangeParam{values=[" + i + ", " + (i + 1) + "], operator1='$gt', operator2='$lt'}",
+                    getMethod.invoke(filter).toString());
+        }
+    }
+
+    @Test
+    void positiveErrorCorrectionKeyFilterTest() throws StorageClientException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .errorCorrectionKey1Eq("err1_test1", "err1_test2")
+                .errorCorrectionKey2Eq("err2_test1", "err2_test2");
+        assertEquals("FilterStringParam{value=[err1_test1, err1_test2], notCondition=false}",
+                builder.build().getErrorCorrectionKey1Filter().toString());
+
+        assertEquals("FilterStringParam{value=[err2_test1, err2_test2], notCondition=false}",
+                builder.build().getErrorCorrectionKey2Filter().toString());
+
+        builder = builder
+                .clear()
+                .errorCorrectionKey1NotEq("err3_test1", "err3_test2")
+                .errorCorrectionKey2NotEq("err4_test1", "err4_test2");
+        assertEquals("FilterStringParam{value=[err3_test1, err3_test2], notCondition=true}",
+                builder.build().getErrorCorrectionKey1Filter().toString());
+
+        assertEquals("FilterStringParam{value=[err4_test1, err4_test2], notCondition=true}",
+                builder.build().getErrorCorrectionKey2Filter().toString());
     }
 }
