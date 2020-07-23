@@ -24,14 +24,12 @@ sudo: false
 notifications:
   email: false
 
-
 before_install:
   # for sonar test coverage metric
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
-  # for using gradle 6.5 instead of default 5 in travis
-  #  getting 'distributionUrl'property with gradle url from gradle-wrapper.properties file
+  # get used Gradle version and download URL from file 'gradle-wrapper.properties'
   - while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\)
-  # getting gradle zip file name
+  # get gradle zip file name
   - arr=(${gradleUrl//// })
   - gradleZipFile=${arr[${#arr[*]}-1]}
   # get gradle directory name after unzipping
