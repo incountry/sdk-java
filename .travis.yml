@@ -11,7 +11,7 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - dependencyCheck
-    - "gradle-container/"
+    - gradle-container
 #    - gradle-6.5
 
 language:
@@ -39,13 +39,7 @@ before_install:
   - arr2=(${gradleZipFile//-bin/ })
   - gradleDirectory=$arr2
   # checking is gradle already exist, if not download it
-  #  - if [ ! "$(ls -A ${gradleDirectory})" ]; then wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
-  #  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then ; else fi
-  - ls $PWD/gradle-container
-  - ls
   - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
-  - touch $PWD/gradle-container/rrr.txt
-  - ls
   - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
   - echo ${GRADLE_HOME}
@@ -55,40 +49,7 @@ before_install:
 
 
 script:
-  - ls
-  - ls $PWD/gradle-container
-  - rm -rf $PWD/gradle-container/*
-  - mv $PWD/$gradleDirectory $PWD/gradle-container
-  - ls $PWD/gradle-container
-  - echo $gradleDirectory
 #  - gradle build jacocoTestReport sonarqube
 #  - gradle integrationTest
-
-#after_failure:
-#  - ls
-#  - ls $PWD/gradle-container
-#  - rm -rf $PWD/gradle-container/*
-#  - mv $PWD/$gradleDirectory $PWD/gradle-container
-#  - ls $PWD/gradle-container
-#  - echo $gradleDirectory
-#  - gradleDirectory
-
-#after_success:
-#  - ls
-#  - ls $PWD/gradle-container
-##  - rm -rf $PWD/gradle-container/*
-#  - mv $PWD/${gradleDirectory} $PWD/gradle-container
-#  - ls $PWD/gradle-container
-#  - echo $gradleDirectory
-#  - gradleDirectory
-
-
-
-#after_script:
-#  - ls
-#  - ls $PWD/gradle-container
-#  - rm -rf $PWD/gradle-container/*
-#  - mv $PWD/$gradleDirectory $PWD/gradle-container
-#  - ls $PWD/gradle-container
-#  - echo $gradleDirectory
-#  - gradleDirectory
+  - rm -rf $PWD/gradle-container/*
+  - mv $PWD/$gradleDirectory $PWD/gradle-container
