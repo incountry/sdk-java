@@ -2,9 +2,16 @@ addons:
   sonarcloud:
     organization: "incountry"
 
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
 cache:
   directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
     - dependencyCheck
+    - gradle-container
 
 language:
   java
@@ -20,13 +27,25 @@ notifications:
 before_install:
   # for sonar test coverage metric
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/$TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH; fi
-  # for using gradle 6.5 instead of default 5 in travis
-  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
-  - unzip -qq gradle-6.5-bin.zip
-  - export GRADLE_HOME=$PWD/gradle-6.5
+  # get used Gradle version and download URL from file 'gradle-wrapper.properties'
+  - while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\)
+  # get gradle zip file name
+  - arr=(${gradleUrl//// })
+  - gradleZipFile=${arr[${#arr[*]}-1]}
+  # get gradle directory name after unzipping
+  - arr2=(${gradleZipFile//-bin/ })
+  - gradleDirectory=$arr2
+  # check used Gradle binaries exist, if not download it
+  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+  - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
+  - echo ${GRADLE_HOME}
+  - echo ${PATH}
   - gradle -v
 
 script:
   - gradle build jacocoTestReport sonarqube
   - gradle integrationTest
+  # move custom Gradle binaries to cache
+  - rm -rf $PWD/gradle-container/*
+  - mv $PWD/$gradleDirectory $PWD/gradle-container
