@@ -24,6 +24,7 @@ public class TransferRecord extends Record {
     private static final String MSG_ERR_RESPONSE = "Response error";
 
     private Integer version;
+    private boolean isEncrypted;
 
     public TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
         setKey(cryptoManager.createKeyHash(record.getKey()));
@@ -52,6 +53,7 @@ public class TransferRecord extends Record {
 
         Map.Entry<String, Integer> encBodyAndVersion = cryptoManager.encrypt(bodyJsonString);
         setBody(encBodyAndVersion.getKey());
+        isEncrypted = cryptoManager.isUsePTEncryption();
         version = (encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
 
         if (record.getPrecommit() != null) {
@@ -66,6 +68,10 @@ public class TransferRecord extends Record {
 
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public boolean isEncrypted() {
+        return isEncrypted;
     }
 
     public static void validate(TransferRecord record) throws StorageServerException {

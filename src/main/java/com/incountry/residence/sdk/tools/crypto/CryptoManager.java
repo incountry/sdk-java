@@ -235,4 +235,8 @@ public class CryptoManager {
         byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
         return new String(decodedBytes, CHARSET);
     }
+
+    public boolean isUsePTEncryption() {
+        return usePTEncryption;
+    }
 }
