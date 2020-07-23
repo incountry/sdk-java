@@ -34,10 +34,10 @@ before_install:
   # getting gradle zip file name
   - arr=(${gradleUrl//// })
   - gradleZipFile=${arr[${#arr[*]}-1]}
-  # getting gradle directory name after unzipping
+  # get gradle directory name after unzipping
   - arr2=(${gradleZipFile//-bin/ })
   - gradleDirectory=$arr2
-  # checking is gradle already exist, if not download it
+  # check used Gradle binaries exist, if not download it
   - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
   - export GRADLE_HOME=$PWD/${gradleDirectory}
   - export PATH=$GRADLE_HOME/bin:$PATH
@@ -50,5 +50,6 @@ before_install:
 script:
   - gradle build jacocoTestReport sonarqube
   - gradle integrationTest
+  # move custom Gradle binaries to cache
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
