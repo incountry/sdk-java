@@ -11,8 +11,8 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - dependencyCheck
-#    - "gradle-container/"
-    - gradle-6.5
+    - "gradle-container/"
+#    - gradle-6.5
 
 language:
   java
