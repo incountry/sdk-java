@@ -43,8 +43,6 @@ before_install:
   - echo ${PATH}
   - gradle -v
 
-
-
 script:
   - gradle build jacocoTestReport sonarqube
   - gradle integrationTest
