@@ -50,5 +50,5 @@ script:
   # move custom Gradle binaries to cache
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
-  on:
-    branch: develop
+#  on:
+#    branch: develop
