@@ -112,7 +112,7 @@ class HttpDaoImplTests {
         Record receivedRecord = JsonUtils.recordFromString(received, null);
 
         assertEquals(expectedPath, callPath);
-        assertNotEquals(key, receivedRecord.getKey());
+        assertNotEquals(key, receivedRecord.getKey1());
         if (key2 != null) {
             assertNotEquals(key2, receivedRecord.getKey2());
         }
@@ -126,7 +126,7 @@ class HttpDaoImplTests {
             assertNotEquals(body, receivedRecord.getBody());
         }
         if (rangeKey != null) {
-            assertEquals(rangeKey, receivedRecord.getRangeKey());
+            assertEquals(rangeKey, receivedRecord.getRangeKey1());
         }
         checkEmptyHttpFields(received, record);
     }
@@ -153,12 +153,12 @@ class HttpDaoImplTests {
 
         Record fetched = storage.read(country, key);
         assertEquals(expectedPath, new URL(agent.getCallUrl()).getPath());
-        assertEquals(key, fetched.getKey());
+        assertEquals(key, fetched.getKey1());
         assertEquals(body, fetched.getBody());
         assertEquals(profileKey, fetched.getProfileKey());
         assertEquals(key2, fetched.getKey2());
         assertEquals(key3, fetched.getKey3());
-        assertEquals(rangeKey, fetched.getRangeKey());
+        assertEquals(rangeKey, fetched.getRangeKey1());
     }
 
     @ParameterizedTest()
@@ -231,10 +231,10 @@ class HttpDaoImplTests {
 
     private void checkEmptyHttpFields(String received, Record record) {
         JsonObject jsonObject = new Gson().fromJson(received, JsonObject.class);
-        assertEquals(record.getKey() == null, jsonObject.get("key") == null);
+        assertEquals(record.getKey1() == null, jsonObject.get("key") == null);
         assertEquals(record.getKey2() == null, jsonObject.get("key2") == null);
         assertEquals(record.getKey3() == null, jsonObject.get("key3") == null);
-        assertEquals(record.getRangeKey() == null, jsonObject.get("range_key") == null);
+        assertEquals(record.getRangeKey1() == null, jsonObject.get("range_key") == null);
         assertEquals(record.getProfileKey() == null, jsonObject.get("profile_key") == null);
         //key1 & body aren't checked because it's always not null
     }

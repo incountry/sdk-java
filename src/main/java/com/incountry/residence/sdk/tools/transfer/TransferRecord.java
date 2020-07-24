@@ -27,7 +27,7 @@ public class TransferRecord extends Record {
     private boolean isEncrypted;
 
     public TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
-        setKey(cryptoManager.createKeyHash(record.getKey()));
+        setKey1(cryptoManager.createKeyHash(record.getKey1()));
         setKey2(cryptoManager.createKeyHash(record.getKey2()));
         setKey3(cryptoManager.createKeyHash(record.getKey3()));
         setKey4(cryptoManager.createKeyHash(record.getKey4()));
@@ -40,7 +40,7 @@ public class TransferRecord extends Record {
         setProfileKey(cryptoManager.createKeyHash(record.getProfileKey()));
         setErrorCorrectionKey1(cryptoManager.createKeyHash(record.getErrorCorrectionKey1()));
         setErrorCorrectionKey2(cryptoManager.createKeyHash(record.getErrorCorrectionKey2()));
-        setRangeKey(record.getRangeKey());
+        setRangeKey1(record.getRangeKey1());
         setRangeKey2(record.getRangeKey2());
         setRangeKey3(record.getRangeKey3());
         setRangeKey4(record.getRangeKey4());
@@ -83,7 +83,7 @@ public class TransferRecord extends Record {
         if (record == null) {
             builder = new StringBuilder("Received record is null");
         } else {
-            if (record.getKey() == null || record.getKey().length() == 0) {
+            if (record.getKey1() == null || record.getKey1().length() == 0) {
                 builder = new StringBuilder("Null required record fields: key");
             }
             if (record.getBody() == null || record.getBody().length() == 0) {
@@ -104,7 +104,7 @@ public class TransferRecord extends Record {
      */
     private Record toRecord() {
         Record rec = new Record();
-        rec.setKey(getKey());
+        rec.setKey1(getKey1());
         rec.setKey2(getKey2());
         rec.setKey3(getKey3());
         rec.setKey4(getKey4());
@@ -114,7 +114,7 @@ public class TransferRecord extends Record {
         rec.setKey8(getKey8());
         rec.setKey9(getKey9());
         rec.setKey10(getKey10());
-        rec.setRangeKey(getRangeKey());
+        rec.setRangeKey1(getRangeKey1());
         rec.setRangeKey2(getRangeKey2());
         rec.setRangeKey3(getRangeKey3());
         rec.setRangeKey4(getRangeKey4());
@@ -137,7 +137,7 @@ public class TransferRecord extends Record {
         JsonElement innerBodyJson = bodyObj.get(P_PAYLOAD);
         setBody(innerBodyJson != null ? innerBodyJson.getAsString() : null);
         Record recordFromMeta = gson.fromJson(bodyObj.get(P_META), Record.class);
-        setKey(recordFromMeta.getKey());
+        setKey1(recordFromMeta.getKey1());
         setKey2(recordFromMeta.getKey2());
         setKey3(recordFromMeta.getKey3());
         setKey4(recordFromMeta.getKey4());

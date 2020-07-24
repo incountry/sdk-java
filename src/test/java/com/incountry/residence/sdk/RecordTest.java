@@ -89,39 +89,6 @@ class RecordTest {
     }
 
     @Test
-    void testSimpleMerge() {
-        String newKey = "newKey";
-        String newBody = "newBody";
-
-        Record baseRecord = new Record(key, body);
-        Record mergedRecord = new Record(newKey, newBody);
-        Record resultRecord = Record.merge(baseRecord, mergedRecord);
-
-        assertEquals(newKey, resultRecord.getKey());
-        assertEquals(newBody, resultRecord.getBody());
-    }
-
-
-    @Test
-    void testMerge() {
-        String newKey = "newKey";
-        String newBody = "newBody";
-        String newProfileKey = "newProfileKey";
-        String newKey2 = "newKey2";
-
-        Record baseRecord = new Record(key, body, profileKey, rangeKey, key2, key3);
-        Record mergedRecord = new Record(newKey, newBody, newProfileKey, null, newKey2, null);
-        Record resultRecord = Record.merge(baseRecord, mergedRecord);
-
-        assertEquals(newKey, resultRecord.getKey());
-        assertEquals(newBody, resultRecord.getBody());
-        assertEquals(newProfileKey, resultRecord.getProfileKey());
-        assertEquals((Long) rangeKey, resultRecord.getRangeKey());
-        assertEquals(newKey2, resultRecord.getKey2());
-        assertEquals(key3, resultRecord.getKey3());
-    }
-
-    @Test
     void testFromString() throws StorageCryptoException, StorageClientException, StorageServerException {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("body", "test");
@@ -134,10 +101,10 @@ class RecordTest {
         jsonObject.addProperty("version", 2);
         String jsonString = new Gson().toJson(jsonObject);
         Record record = JsonUtils.recordFromString(jsonString, null);
-        assertEquals(jsonObject.get("key").getAsString(), record.getKey());
+        assertEquals(jsonObject.get("key").getAsString(), record.getKey1());
         assertEquals(jsonObject.get("body").getAsString(), record.getBody());
         assertEquals(jsonObject.get("profile_key").getAsString(), record.getProfileKey());
-        assertEquals(jsonObject.get("range_key").getAsLong(), record.getRangeKey());
+        assertEquals(jsonObject.get("range_key").getAsLong(), record.getRangeKey1());
         assertEquals(jsonObject.get("key2").getAsString(), record.getKey2());
         assertEquals(jsonObject.get("key3").getAsString(), record.getKey3());
     }
@@ -215,7 +182,7 @@ class RecordTest {
         assertNotEquals(record1, UUID.randomUUID());
 
         Record record3 = new Record()
-                .setKey(key)
+                .setKey1(key)
                 .setKey2(key2)
                 .setKey3(key3)
                 .setKey4(key4)
@@ -226,7 +193,7 @@ class RecordTest {
                 .setKey9(key9)
                 .setKey10(key10)
                 .setProfileKey(profileKey)
-                .setRangeKey(rangeKey)
+                .setRangeKey1(rangeKey)
                 .setRangeKey2(rangeKey2)
                 .setRangeKey3(rangeKey3)
                 .setRangeKey4(rangeKey4)
@@ -271,7 +238,7 @@ class RecordTest {
 
     private void checkRangeKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
         Record newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
-        newRecord.setRangeKey(newRecord.getRangeKey() + 1);
+        newRecord.setRangeKey1(newRecord.getRangeKey1() + 1);
         assertNotEquals(expectedRecord, newRecord);
 
         newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
@@ -313,7 +280,7 @@ class RecordTest {
 
     private void checkKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
         Record newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
-        newRecord.setKey(newRecord.getKey() + UUID.randomUUID());
+        newRecord.setKey1(newRecord.getKey1() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
 
         newRecord = JsonUtils.recordFromString(recordString, cryptoManager)

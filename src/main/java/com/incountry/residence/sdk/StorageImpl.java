@@ -249,7 +249,7 @@ public class StorageImpl implements Storage {
                     record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
-        checkParameters(country, record.getKey());
+        checkParameters(country, record.getKey1());
         dao.createRecord(country, record, cryptoManager);
         return record;
     }
@@ -306,7 +306,7 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
             for (Record record : records) {
-                checkParameters(country, record.getKey());
+                checkParameters(country, record.getKey1());
             }
             dao.createBatch(records, country, cryptoManager);
         }

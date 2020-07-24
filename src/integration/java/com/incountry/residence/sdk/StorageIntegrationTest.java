@@ -136,7 +136,7 @@ public class StorageIntegrationTest {
     @Order(300)
     public void readTest() throws StorageException {
         Record incomingRecord = storage.read(MIDIPOP_COUNTRY, WRITE_KEY);
-        assertEquals(WRITE_KEY, incomingRecord.getKey());
+        assertEquals(WRITE_KEY, incomingRecord.getKey1());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
         assertEquals(KEY_2, incomingRecord.getKey2());
@@ -150,14 +150,14 @@ public class StorageIntegrationTest {
         storageIgnoreCase.write(MIDIPOP_COUNTRY, record);
 
         Record incomingRecord = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toLowerCase());
-        assertEquals(WRITE_KEY_IGNORE_CASE, incomingRecord.getKey());
+        assertEquals(WRITE_KEY_IGNORE_CASE, incomingRecord.getKey1());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
         assertEquals(KEY_2, incomingRecord.getKey2());
         assertEquals(KEY_3, incomingRecord.getKey3());
 
         incomingRecord = storageIgnoreCase.read(MIDIPOP_COUNTRY, WRITE_KEY_IGNORE_CASE.toUpperCase());
-        assertEquals(WRITE_KEY_IGNORE_CASE, incomingRecord.getKey());
+        assertEquals(WRITE_KEY_IGNORE_CASE, incomingRecord.getKey1());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
         assertEquals(KEY_2, incomingRecord.getKey2());
@@ -176,7 +176,7 @@ public class StorageIntegrationTest {
         BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(WRITE_KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(WRITE_KEY, batchRecord.getRecords().get(0).getKey1());
 
         builder.clear()
                 .keyEq(BATCH_WRITE_KEY)
@@ -187,7 +187,7 @@ public class StorageIntegrationTest {
         batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey1());
 
         builder.clear()
                 .key2Eq(KEY_2)
@@ -197,9 +197,9 @@ public class StorageIntegrationTest {
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         assertTrue(batchRecord.getRecords().stream().anyMatch(record
-                -> record.getKey().equals(BATCH_WRITE_KEY)));
+                -> record.getKey1().equals(BATCH_WRITE_KEY)));
         assertTrue(batchRecord.getRecords().stream().anyMatch(record
-                -> record.getKey().equals(WRITE_KEY)));
+                -> record.getKey1().equals(WRITE_KEY)));
 
         builder.clear()
                 .keyNotEq(WRITE_KEY)
@@ -209,7 +209,7 @@ public class StorageIntegrationTest {
         batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(BATCH_WRITE_KEY, batchRecord.getRecords().get(0).getKey1());
     }
 
     @Test
@@ -222,8 +222,8 @@ public class StorageIntegrationTest {
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         List<String> resultIdList = new ArrayList<>();
-        resultIdList.add(batchRecord.getRecords().get(0).getKey());
-        resultIdList.add(batchRecord.getRecords().get(1).getKey());
+        resultIdList.add(batchRecord.getRecords().get(0).getKey1());
+        resultIdList.add(batchRecord.getRecords().get(1).getKey1());
         assertTrue(resultIdList.contains(WRITE_KEY));
         assertTrue(resultIdList.contains(BATCH_WRITE_KEY));
     }
@@ -240,7 +240,7 @@ public class StorageIntegrationTest {
         BatchRecord batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey());
+        assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey1());
 
         builder = builder.clear()
                 .keyEq(WRITE_KEY_IGNORE_CASE.toLowerCase())
@@ -251,7 +251,7 @@ public class StorageIntegrationTest {
         batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey());
+        assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey1());
 
         builder = builder.clear()
                 .keyEq(WRITE_KEY_IGNORE_CASE.toUpperCase())
@@ -262,7 +262,7 @@ public class StorageIntegrationTest {
         batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey());
+        assertEquals(WRITE_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getKey1());
     }
 
     @Test
@@ -272,7 +272,7 @@ public class StorageIntegrationTest {
                 .key2Eq(KEY_2)
                 .rangeKeyEq(WRITE_RANGE_KEY);
         Record record = storage.findOne(MIDIPOP_COUNTRY, builder);
-        assertEquals(WRITE_KEY, record.getKey());
+        assertEquals(WRITE_KEY, record.getKey1());
         assertEquals(RECORD_BODY, record.getBody());
     }
 
@@ -404,7 +404,7 @@ public class StorageIntegrationTest {
                 String country = (numb % 2 == 0 ? MIDIPOP_COUNTRY : MIDIPOP_COUNTRY_2);
                 storage.write(country, record);
                 Record incomingRecord = storage.read(country, randomKey);
-                assertEquals(randomKey, incomingRecord.getKey());
+                assertEquals(randomKey, incomingRecord.getKey1());
                 assertEquals(RECORD_BODY, incomingRecord.getBody());
                 assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
                 assertEquals(KEY_2, incomingRecord.getKey2());

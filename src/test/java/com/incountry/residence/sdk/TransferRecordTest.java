@@ -58,7 +58,7 @@ class TransferRecordTest {
         StorageServerException ex = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
         assertEquals("Null required record fields: key", ex.getMessage());
 
-        transferRecord.setKey("");
+        transferRecord.setKey1("");
         StorageServerException ex1 = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
         assertEquals("Null required record fields: key", ex1.getMessage());
     }

@@ -3,7 +3,7 @@ package com.incountry.residence.sdk.dto;
 import java.util.Objects;
 
 public class Record {
-    private String key;
+    private String key1;
     private String key2;
     private String key3;
     private String key4;
@@ -14,7 +14,7 @@ public class Record {
     private String key9;
     private String key10;
     private String profileKey;
-    private Long rangeKey;
+    private Long rangeKey1;
     private Long rangeKey2;
     private Long rangeKey3;
     private Long rangeKey4;
@@ -36,61 +36,39 @@ public class Record {
     /**
      * Short constructor
      *
-     * @param key  key
+     * @param key1 key
      * @param body data to be stored and encrypted
      */
-    public Record(String key, String body) {
-        this.key = key;
+    public Record(String key1, String body) {
+        this.key1 = key1;
         this.body = body;
     }
 
     /**
      * Full constructor
      *
-     * @param key        Required, record key
+     * @param key1       Required, record key
      * @param body       Optional, data to be stored and encrypted
      * @param profileKey Optional, profile key
-     * @param rangeKey   Optional, range key
+     * @param rangeKey1  Optional, range key
      * @param key2       Optional, key2
      * @param key3       Optional, key3
      */
-    public Record(String key, String body, String profileKey, Long rangeKey, String key2, String key3) {
-        this.key = key;
+    public Record(String key1, String body, String profileKey, Long rangeKey1, String key2, String key3) {
+        this.key1 = key1;
         this.body = body;
         this.profileKey = profileKey;
-        this.rangeKey = rangeKey;
+        this.rangeKey1 = rangeKey1;
         this.key2 = key2;
         this.key3 = key3;
     }
 
-    private static <T> T mergeKeys(T oldKey, T newKey) {
-        return newKey != null ? newKey : oldKey;
+    public String getKey1() {
+        return key1;
     }
 
-    /**
-     * merge records. Notnull field values from @merged replaces old ones in @base
-     *
-     * @param base   base record
-     * @param merged new records, null fileds are ignored
-     * @return new record with merged fileds
-     */
-    public static Record merge(Record base, Record merged) {
-        String mergedKey = mergeKeys(base.getKey(), merged.getKey());
-        String mergedBody = mergeKeys(base.getBody(), merged.getBody());
-        String mergedProfileKey = mergeKeys(base.getProfileKey(), merged.getProfileKey());
-        Long mergedRangeKey = mergeKeys(base.getRangeKey(), merged.getRangeKey());
-        String mergedKey2 = mergeKeys(base.getKey2(), merged.getKey2());
-        String mergedKey3 = mergeKeys(base.getKey3(), merged.getKey3());
-
-        return new Record(mergedKey, mergedBody, mergedProfileKey, mergedRangeKey, mergedKey2, mergedKey3);
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public Record setKey(String key) {
-        this.key = key;
+    public Record setKey1(String key1) {
+        this.key1 = key1;
         return this;
     }
 
@@ -184,12 +162,12 @@ public class Record {
         return this;
     }
 
-    public Long getRangeKey() {
-        return rangeKey;
+    public Long getRangeKey1() {
+        return rangeKey1;
     }
 
-    public Record setRangeKey(Long rangeKey) {
-        this.rangeKey = rangeKey;
+    public Record setRangeKey1(Long rangeKey1) {
+        this.rangeKey1 = rangeKey1;
         return this;
     }
 
@@ -319,7 +297,7 @@ public class Record {
             return false;
         }
         Record record = (Record) obj;
-        return Objects.equals(key, record.key) &&
+        return Objects.equals(key1, record.key1) &&
                 Objects.equals(key2, record.key2) &&
                 Objects.equals(key3, record.key3) &&
                 Objects.equals(key4, record.key4) &&
@@ -330,7 +308,7 @@ public class Record {
                 Objects.equals(key9, record.key9) &&
                 Objects.equals(key10, record.key10) &&
                 Objects.equals(profileKey, record.profileKey) &&
-                Objects.equals(rangeKey, record.rangeKey) &&
+                Objects.equals(rangeKey1, record.rangeKey1) &&
                 Objects.equals(rangeKey2, record.rangeKey2) &&
                 Objects.equals(rangeKey3, record.rangeKey3) &&
                 Objects.equals(rangeKey4, record.rangeKey4) &&
@@ -348,9 +326,9 @@ public class Record {
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+        return Objects.hash(key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 profileKey,
-                rangeKey, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
+                rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
                 body, precommit, errorCorrectionKey1, errorCorrectionKey2);
     }
 }

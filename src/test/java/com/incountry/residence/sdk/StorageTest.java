@@ -107,7 +107,7 @@ class StorageTest {
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(KEY, batchRecord.getRecords().get(0).getKey1());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
     }
 
@@ -177,12 +177,12 @@ class StorageTest {
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(KEY, batchRecord.getRecords().get(0).getKey1());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey());
+        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey1());
     }
 
     @RepeatedTest(3)
@@ -203,12 +203,12 @@ class StorageTest {
         String expected = "{\"filter\":{\"profile_key\":[\"" + cryptoManager.createKeyHash(PROFILE_KEY) + "\"]},\"options\":{\"limit\":1,\"offset\":0}}";
         assertEquals(expected, callBody);
 
-        assertEquals(KEY, foundRecord.getKey());
+        assertEquals(KEY, foundRecord.getKey1());
         assertEquals(BODY, foundRecord.getBody());
         assertEquals(KEY_2, foundRecord.getKey2());
         assertEquals(KEY_3, foundRecord.getKey3());
         assertEquals(PROFILE_KEY, foundRecord.getProfileKey());
-        assertEquals(RANGE_KEY, foundRecord.getRangeKey());
+        assertEquals(RANGE_KEY, foundRecord.getRangeKey1());
 
         agent.setResponse("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
         foundRecord = storage.findOne(COUNTRY, builder);
@@ -240,12 +240,12 @@ class StorageTest {
         assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey());
+        assertEquals(KEY, batchRecord.getRecords().get(0).getKey1());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey());
+        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey1());
     }
 
     @Test
@@ -336,12 +336,12 @@ class StorageTest {
         assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY + 1, batchRecord.getRecords().get(0).getKey());
+        assertEquals(KEY + 1, batchRecord.getRecords().get(0).getKey1());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey());
+        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey1());
     }
 
     @Test
