@@ -44,8 +44,11 @@ before_install:
   - gradle -v
 
 script:
+  - echo "______________________________________________________________________________________________________________"
   - gradle build jacocoTestReport sonarqube
   - gradle integrationTest
   # move custom Gradle binaries to cache
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
+  on:
+    branch: develop
