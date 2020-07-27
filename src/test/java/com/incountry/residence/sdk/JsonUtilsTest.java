@@ -5,6 +5,8 @@ import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -21,19 +23,19 @@ class JsonUtilsTest {
     @Test
     void testBetweenFilter() throws StorageClientException {
         String expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, 9).build(), null);
+        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, 9).build(), null);
         assertEquals(expected, fact);
 
         expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, true, 9, false).build(), null);
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, true, 9, false).build(), null);
         assertEquals(expected, fact);
 
         expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, false, 9, true).build(), null);
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, false, 9, true).build(), null);
         assertEquals(expected, fact);
 
         expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, false, 9, false).build(), null);
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, false, 9, false).build(), null);
         assertEquals(expected, fact);
     }
 
@@ -46,12 +48,12 @@ class JsonUtilsTest {
     @Test
     void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
-        filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, true));
+        filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, true));
         String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
         assertEquals("{\"filter\":{\"version\":{\"$not\":[1]}},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         filter = new FindFilter();
-        filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, false));
+        filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
         jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
         assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }

@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.http.mocks.FakeHttpAgent;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -330,7 +331,7 @@ class HttpDaoImplTests {
     void testSearchPopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
-                .profileKeyEq("profileKey");
+                .stringKeyEq(StringField.PROFILE_KEY, "profileKey");
         Record record = new Record("someRecordKey", "body")
                 .setProfileKey("profileKey");
         String encrypted = JsonUtils.toJsonString(record, initCryptoManager(false, false));

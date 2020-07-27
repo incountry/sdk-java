@@ -35,20 +35,6 @@ public class JsonUtils {
 
     private static final String P_BODY = "body";
     private static final String P_PRECOMMIT = "precommit";
-    private static final String P_ERROR_CORRECTION_KEY_1 = "error_correction_key1";
-    private static final String P_ERROR_CORRECTION_KEY_2 = "error_correction_key2";
-    private static final String P_RECORD_KEY = "record_key";
-    private static final String P_KEY_1 = "key1";
-    private static final String P_KEY_2 = "key2";
-    private static final String P_KEY_3 = "key3";
-    private static final String P_KEY_4 = "key4";
-    private static final String P_KEY_5 = "key5";
-    private static final String P_KEY_6 = "key6";
-    private static final String P_KEY_7 = "key7";
-    private static final String P_KEY_8 = "key8";
-    private static final String P_KEY_9 = "key9";
-    private static final String P_KEY_10 = "key10";
-    private static final String P_PROFILE_KEY = "profile_key";
     private static final String P_RANGE_KEY_1 = "range_key1";
     private static final String P_RANGE_KEY_2 = "range_key2";
     private static final String P_RANGE_KEY_3 = "range_key3";
@@ -112,31 +98,10 @@ public class JsonUtils {
     private static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject json = new JsonObject();
         if (filter != null) {
-            addToJson(json, P_RECORD_KEY, filter.getRecordKeyFilter(), cryptoManager);
-            addToJson(json, P_KEY_1, filter.getKey1Filter(), cryptoManager);
-            addToJson(json, P_KEY_2, filter.getKey2Filter(), cryptoManager);
-            addToJson(json, P_KEY_3, filter.getKey3Filter(), cryptoManager);
-            addToJson(json, P_KEY_4, filter.getKey4Filter(), cryptoManager);
-            addToJson(json, P_KEY_5, filter.getKey5Filter(), cryptoManager);
-            addToJson(json, P_KEY_6, filter.getKey6Filter(), cryptoManager);
-            addToJson(json, P_KEY_7, filter.getKey7Filter(), cryptoManager);
-            addToJson(json, P_KEY_8, filter.getKey8Filter(), cryptoManager);
-            addToJson(json, P_KEY_9, filter.getKey9Filter(), cryptoManager);
-            addToJson(json, P_KEY_10, filter.getKey10Filter(), cryptoManager);
-            addToJson(json, P_ERROR_CORRECTION_KEY_1, filter.getErrorCorrectionKey1Filter(), cryptoManager);
-            addToJson(json, P_ERROR_CORRECTION_KEY_2, filter.getErrorCorrectionKey2Filter(), cryptoManager);
-            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), cryptoManager);
-            addToJson(json, P_VERSION, filter.getVersionFilter(), cryptoManager);
-            addRangeToJson(json, P_RANGE_KEY_1, filter.getRangeKey1Filter());
-            addRangeToJson(json, P_RANGE_KEY_2, filter.getRangeKey2Filter());
-            addRangeToJson(json, P_RANGE_KEY_3, filter.getRangeKey3Filter());
-            addRangeToJson(json, P_RANGE_KEY_4, filter.getRangeKey4Filter());
-            addRangeToJson(json, P_RANGE_KEY_5, filter.getRangeKey5Filter());
-            addRangeToJson(json, P_RANGE_KEY_6, filter.getRangeKey6Filter());
-            addRangeToJson(json, P_RANGE_KEY_7, filter.getRangeKey7Filter());
-            addRangeToJson(json, P_RANGE_KEY_8, filter.getRangeKey8Filter());
-            addRangeToJson(json, P_RANGE_KEY_9, filter.getRangeKey9Filter());
-            addRangeToJson(json, P_RANGE_KEY_10, filter.getRangeKey10Filter());
+            filter.getStringFilterMap().forEach((stringField, filterStringParam) ->
+                    addToJson(json, stringField.toString().toLowerCase(), filterStringParam, cryptoManager));
+            filter.getNumberFilterMap().forEach((numberField, filterNumberParam) ->
+                    addRangeToJson(json, numberField.toString().toLowerCase(), filterNumberParam));
         }
         return json;
     }

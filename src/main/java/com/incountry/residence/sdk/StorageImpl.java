@@ -4,6 +4,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -284,7 +285,7 @@ public class StorageImpl implements Storage {
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
-                .versionNotEq(String.valueOf(cryptoManager.getCurrentSecretVersion()));
+                .stringKeyNotEq(StringField.VERSION, String.valueOf(cryptoManager.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
         batchWrite(country, batchRecord.getRecords());
         MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());

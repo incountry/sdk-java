@@ -4,6 +4,8 @@ import com.incountry.residence.sdk.crypto.testimpl.FernetCrypto;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -187,31 +189,31 @@ public class StorageIntegrationTest {
     @Order(400)
     public void findTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .recordKeyEq(RECORD_KEY)
-                .key2Eq(KEY_2)
-                .key3Eq(KEY_3)
-                .profileKeyEq(PROFILE_KEY)
-                .rangeKey1Eq(WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.RECORD_KEY, RECORD_KEY)
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .stringKeyEq(StringField.KEY3, KEY_3)
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY)
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
 
         builder.clear()
-                .recordKeyEq(BATCH_RECORD_KEY_1)
-                .key2Eq(KEY_2)
-                .key3Eq(KEY_3)
-                .profileKeyEq(PROFILE_KEY)
-                .rangeKey1Eq(BATCH_WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.RECORD_KEY, BATCH_RECORD_KEY_1)
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .stringKeyEq(StringField.KEY3, KEY_3)
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY)
+                .numberKeyEq(NumberField.RANGE_KEY1, BATCH_WRITE_RANGE_KEY_1);
         batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(BATCH_RECORD_KEY_1, batchRecord.getRecords().get(0).getRecordKey());
 
         builder.clear()
-                .key2Eq(KEY_2)
-                .key3Eq(KEY_3)
-                .profileKeyEq(PROFILE_KEY);
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .stringKeyEq(StringField.KEY3, KEY_3)
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
         batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
@@ -221,10 +223,10 @@ public class StorageIntegrationTest {
                 -> record.getRecordKey().equals(RECORD_KEY)));
 
         builder.clear()
-                .recordKeyNotEq(RECORD_KEY)
-                .key2Eq(KEY_2)
-                .key3Eq(KEY_3)
-                .profileKeyEq(PROFILE_KEY);
+                .stringKeyNotEq(StringField.RECORD_KEY, RECORD_KEY)
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .stringKeyEq(StringField.KEY3, KEY_3)
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
         batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
@@ -235,8 +237,8 @@ public class StorageIntegrationTest {
     @Order(401)
     public void findAdvancedTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .key2Eq(KEY_2)
-                .rangeKey1Eq(WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
         BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
@@ -251,33 +253,33 @@ public class StorageIntegrationTest {
     @Order(402)
     public void findIgnoreCaseTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .recordKeyEq(RECORD_KEY_IGNORE_CASE)
-                .key2Eq(KEY_2)
-                .key3Eq(KEY_3)
-                .profileKeyEq(PROFILE_KEY)
-                .rangeKey1Eq(WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE)
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .stringKeyEq(StringField.KEY3, KEY_3)
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY)
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         BatchRecord batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
 
         builder = builder.clear()
-                .recordKeyEq(RECORD_KEY_IGNORE_CASE.toLowerCase())
-                .key2Eq(KEY_2.toLowerCase())
-                .key3Eq(KEY_3.toLowerCase())
-                .profileKeyEq(PROFILE_KEY.toLowerCase())
-                .rangeKey1Eq(WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toLowerCase())
+                .stringKeyEq(StringField.KEY2, KEY_2.toLowerCase())
+                .stringKeyEq(StringField.KEY3, KEY_3.toLowerCase())
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY.toLowerCase())
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
 
         builder = builder.clear()
-                .recordKeyEq(RECORD_KEY_IGNORE_CASE.toUpperCase())
-                .key2Eq(KEY_2.toUpperCase())
-                .key3Eq(KEY_3.toUpperCase())
-                .profileKeyEq(PROFILE_KEY.toUpperCase())
-                .rangeKey1Eq(WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toUpperCase())
+                .stringKeyEq(StringField.KEY2, KEY_2.toUpperCase())
+                .stringKeyEq(StringField.KEY3, KEY_3.toUpperCase())
+                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY.toUpperCase())
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
@@ -288,8 +290,8 @@ public class StorageIntegrationTest {
     @Order(500)
     public void findOneTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .key2Eq(KEY_2)
-                .rangeKey1Eq(WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.KEY2, KEY_2)
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         Record record = storage.findOne(MIDIPOP_COUNTRY, builder);
         assertEquals(RECORD_KEY, record.getRecordKey());
         assertEquals(RECORD_BODY, record.getBody());
@@ -332,8 +334,8 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_BODY, record2.getBody());
         //find record with custom enc
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .recordKeyEq(customRecordKey)
-                .rangeKey1Eq(WRITE_RANGE_KEY_1);
+                .stringKeyEq(StringField.RECORD_KEY, customRecordKey)
+                .numberKeyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         Record record3 = storage2.findOne(MIDIPOP_COUNTRY, builder);
         assertEquals(record, record3);
         //delete record with custom enc
