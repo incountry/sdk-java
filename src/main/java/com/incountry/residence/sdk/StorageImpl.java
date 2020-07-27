@@ -364,12 +364,4 @@ public class StorageImpl implements Storage {
         }
         return records.get(0);
     }
-
-    @Override
-    public String toString() {
-        return "StorageImpl{" +
-                "cryptoManager=" + cryptoManager +
-                ", encrypted=" + encrypted +
-                '}';
-    }
 }
