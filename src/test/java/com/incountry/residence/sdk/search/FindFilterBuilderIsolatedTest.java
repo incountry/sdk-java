@@ -37,22 +37,22 @@ class FindFilterBuilderIsolatedTest {
     void toStringPositiveTest() throws StorageClientException {
         String string = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
-                .keyEq("3", "4")
+                .recordKeyEq("3", "4")
                 .key2Eq("5", "6")
                 .key3Eq("7", "8")
                 .profileKeyEq("9", "10")
                 .versionNotEq("11", "12")
-                .rangeKeyEq(13L, 14L)
+                .rangeKey1Eq(13L, 14L)
                 .build().toString();
         assertNotNull(string);
         assertTrue(string.contains("limit=1"));
         assertTrue(string.contains("offset=2"));
-        assertTrue(string.contains("keyFilter=FilterStringParam{value=[3, 4], notCondition=false}"));
+        assertTrue(string.contains("recordKeyFilter=FilterStringParam{value=[3, 4], notCondition=false}"));
         assertTrue(string.contains("key2Filter=FilterStringParam{value=[5, 6], notCondition=false"));
         assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=false"));
         assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=false}"));
         assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12], notCondition=true}"));
-        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='null', operator2='null'}"));
+        assertTrue(string.contains("rangeKey1Filter=FilterRangeParam{values=[13, 14], operator1='null', operator2='null'}"));
     }
 
 
@@ -61,11 +61,11 @@ class FindFilterBuilderIsolatedTest {
         String nullString = null;
         String[] nullArrayString = null;
         //key
-        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(nullString));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().recordKeyEq(nullString));
         assertEquals("FilterStringParam values can't be null", ex1.getMessage());
-        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(nullArrayString));
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().recordKeyEq(nullArrayString));
         assertEquals("FilterStringParam values can't be null", ex2.getMessage());
-        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(new String[]{}));
+        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().recordKeyEq(new String[]{}));
         assertEquals("FilterStringParam values can't be null", ex3.getMessage());
         //key2
         StorageClientException ex4 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().key2Eq(nullString));
@@ -104,30 +104,30 @@ class FindFilterBuilderIsolatedTest {
         //rangeKey
         Long nullLong = null;
         Long[] nullArrayLong = null;
-        StorageClientException ex19 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyEq(nullLong));
+        StorageClientException ex19 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKey1Eq(nullLong));
         assertEquals("FilterNumberParam values can't be null", ex19.getMessage());
-        StorageClientException ex20 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyEq(nullArrayLong));
+        StorageClientException ex20 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKey1Eq(nullArrayLong));
         assertEquals("FilterNumberParam values can't be null", ex20.getMessage());
-        StorageClientException ex21 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyEq(new Long[]{}));
+        StorageClientException ex21 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKey1Eq(new Long[]{}));
         assertEquals("FilterNumberParam values can't be null", ex21.getMessage());
         //limit & offset
         StorageClientException ex22 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().limitAndOffset(-1, 0));
         assertEquals("Limit must be more than 1", ex22.getMessage());
         StorageClientException ex23 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().limitAndOffset(1, -1));
         assertEquals("Offset must be more than 0", ex23.getMessage());
-        StorageClientException ex24 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKeyBetween(1, -1));
+        StorageClientException ex24 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().rangeKey1Between(1, -1));
         assertEquals("Value1 in range filter can by only less or equals value2", ex24.getMessage());
     }
 
     @Test
     void positiveKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
-        assertEquals("1", builder.keyEq("1").build().getKeyFilter().getValues().get(0));
-        assertEquals("2", builder.keyEq("1", "2").build().getKeyFilter().getValues().get(1));
-        assertFalse(builder.keyEq("4").build().getKeyFilter().isNotCondition());
-        assertEquals("6", builder.keyNotEq("5", "6").build().getKeyFilter().getValues().get(1));
-        assertTrue(builder.keyNotEq("7", "8").build().getKeyFilter().isNotCondition());
-        assertFalse(builder.keyEq("9", "10").build().getKeyFilter().isNotCondition());
+        assertEquals("1", builder.recordKeyEq("1").build().getRecordKeyFilter().getValues().get(0));
+        assertEquals("2", builder.recordKeyEq("1", "2").build().getRecordKeyFilter().getValues().get(1));
+        assertFalse(builder.recordKeyEq("4").build().getRecordKeyFilter().isNotCondition());
+        assertEquals("6", builder.recordKeyNotEq("5", "6").build().getRecordKeyFilter().getValues().get(1));
+        assertTrue(builder.recordKeyNotEq("7", "8").build().getRecordKeyFilter().isNotCondition());
+        assertFalse(builder.recordKeyEq("9", "10").build().getRecordKeyFilter().isNotCondition());
     }
 
     @Test
@@ -177,33 +177,34 @@ class FindFilterBuilderIsolatedTest {
     @Test
     void positiveRangeKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
-        assertEquals(1L, builder.rangeKeyEq(1L).build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(2L, builder.rangeKeyEq(1L, 2L).build().getRangeKeyFilter().getValues()[1]);
-        assertEquals(9L, builder.rangeKeyGT(9L).build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(FindFilterBuilder.OPER_GT, builder.rangeKeyGT(10L).build().getRangeKeyFilter().getOperator1());
-        assertEquals(11L, builder.rangeKeyGTE(11L).build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(FindFilterBuilder.OPER_GTE, builder.rangeKeyGTE(12L).build().getRangeKeyFilter().getOperator1());
-        assertEquals(13L, builder.rangeKeyLT(13L).build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(FindFilterBuilder.OPER_LT, builder.rangeKeyLT(14L).build().getRangeKeyFilter().getOperator1());
-        assertEquals(15L, builder.rangeKeyLTE(15L).build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(FindFilterBuilder.OPER_LTE, builder.rangeKeyLTE(16L).build().getRangeKeyFilter().getOperator1());
-        builder.rangeKeyBetween(17L, 18L);
-        assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getRangeKeyFilter().getOperator1());
-        assertEquals(FindFilterBuilder.OPER_LTE, builder.build().getRangeKeyFilter().getOperator2());
-        assertEquals(17L, builder.build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(18L, builder.build().getRangeKeyFilter().getValues()[1]);
-        builder.rangeKeyBetween(19L, true, 20L, false);
-        assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getRangeKeyFilter().getOperator1());
-        assertEquals(FindFilterBuilder.OPER_LT, builder.build().getRangeKeyFilter().getOperator2());
-        assertEquals(19L, builder.build().getRangeKeyFilter().getValues()[0]);
-        assertEquals(20L, builder.build().getRangeKeyFilter().getValues()[1]);
+        assertEquals(1L, builder.rangeKey1Eq(1L).build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(2L, builder.rangeKey1Eq(1L, 2L).build().getRangeKey1Filter().getValues()[1]);
+        assertEquals(9L, builder.rangeKey1GT(9L).build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(FindFilterBuilder.OPER_GT, builder.rangeKey1GT(10L).build().getRangeKey1Filter().getOperator1());
+        assertEquals(11L, builder.rangeKey1GTE(11L).build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(FindFilterBuilder.OPER_GTE, builder.rangeKey1GTE(12L).build().getRangeKey1Filter().getOperator1());
+        assertEquals(13L, builder.rangeKey1LT(13L).build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(FindFilterBuilder.OPER_LT, builder.rangeKey1LT(14L).build().getRangeKey1Filter().getOperator1());
+        assertEquals(15L, builder.rangeKey1LTE(15L).build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(FindFilterBuilder.OPER_LTE, builder.rangeKey1LTE(16L).build().getRangeKey1Filter().getOperator1());
+        builder.rangeKey1Between(17L, 18L);
+        assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getRangeKey1Filter().getOperator1());
+        assertEquals(FindFilterBuilder.OPER_LTE, builder.build().getRangeKey1Filter().getOperator2());
+        assertEquals(17L, builder.build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(18L, builder.build().getRangeKey1Filter().getValues()[1]);
+        builder.rangeKey1Between(19L, true, 20L, false);
+        assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getRangeKey1Filter().getOperator1());
+        assertEquals(FindFilterBuilder.OPER_LT, builder.build().getRangeKey1Filter().getOperator2());
+        assertEquals(19L, builder.build().getRangeKey1Filter().getValues()[0]);
+        assertEquals(20L, builder.build().getRangeKey1Filter().getValues()[1]);
     }
 
     @Test
     void positiveKeyFilterReflectionTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
-        for (int i = 1; i < 11; i++) {
-            String postfix = i == 1 ? "" : String.valueOf(i);
+        for (int i = 2; i < 11; i++) {
+            //todo restore filtering key1
+            String postfix = String.valueOf(i);
             builder.clear();
             Method methodKeyEq = FindFilterBuilder.class.getMethod("key" + postfix + "Eq", String[].class);
             String randomValue = UUID.randomUUID().toString();
@@ -228,7 +229,7 @@ class FindFilterBuilderIsolatedTest {
     void positiveRangeKeyFilterReflectionTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         for (int i = 1; i < 11; i++) {
-            String postfix = i == 1 ? "" : String.valueOf(i);
+            String postfix = String.valueOf(i);
             builder.clear();
             Method methodRangeKeyEq = FindFilterBuilder.class.getMethod("rangeKey" + postfix + "Eq", Long[].class);
             Long[] arr = new Long[]{(long) i};

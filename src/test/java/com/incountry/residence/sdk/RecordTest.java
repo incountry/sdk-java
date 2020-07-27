@@ -26,15 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RecordTest {
     @Expose
-    public String key;
+    @SerializedName("record_key")
+    public String recordKey;
     @Expose
     public String body;
     @Expose
     @SerializedName("profile_key")
     public String profileKey;
     @Expose
-    @SerializedName("range_key")
-    public long rangeKey;
+    @SerializedName("range_key1")
+    public long rangeKey1;
     public long rangeKey2;
     public long rangeKey3;
     public long rangeKey4;
@@ -61,8 +62,8 @@ class RecordTest {
 
     @BeforeEach
     public void init() {
-        key = "key1";
         body = "body";
+        recordKey = "recordKey1";
         key2 = "key2";
         key3 = "key3";
         key4 = "key4";
@@ -73,7 +74,7 @@ class RecordTest {
         key9 = "key9";
         key10 = "key10";
         profileKey = "profileKey";
-        rangeKey = 1;
+        rangeKey1 = 1;
         rangeKey2 = 2;
         rangeKey3 = 3;
         rangeKey4 = 4;
@@ -93,18 +94,18 @@ class RecordTest {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("body", "test");
         jsonObject.addProperty("env_id", "5422b4ba-016d-4a3b-aea5-a832083697b1");
-        jsonObject.addProperty("key", "write_key");
+        jsonObject.addProperty("record_key", "write_record_key");
         jsonObject.addProperty("key2", "key2");
         jsonObject.addProperty("key3", "key3");
         jsonObject.addProperty("profile_key", "profileKey");
-        jsonObject.addProperty("range_key", 1);
+        jsonObject.addProperty("range_key1", 1);
         jsonObject.addProperty("version", 2);
         String jsonString = new Gson().toJson(jsonObject);
         Record record = JsonUtils.recordFromString(jsonString, null);
-        assertEquals(jsonObject.get("key").getAsString(), record.getKey1());
+        assertEquals(jsonObject.get("record_key").getAsString(), record.getRecordKey());
         assertEquals(jsonObject.get("body").getAsString(), record.getBody());
         assertEquals(jsonObject.get("profile_key").getAsString(), record.getProfileKey());
-        assertEquals(jsonObject.get("range_key").getAsLong(), record.getRangeKey1());
+        assertEquals(jsonObject.get("range_key1").getAsLong(), record.getRangeKey1());
         assertEquals(jsonObject.get("key2").getAsString(), record.getKey2());
         assertEquals(jsonObject.get("key3").getAsString(), record.getKey3());
     }
@@ -113,12 +114,16 @@ class RecordTest {
     void testToJsonObject() throws StorageCryptoException, StorageClientException {
         JsonElement jsonElement = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJsonTree(this);
         JsonObject jsonObject = (JsonObject) jsonElement;
-        Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record record = new Record(recordKey, body)
+                .setProfileKey(profileKey)
+                .setRangeKey1(rangeKey1)
+                .setKey2(key2)
+                .setKey3(key3);
         JsonObject recordJsonObject = JsonUtils.toJson(record, null);
-        assertEquals(jsonObject.get("key"), recordJsonObject.get("key"));
+        assertEquals(jsonObject.get("record_key"), recordJsonObject.get("record_key"));
         assertEquals(jsonObject.get("body"), recordJsonObject.get("body"));
         assertEquals(jsonObject.get("profile_key"), recordJsonObject.get("profile_key"));
-        assertEquals(jsonObject.get("range_key"), recordJsonObject.get("range_key"));
+        assertEquals(jsonObject.get("range_key1"), recordJsonObject.get("range_key1"));
         assertEquals(jsonObject.get("key2"), recordJsonObject.get("key2"));
         assertEquals(jsonObject.get("key3"), recordJsonObject.get("key3"));
     }
@@ -126,20 +131,26 @@ class RecordTest {
     @Test
     void testToJsonObjectWithPTE() throws StorageCryptoException, StorageClientException, StorageServerException {
         String bodyWithJson = "{\"FirstName\":\"<first name>\"}";
-        Record record = new Record(key, bodyWithJson, profileKey, rangeKey, key2, key3);
+        Record record = new Record(recordKey, bodyWithJson)
+                .setProfileKey(profileKey)
+                .setRangeKey1(rangeKey1)
+                .setKey2(key2)
+                .setKey3(key3);
         CryptoManager crypto = new CryptoManager(null, "envId", null, false);
         String recordJson = JsonUtils.toJsonString(record, crypto);
         assertEquals("{\"version\":0," +
                         "\"is_encrypted\":false," +
-                        "\"key\":\"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\"," +
+                        "\"record_key\":\"b246499acb9e5c3161f9fb40184324f9d2ac384530ec583fcc0f8a8b12090c71\"," +
                         "\"key2\":\"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\"," +
                         "\"key3\":\"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\"," +
                         "\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"," +
-                        "\"range_key\":1," +
-                        "\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7ImtleSI6ImtleTEiLCJrZXkyIjoia2V5MiIsImtleTMiOiJrZXkzIiwicHJvZmlsZV9rZXkiOiJwcm9maWxlS2V5In19\"}",
+                        "\"range_key1\":1," +
+                        "\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7InJlY29yZF9rZXkiOiJyZWNvcmRLZXkxIiwia2V5MiI6ImtleTIiLCJrZXkzIjoia2V5MyIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}",
                 recordJson);
         Record record2 = JsonUtils.recordFromString(recordJson, crypto);
         assertEquals(record, record2);
+
+        //{"version":0,"is_encrypted":false,"record_key":"b246499acb9e5c3161f9fb40184324f9d2ac384530ec583fcc0f8a8b12090c71","key2":"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8","key3":"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6","profile_key":"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d","range_key1":1,"body":"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7InJlY29yZF9rZXkiOiJyZWNvcmRLZXkxIiwia2V5MiI6ImtleTIiLCJrZXkzIjoia2V5MyIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ=="}
     }
 
     /**
@@ -152,7 +163,11 @@ class RecordTest {
     @Test
     void testToJsonString() throws StorageCryptoException, StorageClientException, StorageServerException {
         String quaziJsonString = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().toJson(this);
-        Record nativeRecord = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record nativeRecord = new Record(recordKey, body)
+                .setProfileKey(profileKey)
+                .setRangeKey1(rangeKey1)
+                .setKey2(key2)
+                .setKey3(key3);
         String nativeRecordJson = JsonUtils.toJsonString(nativeRecord, null);
         Record recordFromQuazy = JsonUtils.recordFromString(quaziJsonString, null);
         Record recordFromNative = JsonUtils.recordFromString(nativeRecordJson, null);
@@ -161,8 +176,16 @@ class RecordTest {
 
     @Test
     void testBatchToStringString() {
-        Record record1 = new Record(key + 1, body + 1, profileKey + 1, rangeKey + 1, key2 + 1, key3 + 1);
-        Record record2 = new Record(key + 2, body + 2, profileKey + 2, rangeKey + 2, key2 + 2, key3 + 2);
+        Record record1 = new Record(recordKey + 1, body + 1)
+                .setProfileKey(profileKey + 1)
+                .setRangeKey1(rangeKey1 + 1)
+                .setKey2(key2 + 1)
+                .setKey3(key3 + 1);
+        Record record2 = new Record(recordKey + 2, body + 2)
+                .setProfileKey(profileKey + 2)
+                .setRangeKey1(rangeKey1 + 2)
+                .setKey2(key2 + 2)
+                .setKey3(key3 + 2);
         BatchRecord batchRecord = new BatchRecord(Arrays.asList(record1, record2), 2, 2, 0, 2, new ArrayList<>());
         String str = batchRecord.toString();
         assertTrue(str.contains(String.valueOf(record1.hashCode())));
@@ -172,8 +195,16 @@ class RecordTest {
     @SuppressWarnings("java:S3415")
     @Test
     void testEquals() throws StorageClientException, StorageCryptoException, StorageServerException {
-        Record record1 = new Record(key, body, profileKey, rangeKey, key2, key3);
-        Record record2 = new Record(key, body, profileKey, rangeKey, key2, key3);
+        Record record1 = new Record(recordKey, body)
+                .setProfileKey(body)
+                .setRangeKey1(rangeKey1)
+                .setKey2(key2)
+                .setKey3(key3);
+        Record record2 = new Record(recordKey, body)
+                .setProfileKey(body)
+                .setRangeKey1(rangeKey1)
+                .setKey2(key2)
+                .setKey3(key3);
         assertEquals(record1, record1);
         assertEquals(record1, record2);
         assertEquals(record2, record1);
@@ -182,7 +213,7 @@ class RecordTest {
         assertNotEquals(record1, UUID.randomUUID());
 
         Record record3 = new Record()
-                .setKey1(key)
+                .setRecordKey(recordKey)
                 .setKey2(key2)
                 .setKey3(key3)
                 .setKey4(key4)
@@ -193,7 +224,7 @@ class RecordTest {
                 .setKey9(key9)
                 .setKey10(key10)
                 .setProfileKey(profileKey)
-                .setRangeKey1(rangeKey)
+                .setRangeKey1(rangeKey1)
                 .setRangeKey2(rangeKey2)
                 .setRangeKey3(rangeKey3)
                 .setRangeKey4(rangeKey4)
@@ -280,7 +311,7 @@ class RecordTest {
 
     private void checkKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
         Record newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
-        newRecord.setKey1(newRecord.getKey1() + UUID.randomUUID());
+        newRecord.setRecordKey(newRecord.getRecordKey() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
 
         newRecord = JsonUtils.recordFromString(recordString, cryptoManager)

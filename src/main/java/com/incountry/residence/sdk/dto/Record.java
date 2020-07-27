@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.dto;
 import java.util.Objects;
 
 public class Record {
+    private String recordKey;
     private String key1;
     private String key2;
     private String key3;
@@ -36,31 +37,21 @@ public class Record {
     /**
      * Short constructor
      *
-     * @param key1 key
-     * @param body data to be stored and encrypted
+     * @param recordKey reocrd key
+     * @param body      data to be stored and encrypted
      */
-    public Record(String key1, String body) {
-        this.key1 = key1;
+    public Record(String recordKey, String body) {
+        this.recordKey = recordKey;
         this.body = body;
     }
 
-    /**
-     * Full constructor
-     *
-     * @param key1       Required, record key
-     * @param body       Optional, data to be stored and encrypted
-     * @param profileKey Optional, profile key
-     * @param rangeKey1  Optional, range key
-     * @param key2       Optional, key2
-     * @param key3       Optional, key3
-     */
-    public Record(String key1, String body, String profileKey, Long rangeKey1, String key2, String key3) {
-        this.key1 = key1;
-        this.body = body;
-        this.profileKey = profileKey;
-        this.rangeKey1 = rangeKey1;
-        this.key2 = key2;
-        this.key3 = key3;
+    public String getRecordKey() {
+        return recordKey;
+    }
+
+    public Record setRecordKey(String recordKey) {
+        this.recordKey = recordKey;
+        return this;
     }
 
     public String getKey1() {
@@ -297,7 +288,8 @@ public class Record {
             return false;
         }
         Record record = (Record) obj;
-        return Objects.equals(key1, record.key1) &&
+        return Objects.equals(recordKey, record.recordKey) &&
+                Objects.equals(key1, record.key1) &&
                 Objects.equals(key2, record.key2) &&
                 Objects.equals(key3, record.key3) &&
                 Objects.equals(key4, record.key4) &&
@@ -326,7 +318,7 @@ public class Record {
 
     @Override
     public int hashCode() {
-        return Objects.hash(key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+        return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 profileKey,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
                 body, precommit, errorCorrectionKey1, errorCorrectionKey2);

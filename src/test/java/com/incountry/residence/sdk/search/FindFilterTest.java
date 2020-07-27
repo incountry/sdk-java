@@ -12,23 +12,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class FindFilterTest {
 
     private String version = "0";
-    public String key = "key1";
+    public String recordKey = "recordKey";
     public String profileKey = "profileKey";
 
     @Test
     void testToJsonObject() throws StorageClientException {
         FilterStringParam versionFilterParam = new FilterStringParam(new String[]{version}, true);
-        FilterStringParam keyFilterParam = new FilterStringParam(new String[]{key}, true);
+        FilterStringParam keyFilterParam = new FilterStringParam(new String[]{recordKey}, true);
         FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey}, true);
 
         FindFilter findFilter = new FindFilter();
         findFilter.setVersionFilter(versionFilterParam);
-        findFilter.setKeyFilter(keyFilterParam);
+        findFilter.setRecordKeyFilter(keyFilterParam);
         findFilter.setProfileKeyFilter(profileKeyFilterParam);
         String jsonString = JsonUtils.toJsonString(findFilter, null);
 
         assertEquals("{\"filter\":" +
-                        "{\"key\":{\"$not\":[\"" + key + "\"]}," +
+                        "{\"record_key\":{\"$not\":[\"" + recordKey + "\"]}," +
                         "\"profile_key\":{\"$not\":[\"" + profileKey + "\"]}," +
                         "\"version\":{\"$not\":[" + version + "]}}," +
                         "\"options\":{\"limit\":100,\"offset\":0}}",

@@ -63,11 +63,11 @@ class SecretsTest {
     @Test
     void testIsJson() throws StorageClientException {
         JsonObject jsonWithoutSecretsDataFields = new JsonObject();
-        jsonWithoutSecretsDataFields.addProperty("body", "test");
-        jsonWithoutSecretsDataFields.addProperty("key", "write_key");
-        jsonWithoutSecretsDataFields.addProperty("key2", "key2");
-        jsonWithoutSecretsDataFields.addProperty("profile_key", "profileKey");
-        jsonWithoutSecretsDataFields.addProperty("range_key", 1);
+        jsonWithoutSecretsDataFields.addProperty("body", "<body>");
+        jsonWithoutSecretsDataFields.addProperty("record_key", "<recordKey>");
+        jsonWithoutSecretsDataFields.addProperty("key2", "<key2>");
+        jsonWithoutSecretsDataFields.addProperty("profile_key", "<profileKey>");
+        jsonWithoutSecretsDataFields.addProperty("range_key1", 1);
         jsonWithoutSecretsDataFields.addProperty("version", 2);
         String jsonString = new Gson().toJson(jsonWithoutSecretsDataFields);
 

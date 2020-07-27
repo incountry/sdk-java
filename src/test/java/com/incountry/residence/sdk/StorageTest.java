@@ -44,11 +44,11 @@ class StorageTest {
     private static final String FAKE_ENDPOINT = "http://fakeEndpoint.localhost:8081";
     private static final String SECRET = "passwordpasswordpasswordpassword";
     private static final String COUNTRY = "us";
-    private static final String KEY = "some_key";
+    private static final String RECORD_KEY = "some_key";
     private static final String KEY_2 = "key2";
     private static final String KEY_3 = "key3";
     private static final String PROFILE_KEY = "profileKey";
-    private static final Long RANGE_KEY = 1L;
+    private static final Long RANGE_KEY_1 = 1L;
     private static final String BODY = "body";
     private static final Integer HTTP_POOL_SIZE = 5;
 
@@ -69,8 +69,12 @@ class StorageTest {
     @RepeatedTest(3)
     void migratePositiveTest(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
-        Record rec = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(Arrays.asList(content, "OK"))));
         BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, cryptoManager);
@@ -99,15 +103,19 @@ class StorageTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
                 .profileKeyEq(PROFILE_KEY);
-        Record rec = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         BatchRecord batchRecord = storage.find(COUNTRY, builder);
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey1());
+        assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
     }
 
@@ -117,7 +125,11 @@ class StorageTest {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(endpoint, null, null, agent));
-        Record record = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
         storage.write(COUNTRY, record);
         String expectedURL = endpoint + "/v2/storage/records/" + COUNTRY;
         String realURL = new URL(agent.getCallUrl()).toString();
@@ -129,7 +141,11 @@ class StorageTest {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(endpoint, null, null, agent));
-        Record record = new Record(null, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record record = new Record(null, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, record));
         assertEquals("Key can't be null", ex.getMessage());
     }
@@ -166,8 +182,12 @@ class StorageTest {
                 .limitAndOffset(1, 0)
                 .profileKeyEq(PROFILE_KEY);
 
-        Record rec = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         BatchRecord batchRecord = storage.find(COUNTRY, builder);
@@ -177,12 +197,12 @@ class StorageTest {
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey1());
+        assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey1());
+        assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
     }
 
     @RepeatedTest(3)
@@ -192,8 +212,12 @@ class StorageTest {
                 .limitAndOffset(1, 0)
                 .profileKeyEq(PROFILE_KEY);
 
-        Record rec = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        String encrypted = JsonUtils.toJsonString(rec, cryptoManager);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
@@ -203,12 +227,12 @@ class StorageTest {
         String expected = "{\"filter\":{\"profile_key\":[\"" + cryptoManager.createKeyHash(PROFILE_KEY) + "\"]},\"options\":{\"limit\":1,\"offset\":0}}";
         assertEquals(expected, callBody);
 
-        assertEquals(KEY, foundRecord.getKey1());
+        assertEquals(RECORD_KEY, foundRecord.getRecordKey());
         assertEquals(BODY, foundRecord.getBody());
         assertEquals(KEY_2, foundRecord.getKey2());
         assertEquals(KEY_3, foundRecord.getKey3());
         assertEquals(PROFILE_KEY, foundRecord.getProfileKey());
-        assertEquals(RANGE_KEY, foundRecord.getRangeKey1());
+        assertEquals(RANGE_KEY_1, foundRecord.getRangeKey1());
 
         agent.setResponse("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
         foundRecord = storage.findOne(COUNTRY, builder);
@@ -226,8 +250,16 @@ class StorageTest {
                 .limitAndOffset(2, 0)
                 .profileKeyEq(PROFILE_KEY);
 
-        Record recOtherEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        Record recEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record recOtherEnc = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        Record recEnc = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
         String encryptedRecOther = JsonUtils.toJsonString(recOtherEnc, otherManager);
         String encryptedRec = JsonUtils.toJsonString(recEnc, cryptoManager);
 
@@ -240,67 +272,67 @@ class StorageTest {
         assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY, batchRecord.getRecords().get(0).getKey1());
+        assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey1());
+        assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
     }
 
     @Test
     void testFindNullFilterSending() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq("SomeValue");
+                .recordKeyEq("SomeValue");
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.find(COUNTRY, builder);
         String body = agent.getCallBody();
         JsonObject json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
-        assertNotNull(json.get("key"));
+        assertNotNull(json.get("record_key"));
         assertNull(json.get("key2"));
         assertNull(json.get("key3"));
-        assertNull(json.get("range_key"));
+        assertNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
         builder.clear().key2Eq("SomeValue");
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
-        assertNull(json.get("key"));
+        assertNull(json.get("record_key"));
         assertNotNull(json.get("key2"));
         assertNull(json.get("key3"));
-        assertNull(json.get("range_key"));
+        assertNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
         builder.clear().key3Eq("SomeValue");
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
-        assertNull(json.get("key"));
+        assertNull(json.get("record_key"));
         assertNull(json.get("key2"));
         assertNotNull(json.get("key3"));
-        assertNull(json.get("range_key"));
+        assertNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
-        builder.clear().rangeKeyEq(123321L);
+        builder.clear().rangeKey1Eq(123321L);
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
-        assertNull(json.get("key"));
+        assertNull(json.get("record_key"));
         assertNull(json.get("key2"));
         assertNull(json.get("key3"));
-        assertNotNull(json.get("range_key"));
+        assertNotNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
         builder.clear().profileKeyEq("SomeValue");
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
-        assertNull(json.get("key"));
+        assertNull(json.get("record_key"));
         assertNull(json.get("key2"));
         assertNull(json.get("key3"));
-        assertNull(json.get("range_key"));
+        assertNull(json.get("range_key1"));
         assertNotNull(json.get("profile_key"));
     }
 
@@ -308,8 +340,16 @@ class StorageTest {
     void testFindWithEncAndFoundPTE() throws StorageException {
         CryptoManager cryptoAsInStorage = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
         CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
-        Record recWithEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        Record recWithPTEnc = new Record(KEY + 1, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record recWithEnc = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        Record recWithPTEnc = new Record(RECORD_KEY + 1, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
         String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoAsInStorage);
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
@@ -323,8 +363,16 @@ class StorageTest {
     void testFindWithoutEncWithEncryptedData() throws StorageException {
         CryptoManager cryptoWithEnc = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
         CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
-        Record recWithEnc = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
-        Record recWithPTEnc = new Record(KEY + 1, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record recWithEnc = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        Record recWithPTEnc = new Record(RECORD_KEY + 1, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
         String encryptedRec = JsonUtils.toJsonString(recWithEnc, cryptoWithEnc);
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
@@ -336,12 +384,12 @@ class StorageTest {
         assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
 
         assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(KEY + 1, batchRecord.getRecords().get(0).getKey1());
+        assertEquals(RECORD_KEY + 1, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
         assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY, batchRecord.getRecords().get(0).getRangeKey1());
+        assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
     }
 
     @Test
@@ -362,13 +410,17 @@ class StorageTest {
         String string = null;
         FakeHttpAgent agent = new FakeHttpAgent(string);
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        Record readRecord = storage.read(COUNTRY, KEY);
+        Record readRecord = storage.read(COUNTRY, RECORD_KEY);
         assertNull(readRecord);
     }
 
     @Test
     void testErrorFindOneInsufficientArgs() throws StorageException {
-        Record record = new Record(KEY, BODY, PROFILE_KEY, RANGE_KEY, KEY_2, KEY_3);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
         String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
@@ -532,7 +584,7 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
-        assertTrue(storage.delete(COUNTRY, KEY));
+        assertTrue(storage.delete(COUNTRY, RECORD_KEY));
         server.stop(0);
     }
 
@@ -546,7 +598,7 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.read(COUNTRY, KEY));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.read(COUNTRY, RECORD_KEY));
         assertEquals("Received record is null", ex.getMessage());
         server.stop(0);
     }
@@ -574,7 +626,7 @@ class StorageTest {
                 .setEnvId("<envId>")
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, KEY));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, RECORD_KEY));
         assertEquals("Server request error: [URL=http://localhost:8767/v2/storage/records/us/463ca9fb48993ae6c598d58aa4a5e6c4e66610e869aff32916ba643387ad4afa, method=DELETE]", ex.getMessage());
         assertEquals("Read timed out", ex.getCause().getMessage());
         server.stop(0);

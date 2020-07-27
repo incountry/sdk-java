@@ -20,20 +20,20 @@ class JsonUtilsTest {
 
     @Test
     void testBetweenFilter() throws StorageClientException {
-        String expected = "{\"filter\":{\"range_key\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, 9).build(), null);
+        String expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, 9).build(), null);
         assertEquals(expected, fact);
 
-        expected = "{\"filter\":{\"range_key\":{\"$gte\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, true, 9, false).build(), null);
+        expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, true, 9, false).build(), null);
         assertEquals(expected, fact);
 
-        expected = "{\"filter\":{\"range_key\":{\"$gt\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, false, 9, true).build(), null);
+        expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, false, 9, true).build(), null);
         assertEquals(expected, fact);
 
-        expected = "{\"filter\":{\"range_key\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, false, 9, false).build(), null);
+        expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKey1Between(2, false, 9, false).build(), null);
         assertEquals(expected, fact);
     }
 
@@ -86,8 +86,8 @@ class JsonUtilsTest {
 
     @Test
     void testBatchRecordFromStringWithNullVersion() throws StorageException {
-        String content = "{\"data\":[{\"key\":\"9ba998c3650c4150d54dd22f3f35f45081c8f5399da625677efde99550447966\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5IiwicHJvZmlsZV9rZXkiOiJwcm9maWxlS2V5In19\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
-        Record record = new Record("key", "body", "profileKey", null, null, null);
+        String content = "{\"data\":[{\"version\":0,\"is_encrypted\":false,\"record_key\":\"cd59def71c1fc1c42bce810ee3e629c345f749cd988d28ab4639311de36ca867\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsicmVjb3JkX2tleSI6InJlY29yZEtleSIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
+        Record record = new Record("recordKey", "body").setProfileKey("profileKey");
         BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, new CryptoManager(null, "envId", null, false));
         assertEquals(record, batchRecord.getRecords().get(0));
     }

@@ -16,7 +16,8 @@ public class FindFilter {
     private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
     private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
 
-    private FilterStringParam keyFilter;
+    private FilterStringParam recordKeyFilter;
+    private FilterStringParam key1Filter;
     private FilterStringParam key2Filter;
     private FilterStringParam key3Filter;
     private FilterStringParam key4Filter;
@@ -29,7 +30,7 @@ public class FindFilter {
     private FilterStringParam errorCorrectionKey1Filter;
     private FilterStringParam errorCorrectionKey2Filter;
     private FilterStringParam profileKeyFilter;
-    private FilterNumberParam rangeKeyFilter;
+    private FilterNumberParam rangeKey1Filter;
     private FilterNumberParam rangeKey2Filter;
     private FilterNumberParam rangeKey3Filter;
     private FilterNumberParam rangeKey4Filter;
@@ -73,12 +74,20 @@ public class FindFilter {
         return offset;
     }
 
-    public FilterStringParam getKeyFilter() {
-        return keyFilter;
+    public FilterStringParam getRecordKeyFilter() {
+        return recordKeyFilter;
     }
 
-    public void setKeyFilter(FilterStringParam keyFilter) {
-        this.keyFilter = keyFilter;
+    public void setRecordKeyFilter(FilterStringParam recordKeyFilter) {
+        this.recordKeyFilter = recordKeyFilter;
+    }
+
+    public FilterStringParam getKey1Filter() {
+        return key1Filter;
+    }
+
+    public void setKey1Filter(FilterStringParam key1Filter) {
+        this.key1Filter = key1Filter;
     }
 
     public FilterStringParam getKey2Filter() {
@@ -161,8 +170,8 @@ public class FindFilter {
         this.profileKeyFilter = profileKeyFilter;
     }
 
-    public FilterNumberParam getRangeKeyFilter() {
-        return rangeKeyFilter;
+    public FilterNumberParam getRangeKey1Filter() {
+        return rangeKey1Filter;
     }
 
     public FilterStringParam getErrorCorrectionKey1Filter() {
@@ -253,8 +262,8 @@ public class FindFilter {
         this.rangeKey10Filter = rangeKey10Filter;
     }
 
-    public void setRangeKeyFilter(FilterNumberParam rangeKeyFilter) {
-        this.rangeKeyFilter = rangeKeyFilter;
+    public void setRangeKey1Filter(FilterNumberParam rangeKey1Filter) {
+        this.rangeKey1Filter = rangeKey1Filter;
     }
 
     public FilterStringParam getVersionFilter() {
@@ -267,6 +276,7 @@ public class FindFilter {
 
     public FindFilter copy() throws StorageClientException {
         FindFilter clone = new FindFilter();
+        clone.setRecordKeyFilter(getRecordKeyFilter() != null ? getRecordKeyFilter().copy() : null);
         cloneKeyFilters(clone);
         cloneRangeKeyFilters(clone);
         clone.setErrorCorrectionKey1Filter(getErrorCorrectionKey1Filter() != null ? getErrorCorrectionKey1Filter().copy() : null);
@@ -279,7 +289,7 @@ public class FindFilter {
     }
 
     private void cloneKeyFilters(FindFilter clone) {
-        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
+        clone.setKey1Filter(getKey1Filter() != null ? getKey1Filter().copy() : null);
         clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
         clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
         clone.setKey4Filter(getKey4Filter() != null ? getKey4Filter().copy() : null);
@@ -292,7 +302,7 @@ public class FindFilter {
     }
 
     private void cloneRangeKeyFilters(FindFilter clone) {
-        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
+        clone.setRangeKey1Filter(getRangeKey1Filter() != null ? getRangeKey1Filter().copy() : null);
         clone.setRangeKey2Filter(getRangeKey2Filter() != null ? getRangeKey2Filter().copy() : null);
         clone.setRangeKey3Filter(getRangeKey3Filter() != null ? getRangeKey3Filter().copy() : null);
         clone.setRangeKey4Filter(getRangeKey4Filter() != null ? getRangeKey4Filter().copy() : null);
@@ -307,7 +317,8 @@ public class FindFilter {
     @Override
     public String toString() {
         return "FindFilter{" +
-                "keyFilter=" + keyFilter +
+                "recordKeyFilter=" + recordKeyFilter +
+                ", key1Filter=" + key1Filter +
                 ", key2Filter=" + key2Filter +
                 ", key3Filter=" + key3Filter +
                 ", key4Filter=" + key4Filter +
@@ -320,7 +331,7 @@ public class FindFilter {
                 ", errorCorrectionKey1Filter=" + errorCorrectionKey1Filter +
                 ", errorCorrectionKey2Filter=" + errorCorrectionKey2Filter +
                 ", profileKeyFilter=" + profileKeyFilter +
-                ", rangeKeyFilter=" + rangeKeyFilter +
+                ", rangeKey1Filter=" + rangeKey1Filter +
                 ", rangeKey2Filter=" + rangeKey2Filter +
                 ", rangeKey3Filter=" + rangeKey3Filter +
                 ", rangeKey4Filter=" + rangeKey4Filter +

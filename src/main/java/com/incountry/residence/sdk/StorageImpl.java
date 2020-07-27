@@ -249,20 +249,20 @@ public class StorageImpl implements Storage {
                     record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
-        checkParameters(country, record.getKey1());
+        checkParameters(country, record.getRecordKey());
         dao.createRecord(country, record, cryptoManager);
         return record;
     }
 
 
-    public Record read(String country, String key) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("read params (country={} , key={})",
+            LOG.trace("read params (country={} , recordKey={})",
                     country,
-                    key != null ? MSG_SIMPLE_SECURE : null);
+                    recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, key);
-        Record record = dao.read(country, key, cryptoManager);
+        checkParameters(country, recordKey);
+        Record record = dao.read(country, recordKey, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
         }
@@ -306,21 +306,21 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
             for (Record record : records) {
-                checkParameters(country, record.getKey1());
+                checkParameters(country, record.getRecordKey());
             }
             dao.createBatch(records, country, cryptoManager);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
-    public boolean delete(String country, String key) throws StorageClientException, StorageServerException {
+    public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("delete params (country={} , key={})",
                     country,
-                    key != null ? MSG_SIMPLE_SECURE : null);
+                    recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, key);
-        dao.delete(country, key, cryptoManager);
+        checkParameters(country, recordKey);
+        dao.delete(country, recordKey, cryptoManager);
         return true;
     }
 

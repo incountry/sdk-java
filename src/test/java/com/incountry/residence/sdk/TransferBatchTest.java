@@ -77,7 +77,7 @@ class TransferBatchTest {
         BatchRecord batchRecord = new BatchRecord(null, 2, 2, 0, 1, new ArrayList<>());
         transferBatch.setMeta(batchRecord);
         List<TransferRecord> data = new ArrayList<>();
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record();
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
 
