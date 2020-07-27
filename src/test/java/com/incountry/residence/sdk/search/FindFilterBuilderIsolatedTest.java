@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -51,6 +52,13 @@ class FindFilterBuilderIsolatedTest {
         assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='', operator2=''}"));
     }
 
+    @Test
+    void testGetFilter() {
+        FindFilterBuilder builder = FindFilterBuilder.create();
+        FindFilter findFilter = new FindFilter();
+        builder.setFilter(findFilter);
+        assertEquals(findFilter, builder.getFilter());
+    }
 
     @Test
     void negativeTestIllegalArgs() {

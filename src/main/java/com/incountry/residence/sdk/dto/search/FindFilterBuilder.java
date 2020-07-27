@@ -135,6 +135,14 @@ public class FindFilterBuilder {
         return this;
     }
 
+    public void setFilter(FindFilter filter) {
+        this.filter = filter;
+    }
+
+    public FindFilter getFilter() {
+        return filter;
+    }
+
     @Override
     public String toString() {
         return "FindFilterBuilder{" +
