@@ -48,7 +48,7 @@ class FindFilterBuilderIsolatedTest {
         assertTrue(string.contains("key3Filter=FilterStringParam{value=[7, 8], notCondition=false"));
         assertTrue(string.contains("profileKeyFilter=FilterStringParam{value=[9, 10], notCondition=false}"));
         assertTrue(string.contains("versionFilter=FilterStringParam{value=[11, 12], notCondition=true}"));
-        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='null', operator2='null'}"));
+        assertTrue(string.contains("rangeKeyFilter=FilterRangeParam{values=[13, 14], operator1='', operator2=''}"));
     }
 
 

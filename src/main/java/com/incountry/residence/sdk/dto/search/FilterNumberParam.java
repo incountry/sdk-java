@@ -122,8 +122,8 @@ public class FilterNumberParam {
     public String toString() {
         return "FilterRangeParam{" +
                 "values=" + Arrays.toString(values) +
-                ", operator1='" + operator1 + '\'' +
-                ", operator2='" + operator2 + '\'' +
+                ", operator1='" + "" + '\'' +
+                ", operator2='" + "" + '\'' +
                 '}';
     }
 }
