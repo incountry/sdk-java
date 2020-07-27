@@ -45,10 +45,10 @@ before_install:
 
 script:
   - echo "_____________________________________________________________________________________________________________"
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then echo "TRUE"; else echo "FALSE"; fi'
   - gradle build jacocoTestReport sonarqube
   - gradle integrationTest
   # move custom Gradle binaries to cache
   - rm -rf $PWD/gradle-container/*
   - mv $PWD/$gradleDirectory $PWD/gradle-container
-#  on:
-#    branch: develop
+
