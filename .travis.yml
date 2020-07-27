@@ -45,8 +45,9 @@ before_install:
 
 script:
 #  - echo "_____________________________________________________________________________________________________________"
-  - gradle build jacocoTestReport sonarqube
+#  - gradle build jacocoTestReport sonarqube
   - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then echo "_____________________________________________________________________________________________________________"; gradle sonarqube; fi
+  - gradle build jacocoTestReport
   - gradle integrationTest
   # move custom Gradle binaries to cache
   - rm -rf $PWD/gradle-container/*
