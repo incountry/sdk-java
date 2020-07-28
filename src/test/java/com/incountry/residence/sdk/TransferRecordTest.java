@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -22,6 +23,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -217,4 +220,28 @@ class TransferRecordTest {
         assertFalse(transferRecord.isEncrypted());
     }
 
+    /**
+     *
+     */
+    @Test
+    void testBackwardCompatibility() throws StorageServerException, StorageClientException, StorageCryptoException {
+        //There is no 'record_key' in encrypted body, but there is deprecated 'key'
+        String legacyRecordJson = "{\"version\":0," +
+                "\"record_key\":\"a301d702fd5942dfdee1cb0c255bee864113ca8c3298c74e19ac3ae067972029\"," +
+                "\"body\":\"2:r0J6eOsdx1RMJfMHBod/xkOQ6+xmpjPSWO4o61nAGG6Ud8S4RL8ug04Jw+7aD98lUw4vSRM7tj62tPIZmuULFOiYz+odDBNjVg5nmylbI/FHuytflyAMRImDoFmtlZTqSsUG0fP5RVdrLyURp3M6BHzcDLFBDiXEOzVkRqx18k2GbsFgJEfv\"}";
+        Record record = JsonUtils.recordFromString(legacyRecordJson, cryptoManager);
+        assertNotNull(record);
+        assertEquals("<key>", record.getRecordKey());
+        assertEquals("<body>", record.getBody());
+        assertNull(record.getKey1());
+
+        //There are no 'record_key' and 'key' in encrypted body
+        legacyRecordJson = "{\"version\":0," +
+                "\"record_key\":\"a301d702fd5942dfdee1cb0c255bee864113ca8c3298c74e19ac3ae067972029\"," +
+                "\"body\":\"2:1BgO5xgjDXZu759eZZZzvRZJmPVDhir2O6Od7bX36r0s3goMKEGk9O6pKs8X4jZJcP+Evndn7GFl4MD2XNRXFKuGOnLieMunU0+gG0sei5iIMw0PWXZVE1IdqT52EulE6a1BD0BLDA==\"}";
+        record = JsonUtils.recordFromString(legacyRecordJson, cryptoManager);
+        assertNotNull(record);
+        assertNull(record.getRecordKey());
+        assertNull(record.getKey1());
+    }
 }
