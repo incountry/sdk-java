@@ -107,9 +107,7 @@ public class JsonUtils {
     }
 
     private static void addRangeToJson(JsonObject json, String jsonKey, FilterNumberParam rangeFilter) {
-        if (rangeFilter != null) {
-            json.add(jsonKey, rangeFilter.isConditional() ? conditionJSON(rangeFilter) : valueJSON(rangeFilter));
-        }
+        json.add(jsonKey, rangeFilter.isConditional() ? conditionJSON(rangeFilter) : valueJSON(rangeFilter));
     }
 
     /**
@@ -138,12 +136,10 @@ public class JsonUtils {
     }
 
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
-        if (param != null) {
-            if (paramName.equals(P_VERSION)) {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
-            } else {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, cryptoManager, true) : toJsonArray(param, cryptoManager));
-            }
+        if (paramName.equals(P_VERSION)) {
+            json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
+        } else {
+            json.add(paramName, param.isNotCondition() ? addNotCondition(param, cryptoManager, true) : toJsonArray(param, cryptoManager));
         }
     }
 
