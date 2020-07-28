@@ -73,10 +73,30 @@ public class StorageIntegrationTest {
     private static final String RECORD_KEY = "RecordKey" + TEMP;
     private static final String RECORD_KEY_IGNORE_CASE = RECORD_KEY + "_IgnorE_CasE";
     private static final String PROFILE_KEY = "ProfileKey" + TEMP;
+    private static final String KEY_1 = "Key1" + TEMP;
     private static final String KEY_2 = "Key2" + TEMP;
     private static final String KEY_3 = "Key3" + TEMP;
+    private static final String KEY_4 = "Key4" + TEMP;
+    private static final String KEY_5 = "Key5" + TEMP;
+    private static final String KEY_6 = "Key6" + TEMP;
+    private static final String KEY_7 = "Key7" + TEMP;
+    private static final String KEY_8 = "Key8" + TEMP;
+    private static final String KEY_9 = "Key9" + TEMP;
+    private static final String KEY_10 = "Key10" + TEMP;
+    private static final String SERVICE_KEY_1 = "ServiceKey1" + TEMP;
+    private static final String SERVICE_KEY_2 = "ServiceKey2" + TEMP;
+    private static final String PRE_COMMIT_BODY = "PreCommitBody" + TEMP;
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
+    private static final Long RANGE_KEY_2 = 2L;
+    private static final Long RANGE_KEY_3 = 3L;
+    private static final Long RANGE_KEY_4 = 4L;
+    private static final Long RANGE_KEY_5 = 5L;
+    private static final Long RANGE_KEY_6 = 6L;
+    private static final Long RANGE_KEY_7 = 7L;
+    private static final Long RANGE_KEY_8 = 8L;
+    private static final Long RANGE_KEY_9 = 9L;
+    private static final Long RANGE_KEY_10 = 10L;
     private static final String RECORD_BODY = "test";
     private static final Integer HTTP_POOL_SIZE = 4;
 
@@ -142,8 +162,28 @@ public class StorageIntegrationTest {
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
+                .setRangeKey2(RANGE_KEY_2)
+                .setRangeKey3(RANGE_KEY_3)
+                .setRangeKey4(RANGE_KEY_4)
+                .setRangeKey5(RANGE_KEY_5)
+                .setRangeKey6(RANGE_KEY_6)
+                .setRangeKey7(RANGE_KEY_7)
+                .setRangeKey8(RANGE_KEY_8)
+                .setRangeKey9(RANGE_KEY_9)
+                .setRangeKey10(RANGE_KEY_10)
+                .setKey1(KEY_1)
                 .setKey2(KEY_2)
-                .setKey3(KEY_3);
+                .setKey3(KEY_3)
+                .setKey4(KEY_4)
+                .setKey5(KEY_5)
+                .setKey6(KEY_6)
+                .setKey7(KEY_7)
+                .setKey8(KEY_8)
+                .setKey9(KEY_9)
+                .setKey10(KEY_10)
+                .setPrecommitBody(PRE_COMMIT_BODY)
+                .setServiceKey1(SERVICE_KEY_1)
+                .setServiceKey2(SERVICE_KEY_2);
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
@@ -154,8 +194,29 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_KEY, incomingRecord.getRecordKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
+        assertEquals(KEY_1, incomingRecord.getKey1());
         assertEquals(KEY_2, incomingRecord.getKey2());
         assertEquals(KEY_3, incomingRecord.getKey3());
+        assertEquals(KEY_4, incomingRecord.getKey4());
+        assertEquals(KEY_5, incomingRecord.getKey5());
+        assertEquals(KEY_6, incomingRecord.getKey6());
+        assertEquals(KEY_7, incomingRecord.getKey7());
+        assertEquals(KEY_8, incomingRecord.getKey8());
+        assertEquals(KEY_9, incomingRecord.getKey9());
+        assertEquals(KEY_10, incomingRecord.getKey10());
+        assertEquals(PRE_COMMIT_BODY, incomingRecord.getPrecommitBody());
+        assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
+        assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey2());
+        assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
+        assertEquals(RANGE_KEY_2, incomingRecord.getRangeKey2());
+        assertEquals(RANGE_KEY_3, incomingRecord.getRangeKey3());
+        assertEquals(RANGE_KEY_4, incomingRecord.getRangeKey4());
+        assertEquals(RANGE_KEY_5, incomingRecord.getRangeKey5());
+        assertEquals(RANGE_KEY_6, incomingRecord.getRangeKey6());
+        assertEquals(RANGE_KEY_7, incomingRecord.getRangeKey7());
+        assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
+        assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
+        assertEquals(RANGE_KEY_10, incomingRecord.getRangeKey10());
     }
 
     @Test
