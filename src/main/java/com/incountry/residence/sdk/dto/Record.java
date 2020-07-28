@@ -26,7 +26,7 @@ public class Record {
     private Long rangeKey9;
     private Long rangeKey10;
     private String body;
-    private String precommit;
+    private String precommitBody;
     private String serviceKey1;
     private String serviceKey2;
 
@@ -252,12 +252,12 @@ public class Record {
         return this;
     }
 
-    public String getPrecommit() {
-        return precommit;
+    public String getPrecommitBody() {
+        return precommitBody;
     }
 
-    public Record setPrecommit(String precommit) {
-        this.precommit = precommit;
+    public Record setPrecommitBody(String precommitBody) {
+        this.precommitBody = precommitBody;
         return this;
     }
 
@@ -311,7 +311,7 @@ public class Record {
                 Objects.equals(rangeKey9, record.rangeKey9) &&
                 Objects.equals(rangeKey10, record.rangeKey10) &&
                 Objects.equals(body, record.body) &&
-                Objects.equals(precommit, record.precommit) &&
+                Objects.equals(precommitBody, record.precommitBody) &&
                 Objects.equals(serviceKey1, record.serviceKey1) &&
                 Objects.equals(serviceKey2, record.serviceKey2);
     }
@@ -321,6 +321,6 @@ public class Record {
         return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 profileKey,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
-                body, precommit, serviceKey1, serviceKey2);
+                body, precommitBody, serviceKey1, serviceKey2);
     }
 }

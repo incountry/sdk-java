@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class JsonUtils {
 
     private static final String P_BODY = "body";
-    private static final String P_PRECOMMIT = "precommit";
+    private static final String P_PRECOMMIT_BODY = "precommit_body";
     private static final String P_RANGE_KEY_1 = "range_key1";
     private static final String P_RANGE_KEY_2 = "range_key2";
     private static final String P_RANGE_KEY_3 = "range_key3";
@@ -58,7 +58,7 @@ public class JsonUtils {
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4,
-            P_RANGE_KEY_5, P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_BODY, P_PRECOMMIT);
+            P_RANGE_KEY_5, P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_BODY, P_PRECOMMIT_BODY);
 
     private JsonUtils() {
     }

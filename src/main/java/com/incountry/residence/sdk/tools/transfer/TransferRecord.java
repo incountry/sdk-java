@@ -23,8 +23,11 @@ public class TransferRecord extends Record {
     private static final String P_META = "meta";
     private static final String MSG_ERR_RESPONSE = "Response error";
 
+    //for backward compatibility
+    private String key;
     private Integer version;
     private boolean isEncrypted;
+
 
     public TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
         setRecordKey(cryptoManager.createKeyHash(record.getRecordKey()));
@@ -56,9 +59,9 @@ public class TransferRecord extends Record {
         isEncrypted = !cryptoManager.isUsePTEncryption();
         version = (encBodyAndVersion.getValue() != null ? encBodyAndVersion.getValue() : 0);
 
-        if (record.getPrecommit() != null) {
-            Map.Entry<String, Integer> encPreCommit = cryptoManager.encrypt(record.getPrecommit());
-            setPrecommit(encPreCommit.getKey());
+        if (record.getPrecommitBody() != null) {
+            Map.Entry<String, Integer> encPreCommit = cryptoManager.encrypt(record.getPrecommitBody());
+            setPrecommitBody(encPreCommit.getKey());
         }
     }
 
@@ -126,7 +129,7 @@ public class TransferRecord extends Record {
         rec.setRangeKey10(getRangeKey10());
         rec.setProfileKey(getProfileKey());
         rec.setBody(getBody());
-        rec.setPrecommit(getPrecommit());
+        rec.setPrecommitBody(getPrecommitBody());
         rec.setServiceKey1(getServiceKey1());
         rec.setServiceKey2(getServiceKey2());
         return rec;
@@ -136,8 +139,12 @@ public class TransferRecord extends Record {
         JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
         JsonElement innerBodyJson = bodyObj.get(P_PAYLOAD);
         setBody(innerBodyJson != null ? innerBodyJson.getAsString() : null);
-        Record recordFromMeta = gson.fromJson(bodyObj.get(P_META), Record.class);
-        setRecordKey(recordFromMeta.getRecordKey());
+        TransferRecord recordFromMeta = gson.fromJson(bodyObj.get(P_META), TransferRecord.class);
+        String recordKey = recordFromMeta.getRecordKey();
+        if (recordKey == null && recordFromMeta.key != null) {
+            recordKey = recordFromMeta.key;
+        }
+        setRecordKey(recordKey);
         setKey2(recordFromMeta.getKey2());
         setKey3(recordFromMeta.getKey3());
         setKey4(recordFromMeta.getKey4());
@@ -179,8 +186,8 @@ public class TransferRecord extends Record {
                     setBody(cryptoManager.decrypt(getBody(), version));
                     decryptAllFromBody(gson);
                 }
-                if (getPrecommit() != null) {
-                    setPrecommit(cryptoManager.decrypt(getPrecommit(), version));
+                if (getPrecommitBody() != null) {
+                    setPrecommitBody(cryptoManager.decrypt(getPrecommitBody(), version));
                 }
             }
         } catch (JsonSyntaxException ex) {

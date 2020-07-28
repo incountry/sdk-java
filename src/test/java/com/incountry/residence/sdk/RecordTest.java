@@ -237,14 +237,14 @@ class RecordTest {
                 .setBody(body)
                 .setServiceKey1(errorCorrectionKey1)
                 .setServiceKey2(errorCorrectionKey2)
-                .setPrecommit(precommit);
+                .setPrecommitBody(precommit);
 
         CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
         String recordString = JsonUtils.toJsonString(record3, cryptoManager);
         Record record4 = JsonUtils.recordFromString(recordString, cryptoManager);
         assertEquals(record3, record4);
 
-        record4.setPrecommit(record4.getPrecommit() + UUID.randomUUID());
+        record4.setPrecommitBody(record4.getPrecommitBody() + UUID.randomUUID());
         assertNotEquals(record3, record4);
 
         record4 = JsonUtils.recordFromString(recordString, cryptoManager)
