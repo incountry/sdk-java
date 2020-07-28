@@ -38,8 +38,8 @@ public class TransferRecord extends Record {
         setKey9(cryptoManager.createKeyHash(record.getKey9()));
         setKey10(cryptoManager.createKeyHash(record.getKey10()));
         setProfileKey(cryptoManager.createKeyHash(record.getProfileKey()));
-        setErrorCorrectionKey1(cryptoManager.createKeyHash(record.getErrorCorrectionKey1()));
-        setErrorCorrectionKey2(cryptoManager.createKeyHash(record.getErrorCorrectionKey2()));
+        setServiceKey1(cryptoManager.createKeyHash(record.getServiceKey1()));
+        setServiceKey2(cryptoManager.createKeyHash(record.getServiceKey2()));
         setRangeKey1(record.getRangeKey1());
         setRangeKey2(record.getRangeKey2());
         setRangeKey3(record.getRangeKey3());
@@ -127,8 +127,8 @@ public class TransferRecord extends Record {
         rec.setProfileKey(getProfileKey());
         rec.setBody(getBody());
         rec.setPrecommit(getPrecommit());
-        rec.setErrorCorrectionKey1(getErrorCorrectionKey1());
-        rec.setErrorCorrectionKey2(getErrorCorrectionKey2());
+        rec.setServiceKey1(getServiceKey1());
+        rec.setServiceKey2(getServiceKey2());
         return rec;
     }
 
@@ -148,8 +148,8 @@ public class TransferRecord extends Record {
         setKey9(recordFromMeta.getKey9());
         setKey10(recordFromMeta.getKey10());
         setProfileKey(recordFromMeta.getProfileKey());
-        setErrorCorrectionKey1(recordFromMeta.getErrorCorrectionKey1());
-        setErrorCorrectionKey2(recordFromMeta.getErrorCorrectionKey2());
+        setServiceKey1(recordFromMeta.getServiceKey1());
+        setServiceKey2(recordFromMeta.getServiceKey2());
     }
 
     @Override

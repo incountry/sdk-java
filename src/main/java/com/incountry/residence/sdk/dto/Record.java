@@ -27,8 +27,8 @@ public class Record {
     private Long rangeKey10;
     private String body;
     private String precommit;
-    private String errorCorrectionKey1;
-    private String errorCorrectionKey2;
+    private String serviceKey1;
+    private String serviceKey2;
 
 
     public Record() {
@@ -261,21 +261,21 @@ public class Record {
         return this;
     }
 
-    public String getErrorCorrectionKey1() {
-        return errorCorrectionKey1;
+    public String getServiceKey1() {
+        return serviceKey1;
     }
 
-    public Record setErrorCorrectionKey1(String errorCorrectionKey1) {
-        this.errorCorrectionKey1 = errorCorrectionKey1;
+    public Record setServiceKey1(String serviceKey1) {
+        this.serviceKey1 = serviceKey1;
         return this;
     }
 
-    public String getErrorCorrectionKey2() {
-        return errorCorrectionKey2;
+    public String getServiceKey2() {
+        return serviceKey2;
     }
 
-    public Record setErrorCorrectionKey2(String errorCorrectionKey2) {
-        this.errorCorrectionKey2 = errorCorrectionKey2;
+    public Record setServiceKey2(String serviceKey2) {
+        this.serviceKey2 = serviceKey2;
         return this;
     }
 
@@ -312,8 +312,8 @@ public class Record {
                 Objects.equals(rangeKey10, record.rangeKey10) &&
                 Objects.equals(body, record.body) &&
                 Objects.equals(precommit, record.precommit) &&
-                Objects.equals(errorCorrectionKey1, record.errorCorrectionKey1) &&
-                Objects.equals(errorCorrectionKey2, record.errorCorrectionKey2);
+                Objects.equals(serviceKey1, record.serviceKey1) &&
+                Objects.equals(serviceKey2, record.serviceKey2);
     }
 
     @Override
@@ -321,6 +321,6 @@ public class Record {
         return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 profileKey,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
-                body, precommit, errorCorrectionKey1, errorCorrectionKey2);
+                body, precommit, serviceKey1, serviceKey2);
     }
 }

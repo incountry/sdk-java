@@ -14,6 +14,6 @@ public enum StringField {
     KEY9,
     KEY10,
     PROFILE_KEY,
-    ERROR_CORRECTION_KEY1,
-    ERROR_CORRECTION_KEY2
+    SERVICE_KEY1,
+    SERVICE_KEY2
 }

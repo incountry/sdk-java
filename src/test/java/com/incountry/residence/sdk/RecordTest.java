@@ -235,8 +235,8 @@ class RecordTest {
                 .setRangeKey9(rangeKey9)
                 .setRangeKey10(rangeKey10)
                 .setBody(body)
-                .setErrorCorrectionKey1(errorCorrectionKey1)
-                .setErrorCorrectionKey2(errorCorrectionKey2)
+                .setServiceKey1(errorCorrectionKey1)
+                .setServiceKey2(errorCorrectionKey2)
                 .setPrecommit(precommit);
 
         CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
@@ -248,11 +248,11 @@ class RecordTest {
         assertNotEquals(record3, record4);
 
         record4 = JsonUtils.recordFromString(recordString, cryptoManager)
-                .setErrorCorrectionKey1(record4.getErrorCorrectionKey1() + UUID.randomUUID());
+                .setServiceKey1(record4.getServiceKey1() + UUID.randomUUID());
         assertNotEquals(record3, record4);
 
         record4 = JsonUtils.recordFromString(recordString, cryptoManager)
-                .setErrorCorrectionKey2(record4.getErrorCorrectionKey2() + UUID.randomUUID());
+                .setServiceKey2(record4.getServiceKey2() + UUID.randomUUID());
         assertNotEquals(record3, record4);
 
         record4 = JsonUtils.recordFromString(recordString, cryptoManager)
