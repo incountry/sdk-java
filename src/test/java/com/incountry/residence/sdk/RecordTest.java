@@ -315,6 +315,10 @@ class RecordTest {
         assertNotEquals(expectedRecord, newRecord);
 
         newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey1(newRecord.getKey1() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
                 .setKey2(newRecord.getKey2() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
 
