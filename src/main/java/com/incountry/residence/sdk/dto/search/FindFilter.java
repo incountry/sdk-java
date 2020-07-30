@@ -14,7 +14,7 @@ public class FindFilter {
     private static final Logger LOG = LogManager.getLogger(FindFilter.class);
 
     public static final int MAX_LIMIT = 100;
-    public static final int DEF_OFFSET = 0;
+    public static final int DEFAULT_OFFSET = 0;
     private static final String MSG_MAX_LIMIT = "Max limit is %d. Use offset to populate more";
     private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
     private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
@@ -23,7 +23,7 @@ public class FindFilter {
     private final EnumMap<NumberField, FilterNumberParam> numberFilterMap = new EnumMap<>(NumberField.class);
 
     private int limit = MAX_LIMIT;
-    private int offset = DEF_OFFSET;
+    private int offset = DEFAULT_OFFSET;
 
     public void setLimit(int limit) throws StorageClientException {
         if (limit > MAX_LIMIT) {

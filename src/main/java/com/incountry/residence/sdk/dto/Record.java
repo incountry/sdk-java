@@ -37,7 +37,7 @@ public class Record {
     /**
      * Short constructor
      *
-     * @param recordKey reocrd key
+     * @param recordKey record key
      * @param body      data to be stored and encrypted
      */
     public Record(String recordKey, String body) {

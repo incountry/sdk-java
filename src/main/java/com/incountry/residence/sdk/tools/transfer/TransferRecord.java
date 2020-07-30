@@ -23,7 +23,7 @@ public class TransferRecord extends Record {
     private static final String P_META = "meta";
     private static final String MSG_ERR_RESPONSE = "Response error";
 
-    //for backward compatibility
+    //for backwards compatibility
     private String key;
     private Integer version;
     private boolean isEncrypted;

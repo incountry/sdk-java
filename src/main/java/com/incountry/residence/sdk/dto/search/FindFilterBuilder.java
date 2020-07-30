@@ -42,8 +42,8 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder keyEq(StringField filed, String... keys) throws StorageClientException {
-        filter.setStringFilter(filed, new FilterStringParam(keys));
+    public FindFilterBuilder keyEq(StringField field, String... keys) throws StorageClientException {
+        filter.setStringFilter(field, new FilterStringParam(keys));
         return this;
     }
 
@@ -52,8 +52,8 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder keyNotEq(StringField filed, String... keys) throws StorageClientException {
-        filter.setStringFilter(filed, new FilterStringParam(keys, true));
+    public FindFilterBuilder keyNotEq(StringField field, String... keys) throws StorageClientException {
+        filter.setStringFilter(field, new FilterStringParam(keys, true));
         return this;
     }
 

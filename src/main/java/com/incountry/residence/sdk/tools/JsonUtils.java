@@ -208,7 +208,7 @@ public class JsonUtils {
 
     private static JsonObject findOptionstoJson(FindFilter filter) {
         int limit = FindFilter.MAX_LIMIT;
-        int offset = FindFilter.DEF_OFFSET;
+        int offset = FindFilter.DEFAULT_OFFSET;
         if (filter != null) {
             limit = filter.getLimit();
             offset = filter.getOffset();
