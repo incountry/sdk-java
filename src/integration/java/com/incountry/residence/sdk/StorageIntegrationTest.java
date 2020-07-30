@@ -143,8 +143,7 @@ public class StorageIntegrationTest {
     @Order(100)
     public void batchWriteTest() throws StorageException {
         List<Record> records = new ArrayList<>();
-        Record record = new Record()
-                .setRecordKey(BATCH_RECORD_KEY_1)
+        Record record = new Record(BATCH_RECORD_KEY_1)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(BATCH_WRITE_RANGE_KEY_1)
@@ -157,8 +156,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(200)
     public void writeTest() throws StorageException {
-        Record record = new Record()
-                .setRecordKey(RECORD_KEY)
+        Record record = new Record(RECORD_KEY)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
@@ -222,8 +220,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(301)
     public void readIgnoreCaseTest() throws StorageException {
-        Record record = new Record()
-                .setRecordKey(RECORD_KEY_IGNORE_CASE)
+        Record record = new Record(RECORD_KEY_IGNORE_CASE)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
@@ -379,8 +376,7 @@ public class StorageIntegrationTest {
         Storage storage2 = StorageImpl.getInstance(config);
         //write record with custom enc
         String customRecordKey = RECORD_KEY + "_custom";
-        Record record = new Record()
-                .setRecordKey(customRecordKey)
+        Record record = new Record(customRecordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
@@ -488,8 +484,7 @@ public class StorageIntegrationTest {
                 String randomKey = RECORD_KEY + UUID.randomUUID().toString();
                 Thread currentThread = Thread.currentThread();
                 currentThread.setName("connectionPoolTest #" + numb);
-                Record record = new Record()
-                        .setRecordKey(randomKey)
+                Record record = new Record(randomKey)
                         .setBody(RECORD_BODY)
                         .setProfileKey(PROFILE_KEY)
                         .setRangeKey1(WRITE_RANGE_KEY_1)

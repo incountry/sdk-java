@@ -56,7 +56,7 @@ class TransferRecordTest {
 
     @Test
     void testValidateNullKey() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         StorageServerException ex = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
         assertEquals("Null required record fields: recordKey", ex.getMessage());
@@ -80,7 +80,7 @@ class TransferRecordTest {
 
     @Test
     void testValidateNullKeyAndBody() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody(null);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
@@ -89,7 +89,7 @@ class TransferRecordTest {
 
     @Test
     void positiveTestEqualsWithSameObjects() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         assertEquals(transferRecord, transferRecord);
     }
@@ -97,7 +97,7 @@ class TransferRecordTest {
     @SuppressWarnings("java:S3415")
     @Test
     void negativeTestEqualsDifferentClassObjects() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         assertNotEquals(transferRecord, null);
         assertNotEquals(transferRecord, UUID.randomUUID());
@@ -106,7 +106,7 @@ class TransferRecordTest {
 
     @Test
     void negativeTestEqualsWithDifferentObjects() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
         assertNotEquals(transferRecord, transferRecord1);
@@ -114,7 +114,7 @@ class TransferRecordTest {
 
     @Test
     void positiveTestWithEqualTransferRecords() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody("");
@@ -124,15 +124,14 @@ class TransferRecordTest {
 
     @Test
     void testHashCode() throws StorageException {
-        Record record = new Record();
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         assertEquals(transferRecord.hashCode(), transferRecord.hashCode());
     }
 
     @Test
     void negativeTestDecrypt() throws StorageException {
-        Record record = new Record()
-                .setRecordKey("recordKey")
+        Record record = new Record("recordKey")
                 .setProfileKey("profileKey")
                 .setRangeKey1(1L)
                 .setKey2("key2")
@@ -145,14 +144,12 @@ class TransferRecordTest {
     @Test
     void testDecryptWithCryptoManagerAndBodyNull() throws StorageException {
         String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
-        Record record = new Record()
-                .setRecordKey("")
+        Record record = new Record("")
                 .setProfileKey("")
                 .setRangeKey1(1L)
                 .setKey2("")
                 .setKey3("");
-        Record recordForComparison = new Record()
-                .setRecordKey(cryptData)
+        Record recordForComparison = new Record(cryptData)
                 .setProfileKey(cryptData)
                 .setRangeKey1(1L)
                 .setKey2(cryptData)
@@ -165,14 +162,12 @@ class TransferRecordTest {
     @Test
     void testDecryptWithCryptoManagerNull() throws StorageException {
         String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
-        Record record = new Record()
-                .setRecordKey("")
+        Record record = new Record("")
                 .setProfileKey("")
                 .setRangeKey1(1L)
                 .setKey2("")
                 .setKey3("");
-        Record recordForComparison = new Record()
-                .setRecordKey(cryptData)
+        Record recordForComparison = new Record(cryptData)
                 .setBody("")
                 .setProfileKey(cryptData)
                 .setRangeKey1(1L)
@@ -186,14 +181,12 @@ class TransferRecordTest {
     @Test
     void testDecryptWithBodyNull() throws StorageException {
         String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
-        Record record = new Record()
-                .setRecordKey("")
+        Record record = new Record("")
                 .setProfileKey("")
                 .setRangeKey1(1L)
                 .setKey2("")
                 .setKey3("");
-        Record recordForComparison = new Record()
-                .setRecordKey(cryptData)
+        Record recordForComparison = new Record(cryptData)
                 .setProfileKey(cryptData)
                 .setRangeKey1(1L)
                 .setKey2(cryptData)

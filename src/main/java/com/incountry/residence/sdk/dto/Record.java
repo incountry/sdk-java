@@ -30,12 +30,17 @@ public class Record {
     private String serviceKey1;
     private String serviceKey2;
 
-
-    public Record() {
+    /**
+     * Minimalistic constructor
+     *
+     * @param recordKey record key
+     */
+    public Record(String recordKey) {
+        this.recordKey = recordKey;
     }
 
     /**
-     * Short constructor
+     * Overloaded constructor
      *
      * @param recordKey record key
      * @param body      data to be stored and encrypted

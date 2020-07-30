@@ -30,7 +30,8 @@ public class TransferRecord extends Record {
 
 
     public TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
-        setRecordKey(cryptoManager.createKeyHash(record.getRecordKey()));
+        super(cryptoManager.createKeyHash(record.getRecordKey()));
+        setKey1(cryptoManager.createKeyHash(record.getKey1()));
         setKey2(cryptoManager.createKeyHash(record.getKey2()));
         setKey3(cryptoManager.createKeyHash(record.getKey3()));
         setKey4(cryptoManager.createKeyHash(record.getKey4()));
@@ -106,8 +107,7 @@ public class TransferRecord extends Record {
      * @return return immutalbe Record
      */
     private Record toRecord() {
-        Record rec = new Record();
-        rec.setRecordKey(getRecordKey());
+        Record rec = new Record(getRecordKey());
         rec.setKey2(getKey2());
         rec.setKey3(getKey3());
         rec.setKey4(getKey4());

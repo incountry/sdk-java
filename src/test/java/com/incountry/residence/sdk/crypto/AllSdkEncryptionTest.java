@@ -35,8 +35,7 @@ class AllSdkEncryptionTest {
 
     AllSdkEncryptionTest() throws StorageClientException {
         cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false);
-        originalRecord = new Record()
-                .setRecordKey("InCountryKey")
+        originalRecord = new Record("InCountryKey")
                 .setBody("{\"data\": \"InCountryBody\"}")
                 .setProfileKey("InCountryPK")
                 .setRangeKey1(6275438399L)

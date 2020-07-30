@@ -212,8 +212,7 @@ class RecordTest {
         assertNotEquals(record1, null);
         assertNotEquals(record1, UUID.randomUUID());
 
-        Record record3 = new Record()
-                .setRecordKey(recordKey)
+        Record record3 = new Record(recordKey)
                 .setKey2(key2)
                 .setKey3(key3)
                 .setKey4(key4)
