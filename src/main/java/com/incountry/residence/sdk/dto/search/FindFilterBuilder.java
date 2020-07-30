@@ -42,46 +42,46 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder stringKeyEq(StringField filed, String... keys) throws StorageClientException {
+    public FindFilterBuilder keyEq(StringField filed, String... keys) throws StorageClientException {
         filter.setStringFilter(filed, new FilterStringParam(keys));
         return this;
     }
 
-    public FindFilterBuilder stringKeyNotEq(StringField filed, String... keys) throws StorageClientException {
-        filter.setStringFilter(filed, new FilterStringParam(keys, true));
-        return this;
-    }
-
-    public FindFilterBuilder numberKeyEq(NumberField field, Long... keys) throws StorageClientException {
+    public FindFilterBuilder keyEq(NumberField field, Long... keys) throws StorageClientException {
         filter.setNumberFilter(field, new FilterNumberParam(keys));
         return this;
     }
 
-    public FindFilterBuilder numberKeyGT(NumberField field, long key) throws StorageClientException {
+    public FindFilterBuilder keyNotEq(StringField filed, String... keys) throws StorageClientException {
+        filter.setStringFilter(filed, new FilterStringParam(keys, true));
+        return this;
+    }
+
+    public FindFilterBuilder keyGT(NumberField field, long key) throws StorageClientException {
         filter.setNumberFilter(field, new FilterNumberParam(OPER_GT, key));
         return this;
     }
 
-    public FindFilterBuilder numberKeyGTE(NumberField field, long key) throws StorageClientException {
+    public FindFilterBuilder keyGTE(NumberField field, long key) throws StorageClientException {
         filter.setNumberFilter(field, new FilterNumberParam(OPER_GTE, key));
         return this;
     }
 
-    public FindFilterBuilder numberKeyLT(NumberField field, long key) throws StorageClientException {
+    public FindFilterBuilder keyLT(NumberField field, long key) throws StorageClientException {
         filter.setNumberFilter(field, new FilterNumberParam(OPER_LT, key));
         return this;
     }
 
-    public FindFilterBuilder numberKeyLTE(NumberField field, long key) throws StorageClientException {
+    public FindFilterBuilder keyLTE(NumberField field, long key) throws StorageClientException {
         filter.setNumberFilter(field, new FilterNumberParam(OPER_LTE, key));
         return this;
     }
 
-    public FindFilterBuilder numberKeyBetween(NumberField field, long fromValue, long toValue) throws StorageClientException {
-        return numberKeyBetween(field, fromValue, true, toValue, true);
+    public FindFilterBuilder keyBetween(NumberField field, long fromValue, long toValue) throws StorageClientException {
+        return keyBetween(field, fromValue, true, toValue, true);
     }
 
-    public FindFilterBuilder numberKeyBetween(NumberField field, long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
+    public FindFilterBuilder keyBetween(NumberField field, long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
         filter.setNumberFilter(field, new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
                 fromValue,
                 includeTo ? OPER_LTE : OPER_LT,

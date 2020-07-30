@@ -331,7 +331,7 @@ class HttpDaoImplTests {
     void testSearchPopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
-                .stringKeyEq(StringField.PROFILE_KEY, "profileKey");
+                .keyEq(StringField.PROFILE_KEY, "profileKey");
         Record record = new Record("someRecordKey", "body")
                 .setProfileKey("profileKey");
         String encrypted = JsonUtils.toJsonString(record, initCryptoManager(false, false));

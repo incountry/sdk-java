@@ -23,19 +23,19 @@ class JsonUtilsTest {
     @Test
     void testBetweenFilter() throws StorageClientException {
         String expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, 9).build(), null);
+        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, 9).build(), null);
         assertEquals(expected, fact);
 
         expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, true, 9, false).build(), null);
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, true, 9, false).build(), null);
         assertEquals(expected, fact);
 
         expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, false, 9, true).build(), null);
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, false, 9, true).build(), null);
         assertEquals(expected, fact);
 
         expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 2, false, 9, false).build(), null);
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, false, 9, false).build(), null);
         assertEquals(expected, fact);
     }
 

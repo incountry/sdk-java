@@ -285,7 +285,7 @@ public class StorageImpl implements Storage {
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
-                .stringKeyNotEq(StringField.VERSION, String.valueOf(cryptoManager.getCurrentSecretVersion()));
+                .keyNotEq(StringField.VERSION, String.valueOf(cryptoManager.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
         batchWrite(country, batchRecord.getRecords());
         MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());

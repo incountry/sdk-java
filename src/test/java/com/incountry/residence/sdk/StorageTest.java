@@ -104,7 +104,7 @@ class StorageTest {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
-                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
+                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
@@ -182,7 +182,7 @@ class StorageTest {
     void testFindWithEnc() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
-                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
+                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
 
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -212,7 +212,7 @@ class StorageTest {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(1, 0)
-                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
+                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
 
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -250,7 +250,7 @@ class StorageTest {
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
-                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
+                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
 
         Record recOtherEnc = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -285,7 +285,7 @@ class StorageTest {
     @Test
     void testFindNullFilterSending() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .stringKeyEq(StringField.RECORD_KEY, "SomeValue");
+                .keyEq(StringField.RECORD_KEY, "SomeValue");
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.find(COUNTRY, builder);
@@ -297,7 +297,7 @@ class StorageTest {
         assertNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
-        builder.clear().stringKeyEq(StringField.KEY2, "SomeValue");
+        builder.clear().keyEq(StringField.KEY2, "SomeValue");
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
@@ -307,7 +307,7 @@ class StorageTest {
         assertNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
-        builder.clear().stringKeyEq(StringField.KEY3, "SomeValue");
+        builder.clear().keyEq(StringField.KEY3, "SomeValue");
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
@@ -317,7 +317,7 @@ class StorageTest {
         assertNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
-        builder.clear().numberKeyEq(NumberField.RANGE_KEY1, 123321L);
+        builder.clear().keyEq(NumberField.RANGE_KEY1, 123321L);
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
@@ -327,7 +327,7 @@ class StorageTest {
         assertNotNull(json.get("range_key1"));
         assertNull(json.get("profile_key"));
 
-        builder.clear().stringKeyEq(StringField.PROFILE_KEY, "SomeValue");
+        builder.clear().keyEq(StringField.PROFILE_KEY, "SomeValue");
         storage.find(COUNTRY, builder);
         body = agent.getCallBody();
         json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
@@ -398,7 +398,7 @@ class StorageTest {
     void testFindIncorrectRecords() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
-                .stringKeyEq(StringField.PROFILE_KEY, PROFILE_KEY);
+                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
         String string = null;
         FakeHttpAgent agent = new FakeHttpAgent(string);
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));

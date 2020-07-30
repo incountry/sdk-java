@@ -41,12 +41,12 @@ class FindFilterBuilderIsolatedTest {
     void toStringPositiveTest() throws StorageClientException {
         String string = FindFilterBuilder.create()
                 .limitAndOffset(1, 2)
-                .stringKeyEq(StringField.RECORD_KEY, "3", "4")
-                .stringKeyEq(StringField.KEY2, "5", "6")
-                .stringKeyEq(StringField.KEY3, "7", "8")
-                .stringKeyEq(StringField.PROFILE_KEY, "9", "10")
-                .stringKeyNotEq(StringField.VERSION, "11", "12")
-                .numberKeyEq(NumberField.RANGE_KEY1, 13L, 14L)
+                .keyEq(StringField.RECORD_KEY, "3", "4")
+                .keyEq(StringField.KEY2, "5", "6")
+                .keyEq(StringField.KEY3, "7", "8")
+                .keyEq(StringField.PROFILE_KEY, "9", "10")
+                .keyNotEq(StringField.VERSION, "11", "12")
+                .keyEq(NumberField.RANGE_KEY1, 13L, 14L)
                 .build().toString();
         assertNotNull(string);
         assertTrue(string.contains("limit=1"));
@@ -65,20 +65,20 @@ class FindFilterBuilderIsolatedTest {
         String nullString = null;
         String[] nullArrayString = null;
         //recordKey
-        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().stringKeyEq(StringField.RECORD_KEY, nullString));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(StringField.RECORD_KEY, nullString));
         assertEquals("FilterStringParam values can't be null", ex1.getMessage());
-        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().stringKeyEq(StringField.RECORD_KEY, nullArrayString));
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(StringField.RECORD_KEY, nullArrayString));
         assertEquals("FilterStringParam values can't be null", ex2.getMessage());
-        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().stringKeyEq(StringField.RECORD_KEY, new String[]{}));
+        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(StringField.RECORD_KEY, new String[]{}));
         assertEquals("FilterStringParam values can't be null", ex3.getMessage());
         //rangeKey1
         Long nullLong = null;
         Long[] nullArrayLong = null;
-        StorageClientException ex19 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().numberKeyEq(NumberField.RANGE_KEY1, nullLong));
+        StorageClientException ex19 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(NumberField.RANGE_KEY1, nullLong));
         assertEquals("FilterNumberParam values can't be null", ex19.getMessage());
-        StorageClientException ex20 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().numberKeyEq(NumberField.RANGE_KEY1, nullArrayLong));
+        StorageClientException ex20 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(NumberField.RANGE_KEY1, nullArrayLong));
         assertEquals("FilterNumberParam values can't be null", ex20.getMessage());
-        StorageClientException ex21 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().numberKeyEq(NumberField.RANGE_KEY1, new Long[]{}));
+        StorageClientException ex21 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyEq(NumberField.RANGE_KEY1, new Long[]{}));
         assertEquals("FilterNumberParam values can't be null", ex21.getMessage());
         //limit & offset
         StorageClientException ex22 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().limitAndOffset(-1, 0));
@@ -86,7 +86,7 @@ class FindFilterBuilderIsolatedTest {
         StorageClientException ex23 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().limitAndOffset(1, -1));
         assertEquals("Offset must be more than 0", ex23.getMessage());
         //between
-        StorageClientException ex24 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().numberKeyBetween(NumberField.RANGE_KEY1, 1, -1));
+        StorageClientException ex24 = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 1, -1));
         assertEquals("Value1 in range filter can by only less or equals value2", ex24.getMessage());
     }
 
@@ -94,12 +94,12 @@ class FindFilterBuilderIsolatedTest {
     void positiveStringKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         for (StringField field : StringField.values()) {
-            assertEquals("1", builder.stringKeyEq(field, "1").build().getStringFilterMap().get(field).getValues().get(0));
-            assertEquals("2", builder.stringKeyEq(field, "1", "2").build().getStringFilterMap().get(field).getValues().get(1));
-            assertFalse(builder.stringKeyEq(field, "4").build().getStringFilterMap().get(field).isNotCondition());
-            assertEquals("6", builder.stringKeyNotEq(field, "5", "6").build().getStringFilterMap().get(field).getValues().get(1));
-            assertTrue(builder.stringKeyNotEq(field, "7", "8").build().getStringFilterMap().get(field).isNotCondition());
-            assertFalse(builder.stringKeyEq(field, "9", "10").build().getStringFilterMap().get(field).isNotCondition());
+            assertEquals("1", builder.keyEq(field, "1").build().getStringFilterMap().get(field).getValues().get(0));
+            assertEquals("2", builder.keyEq(field, "1", "2").build().getStringFilterMap().get(field).getValues().get(1));
+            assertFalse(builder.keyEq(field, "4").build().getStringFilterMap().get(field).isNotCondition());
+            assertEquals("6", builder.keyNotEq(field, "5", "6").build().getStringFilterMap().get(field).getValues().get(1));
+            assertTrue(builder.keyNotEq(field, "7", "8").build().getStringFilterMap().get(field).isNotCondition());
+            assertFalse(builder.keyEq(field, "9", "10").build().getStringFilterMap().get(field).isNotCondition());
         }
     }
 
@@ -107,22 +107,22 @@ class FindFilterBuilderIsolatedTest {
     void positiveRangeKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         for (NumberField field : NumberField.values()) {
-            assertEquals(1L, builder.numberKeyEq(field, 1L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(2L, builder.numberKeyEq(field, 1L, 2L).build().getNumberFilterMap().get(field).getValues()[1]);
-            assertEquals(9L, builder.numberKeyGT(field, 9L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_GT, builder.numberKeyGT(field, 10L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(11L, builder.numberKeyGTE(field, 11L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.numberKeyGTE(field, 12L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(13L, builder.numberKeyLT(field, 13L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_LT, builder.numberKeyLT(field, 14L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(15L, builder.numberKeyLTE(field, 15L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_LTE, builder.numberKeyLTE(field, 16L).build().getNumberFilterMap().get(field).getOperator1());
-            builder.numberKeyBetween(field, 17L, 18L);
+            assertEquals(1L, builder.keyEq(field, 1L).build().getNumberFilterMap().get(field).getValues()[0]);
+            assertEquals(2L, builder.keyEq(field, 1L, 2L).build().getNumberFilterMap().get(field).getValues()[1]);
+            assertEquals(9L, builder.keyGT(field, 9L).build().getNumberFilterMap().get(field).getValues()[0]);
+            assertEquals(FindFilterBuilder.OPER_GT, builder.keyGT(field, 10L).build().getNumberFilterMap().get(field).getOperator1());
+            assertEquals(11L, builder.keyGTE(field, 11L).build().getNumberFilterMap().get(field).getValues()[0]);
+            assertEquals(FindFilterBuilder.OPER_GTE, builder.keyGTE(field, 12L).build().getNumberFilterMap().get(field).getOperator1());
+            assertEquals(13L, builder.keyLT(field, 13L).build().getNumberFilterMap().get(field).getValues()[0]);
+            assertEquals(FindFilterBuilder.OPER_LT, builder.keyLT(field, 14L).build().getNumberFilterMap().get(field).getOperator1());
+            assertEquals(15L, builder.keyLTE(field, 15L).build().getNumberFilterMap().get(field).getValues()[0]);
+            assertEquals(FindFilterBuilder.OPER_LTE, builder.keyLTE(field, 16L).build().getNumberFilterMap().get(field).getOperator1());
+            builder.keyBetween(field, 17L, 18L);
             assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getNumberFilterMap().get(field).getOperator1());
             assertEquals(FindFilterBuilder.OPER_LTE, builder.build().getNumberFilterMap().get(field).getOperator2());
             assertEquals(17L, builder.build().getNumberFilterMap().get(field).getValues()[0]);
             assertEquals(18L, builder.build().getNumberFilterMap().get(field).getValues()[1]);
-            builder.numberKeyBetween(field, 19L, true, 20L, false);
+            builder.keyBetween(field, 19L, true, 20L, false);
             assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getNumberFilterMap().get(field).getOperator1());
             assertEquals(FindFilterBuilder.OPER_LT, builder.build().getNumberFilterMap().get(field).getOperator2());
             assertEquals(19L, builder.build().getNumberFilterMap().get(field).getValues()[0]);
@@ -133,27 +133,27 @@ class FindFilterBuilderIsolatedTest {
     @Test
     void testFiltersForSchema2point2() throws StorageClientException {
         FindFilter filter = FindFilterBuilder.create()
-                .stringKeyEq(StringField.RECORD_KEY, "1a", "2b")
-                .stringKeyEq(StringField.KEY1, "3c", "4d")
-                .stringKeyEq(StringField.KEY4, "5e", "6f")
-                .stringKeyEq(StringField.KEY5, "7g", "8h")
-                .stringKeyEq(StringField.KEY6, "9i", "10j")
-                .stringKeyEq(StringField.KEY7, "11k", "12l")
-                .stringKeyEq(StringField.KEY8, "13m", "14n")
-                .stringKeyEq(StringField.KEY9, "15o", "16p")
-                .stringKeyEq(StringField.KEY10, "17q", "18r")
-                .stringKeyEq(StringField.SERVICE_KEY1, "19s", "20t")
-                .stringKeyEq(StringField.SERVICE_KEY2, "21u", "22v")
-                .numberKeyEq(NumberField.RANGE_KEY1, 23L, 24L)
-                .numberKeyEq(NumberField.RANGE_KEY2, 25L, 26L)
-                .numberKeyEq(NumberField.RANGE_KEY3, 27L, 28L)
-                .numberKeyEq(NumberField.RANGE_KEY4, 29L, 30L)
-                .numberKeyEq(NumberField.RANGE_KEY5, 31L, 32L)
-                .numberKeyEq(NumberField.RANGE_KEY6, 33L, 34L)
-                .numberKeyEq(NumberField.RANGE_KEY7, 35L, 36L)
-                .numberKeyEq(NumberField.RANGE_KEY8, 37L, 38L)
-                .numberKeyEq(NumberField.RANGE_KEY9, 39L, 40L)
-                .numberKeyEq(NumberField.RANGE_KEY10, 41L, 42L)
+                .keyEq(StringField.RECORD_KEY, "1a", "2b")
+                .keyEq(StringField.KEY1, "3c", "4d")
+                .keyEq(StringField.KEY4, "5e", "6f")
+                .keyEq(StringField.KEY5, "7g", "8h")
+                .keyEq(StringField.KEY6, "9i", "10j")
+                .keyEq(StringField.KEY7, "11k", "12l")
+                .keyEq(StringField.KEY8, "13m", "14n")
+                .keyEq(StringField.KEY9, "15o", "16p")
+                .keyEq(StringField.KEY10, "17q", "18r")
+                .keyEq(StringField.SERVICE_KEY1, "19s", "20t")
+                .keyEq(StringField.SERVICE_KEY2, "21u", "22v")
+                .keyEq(NumberField.RANGE_KEY1, 23L, 24L)
+                .keyEq(NumberField.RANGE_KEY2, 25L, 26L)
+                .keyEq(NumberField.RANGE_KEY3, 27L, 28L)
+                .keyEq(NumberField.RANGE_KEY4, 29L, 30L)
+                .keyEq(NumberField.RANGE_KEY5, 31L, 32L)
+                .keyEq(NumberField.RANGE_KEY6, 33L, 34L)
+                .keyEq(NumberField.RANGE_KEY7, 35L, 36L)
+                .keyEq(NumberField.RANGE_KEY8, 37L, 38L)
+                .keyEq(NumberField.RANGE_KEY9, 39L, 40L)
+                .keyEq(NumberField.RANGE_KEY10, 41L, 42L)
                 .build();
 
         checkStringFilters(filter);
