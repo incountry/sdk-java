@@ -108,6 +108,7 @@ public class TransferRecord extends Record {
      */
     private Record toRecord() {
         Record rec = new Record(getRecordKey());
+        rec.setKey1(getKey1());
         rec.setKey2(getKey2());
         rec.setKey3(getKey3());
         rec.setKey4(getKey4());
