@@ -146,6 +146,7 @@ public class TransferRecord extends Record {
             recordKey = recordFromMeta.key;
         }
         setRecordKey(recordKey);
+        setKey1(recordFromMeta.getKey1());
         setKey2(recordFromMeta.getKey2());
         setKey3(recordFromMeta.getKey3());
         setKey4(recordFromMeta.getKey4());
