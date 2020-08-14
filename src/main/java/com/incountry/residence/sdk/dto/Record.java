@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.dto;
 
+import java.util.Date;
 import java.util.Objects;
 
 public class Record {
@@ -29,6 +30,8 @@ public class Record {
     private String precommitBody;
     private String serviceKey1;
     private String serviceKey2;
+    protected Date createdAt;
+    protected Date updatedAt;
 
     /**
      * Minimalistic constructor
@@ -284,6 +287,14 @@ public class Record {
         return this;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -318,14 +329,56 @@ public class Record {
                 Objects.equals(body, record.body) &&
                 Objects.equals(precommitBody, record.precommitBody) &&
                 Objects.equals(serviceKey1, record.serviceKey1) &&
-                Objects.equals(serviceKey2, record.serviceKey2);
+                Objects.equals(createdAt, record.createdAt) &&
+                Objects.equals(updatedAt, record.updatedAt);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
-                profileKey,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
-                body, precommitBody, serviceKey1, serviceKey2);
+                body, profileKey, precommitBody, serviceKey1, serviceKey2,
+                createdAt, updatedAt);
+    }
+
+    /**
+     * get copy of Record immutably
+     *
+     * @return return copy
+     */
+    protected Record copy() {
+        Record newRecord = new Record(recordKey);
+        newRecord.key1 = key1;
+        newRecord.key2 = key2;
+        newRecord.key3 = key3;
+        newRecord.key4 = key4;
+        newRecord.key5 = key5;
+        newRecord.key6 = key6;
+        newRecord.key7 = key7;
+        newRecord.key8 = key8;
+        newRecord.key9 = key9;
+        newRecord.key10 = key10;
+        newRecord.rangeKey1 = rangeKey1;
+        newRecord.rangeKey2 = rangeKey2;
+        newRecord.rangeKey3 = rangeKey3;
+        newRecord.rangeKey4 = rangeKey4;
+        newRecord.rangeKey5 = rangeKey5;
+        newRecord.rangeKey6 = rangeKey6;
+        newRecord.rangeKey7 = rangeKey7;
+        newRecord.rangeKey8 = rangeKey8;
+        newRecord.rangeKey9 = rangeKey9;
+        newRecord.rangeKey10 = rangeKey10;
+        newRecord.profileKey = profileKey;
+        newRecord.body = body;
+        newRecord.precommitBody = precommitBody;
+        newRecord.serviceKey1 = serviceKey1;
+        newRecord.serviceKey2 = serviceKey2;
+        if (createdAt != null) {
+            newRecord.createdAt = new Date(createdAt.getTime());
+        }
+        if (updatedAt != null) {
+            newRecord.updatedAt = new Date(updatedAt.getTime());
+        }
+        return newRecord;
     }
 }

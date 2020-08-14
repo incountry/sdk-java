@@ -101,41 +101,6 @@ public class TransferRecord extends Record {
         }
     }
 
-    /**
-     * immutable get Record
-     *
-     * @return return immutalbe Record
-     */
-    private Record toRecord() {
-        Record rec = new Record(getRecordKey());
-        rec.setKey1(getKey1());
-        rec.setKey2(getKey2());
-        rec.setKey3(getKey3());
-        rec.setKey4(getKey4());
-        rec.setKey5(getKey5());
-        rec.setKey6(getKey6());
-        rec.setKey7(getKey7());
-        rec.setKey8(getKey8());
-        rec.setKey9(getKey9());
-        rec.setKey10(getKey10());
-        rec.setRangeKey1(getRangeKey1());
-        rec.setRangeKey2(getRangeKey2());
-        rec.setRangeKey3(getRangeKey3());
-        rec.setRangeKey4(getRangeKey4());
-        rec.setRangeKey5(getRangeKey5());
-        rec.setRangeKey6(getRangeKey6());
-        rec.setRangeKey7(getRangeKey7());
-        rec.setRangeKey8(getRangeKey8());
-        rec.setRangeKey9(getRangeKey9());
-        rec.setRangeKey10(getRangeKey10());
-        rec.setProfileKey(getProfileKey());
-        rec.setBody(getBody());
-        rec.setPrecommitBody(getPrecommitBody());
-        rec.setServiceKey1(getServiceKey1());
-        rec.setServiceKey2(getServiceKey2());
-        return rec;
-    }
-
     public void decryptAllFromBody(Gson gson) {
         JsonObject bodyObj = gson.fromJson(getBody(), JsonObject.class);
         JsonElement innerBodyJson = bodyObj.get(P_PAYLOAD);
@@ -194,6 +159,6 @@ public class TransferRecord extends Record {
         } catch (JsonSyntaxException ex) {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
-        return toRecord();
+        return copy();
     }
 }

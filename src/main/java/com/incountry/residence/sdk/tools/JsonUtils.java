@@ -45,6 +45,8 @@ public class JsonUtils {
     private static final String P_RANGE_KEY_8 = "range_key8";
     private static final String P_RANGE_KEY_9 = "range_key9";
     private static final String P_RANGE_KEY_10 = "range_key10";
+    private static final String P_CREATED_AT = "created_at";
+    private static final String P_UPDATED_AT = "updated_at";
     private static final String P_PAYLOAD = "payload";
     private static final String P_META = "meta";
     private static final String P_VERSION = "version";
@@ -57,8 +59,9 @@ public class JsonUtils {
     private static final String MSG_ERR_RESPONSE = "Response error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
-    private static final List<String> REMOVE_KEYS = Arrays.asList(P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4,
-            P_RANGE_KEY_5, P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_BODY, P_PRECOMMIT_BODY);
+    private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
+            P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
+            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10);
 
     private JsonUtils() {
     }
