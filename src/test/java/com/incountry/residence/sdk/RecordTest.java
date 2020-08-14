@@ -45,6 +45,7 @@ class RecordTest {
     public long rangeKey8;
     public long rangeKey9;
     public long rangeKey10;
+    public String key1;
     @Expose
     public String key2;
     @Expose
@@ -64,6 +65,7 @@ class RecordTest {
     public void init() {
         body = "body";
         recordKey = "recordKey1";
+        key1 = "key1";
         key2 = "key2";
         key3 = "key3";
         key4 = "key4";
@@ -213,6 +215,7 @@ class RecordTest {
         assertNotEquals(record1, UUID.randomUUID());
 
         Record record3 = new Record(recordKey)
+                .setKey1(key1)
                 .setKey2(key2)
                 .setKey3(key3)
                 .setKey4(key4)
