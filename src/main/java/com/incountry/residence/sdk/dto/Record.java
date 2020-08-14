@@ -288,11 +288,11 @@ public class Record {
     }
 
     public Date getCreatedAt() {
-        return createdAt;
+        return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public Date getUpdatedAt() {
-        return updatedAt;
+        return updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 
     @Override
@@ -329,6 +329,7 @@ public class Record {
                 Objects.equals(body, record.body) &&
                 Objects.equals(precommitBody, record.precommitBody) &&
                 Objects.equals(serviceKey1, record.serviceKey1) &&
+                Objects.equals(serviceKey2, record.serviceKey2) &&
                 Objects.equals(createdAt, record.createdAt) &&
                 Objects.equals(updatedAt, record.updatedAt);
     }
@@ -373,12 +374,8 @@ public class Record {
         newRecord.precommitBody = precommitBody;
         newRecord.serviceKey1 = serviceKey1;
         newRecord.serviceKey2 = serviceKey2;
-        if (createdAt != null) {
-            newRecord.createdAt = new Date(createdAt.getTime());
-        }
-        if (updatedAt != null) {
-            newRecord.updatedAt = new Date(updatedAt.getTime());
-        }
+        newRecord.createdAt = getCreatedAt();
+        newRecord.updatedAt = getUpdatedAt();
         return newRecord;
     }
 }
