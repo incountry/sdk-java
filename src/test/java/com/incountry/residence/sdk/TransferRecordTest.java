@@ -3,6 +3,7 @@ package com.incountry.residence.sdk;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -17,6 +18,9 @@ import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -236,5 +240,120 @@ class TransferRecordTest {
         assertNotNull(record);
         assertNull(record.getRecordKey());
         assertNull(record.getKey1());
+    }
+
+    @Test
+    void createAndUpdateDateTest() throws StorageClientException, StorageCryptoException, StorageServerException, ParseException {
+        String responseJson = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"2020-01-01T09:30:45Z\",\n" +
+                "  \"updated_at\": \"2020-02-28T13:50:30+0000\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        Record record1 = JsonUtils.recordFromString(responseJson, cryptoManager);
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss Z");
+        assertEquals(dateFormat.parse("2020-01-01 09:30:45 +0000"), record1.getCreatedAt());
+        assertEquals(dateFormat.parse("2020-02-28 13:50:30 +0000"), record1.getUpdatedAt());
+
+        Record record2 = JsonUtils.recordFromString(responseJson, cryptoManager);
+        assertEquals(record1, record2);
+
+        String responseJsonWithoutCreatedAt = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"updated_at\": \"2020-02-28T13:50:30+0000\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+        Record record3 = JsonUtils.recordFromString(responseJsonWithoutCreatedAt, cryptoManager);
+        assertNotEquals(record1, record3);
+
+        String responseJsonWithoutUpdatedAt = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"2020-01-01T09:30:45Z\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+        Record record4 = JsonUtils.recordFromString(responseJsonWithoutCreatedAt, cryptoManager);
+        assertNotEquals(record1, record4);
+
+        String responseJsonAnotherCreatedAt = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"2019-01-01T09:30:45Z\",\n" +
+                "  \"updated_at\": \"2020-02-28T13:50:30+0000\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+        Record record5 = JsonUtils.recordFromString(responseJsonAnotherCreatedAt, cryptoManager);
+        assertNotEquals(record1, record5);
+
+        String responseJsonAnotherUpdatedAt = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"2020-01-01T09:30:45Z\",\n" +
+                "  \"updated_at\": \"2020-03-28T13:50:30+0000\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+        Record record6 = JsonUtils.recordFromString(responseJsonAnotherUpdatedAt, cryptoManager);
+        assertNotEquals(record1, record6);
+    }
+
+    @Test
+    void createAndUpdateDateNegativeTest() throws StorageClientException {
+        String responseJson1 = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"SOME_ILLEGAL_DATE\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        StorageServerException exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson1, cryptoManager));
+        assertEquals("Response error", exception.getMessage());
+        assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
+        assertEquals(ParseException.class, exception.getCause().getCause().getClass());
+        assertEquals("Failed to parse date [\"SOME_ILLEGAL_DATE\"]: Invalid number: SOME", exception.getCause().getCause().getMessage());
+
+        String responseJson2 = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"123321\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+
+        exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson2, cryptoManager));
+        assertEquals("Response error", exception.getMessage());
+        assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
+        assertEquals(ParseException.class, exception.getCause().getCause().getClass());
+        assertEquals("Failed to parse date [\"123321\"]: 123321", exception.getCause().getCause().getMessage());
+
+        String responseJson3 = "{\n" +
+                "  \"version\": 0,\n" +
+                "  \"created_at\": \"\",\n" +
+                "  \"record_key\": \"f80969b9ad88774bcfca0512ed523b97bdc1fb87ba1c0d6297bdaf84d2666e68\",\n" +
+                "  \"key2\": \"409e11fd44de5fdb33bdfcc0e6584b8b64bb9b27f325d5d7ec3ce3d521f5aca8\",\n" +
+                "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
+                "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
+                "}";
+
+        exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson3, cryptoManager));
+        assertEquals("Response error", exception.getMessage());
+        assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
+        assertEquals(ParseException.class, exception.getCause().getCause().getClass());
+        assertEquals("Failed to parse date [\"\"]: (java.lang.NumberFormatException)", exception.getCause().getCause().getMessage());
     }
 }
