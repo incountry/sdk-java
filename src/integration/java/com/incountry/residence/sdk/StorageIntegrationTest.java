@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -215,6 +216,8 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
         assertEquals(RANGE_KEY_10, incomingRecord.getRangeKey10());
+        assertNotNull(incomingRecord.getCreatedAt());
+        assertNotNull(incomingRecord.getUpdatedAt());
     }
 
     @Test
@@ -256,6 +259,8 @@ public class StorageIntegrationTest {
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
+        assertNotNull(batchRecord.getRecords().get(0).getCreatedAt());
+        assertNotNull(batchRecord.getRecords().get(0).getUpdatedAt());
 
         builder.clear()
                 .keyEq(StringField.RECORD_KEY, BATCH_RECORD_KEY_1)
