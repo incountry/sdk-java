@@ -396,7 +396,12 @@ public class StorageIntegrationTest {
         storage2.write(MIDIPOP_COUNTRY, record);
         //read record with custom enc
         Record record1 = storage2.read(MIDIPOP_COUNTRY, customRecordKey);
-        assertEquals(record, record1);
+        assertEquals(record.getBody(), record1.getBody());
+        assertEquals(record.getRecordKey(), record1.getRecordKey());
+        assertEquals(record.getProfileKey(), record1.getProfileKey());
+        assertEquals(record.getRangeKey1(), record1.getRangeKey1());
+        assertEquals(record.getKey2(), record1.getKey2());
+        assertEquals(record.getKey3(), record1.getKey3());
         //read recorded record with default encryption
         Record record2 = storage2.read(MIDIPOP_COUNTRY, RECORD_KEY);
         assertEquals(RECORD_BODY, record2.getBody());
@@ -405,7 +410,8 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.RECORD_KEY, customRecordKey)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         Record record3 = storage2.findOne(MIDIPOP_COUNTRY, builder);
-        assertEquals(record, record3);
+        assertEquals(record.getRecordKey(), record3.getRecordKey());
+        assertEquals(record.getRangeKey1(), record3.getRangeKey1());
         //delete record with custom enc
         storage2.delete(MIDIPOP_COUNTRY, customRecordKey);
         Record record4 = storage2.read(MIDIPOP_COUNTRY, customRecordKey);

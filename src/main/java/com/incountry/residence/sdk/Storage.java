@@ -19,13 +19,12 @@ public interface Storage {
      * Write data to remote storage
      *
      * @param country country identifier
-     * @param record  object which encapsulate data which must be written in storage
-     * @return recorded record
+     * @param record  object which encapsulate data which must be written in storage*
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException;
+    void write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Write multiple records at once in remote storage

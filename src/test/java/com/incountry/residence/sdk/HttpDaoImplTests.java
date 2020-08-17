@@ -253,21 +253,22 @@ class HttpDaoImplTests {
     }
 
     @Test
-    void testWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
+    void testWritePopApiResponse() throws StorageClientException, StorageServerException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
         String country = "US";
         Record record = new Record("key", "body");
-        Record resRecord = storage.write(country, record); //ok
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //Ok
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //OK
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //okokok
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //null
-        assertNotNull(resRecord);
+        Throwable throwable = null;
+        try {
+            storage.write(country, record); //ok
+            storage.write(country, record); //Ok
+            storage.write(country, record); //OK
+            storage.write(country, record); //okokok
+            storage.write(country, record); //null
+        } catch (Throwable exception) {
+            throwable = exception;
+        }
+        assertNull(throwable);
     }
 
     @Test
