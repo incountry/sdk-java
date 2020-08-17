@@ -204,7 +204,7 @@ public class StorageIntegrationTest {
         assertEquals(KEY_10, incomingRecord.getKey10());
         assertEquals(PRE_COMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
-        assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey2());
+        assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
         assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
         assertEquals(RANGE_KEY_2, incomingRecord.getRangeKey2());
         assertEquals(RANGE_KEY_3, incomingRecord.getRangeKey3());
