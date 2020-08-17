@@ -51,6 +51,7 @@ public class StorageIntegrationTest {
     public static final String INT_INC_CLIENT_ID = "INT_INC_CLIENT_ID";
     public static final String INT_INC_CLIENT_SECRET = "INT_INC_CLIENT_SECRET";
     public static final String INT_INC_DEFAULT_AUTH_ENDPOINT = "INT_INC_DEFAULT_AUTH_ENDPOINT";
+    public static final String INT_INC_HTTP_POOL_SIZE = "INT_INC_HTTP_POOL_SIZE";
     public static final String INT_INC_EMEA_AUTH_ENDPOINT = "INT_INC_EMEA_AUTH_ENDPOINT";
     public static final String INT_INC_APAC_AUTH_ENDPOINT = "INT_INC_APAC_AUTH_ENDPOINT";
     public static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
@@ -99,7 +100,7 @@ public class StorageIntegrationTest {
     private static final Long RANGE_KEY_9 = 9L;
     private static final Long RANGE_KEY_10 = 10L;
     private static final String RECORD_BODY = "test";
-    private static final Integer HTTP_POOL_SIZE = 4;
+    private static final Integer HTTP_POOL_SIZE = Integer.valueOf(loadFromEnv(INT_INC_HTTP_POOL_SIZE, "4"));
 
     private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
@@ -117,6 +118,11 @@ public class StorageIntegrationTest {
 
     public static String loadFromEnv(String key) {
         return System.getenv(key);
+    }
+
+    public static String loadFromEnv(String key, String defaultValue) {
+        String value = loadFromEnv(key);
+        return value == null ? defaultValue : value;
     }
 
 
@@ -205,7 +211,7 @@ public class StorageIntegrationTest {
         assertEquals(KEY_10, incomingRecord.getKey10());
         assertEquals(PRE_COMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
-        assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey2());
+        assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
         assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
         assertEquals(RANGE_KEY_2, incomingRecord.getRangeKey2());
         assertEquals(RANGE_KEY_3, incomingRecord.getRangeKey3());
