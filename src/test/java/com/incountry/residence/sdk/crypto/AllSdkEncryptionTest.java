@@ -22,7 +22,7 @@ class AllSdkEncryptionTest {
     private static final String PASSWORD = "password";
     private static final String RESPONSE = "{\n" +
             "    \"record_key\": \"976143aa1fd12b9ad7449fd9d3a6d25347d71b890b49d4fb5c738e798238865f\",\n" +
-            "    \"body\": \"2:vJdEK6XMEmvstvlz6DyRzl4yS6UG1tVG61uIoNaHurh6v8bIeb1o1LBBtVLWBTpvMzsV8RE7s2g9hQcjv7lZP/UqDKNNK61du+nOV6X4IuFGLTi5zVJo3kqJ7fK0Kv9iHzTx/PxIZUjsVw/wf/7XRMTZ+u/xNgj7uiIu5Adt8ky390T/h29dketkK6l+7Nn2QIe6ilPuyw9S3kzM5+AcCssigdp2yHAhbWVwDs4Vr33pqtTfsqzMfyOvaDfmn2S1fv2AK5jdvXR/okeRRRH263j68GUkGuHtZmAcynQBhilAyfK5qKVE4sqIxMk1j0W+vYNN8p2l\",\n" +
+            "    \"body\": \"2:IGJNCmV+RXZydaPxDjjhZ80/6aZ2vcEUZ2GuOzKgVSSdM6gYf5RPgFbyLqv+7ihz0CpYFQQWf9xkIyD/u3VYky8dWLq+NXcE2xYL4/U7LqUZmJPQzgcQCABYQ/8vOvUEcrfOAwzGjR6etTp1ki+79JmCEZFSNqcDP1GZXNLFdLoSUp1X2wVlH9ukhJ4jrE0cKDrpJllswRSOz0BhS8PA/73KNKwo718t7fPWpUm7RkyILwYTd/LpPvpXMS6JypEns8fviOpbCLQPpZNBe6zpwbFf3C0qElHlbCyPbDyUiMzVKOwWlYFpozFcRyWegjJ42T8v52+GuRY5\",\n" +
             "    \"key2\": \"abcb2ad9e9e0b1787f262b014f517ad1136f868e7a015b1d5aa545b2f575640d\",\n" +
             "    \"key3\": \"1102ae53e55f0ce1d802cc8bb66397e7ea749fd8d05bd2d4d0f697cedaf138e3\",\n" +
             "    \"profile_key\": \"f5b5ae4914972ace070fa51b410789324abe063dbe2bb09801410d9ab54bf833\",\n" +
