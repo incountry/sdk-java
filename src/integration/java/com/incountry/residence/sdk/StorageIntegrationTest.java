@@ -86,7 +86,7 @@ public class StorageIntegrationTest {
     private static final String KEY_10 = "Key10" + TEMP;
     private static final String SERVICE_KEY_1 = "ServiceKey1" + TEMP;
     private static final String SERVICE_KEY_2 = "ServiceKey2" + TEMP;
-    private static final String PRE_COMMIT_BODY = "PreCommitBody" + TEMP;
+    private static final String PRECOMMIT_BODY = "PreсommitBody" + TEMP;
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
     private static final Long RANGE_KEY_2 = 2L;
@@ -185,7 +185,7 @@ public class StorageIntegrationTest {
                 .setKey8(KEY_8)
                 .setKey9(KEY_9)
                 .setKey10(KEY_10)
-                .setPrecommitBody(PRE_COMMIT_BODY)
+                .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
         storage.write(MIDIPOP_COUNTRY, record);
@@ -208,7 +208,7 @@ public class StorageIntegrationTest {
         assertEquals(KEY_8, incomingRecord.getKey8());
         assertEquals(KEY_9, incomingRecord.getKey9());
         assertEquals(KEY_10, incomingRecord.getKey10());
-        assertEquals(PRE_COMMIT_BODY, incomingRecord.getPrecommitBody());
+        assertEquals(PRECOMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
         assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
         assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
