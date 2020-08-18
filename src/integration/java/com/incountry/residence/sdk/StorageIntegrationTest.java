@@ -34,6 +34,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY1;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -87,7 +89,7 @@ public class StorageIntegrationTest {
     private static final String KEY_10 = "Key10" + TEMP;
     private static final String SERVICE_KEY_1 = "ServiceKey1" + TEMP;
     private static final String SERVICE_KEY_2 = "ServiceKey2" + TEMP;
-    private static final String PRE_COMMIT_BODY = "PreCommitBody" + TEMP;
+    private static final String PRECOMMIT_BODY = "PreсommitBody" + TEMP;
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
     private static final Long RANGE_KEY_2 = 2L;
@@ -186,7 +188,7 @@ public class StorageIntegrationTest {
                 .setKey8(KEY_8)
                 .setKey9(KEY_9)
                 .setKey10(KEY_10)
-                .setPrecommitBody(PRE_COMMIT_BODY)
+                .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
         storage.write(MIDIPOP_COUNTRY, record);
@@ -209,7 +211,7 @@ public class StorageIntegrationTest {
         assertEquals(KEY_8, incomingRecord.getKey8());
         assertEquals(KEY_9, incomingRecord.getKey9());
         assertEquals(KEY_10, incomingRecord.getKey10());
-        assertEquals(PRE_COMMIT_BODY, incomingRecord.getPrecommitBody());
+        assertEquals(PRECOMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
         assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
         assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
@@ -353,6 +355,91 @@ public class StorageIntegrationTest {
         assertEquals(1, batchRecord.getCount());
         assertEquals(1, batchRecord.getRecords().size());
         assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+    }
+
+    @Test
+    @Order(403)
+    public void findByVersionTest() throws StorageException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.KEY2, KEY_2)
+                .keyEq(StringField.VERSION, String.valueOf(VERSION));
+        BatchRecord batchRecord1 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, batchRecord1.getCount());
+        assertEquals(2, batchRecord1.getRecords().size());
+
+        builder.keyEq(StringField.VERSION, String.valueOf(VERSION + 10));
+        BatchRecord batchRecord2 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(0, batchRecord2.getCount());
+        assertEquals(0, batchRecord2.getRecords().size());
+
+        builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION));
+        BatchRecord batchRecord3 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(0, batchRecord3.getCount());
+        assertEquals(0, batchRecord3.getRecords().size());
+
+        builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION + 10));
+        BatchRecord batchRecord4 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, batchRecord4.getCount());
+        assertEquals(2, batchRecord4.getRecords().size());
+    }
+
+    @Test
+    @Order(404)
+    public void findByAllFieldsTest() throws StorageException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.RECORD_KEY, RECORD_KEY)
+                .keyEq(StringField.KEY1, KEY_1)
+                .keyEq(StringField.KEY2, KEY_2)
+                .keyEq(StringField.KEY3, KEY_3)
+                .keyEq(StringField.KEY4, KEY_4)
+                .keyEq(StringField.KEY5, KEY_5)
+                .keyEq(StringField.KEY6, KEY_6)
+                .keyEq(StringField.KEY7, KEY_7)
+                .keyEq(StringField.KEY8, KEY_8)
+                .keyEq(StringField.KEY9, KEY_9)
+                .keyEq(StringField.KEY10, KEY_10)
+                .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1)
+                .keyEq(NumberField.RANGE_KEY2, RANGE_KEY_2)
+                .keyEq(NumberField.RANGE_KEY3, RANGE_KEY_3)
+                .keyEq(NumberField.RANGE_KEY4, RANGE_KEY_4)
+                .keyEq(NumberField.RANGE_KEY5, RANGE_KEY_5)
+                .keyEq(NumberField.RANGE_KEY6, RANGE_KEY_6)
+                .keyEq(NumberField.RANGE_KEY7, RANGE_KEY_7)
+                .keyEq(NumberField.RANGE_KEY8, RANGE_KEY_8)
+                .keyEq(NumberField.RANGE_KEY9, RANGE_KEY_9)
+                .keyEq(NumberField.RANGE_KEY10, RANGE_KEY_10)
+                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
+                .keyEq(SERVICE_KEY1, SERVICE_KEY_1)
+                .keyEq(SERVICE_KEY2, SERVICE_KEY_2);
+
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(1, batchRecord.getRecords().size());
+        Record record = batchRecord.getRecords().get(0);
+        assertEquals(RECORD_KEY, record.getRecordKey());
+        assertEquals(KEY_1, record.getKey1());
+        assertEquals(KEY_2, record.getKey2());
+        assertEquals(KEY_3, record.getKey3());
+        assertEquals(KEY_4, record.getKey4());
+        assertEquals(KEY_5, record.getKey5());
+        assertEquals(KEY_6, record.getKey6());
+        assertEquals(KEY_7, record.getKey7());
+        assertEquals(KEY_8, record.getKey8());
+        assertEquals(KEY_9, record.getKey9());
+        assertEquals(KEY_10, record.getKey10());
+        assertEquals(WRITE_RANGE_KEY_1, record.getRangeKey1());
+        assertEquals(RANGE_KEY_2, record.getRangeKey2());
+        assertEquals(RANGE_KEY_3, record.getRangeKey3());
+        assertEquals(RANGE_KEY_4, record.getRangeKey4());
+        assertEquals(RANGE_KEY_5, record.getRangeKey5());
+        assertEquals(RANGE_KEY_6, record.getRangeKey6());
+        assertEquals(RANGE_KEY_7, record.getRangeKey7());
+        assertEquals(RANGE_KEY_8, record.getRangeKey8());
+        assertEquals(RANGE_KEY_9, record.getRangeKey9());
+        assertEquals(RANGE_KEY_10, record.getRangeKey10());
+        assertEquals(PROFILE_KEY, record.getProfileKey());
+        assertEquals(SERVICE_KEY_1, record.getServiceKey1());
+        assertEquals(SERVICE_KEY_2, record.getServiceKey2());
     }
 
     @Test
