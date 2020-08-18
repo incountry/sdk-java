@@ -351,6 +351,32 @@ public class StorageIntegrationTest {
     }
 
     @Test
+    @Order(403)
+    public void findByVersionTest() throws StorageException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.KEY2, KEY_2)
+                .keyEq(StringField.VERSION, String.valueOf(VERSION));
+        BatchRecord batchRecord1 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, batchRecord1.getCount());
+        assertEquals(2, batchRecord1.getRecords().size());
+
+        builder.keyEq(StringField.VERSION, String.valueOf(VERSION + 10));
+        BatchRecord batchRecord2 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(0, batchRecord2.getCount());
+        assertEquals(0, batchRecord2.getRecords().size());
+
+        builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION));
+        BatchRecord batchRecord3 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(0, batchRecord3.getCount());
+        assertEquals(0, batchRecord3.getRecords().size());
+
+        builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION + 10));
+        BatchRecord batchRecord4 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, batchRecord4.getCount());
+        assertEquals(2, batchRecord4.getRecords().size());
+    }
+
+    @Test
     @Order(500)
     public void findOneTest() throws StorageException {
         FindFilterBuilder builder = FindFilterBuilder.create()
