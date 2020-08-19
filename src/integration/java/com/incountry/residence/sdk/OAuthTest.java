@@ -71,13 +71,13 @@ public class OAuthTest {
         String body = "body " + key;
         Record record = new Record(key, body);
         storage.write(COUNTRY, record);
-        assertEquals(record, storage.read(COUNTRY, key));
+        assertEquals(record.getRecordKey(), storage.read(COUNTRY, key).getRecordKey());
 
         String key2 = UUID.randomUUID().toString();
         String body2 = "body " + key2;
         Record record2 = new Record(key2, body2);
         storage.write(MINIPOP_COUNTRY, record2);
-        assertEquals(record2, storage.read(MINIPOP_COUNTRY, key2));
+        assertEquals(record2.getRecordKey(), storage.read(MINIPOP_COUNTRY, key2).getRecordKey());
     }
 
     @Test
