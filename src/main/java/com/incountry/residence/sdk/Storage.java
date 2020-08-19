@@ -19,7 +19,7 @@ public interface Storage {
      * Write data to remote storage
      *
      * @param country country identifier
-     * @param record  object which encapsulate data which must be written in storage*
+     * @param record  object which encapsulate data which must be written in storage
      * @return recorded record
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
