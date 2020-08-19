@@ -4,8 +4,10 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
@@ -17,10 +19,15 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransferRecordTest {
 
@@ -49,19 +56,19 @@ class TransferRecordTest {
 
     @Test
     void testValidateNullKey() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         StorageServerException ex = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
-        assertEquals("Null required record fields: key", ex.getMessage());
+        assertEquals("Null required record fields: recordKey", ex.getMessage());
 
-        transferRecord.setKey("");
+        transferRecord.setRecordKey("");
         StorageServerException ex1 = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
-        assertEquals("Null required record fields: key", ex1.getMessage());
+        assertEquals("Null required record fields: recordKey", ex1.getMessage());
     }
 
     @Test
     void testValidateNullBody() throws StorageException {
-        Record record = new Record("some_key", null, null, null, null, null);
+        Record record = new Record("some_key", null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody(null);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
@@ -73,30 +80,33 @@ class TransferRecordTest {
 
     @Test
     void testValidateNullKeyAndBody() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody(null);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> TransferRecord.validate(transferRecord));
-        assertEquals("Null required record fields: key, body", ex.getMessage());
+        assertEquals("Null required record fields: recordKey, body", ex.getMessage());
     }
 
     @Test
     void positiveTestEqualsWithSameObjects() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         assertEquals(transferRecord, transferRecord);
     }
 
+    @SuppressWarnings("java:S3415")
     @Test
     void negativeTestEqualsDifferentClassObjects() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
-        assertNotEquals(transferRecord, (""));
+        assertNotEquals(transferRecord, null);
+        assertNotEquals(transferRecord, UUID.randomUUID());
+        assertNotEquals(null, transferRecord);
     }
 
     @Test
     void negativeTestEqualsWithDifferentObjects() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
         assertNotEquals(transferRecord, transferRecord1);
@@ -104,7 +114,7 @@ class TransferRecordTest {
 
     @Test
     void positiveTestWithEqualTransferRecords() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         TransferRecord transferRecord1 = new TransferRecord(record, cryptoManager, "");
         transferRecord.setBody("");
@@ -114,14 +124,18 @@ class TransferRecordTest {
 
     @Test
     void testHashCode() throws StorageException {
-        Record record = new Record(null, null, null, null, null, null);
+        Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
         assertEquals(transferRecord.hashCode(), transferRecord.hashCode());
     }
 
     @Test
     void negativeTestDecrypt() throws StorageException {
-        Record record = new Record("key", null, "profileKay", 1L, "key2", "key3");
+        Record record = new Record("recordKey")
+                .setProfileKey("profileKey")
+                .setRangeKey1(1L)
+                .setKey2("key2")
+                .setKey3("key3");
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         StorageServerException ex = assertThrows(StorageServerException.class, () -> transferRecord.decrypt(cryptoManager, gson));
         assertEquals("Response error", ex.getMessage());
@@ -130,8 +144,16 @@ class TransferRecordTest {
     @Test
     void testDecryptWithCryptoManagerAndBodyNull() throws StorageException {
         String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
-        Record record = new Record("", null, "", 1L, "", "");
-        Record recordForComparison = new Record(cryptData, null, cryptData, 1L, cryptData, cryptData);
+        Record record = new Record("")
+                .setProfileKey("")
+                .setRangeKey1(1L)
+                .setKey2("")
+                .setKey3("");
+        Record recordForComparison = new Record(cryptData)
+                .setProfileKey(cryptData)
+                .setRangeKey1(1L)
+                .setKey2(cryptData)
+                .setKey3(cryptData);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody(null);
         assertEquals(recordForComparison, transferRecord.decrypt(null, gson));
@@ -140,8 +162,17 @@ class TransferRecordTest {
     @Test
     void testDecryptWithCryptoManagerNull() throws StorageException {
         String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
-        Record record = new Record("", null, "", 1L, "", "");
-        Record recordForComparison = new Record(cryptData, "", cryptData, 1L, cryptData, cryptData);
+        Record record = new Record("")
+                .setProfileKey("")
+                .setRangeKey1(1L)
+                .setKey2("")
+                .setKey3("");
+        Record recordForComparison = new Record(cryptData)
+                .setBody("")
+                .setProfileKey(cryptData)
+                .setRangeKey1(1L)
+                .setKey2(cryptData)
+                .setKey3(cryptData);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody("");
         assertEquals(recordForComparison, transferRecord.decrypt(null, gson));
@@ -150,11 +181,60 @@ class TransferRecordTest {
     @Test
     void testDecryptWithBodyNull() throws StorageException {
         String cryptData = "0ffcf2aa9f2e874e824a98d60621649dd5b594bdde303a20c150ff64fa60ccef";
-        Record record = new Record("", null, "", 1L, "", "");
-        Record recordForComparison = new Record(cryptData, null, cryptData, 1L, cryptData, cryptData);
+        Record record = new Record("")
+                .setProfileKey("")
+                .setRangeKey1(1L)
+                .setKey2("")
+                .setKey3("");
+        Record recordForComparison = new Record(cryptData)
+                .setProfileKey(cryptData)
+                .setRangeKey1(1L)
+                .setKey2(cryptData)
+                .setKey3(cryptData);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         transferRecord.setBody(null);
         assertEquals(recordForComparison, transferRecord.decrypt(cryptoManager, gson));
     }
 
+    @Test
+    void testIsEncrypted() throws StorageClientException, StorageCryptoException {
+        Record record = new Record("someKey", "someBody");
+        TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
+        assertTrue(transferRecord.isEncrypted());
+
+        CryptoManager cryptoManagerWithoutEnc = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        transferRecord = new TransferRecord(record, cryptoManagerWithoutEnc, "{\"test\":}");
+        assertFalse(transferRecord.isEncrypted());
+
+        transferRecord.setEncrypted(true);
+        assertTrue(transferRecord.isEncrypted());
+
+        transferRecord.setEncrypted(false);
+        assertFalse(transferRecord.isEncrypted());
+    }
+
+    /**
+     *
+     */
+    @Test
+    void testBackwardCompatibility() throws StorageServerException, StorageClientException, StorageCryptoException {
+        //There is no 'record_key' in encrypted body, but there is deprecated 'key'
+        String legacyRecordJson = "{\"version\":0," +
+                "\"record_key\":\"a301d702fd5942dfdee1cb0c255bee864113ca8c3298c74e19ac3ae067972029\"," +
+                "\"body\":\"2:r0J6eOsdx1RMJfMHBod/xkOQ6+xmpjPSWO4o61nAGG6Ud8S4RL8ug04Jw+7aD98lUw4vSRM7tj62tPIZmuULFOiYz+odDBNjVg5nmylbI/FHuytflyAMRImDoFmtlZTqSsUG0fP5RVdrLyURp3M6BHzcDLFBDiXEOzVkRqx18k2GbsFgJEfv\"}";
+        Record record = JsonUtils.recordFromString(legacyRecordJson, cryptoManager);
+        assertNotNull(record);
+        assertEquals("<key>", record.getRecordKey());
+        assertEquals("<body>", record.getBody());
+        assertNull(record.getKey1());
+
+        //There are no 'record_key' and 'key' in encrypted body
+        legacyRecordJson = "{\"version\":0," +
+                "\"record_key\":\"a301d702fd5942dfdee1cb0c255bee864113ca8c3298c74e19ac3ae067972029\"," +
+                "\"body\":\"2:1BgO5xgjDXZu759eZZZzvRZJmPVDhir2O6Od7bX36r0s3goMKEGk9O6pKs8X4jZJcP+Evndn7GFl4MD2XNRXFKuGOnLieMunU0+gG0sei5iIMw0PWXZVE1IdqT52EulE6a1BD0BLDA==\"}";
+        record = JsonUtils.recordFromString(legacyRecordJson, cryptoManager);
+        assertNotNull(record);
+        assertNull(record.getRecordKey());
+        assertNull(record.getKey1());
+    }
 }

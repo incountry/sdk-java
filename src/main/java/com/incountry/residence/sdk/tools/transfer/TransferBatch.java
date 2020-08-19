@@ -18,10 +18,13 @@ public class TransferBatch {
     public void validate() throws StorageServerException {
         if (meta == null) {
             throw new StorageServerException(MSG_ERR_NULL_META);
-        } else if (meta.getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0) {
+        }
+        boolean negativeNumber = meta.getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0;
+        boolean positiveMetaEmptyData = meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount());
+        boolean zeroMetaNonEmptyData = meta.getCount() == 0 && data != null && !data.isEmpty();
+        if (negativeNumber) {
             throw new StorageServerException(MSG_ERR_NEGATIVE_META);
-            } else if (meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount())
-                || meta.getCount() == 0 && !data.isEmpty()) {
+        } else if (positiveMetaEmptyData || zeroMetaNonEmptyData) {
             throw new StorageServerException(MSG_ERR_INCORRECT_COUNT);
         } else if (meta.getCount() > meta.getTotal()) {
             throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);

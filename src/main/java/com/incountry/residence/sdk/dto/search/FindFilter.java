@@ -4,26 +4,26 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * Container for filters to searching of stored data by param values
  */
 public class FindFilter {
     private static final Logger LOG = LogManager.getLogger(FindFilter.class);
 
-    private static final int MAX_LIMIT = 100;
+    public static final int MAX_LIMIT = 100;
+    public static final int DEFAULT_OFFSET = 0;
     private static final String MSG_MAX_LIMIT = "Max limit is %d. Use offset to populate more";
     private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
     private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
 
-    private FilterStringParam keyFilter;
-    private FilterStringParam key2Filter;
-    private FilterStringParam key3Filter;
-    private FilterStringParam profileKeyFilter;
-    private FilterNumberParam rangeKeyFilter;
-    private FilterStringParam versionFilter;
+    private final EnumMap<StringField, FilterStringParam> stringFilterMap = new EnumMap<>(StringField.class);
+    private final EnumMap<NumberField, FilterNumberParam> numberFilterMap = new EnumMap<>(NumberField.class);
 
     private int limit = MAX_LIMIT;
-    private int offset = 0;
+    private int offset = DEFAULT_OFFSET;
 
     public void setLimit(int limit) throws StorageClientException {
         if (limit > MAX_LIMIT) {
@@ -54,78 +54,39 @@ public class FindFilter {
         return offset;
     }
 
-    public FilterStringParam getKeyFilter() {
-        return keyFilter;
+    public void setStringFilter(StringField field, FilterStringParam param) {
+        stringFilterMap.put(field, param);
     }
 
-    public void setKeyFilter(FilterStringParam keyFilter) {
-        this.keyFilter = keyFilter;
+    public void setNumberFilter(NumberField field, FilterNumberParam param) {
+        numberFilterMap.put(field, param);
     }
 
-    public FilterStringParam getKey2Filter() {
-        return key2Filter;
+    public Map<StringField, FilterStringParam> getStringFilterMap() {
+        return stringFilterMap;
     }
 
-    public void setKey2Filter(FilterStringParam key2Filter) {
-        this.key2Filter = key2Filter;
-    }
-
-    public FilterStringParam getKey3Filter() {
-        return key3Filter;
-    }
-
-    public void setKey3Filter(FilterStringParam key3Filter) {
-        this.key3Filter = key3Filter;
-    }
-
-    public FilterStringParam getProfileKeyFilter() {
-        return profileKeyFilter;
-    }
-
-    public void setProfileKeyFilter(FilterStringParam profileKeyFilter) {
-        this.profileKeyFilter = profileKeyFilter;
-    }
-
-    public FilterNumberParam getRangeKeyFilter() {
-        return rangeKeyFilter;
-    }
-
-    public void setRangeKeyFilter(FilterNumberParam rangeKeyFilter) {
-        this.rangeKeyFilter = rangeKeyFilter;
-    }
-
-    public FilterStringParam getVersionFilter() {
-        return versionFilter;
-    }
-
-    public void setVersionFilter(FilterStringParam versionFilter) {
-        this.versionFilter = versionFilter;
+    public Map<NumberField, FilterNumberParam> getNumberFilterMap() {
+        return numberFilterMap;
     }
 
     public FindFilter copy() throws StorageClientException {
         FindFilter clone = new FindFilter();
-        clone.setKeyFilter(getKeyFilter() != null ? getKeyFilter().copy() : null);
-        clone.setKey2Filter(getKey2Filter() != null ? getKey2Filter().copy() : null);
-        clone.setKey3Filter(getKey3Filter() != null ? getKey3Filter().copy() : null);
-        clone.setProfileKeyFilter(getProfileKeyFilter() != null ? getProfileKeyFilter().copy() : null);
-        clone.setRangeKeyFilter(getRangeKeyFilter() != null ? getRangeKeyFilter().copy() : null);
-        clone.setVersionFilter(getVersionFilter() != null ? getVersionFilter().copy() : null);
-        clone.setOffset(getOffset());
-        clone.setLimit(getLimit());
+        clone.stringFilterMap.putAll(this.stringFilterMap);
+        clone.numberFilterMap.putAll(this.numberFilterMap);
+        clone.setOffset(this.getOffset());
+        clone.setLimit(this.getLimit());
         return clone;
     }
 
     @Override
     public String toString() {
         return "FindFilter{" +
-                "keyFilter=" + keyFilter +
-                ", key2Filter=" + key2Filter +
-                ", key3Filter=" + key3Filter +
-                ", profileKeyFilter=" + profileKeyFilter +
-                ", rangeKeyFilter=" + rangeKeyFilter +
-                ", versionFilter=" + versionFilter +
+                "stringFilterMap=" + stringFilterMap +
+                ", numberFilterMap=" + numberFilterMap +
                 ", limit=" + limit +
                 ", offset=" + offset +
                 '}';
     }
 }
+
