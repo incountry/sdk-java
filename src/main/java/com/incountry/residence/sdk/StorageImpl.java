@@ -242,7 +242,7 @@ public class StorageImpl implements Storage {
         checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
-    public void write(String country, Record record) throws
+    public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("write params (country={} , record={})",
@@ -252,6 +252,7 @@ public class StorageImpl implements Storage {
         checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getRecordKey());
         dao.createRecord(country, record, cryptoManager);
+        return record;
     }
 
 
