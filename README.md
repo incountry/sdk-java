@@ -35,34 +35,51 @@ public class StorageImpl implements Storage {
   /**
    * creating Storage instance
    *
-   * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
-                              with {@link #getInstance()}
-   * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-                              with {@link #getInstance()}
-   * @param endpoint          Optional. Defines API URL.
-   *                          Default endpoint will be used if this param is null
-   * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+   * @param config A container with configuration for a Storage initialization
    * @return instance of Storage
    * @throws StorageClientException if configuration validation finished with errors
    * @throws StorageServerException if server connection failed or server response error
    */
-  public static Storage getInstance(String environmentID, String apiKey, String endpoint,
-                            SecretKeyAccessor secretKeyAccessor) throws StorageServerException {...}
+  public static Storage getInstance(StorageConfig config)
+                                    throws StorageClientException, StorageServerException  {...}
 //...
 }
 ```
-
+StorageConfig provides the following parameters:
+```java
+/**
+ * container with Storage configuration, using pattern 'builder'
+ */
+public class StorageConfig {
+    //...
+    /** Required to be passed in, or as environment variable INC_API_KEY */
+    private String envId;
+    /** Required when using API key authorization, or as environment variable */   
+    private String apiKey;
+    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */ 
+    private String endPoint;
+    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */    
+    private SecretKeyAccessor secretKeyAccessor;
+    /** Optional. List of custom encryption configurations */
+    private List<Crypto> customEncryptionConfigsList;    
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
+    private String clientId;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
+    private String clientSecret;
+    //...
+```
 Parameters `environmentID` and `apiKey` (or `clientId` and `clientSecret` instead of `apiKey`) can be fetched from your dashboard on `Incountry` site.
 
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
 Below is an example how to create a storage instance:
 ```java
-SecretKeyAccessor secretKeyAccessor = () -> SecretsDataGenerator.fromPassword("<password>");
-String endPoint = "https://us-mt-01.api.incountry.io";
-String envId = "<env_id>";
-String apiKey = "<api_key>";
-Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
+SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
+StorageConfig config = new StorageConfig()
+    .setEnvId("<env_id>")
+    .setApiKey("<api_key>")    
+    .setSecretKeyAccessor(accessor);
+Storage storage=StorageImpl.getInstance(config);
 ```
 
 #### oAuth Authentication
@@ -234,48 +251,83 @@ public interface Storage {
 Here is how you initialize a record object:
 ```java
 public class Record {
-    /**
-     * Full constructor
-     *
-     * @param key        Required, record key
-     * @param body       Optional, data to be stored and encrypted
-     * @param profileKey Optional, profile key
-     * @param rangeKey   Optional, range key
-     * @param key2       Optional, key2
-     * @param key3       Optional, key3
-     */
-    public Record(String key, String body, String profileKey, Long rangeKey, String key2, String key3)
+   /**
+    * Minimalistic constructor
+    *
+    * @param recordKey record key
+    */
+    public Record(String recordKey) {...};        
+    
+   /**
+    * Overloaded constructor
+    *
+    * @param recordKey record key
+    * @param body      data to be stored and encrypted
+    */
+    public Record(String recordKey, String body) {...}                    
     //...
 }
 ```
 
 Below is the example of how you may use `write` method:
 ```java
-key = "user_1";
-body = "some PII data";
-profileKey = "customer";
-rangeKey = 10000L;
-key2 = "english";
-key3 = "insurance";
-Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+Record record = new Record("some_key")
+    .setBody("some PII data")
+    .setProfileKey("customer")
+    .setKey1("hatchback")
+    .setKey2("english")
+    .setKey3("insurance")
+    .setRangeKey1(10_000L)
 storage.write("us", record);
 ```
 
-#### Encryption
-InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
-Here is how data is transformed and stored in InCountry database:
+#### List of available record fields
+v3.0.0 release introduced a series of new fields available for storage. Below is an exhaustive list of fields available for storage in InCountry along with their types and  storage methods - each field is either encrypted, hashed or stored as is:
 ```java
 public class Record {
-    private String key;          // hashed
-    private String body;         // encrypted
-    private String profileKey;   // hashed
-    private Long rangeKey;       // plain
-    private String key2;         // hashed
-    private String key3;         // hashed
-    //...
-}
+    //String fields, hashed
+    private String recordKey;
+    private String key1;
+    private String key2;
+    private String key3;
+    private String key4;
+    private String key5;
+    private String key6;
+    private String key7;
+    private String key8;
+    private String key9;
+    private String key10;
+    private String profileKey;
+    private String serviceKey1;
+    private String serviceKey2;
+    //String fields, encrypted
+    private String body;
+    private String precommitBody;
+    //Long fields, plain
+    private Long rangeKey1;
+    private Long rangeKey2;
+    private Long rangeKey3;
+    private Long rangeKey4;
+    private Long rangeKey5;
+    private Long rangeKey6;
+    private Long rangeKey7;
+    private Long rangeKey8;
+    private Long rangeKey9;
+    private Long rangeKey10;    
+    //Readonly service fields, date in ISO format
+    protected Date createdAt;
+    protected Date updatedAt;
 ```
+These properties can be accessed using getters, changed using getters (in builder style) for example:
 
+```java
+String key2 = record.getKey2();
+String body = record.getBody();
+
+record.setProfileKey("customer")
+    .setRangeKey1(1_000L)
+    .setKey3("grey");
+```
 ### Batches
 
 Use the `batchWrite` method to write multiple records to the storage in a single request.
@@ -300,27 +352,27 @@ public interface Storage {
  Below is the example of how you may use `batchWrite` method
 ```java
 List<Record> list = new ArrayList<>();
-list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
-list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
+list.add(new Record("some_record_key","some PII data"));
+list.add(new Record("another_record_key","another PII data"));
 storage.batchWrite("us", list);
 ```
 
 ### Reading stored data
 
-Stored record can be read by `key` using `read` method.
+Stored record can be read by `recordKey` using `read` method.
 ```java
 public interface Storage {
    /**
     * Read data from remote storage
     *
     * @param country   country identifier
-    * @param key record unique identifier
+    * @param recordKey record unique identifier
     * @return Record object which contains required data
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record read(String country, String key)
+    Record read(String country, String recordKey)
         throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -328,19 +380,10 @@ public interface Storage {
 
 Below is the example of how you may use `read` method:
  ```java
-String key = "user_1";
-Record record = storage.read("us", key);
+String recordKey = "user_1";
+Record record = storage.read("us", recordKey);
 String decryptedBody = record.getBody();
  ```
-
-`Record` contains the following properties: `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
-
-These properties can be accessed using getters, for example:
-
-```java
-String key2 = record.getKey2();
-String body = record.getBody();
-```
 
 ### Find records
 
@@ -368,9 +411,9 @@ Use `FindFilterBuilder` class to refine your find request.
 Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                  .key2Eq("someKey")
-                  .key3Eq("firstValue","secondValue")
-                  .rangeKeyBetween(123L, 456L);
+                  .keyEq(StringField.KEY2, "someKey")
+                  .keyEq(StringField.KEY3, "firstValue", "secondValue") 
+                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L);                                                    
 
 BatchRecord findResult = storage.find("us", builder);
 if (findResult.getCount() > 0) {
@@ -381,7 +424,7 @@ if (findResult.getCount() > 0) {
 
 The request will return records, filtered according to the following pseudo-sql
 ```sql
-key2 = 'someKey' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey` < = 456)
+key2 = 'someKey' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey1` < = 456)
 ```
 
 All conditions added via `FindFilterBuilder` are joined using logical `AND`. You may not add multiple conditions for the same key - if you do only the last one will be used.
@@ -396,25 +439,19 @@ BatchRecord records = storage.find("us", builder);
 
 Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
-EQUALS         (FindFilterBuilder::keyEq)
-               (FindFilterBuilder::key2Eq)
-               (FindFilterBuilder::key3Eq)
-               (FindFilterBuilder::profileKeyEq)
-NOT_EQUALS     (FindFilterBuilder::keyNotEq)
-               (FindFilterBuilder::key2NotEq)
-               (FindFilterBuilder::key3NotEq)
-               (FindFilterBuilder::profileKeyNotEq)
+EQUALS         (FindFilterBuilder::keyEq)               
+NOT_EQUALS     (FindFilterBuilder::keyNotEq)               
 ```
 
-You can use the following builder methods for filtering by numerical `rangeKey` field:
+You can use the following builder methods for filtering by numerical fields:
 ```java
-EQUALS              (FindFilterBuilder::rangeKeyEq)
-IN                  (FindFilterBuilder::rangeKeyIn)
-GREATER             (FindFilterBuilder::rangeKeyGT)
-GREATER OR EQUALS   (FindFilterBuilder::rangeKeyGTE)
-LESS                (FindFilterBuilder::rangeKeyLT)
-LESS OR EQUALS      (FindFilterBuilder::rangeKeyLTE)
-BETWEEN             (FindFilterBuilder::rangeKeyBetween)
+EQUALS              (FindFilterBuilder::keyEq)
+IN                  (FindFilterBuilder::keyIn)
+GREATER             (FindFilterBuilder::keyGT)
+GREATER OR EQUALS   (FindFilterBuilder::keyGTE)
+LESS                (FindFilterBuilder::keyLT)
+LESS OR EQUALS      (FindFilterBuilder::keyLTE)
+BETWEEN             (FindFilterBuilder::keyBetween)
 ```
 
 Method `find` returns `BatchRecord` object which contains a list of `Record` and some metadata:
@@ -463,9 +500,9 @@ It works the same way as `find` but returns the first record or `null` if no rec
 Here is the example of how `findOne` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                .key2Eq("someKey")
-                .key3Eq("firstValue", "secondValue")
-                .rangeKeyBetween(123L, 456L);
+                  .keyEq(StringField.KEY2, "someKey")
+                  .keyEq(StringField.KEY3, "firstValue", "secondValue") 
+                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L); 
 
 Record record = storage.findOne("us", builder);
 //...
@@ -480,21 +517,22 @@ public interface Storage {
     * Delete record from remote storage
     *
     * @param country   country code of the record
-    * @param key the record's key
+    * @param recordKey the record's key
     * @return true when record was deleted
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
-    boolean delete(String country, String key)
+    boolean delete(String country, String recordKey)
             throws StorageClientException, StorageServerException;
     //...
 }
 ```
 
+
 Below is the example of how you may use `delete` method:
  ```java
-String key = "user_1";
-storage.delete("us", key);
+String recordKey = "user_1";
+storage.delete("us", recordKey);
  ```
 
 Data Migration and Key Rotation support
@@ -569,38 +607,12 @@ public void test() {
 Custom Encryption Support
 -----
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
-One of the overloaded versions of the method `getInstance` in class `StorageImpl` allows you to pass a list of custom encryption implementations:
+
+Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
 
 ```java
-/**
-  * creating Storage instance
-  *
-  * @param config Configuration for Storage initialization
-  * @return instance of Storage
-  * @throws StorageClientException if configuration validation finished with errors
-  * @throws StorageCryptoException if custom encryption fails during initialization
-  * @throws StorageServerException if server connection failed or server response error
-  */
-public static Storage getInstance(StorageConfig config)
-              throws StorageClientException, StorageServerException {...}
-```
-
-Class `StorageConfig` is a container with Storage configuration, using Builder pattern. Use method `setCustomEncryptionConfigsList` for passing a list of custom encryption implementations:
-
-```java
-public class StorageConfig {
-   private String envId;
-       private String apiKey;
-       private String endPoint;
-       private SecretKeyAccessor secretKeyAccessor;
-       private List<Crypto> customEncryptionConfigsList;
-       private boolean normalizeKeys;
-       private String clientId;
-       private String clientSecret;
-       private String authEndPoint;
-       private Integer httpTimeout;
+public class StorageConfig {   
     //...
-
     /**
      * for custom encryption
      *
@@ -610,21 +622,7 @@ public class StorageConfig {
     public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
         this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
-    }
-
-    /**
-     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
-     * Default value is 30 seconds.
-     *
-     * @param httpTimeout timeout in seconds
-     * @return StorageConfig
-     */
-    public StorageConfig setHttpTimeout(Integer httpTimeout) {
-        this.httpTimeout = httpTimeout;
-        return this;
-    }
-
-
+    }    
     //...
 }
 ```

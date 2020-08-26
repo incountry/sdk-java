@@ -26,9 +26,9 @@ public class StorageConfig {
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
     private List<Crypto> customEncryptionConfigsList;
-    private boolean normalizeKeys;
     private String clientId;
     private String clientSecret;
+    private boolean normalizeKeys;
     private String endpointMask;
     private String countriesEndpoint;
     private Integer httpTimeout;
