@@ -116,7 +116,7 @@ public class StorageImpl implements Storage {
     /**
      * creating Storage instance
      *
-     * @param config A container with configuration for a Storage initialization
+     * @param config A container with configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
      * @throws StorageServerException if server connection failed or server response error

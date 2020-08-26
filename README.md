@@ -35,7 +35,7 @@ public class StorageImpl implements Storage {
   /**
    * creating Storage instance
    *
-   * @param config A container with configuration for a Storage initialization
+   * @param config A container with configuration for Storage initialization
    * @return instance of Storage
    * @throws StorageClientException if configuration validation finished with errors
    * @throws StorageServerException if server connection failed or server response error
@@ -198,23 +198,23 @@ You can also use `SecretsDataGenerator` class for creating `SecretsData` instanc
     SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
     ```
 
-    ```javascript
-    {
+```javascript
+{
     "secrets": [
         {
-        "secret": "secret0",
-        "version": 0,
-        "isKey": false
+            "secret": "secret0",
+            "version": 0,
+            "isKey": false
         },
         {
-        "secret": "secret1",
-        "version": 1,
-        "isKey": false
+            "secret": "secret1",
+            "version": 1,
+            "isKey": false
         }
     ],
     "currentVersion": 1
-    }
-    ```
+}
+```
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
 
@@ -318,7 +318,7 @@ public class Record {
     protected Date createdAt;
     protected Date updatedAt;
 ```
-These properties can be accessed using getters, changed using getters (in builder style) for example:
+You can access all the properties using appropriate getters and setters, for example:
 
 ```java
 String key2 = record.getKey2();
