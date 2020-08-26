@@ -328,6 +328,10 @@ record.setProfileKey("customer")
     .setRangeKey1(1_000L)
     .setKey3("grey");
 ```
+
+#### Date fields
+Use `created_at` and `updated_at` fields to access date-related information about records. `created_at` indicates date when the record was initially created in the target country. `updated_at` shows the date of the latest write operation for the given recordKey
+
 ### Batches
 
 Use the `batchWrite` method to write multiple records to the storage in a single request.
