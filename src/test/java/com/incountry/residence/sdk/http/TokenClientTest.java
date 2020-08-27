@@ -226,4 +226,16 @@ class TokenClientTest {
         tokenClient = new OAuthTokenClient(null, null, null, null, null, HttpClients.createDefault());
         assertNotNull(tokenClient);
     }
+
+    @Test
+    void testAuthClientWithRejectedPort() throws StorageException, IOException {
+        List<String> responseList = Collections.singletonList("{}");
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", HttpClients.createDefault());
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, 1000);
+        server.start();
+        StorageServerException ex =  assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+        assertEquals("Unexpected exception during authorization, params [OAuth URL=http://localhost:8765, audience=https://localhost]", ex.getMessage());
+        server.stop(0);
+    }
 }

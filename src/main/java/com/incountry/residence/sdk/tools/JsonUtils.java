@@ -190,9 +190,6 @@ public class JsonUtils {
     }
 
     private static JsonArray valueJSON(FilterNumberParam range) {
-        if (range.getValues() == null || range.getValues().length == 0) {
-            return null;
-        }
         JsonArray array = new JsonArray();
         for (long i : range.getValues()) {
             array.add(i);
@@ -227,7 +224,7 @@ public class JsonUtils {
     }
 
     public static JsonArray toJsonInt(FilterStringParam param) {
-        if (param == null || param.getValues() == null) {
+        if (param == null) {
             return null;
         }
         JsonArray array = new JsonArray();
@@ -274,7 +271,7 @@ public class JsonUtils {
     }
 
     public static JsonArray toJsonArray(FilterStringParam param, CryptoManager cryptoManager) {
-        if (param == null || param.getValues() == null) {
+        if (param == null) {
             return null;
         }
         JsonArray array = new JsonArray();
