@@ -330,7 +330,7 @@ record.setProfileKey("customer")
 ```
 
 #### Date fields
-Use `created_at` and `updated_at` fields to access date-related information about records. `created_at` indicates date when the record was initially created in the target country. `updated_at` shows the date of the latest write operation for the given recordKey
+Use `createdAt` and `updatedAt` fields to access date-related information about records. `createdAt` indicates date when the record was initially created in the target country. `updatedAt` shows the date of the latest write operation for the given `recordKey`
 
 ### Batches
 
