@@ -91,9 +91,10 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+        String token = tokenClient.getToken(AUDIENCE_URL, null);
         Thread.sleep(2000);
-        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+        String token1 = tokenClient.getToken(AUDIENCE_URL, null);
+        assertEquals(token, token1);
         server.stop(0);
     }
 
