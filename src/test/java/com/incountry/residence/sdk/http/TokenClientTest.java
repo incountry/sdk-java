@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,17 +85,22 @@ class TokenClientTest {
     @SuppressWarnings("java:S2925")
     @Test
     void tokenShortLifespanTest() throws StorageException, IOException, InterruptedException {
-        List<String> responseList = Collections.singletonList(
-                "{'access_token'='1234567889' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
+        String expectedValue1 = "1234567889";
+        String expectedValue2 = "0987654321";
+        List<String> responseList = Arrays.asList(
+                "{'access_token'='" + expectedValue1 + "' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}",
+                "{'access_token'='" + expectedValue2 + "' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
         );
         TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", HttpClients.createDefault());
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        String token = tokenClient.getToken(AUDIENCE_URL, null);
-        Thread.sleep(2000);
         String token1 = tokenClient.getToken(AUDIENCE_URL, null);
-        assertEquals(token, token1);
+        assertEquals(expectedValue1, token1);
+        Thread.sleep(2000);
+        String token2 = tokenClient.getToken(AUDIENCE_URL, null);
+        assertEquals(expectedValue2, token2);
+        assertNotEquals(token1, token2);
         server.stop(0);
     }
 
