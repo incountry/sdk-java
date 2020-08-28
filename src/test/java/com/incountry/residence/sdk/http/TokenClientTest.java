@@ -81,6 +81,22 @@ class TokenClientTest {
         server.stop(0);
     }
 
+    @SuppressWarnings("java:S2925")
+    @Test
+    void tokenShortLifespanTest() throws StorageException, IOException, InterruptedException {
+        List<String> responseList = Collections.singletonList(
+                "{'access_token'='1234567889' , 'expires_in'='1' , 'token_type'='bearer', 'scope'='" + ENV_ID + "'}"
+        );
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, "<client_id>", "<client_secret>", HttpClients.createDefault());
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
+        server.start();
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+        Thread.sleep(2000);
+        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+        server.stop(0);
+    }
+
     @Test
     void defaultAuthClientNegativeTest() throws StorageException, IOException {
         int respCode = 401;
