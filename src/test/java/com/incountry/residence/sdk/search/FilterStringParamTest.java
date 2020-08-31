@@ -47,4 +47,13 @@ class FilterStringParamTest {
         List<String> values = stringParam.getValues();
         assertTrue(values.isEmpty());
     }
+
+    @Test
+    void filterStringParamCopyTest() throws StorageClientException {
+        String filterValue = "filterValue";
+        FilterStringParam stringParam = new FilterStringParam(new String[]{filterValue}, true);
+        FilterStringParam stringParamCopy = stringParam.copy();
+        assertEquals(stringParam.getValues(), stringParamCopy.getValues());
+        assertEquals(stringParam.isNotCondition(), stringParamCopy.isNotCondition());
+    }
 }

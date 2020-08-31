@@ -460,6 +460,16 @@ class HttpDaoImplTests {
     }
 
     @Test
+    void testWriteToCustomEndpointWithMinipopAndSecondaryUrl() throws StorageServerException, StorageCryptoException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl("https://ustest.org", "test.org", null, agent));
+        Record record = new Record("1", "body");
+        agent.setResponse("OK");
+        storage.write("US", record);
+        assertEquals("https://ustest.org/v2/storage/records/us", agent.getCallUrl());
+    }
+
+    @Test
     void popTest() {
         String name = "us";
         String host = "http://localhost";
