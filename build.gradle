@@ -112,6 +112,10 @@ sonarqube {
         property "sonar.organization", "incountry"
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/test/jacocoTestReport.xml"
+        property "sonar.buildbreaker.skip", "false"
+        property "sonar.qualitygate.wait", "true"
+        property "sonar.qualitygate.timeout", "300"
+        property "sonar.verbose", "false"
     }
 }
 
