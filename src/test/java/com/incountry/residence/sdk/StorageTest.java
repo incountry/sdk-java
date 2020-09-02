@@ -15,6 +15,7 @@ import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
@@ -77,16 +78,32 @@ class StorageTest {
                 .setKey2(KEY_2)
                 .setKey3(KEY_3);
         String encrypted = JsonUtils.toJsonString(record, cryptoManager);
-        String content = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
-        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(Arrays.asList(content, "OK"))));
-        BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, cryptoManager);
+        //return 2 records, 1 correct, 1 invalid
+        String response1 = "{\"data\":[" + encrypted + ",{\"not_record\":1}],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}";
+        //return 1 correct record
+        String response2 = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
+        //return 0 records
+        String response3 = "{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}";
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor,
+                new HttpDaoImpl(FAKE_ENDPOINT, null, null,
+                        new FakeHttpAgent(Arrays.asList(response1, "OK", response2, "OK", response3, "OK"))));
 
-        int migratedRecords = batchRecord.getCount();
-        int totalLeft = batchRecord.getTotal() - batchRecord.getCount();
+        String expected1 = "MigrateResult{migrated=1, totalLeft=1, errors=[com.incountry.residence.sdk.tools.exceptions.RecordException: Record Parse Exception]}";
+        runMigrationChecks(response1, expected1, storage);
+        String expected2 = "MigrateResult{migrated=1, totalLeft=0, errors=[]}";
+        runMigrationChecks(response2, expected2, storage);
+        String expected3 = "MigrateResult{migrated=0, totalLeft=0, errors=[]}";
+        runMigrationChecks(response3, expected3, storage);
+    }
+
+    private void runMigrationChecks(String response1, String expected1, Storage storage) throws StorageServerException, StorageClientException, StorageCryptoException {
+        BatchRecord batchRecord = JsonUtils.batchRecordFromString(response1, cryptoManager);
+        int migratedRecords = batchRecord.getRecords().size();
+        int totalLeft = batchRecord.getTotal() - batchRecord.getRecords().size();
         MigrateResult migrateResult = storage.migrate("us", 2);
-
         assertEquals(migratedRecords, migrateResult.getMigrated());
         assertEquals(totalLeft, migrateResult.getTotalLeft());
+        assertEquals(expected1, migrateResult.toString());
     }
 
     @Test
