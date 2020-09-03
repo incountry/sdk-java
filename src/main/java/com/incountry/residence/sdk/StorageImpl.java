@@ -287,8 +287,12 @@ public class StorageImpl implements Storage {
                 .limitAndOffset(limit, 0)
                 .keyNotEq(StringField.VERSION, String.valueOf(cryptoManager.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
-        batchWrite(country, batchRecord.getRecords());
-        MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
+        if (!batchRecord.getRecords().isEmpty()) {
+            batchWrite(country, batchRecord.getRecords());
+        }
+        MigrateResult result = new MigrateResult(batchRecord.getRecords().size(),
+                batchRecord.getTotal() - batchRecord.getRecords().size(),
+                batchRecord.getErrors());
         if (LOG.isTraceEnabled()) {
             LOG.trace("batchWrite results={}", result);
         }
