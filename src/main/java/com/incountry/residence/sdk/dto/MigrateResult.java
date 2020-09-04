@@ -23,6 +23,10 @@ public class MigrateResult {
         return totalLeft;
     }
 
+    public List<RecordException> getErrors() {
+        return errors;
+    }
+
     @Override
     public String toString() {
         return "MigrateResult{" +
