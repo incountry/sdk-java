@@ -2,20 +2,6 @@ addons:
   sonarcloud:
     organization: "incountry"
 
-git:
-  depth: false
-
-before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-
-cache:
-  directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
-    - dependencyCheck
-    - gradle-container
-
 language:
   java
 
@@ -27,27 +13,47 @@ sudo: false
 notifications:
   email: false
 
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - dependencyCheck
+    - gradle-container
+
 before_install:
-  # get used Gradle version and download URL from file 'gradle-wrapper.properties'
+  # Get used Gradle version and download URL from file 'gradle-wrapper.properties'
   - while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\)
-  # get gradle zip file name
-  - arr=(${gradleUrl//// })
-  - gradleZipFile=${arr[${#arr[*]}-1]}
-  # get gradle directory name after unzipping
-  - arr2=(${gradleZipFile//-bin/ })
-  - gradleDirectory=$arr2
-  # check used Gradle binaries exist, if not download it
-  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
-  - export GRADLE_HOME=$PWD/${gradleDirectory}
-  - export PATH=$GRADLE_HOME/bin:$PATH
-  - echo ${GRADLE_HOME}
-  - echo ${PATH}
-  - gradle -v
+  # Get gradle zip file name and gradle directory name
+  - arr=(${gradleUrl//// }); gradleZipFile=${arr[${#arr[*]}-1]}
+  - arr2=(${gradleZipFile//-bin/ }); gradleDirectory=$arr2
+  # Check if Gradle binaries exist. If not, download them
+  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget -q ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+  - export GRADLE_HOME=$PWD/${gradleDirectory}; export PATH=$GRADLE_HOME/bin:$PATH
 
-script:
-  - gradle build jacocoTestReport sonarqube
-  - gradle integrationTest
-  # move custom Gradle binaries to cache
-  - rm -rf $PWD/gradle-container/*
-  - mv $PWD/$gradleDirectory $PWD/gradle-container
+jobs:
+  include:
+    - stage: build
+      name: "Build the code, scan with Snyk, run tests & Sonar"
+      script:
+        # Print debug information
+        - echo "Building for branch=$TRAVIS_BRANCH, PR=${TRAVIS_PULL_REQUEST} ..."; env | grep "COMMIT\|PULL\|BRANCH"
+        # Perform the build
+        - ./travis-build.sh
+        # move custom Gradle binaries to the cache
+        - rm -rf $PWD/gradle-container/*
+        - mv $PWD/$gradleDirectory $PWD/gradle-container
+    - stage: build
+      name: "Run integration tests"
+      script:
+        - gradle integrationTest
 
+stages:
+  - name: build
+
+env:
+  global:
+    - APP_NAME=sdk-java
