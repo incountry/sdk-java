@@ -103,6 +103,9 @@ class StorageTest {
         MigrateResult migrateResult = storage.migrate("us", 2);
         assertEquals(migratedRecords, migrateResult.getMigrated());
         assertEquals(totalLeft, migrateResult.getTotalLeft());
+        if (batchRecord.getErrors() != null && !batchRecord.getErrors().isEmpty()) {
+            assertEquals(batchRecord.getErrors().get(0).getRawData(), migrateResult.getErrors().get(0).getRawData());
+        }
         assertEquals(expected1, migrateResult.toString());
     }
 
