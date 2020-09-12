@@ -1,6 +1,8 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.crypto.testimpl.FernetCrypto;
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -13,13 +15,20 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -117,6 +126,11 @@ public class StorageIntegrationTest {
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final int VERSION = 0;
+    private static final String FILE_EXTENSION = "txt";
+    private static final String FILE_CONTENT = "Hello world!";
+    private static final String NEW_FILE_NAME = "new_sdk_incountry_test_file";
+    private static final String NEW_FILE_MIME_TYPE = "text/plain";
+    private static String fileId;
 
     public static String loadFromEnv(String key) {
         return System.getenv(key);
@@ -609,5 +623,45 @@ public class StorageIntegrationTest {
             }
             return null;
         };
+    }
+
+    @Disabled
+    @Test
+    void addAttachmentTest() throws StorageException, IOException {
+        Path tempFile = Files.createTempFile("sdk_incountry_integration_tests_file", FILE_EXTENSION);
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
+        fileId = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, false);
+        Files.delete(tempFile);
+    }
+
+    @Disabled
+    @Test
+    void getAttachmentFileTest() throws StorageException, IOException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
+        assertEquals(FILE_EXTENSION, file.getFileExtension());
+        assertEquals(FILE_CONTENT, incomingFileContent);
+    }
+
+    @Disabled
+    @Test
+    void updateAttachmentMetaTest() throws StorageException {
+        storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_FILE_MIME_TYPE);
+    }
+
+    @Disabled
+    @Test
+    void getAttachmentMetaTest() throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        assertEquals(fileId, meta.getFileId());
+        assertEquals(NEW_FILE_NAME, meta.getFileName());
+        assertEquals(NEW_FILE_MIME_TYPE, meta.getMimeType());
+    }
+
+    @Disabled
+    @Test
+    void deleteAttachmentTest() throws StorageException {
+        storage.deleteAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
     }
 }

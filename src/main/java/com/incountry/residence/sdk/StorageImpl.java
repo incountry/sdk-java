@@ -1,5 +1,7 @@
 package com.incountry.residence.sdk;
 
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
@@ -24,6 +26,8 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -37,6 +41,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
+    private static final String MSG_ERR_NULL_FILE_ID = "File id can't be null";
     private static final String MSG_ERR_NULL_KEY = "Key can't be null";
     private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
@@ -49,6 +54,10 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_NULL_FILE_NAME = "File name can't be null";
+    private static final String MSG_ERR_NULL_FILE_MIME_TYPE = "MIME type can't be null";
+    private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "File input stream can't be null";
+    private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "File input stream is not available";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
@@ -242,6 +251,15 @@ public class StorageImpl implements Storage {
         checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
+    private void checkAttachmentParameters(String country, String key, String fileId) throws StorageClientException {
+        if (fileId == null || fileId.isEmpty()) {
+            LOG.error(MSG_ERR_NULL_FILE_ID);
+            throw new StorageClientException(MSG_ERR_NULL_FILE_ID);
+        }
+        checkParameters(country, key);
+    }
+
+
     public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
@@ -364,5 +382,75 @@ public class StorageImpl implements Storage {
             LOG.trace("findOne results ({})", records.get(0).hashCode());
         }
         return records.get(0);
+    }
+
+    @Override
+    public String addAttachment(String country, String recordKey, InputStream fileStream, boolean upsert) throws StorageClientException, StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("addAttachment params (country={} , key={}, upsert={})",
+                    country, recordKey, upsert);
+        }
+
+        try {
+            if (fileStream == null || fileStream.available() == 0) {
+                LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
+                throw new StorageClientException(MSG_ERR_NULL_FILE_INPUT_STREAM);
+            }
+        } catch (IOException ex) {
+            LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
+            throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);
+        }
+        checkParameters(country, recordKey);
+        return dao.addAttachment(country, recordKey, fileStream, upsert);
+    }
+
+    @Override
+    public boolean deleteAttachment(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("addAttachment params (country={} , key={}, fileId={})",
+                    country, recordKey, fileId);
+        }
+        checkAttachmentParameters(country, recordKey, fileId);
+        dao.deleteAttachment(country, recordKey, fileId);
+        return true;
+    }
+
+    @Override
+    public AttachedFile getAttachmentFile(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("getAttachmentFile params (country={} , key={}, fileId={})",
+                    country, recordKey, fileId);
+        }
+        checkAttachmentParameters(country, recordKey, fileId);
+        checkParameters(country, recordKey);
+        return dao.getAttachmentFile(country, recordKey, fileId);
+    }
+
+    @Override
+    public void updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("updateAttachmentMeta params (country={} , key={}, fileId={}, fileName={}, mimeType={})",
+                    country, recordKey, fileId, fileName, mimeType);
+        }
+        if (fileName == null || fileName.isEmpty()) {
+            LOG.error(MSG_ERR_NULL_FILE_NAME);
+            throw new StorageClientException(MSG_ERR_NULL_FILE_NAME);
+        }
+        if (mimeType == null || mimeType.isEmpty()) {
+            LOG.error(MSG_ERR_NULL_FILE_MIME_TYPE);
+            throw new StorageClientException(MSG_ERR_NULL_FILE_MIME_TYPE);
+        }
+        checkAttachmentParameters(country, recordKey, fileId);
+        dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
+    }
+
+    @Override
+    public AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("getAttachmentMeta params (country={} , key={}, fileId={})",
+                    country, recordKey, fileId);
+        }
+        checkAttachmentParameters(country, recordKey, fileId);
+        return dao.getAttachmentMeta(country, recordKey, fileId);
     }
 }

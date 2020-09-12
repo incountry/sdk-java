@@ -1,5 +1,7 @@
 package com.incountry.residence.sdk;
 
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
@@ -8,6 +10,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -97,4 +100,14 @@ public interface Storage {
      * @throws StorageCryptoException if decryption failed
      */
     MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException;
+
+    String addAttachment(String country, String recordKey, InputStream fileInputStream, boolean upsert) throws StorageClientException, StorageServerException;
+
+    boolean deleteAttachment(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    AttachedFile getAttachmentFile(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    void updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException;
+
+    AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
 }

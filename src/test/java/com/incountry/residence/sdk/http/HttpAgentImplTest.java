@@ -46,26 +46,27 @@ class HttpAgentImplTest {
     private static final int PORT = 8769;
     private static final String ENDPOINT = "http://localhost:" + PORT;
     private static final TokenClient TOKEN_CLIENT = new ApiKeyTokenClient("<api_key>");
+    private static final String APPLICATION_JSON = "application/json";
 
 
     @Test
     void testNullEndpointException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0, APPLICATION_JSON));
         assertEquals("URL can't be null", ex.getMessage());
     }
 
     @Test
     void testNullApiKeyException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0, APPLICATION_JSON));
         assertEquals("URL can't be null", ex.getMessage());
     }
 
     @Test
     void testNullEnvIdException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, null, HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0, APPLICATION_JSON));
         assertEquals("URL can't be null", ex.getMessage());
     }
 
@@ -74,7 +75,7 @@ class HttpAgentImplTest {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         String url = "https://" + UUID.randomUUID().toString() + ".localhost";
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(url,
-                "GET", "someBody", new HashMap<>(), null, null, 0));
+                "GET", "someBody", new HashMap<>(), null, null, 0, APPLICATION_JSON));
         assertEquals("Server request error: [URL=" + url + ", method=GET]", ex.getMessage());
     }
 
@@ -85,9 +86,9 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        assertNotNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
-        assertNotNull(agent.request(ENDPOINT, "POST", "", ApiResponse.DELETE, null, null, 0));
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, null, null, 0));
+        assertNotNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0, APPLICATION_JSON).getContent());
+        assertNotNull(agent.request(ENDPOINT, "POST", "", ApiResponse.DELETE, null, null, 0, APPLICATION_JSON).getContent());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", null, ApiResponse.DELETE, null, null, 0, APPLICATION_JSON));
         assertEquals("Server request error: POST", ex.getMessage());
         server.stop(0);
     }
@@ -100,7 +101,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer(content, respCode, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "POST", "<body>", ApiResponse.DELETE, null, null, 0, APPLICATION_JSON));
         assertEquals(String.format("Code=%d, endpoint=[%s], content=[%s]", respCode, ENDPOINT, content), ex.getMessage());
         server.stop(0);
     }
@@ -115,12 +116,12 @@ class HttpAgentImplTest {
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         StorageServerException ex1 = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, null, 0));
+                agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, null, 0, APPLICATION_JSON));
         assertEquals(expectedErrorString, ex1.getMessage());
         StorageServerException ex2 = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, null, 2));
+                agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, null, 2, APPLICATION_JSON));
         assertEquals(expectedErrorString, ex2.getMessage());
-        assertEquals(content, agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, null, 1));
+        assertEquals(content, agent.request(ENDPOINT, method, "<body>", ApiResponse.DELETE, null, null, 1, APPLICATION_JSON).getContent());
         server.stop(0);
     }
 
@@ -130,7 +131,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        assertNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.READ, null, null, 0));
+        assertNull(agent.request(ENDPOINT, "POST", "<body>", ApiResponse.READ, null, null, 0, APPLICATION_JSON).getContent());
         server.stop(0);
     }
 
@@ -142,7 +143,7 @@ class HttpAgentImplTest {
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         StorageServerException ex = assertThrows(StorageServerException.class, ()
-                -> agent.request(ENDPOINT, "GET", "someBody", new HashMap<>(), null, null, 0));
+                -> agent.request(ENDPOINT, "GET", "someBody", new HashMap<>(), null, null, 0, APPLICATION_JSON));
         assertEquals(String.format("Code=%d, endpoint=[%s], content=[ok]", respCode, ENDPOINT), ex.getMessage());
         server.stop(0);
     }
@@ -152,7 +153,7 @@ class HttpAgentImplTest {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         String url = " ";
         StorageServerException ex = assertThrows(StorageServerException.class, ()
-                -> agent.request(url, "GET", "someBody", new HashMap<>(), null, null, 0));
+                -> agent.request(url, "GET", "someBody", new HashMap<>(), null, null, 0, APPLICATION_JSON));
         assertEquals("URL error", ex.getMessage());
         assertEquals(URISyntaxException.class, ex.getCause().getClass());
         assertEquals("Illegal character in path at index 0: " + url, ex.getCause().getMessage());

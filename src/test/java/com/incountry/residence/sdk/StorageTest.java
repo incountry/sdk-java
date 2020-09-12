@@ -27,7 +27,11 @@ import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -663,5 +667,61 @@ class StorageTest {
                 .setMaxHttpConnectionsPerRoute(-1);
         ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
+    }
+
+    @Test
+    void addAttachmentTestWithIllegalParams() throws StorageClientException, StorageServerException, IOException {
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        String recordKey = "key";
+        InputStream inputStream = null;
+        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        try {
+            inputStream = Files.newInputStream(tempFile);
+            Files.write(tempFile, "Hello world!".getBytes(StandardCharsets.UTF_8));
+
+            InputStream fileInputStream = inputStream;
+            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.addAttachment(null, recordKey, fileInputStream, false));
+            assertEquals("Country can't be null", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("", recordKey, fileInputStream, false));
+            assertEquals("Country can't be null", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", null, fileInputStream, false));
+            assertEquals("Key can't be null", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", "", fileInputStream, false));
+            assertEquals("Key can't be null", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, null, false));
+            assertEquals("File input stream can't be null", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    return -1;
+                }
+            }, false));
+            assertEquals("File input stream can't be null", ex.getMessage());
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            Files.delete(tempFile);
+        }
+    }
+
+    @Test
+    void deleteAttachmentTestWithIllegalParams() throws StorageClientException, StorageServerException {
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        String recordKey = "key";
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.deleteAttachment("us", recordKey, null));
+        assertEquals("File id can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.deleteAttachment("us", recordKey, ""));
+        assertEquals("File id can't be null", ex.getMessage());
     }
 }

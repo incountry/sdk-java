@@ -4,7 +4,9 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +25,8 @@ public abstract class AbstractHttpRequestCreator {
 
     private static final String POST = "POST";
     private static final String GET = "GET";
+    private static final String PUT = "PUT";
+    private static final String PATCH = "PATCH";
 
     protected HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
         URI uri;
@@ -43,6 +47,16 @@ public abstract class AbstractHttpRequestCreator {
             return request;
         } else if (method.equals(GET)) {
             return new HttpGet(uri);
+        } else if (method.equals(PUT)) {
+            HttpPut request = new HttpPut(uri);
+            StringEntity entity = new StringEntity(body);
+            request.setEntity(entity);
+            return request;
+        } else if (method.equals(PATCH)) {
+            HttpPatch request = new HttpPatch(uri);
+            StringEntity entity = new StringEntity(body);
+            request.setEntity(entity);
+            return request;
         } else {
             return new HttpDelete(uri);
         }

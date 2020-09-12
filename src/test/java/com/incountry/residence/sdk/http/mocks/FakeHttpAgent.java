@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.http.mocks;
 
+import com.incountry.residence.sdk.tools.models.PopApiResponse;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
@@ -27,7 +28,7 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, String audience, String region, int retryCount) {
+    public PopApiResponse request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, String audience, String region, int retryCount, String contentType) {
         this.callUrl = url;
         this.callMethod = method;
         this.callBody = body;
@@ -35,7 +36,7 @@ public class FakeHttpAgent implements HttpAgent {
         this.retryCount = retryCount;
         this.audienceUrl = audience;
         this.callRegion = region;
-        return getResponse();
+        return new PopApiResponse(getResponse());
     }
 
     public String getCallUrl() {
