@@ -711,6 +711,26 @@ class StorageTest {
     }
 
     @Test
+    void updateAttachmentMetaWithIllegalParams() throws StorageClientException, StorageServerException, IOException {
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>");
+        Storage storage = StorageImpl.getInstance(config);
+        String recordKey = "key";
+        String fileId = "123";
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, null, "text/plain"));
+        assertEquals("File name can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "", "text/plain"));
+        assertEquals("File name can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "test_file", null));
+        assertEquals("MIME type can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "test_file", ""));
+        assertEquals("MIME type can't be null", ex.getMessage());
+    }
+
+    @Test
     void deleteAttachmentTestWithIllegalParams() throws StorageClientException, StorageServerException {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
