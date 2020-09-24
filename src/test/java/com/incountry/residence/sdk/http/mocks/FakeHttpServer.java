@@ -3,6 +3,8 @@ package com.incountry.residence.sdk.http.mocks;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,6 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class FakeHttpServer {
+
+    private static final Logger LOG = LogManager.getLogger(FakeHttpServer.class);
     private final HttpServer server;
 
     public FakeHttpServer(String response, int responseCode, int port) throws IOException {
@@ -80,8 +84,8 @@ public class FakeHttpServer {
             if (sleepTimeout != null) {
                 try {
                     Thread.sleep(sleepTimeout * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ex) {
+                    LOG.error(ex.getMessage());
                 }
             }
             String currentResponse = null;

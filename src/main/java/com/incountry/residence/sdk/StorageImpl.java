@@ -398,7 +398,11 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileStream.hashCode(), upsert);
         }
         checkParameters(country, recordKey);
-        return dao.addAttachment(country, recordKey, fileStream, upsert);
+        String attachedFileId = dao.addAttachment(country, recordKey, fileStream, upsert);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("addAttachment results={}", attachedFileId);
+        }
+        return attachedFileId;
     }
 
     @Override
@@ -409,7 +413,9 @@ public class StorageImpl implements Storage {
         }
         checkAttachmentParameters(country, recordKey, fileId);
         dao.deleteAttachment(country, recordKey, fileId);
-        LOG.trace("deleteAttachment method result: true");
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("deleteAttachment results={}", true);
+        }
         return true;
     }
 
@@ -443,7 +449,9 @@ public class StorageImpl implements Storage {
         }
         checkAttachmentParameters(country, recordKey, fileId);
         AttachmentMeta attachmentMeta = dao.getAttachmentMeta(country, recordKey, fileId);
-        LOG.trace("getAttachmentMeta method result: {}", attachmentMeta);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("getAttachmentMeta results={}", attachmentMeta);
+        }
         return attachmentMeta;
     }
 }

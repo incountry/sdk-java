@@ -11,6 +11,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class AllSdkEncryptionTest {
 
+    private static final Logger LOG = LogManager.getLogger(AllSdkEncryptionTest.class);
     private static final String ENV_ID = "InCountry";
     private static final String PASSWORD = "password";
     private static final String RESPONSE = "{\n" +
@@ -72,8 +75,8 @@ class AllSdkEncryptionTest {
     static {
         try {
             cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false);
-        } catch (StorageClientException e) {
-            e.printStackTrace();
+        } catch (StorageClientException ex) {
+            LOG.error(ex.getMessage());
         }
         ORIGINAL_RECORD = new Record("InCountryKey")
                 .setBody("{\"data\": \"InCountryBody\"}")
