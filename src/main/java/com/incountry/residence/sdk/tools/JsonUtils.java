@@ -18,7 +18,6 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.transfer.TransferBatch;
 import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
@@ -54,6 +53,8 @@ public class JsonUtils {
     private static final String P_OFFSET = "offset";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
+    private static final String P_FILE_NAME = "filename";
+    private static final String P_MIME_TYPE = "mime_type";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
     private static final String MSG_ERR_RESPONSE = "Response error";
@@ -280,10 +281,10 @@ public class JsonUtils {
         return array;
     }
 
-    public static SecretsData getSecretsDataFromJson(String string) throws StorageClientException {
-        SecretsData result;
+    public static <T> Object getDataFromJson(String string, Class<T> clazz) throws StorageClientException {
+        T result;
         try {
-            result = new Gson().fromJson(string, SecretsData.class);
+            result = new Gson().fromJson(string, clazz);
         } catch (JsonSyntaxException e) {
             throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }
@@ -305,5 +306,12 @@ public class JsonUtils {
             }
         }
         return result;
+    }
+
+    public static String createUpdatedMetaJson(String fileName, String mimeType) {
+        JsonObject json = new JsonObject();
+        json.addProperty(P_FILE_NAME, fileName);
+        json.addProperty(P_MIME_TYPE, mimeType);
+        return json.toString();
     }
 }

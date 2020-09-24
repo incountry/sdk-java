@@ -101,13 +101,65 @@ public interface Storage {
      */
     MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException;
 
+    /**
+     * Add attached file to existing record
+     *
+     * @param country country identifier
+     * @param recordKey the record's recordKey
+     * @param fileInputStream input data stream
+     * @param upsert http method flag, if true used PUT method otherwise POST
+     * @return id of attached file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
     String addAttachment(String country, String recordKey, InputStream fileInputStream, boolean upsert) throws StorageClientException, StorageServerException;
 
+    /**
+     * Delete attached file of existing record
+     *
+     * @param country country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId file identifier
+     * @return true when file was deleted
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
     boolean deleteAttachment(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
 
+    /**
+     * Get attached file of existing record
+     *
+     * @param country country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId file identifier
+     * @return AttachedFile object which contains required file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
     AttachedFile getAttachmentFile(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
 
+    /**
+     * Update attached file meta information
+     *
+     * @param country country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId file identifier
+     * @param fileName file name
+     * @param mimeType file MIME type
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
     void updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException;
 
+    /**
+     * Get attached file meta information
+     *
+     * @param country country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId file identifier
+     * @return AttachmentMeta  object which contains required meta information
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
     AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
 }

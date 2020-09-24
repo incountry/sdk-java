@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.dto;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 public class Record {
@@ -32,6 +33,7 @@ public class Record {
     private String serviceKey2;
     protected Date createdAt;
     protected Date updatedAt;
+    private List<String> attachedFiles;
 
     /**
      * Minimalistic constructor
@@ -293,6 +295,15 @@ public class Record {
 
     public Date getUpdatedAt() {
         return updatedAt != null ? new Date(updatedAt.getTime()) : null;
+    }
+
+    public List<String> getAttachedFiles() {
+        return attachedFiles;
+    }
+
+    public Record setAttachedFiles(List<String> attachedFiles) {
+        this.attachedFiles = attachedFiles;
+        return this;
     }
 
     @Override

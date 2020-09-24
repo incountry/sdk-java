@@ -1,8 +1,8 @@
 package com.incountry.residence.sdk.tools.dao.impl;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.incountry.residence.sdk.tools.models.PopApiResponse;
+import com.incountry.residence.sdk.tools.models.CustomEnum;
+import com.incountry.residence.sdk.tools.models.HttpParameters;
+import com.incountry.residence.sdk.tools.models.ApiResponse;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
@@ -43,7 +43,7 @@ public class HttpDaoImpl implements Dao {
     private static final String DEFAULT_ENDPOINT_MASK = "-mt-01.api.incountry.io";
     private static final String DEFAULT_COUNTRY = "us";
     private static final String DEFAULT_REGION = "emea";
-    private static final String STORAGE_URL = "/v2/storage/records/";
+    private static final String STORAGE_URL = "v2/storage/records";
     private static final String URI_HTTPS = "https://";
     private static final String URI_POST = "POST";
     private static final String URI_PUT = "PUT";
@@ -52,11 +52,14 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_DELETE = "DELETE";
     private static final String URI_FIND = "/find";
     private static final String URI_BATCH_WRITE = "/batchWrite";
+    private static final String URI_META = "meta";
     private static final String URI_DELIMITER = "/";
-    private static final String URI_ATTACHMENTS = "/attachments";
+    private static final String URI_ATTACHMENTS = "attachments";
     private static final String APPLICATION_JSON = "application/json";
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
     private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
+
+    private static final String MSG_ERR_USER_INPUT_STREAM = "User's InputStream reading error";
 
     private final Map<String, POP> popMap = new HashMap<>();
 
@@ -99,7 +102,7 @@ public class HttpDaoImpl implements Dao {
         }
         String content;
         popMap.clear();
-        PopApiResponse response = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT, APPLICATION_JSON);
+        ApiResponse response = httpAgent.request(countriesEndpoint, null, null, null, RETRY_CNT, new HttpParameters(URI_GET, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.COUNTRY, APPLICATION_JSON));
         content = response.getContent();
         popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
         lastLoadedTime = System.currentTimeMillis();
@@ -150,7 +153,7 @@ public class HttpDaoImpl implements Dao {
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry);
         String body = JsonUtils.toJsonString(record, cryptoManager);
-        httpAgent.request(url, URI_POST, body, ApiResponse.WRITE, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_POST, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.WRITE, APPLICATION_JSON));
     }
 
     @Override
@@ -159,7 +162,7 @@ public class HttpDaoImpl implements Dao {
         String recListJson = JsonUtils.toJsonString(records, cryptoManager);
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
-        httpAgent.request(url, URI_POST, recListJson, ApiResponse.BATCH_WRITE, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        httpAgent.request(url, recListJson, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_POST, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.BATCH_WRITE, APPLICATION_JSON));
     }
 
     @Override
@@ -168,7 +171,7 @@ public class HttpDaoImpl implements Dao {
         String key = cryptoManager != null ? cryptoManager.createKeyHash(recordKey) : recordKey;
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordUrl(endPoint.mainUrl, lowerCountry, key);
-        PopApiResponse response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_GET, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.READ, APPLICATION_JSON));
         if (response.getContent() == null) {
             return null;
         } else {
@@ -182,7 +185,7 @@ public class HttpDaoImpl implements Dao {
         String recordHash = cryptoManager != null ? cryptoManager.createKeyHash(key) : key;
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordUrl(endPoint.mainUrl, lowerCountry, recordHash);
-        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_DELETE, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.DELETE, APPLICATION_JSON));
     }
 
     @Override
@@ -191,7 +194,7 @@ public class HttpDaoImpl implements Dao {
         EndPoint endpoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endpoint.mainUrl, lowerCountry, URI_FIND);
         String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
-        PopApiResponse response = httpAgent.request(url, URI_POST, postData, ApiResponse.FIND, endpoint.audience, endpoint.region, RETRY_CNT, APPLICATION_JSON);
+        ApiResponse response = httpAgent.request(url, postData, endpoint.audience, endpoint.region, RETRY_CNT, new HttpParameters(URI_POST, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.FIND, APPLICATION_JSON));
         if (response.getContent() == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
         }
@@ -202,15 +205,16 @@ public class HttpDaoImpl implements Dao {
     public String addAttachment(String country, String recordKey, InputStream fileInputStream, boolean upsert) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
-        String url = getAttachmentUrl(endPoint.mainUrl, lowerCountry, recordKey);
+        String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS);
         String method = upsert ? URI_PUT : URI_POST;
-        String body = null;
+        String body;
         try {
             body = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            LOG.error(MSG_ERR_USER_INPUT_STREAM);
+            throw new StorageClientException(MSG_ERR_USER_INPUT_STREAM, ex);
         }
-        PopApiResponse response = httpAgent.request(url, method, body, ApiResponse.WRITE, endPoint.audience, endPoint.region, RETRY_CNT, MULTIPART_FORM_DATA);
+        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(method, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.WRITE, MULTIPART_FORM_DATA));
         return response.getContent();
     }
 
@@ -218,68 +222,57 @@ public class HttpDaoImpl implements Dao {
     public void deleteAttachment(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
-        String url = getAttachmentUrlWithFileId(endPoint.mainUrl, lowerCountry, recordKey, fileId);
-        httpAgent.request(url, URI_DELETE, null, ApiResponse.DELETE, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId);
+        httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_DELETE, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.DELETE, APPLICATION_JSON));
     }
 
     @Override
     public AttachedFile getAttachmentFile(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
-        String url = getAttachmentUrlWithFileId(endPoint.mainUrl, lowerCountry, recordKey, fileId);
-        PopApiResponse response = httpAgent.request(url, URI_GET, null, ApiResponse.DELETE, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId);
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_GET, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.READ, APPLICATION_JSON));
         InputStream content = new ByteArrayInputStream(response.getContent().getBytes(StandardCharsets.UTF_8));
-        return new AttachedFile(content, response.getFileExtension());
+        String fileExtension = null;
+        if (response.getMetaInfo().containsKey(CustomEnum.EXTENSION)) {
+            fileExtension = response.getMetaInfo().get(CustomEnum.EXTENSION);
+        }
+        return new AttachedFile(content, fileExtension);
     }
 
     @Override
     public void updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
-        String url = getAttachmentUrlMeta(endPoint.mainUrl, lowerCountry, recordKey, fileId);
-        JsonObject json = new JsonObject();
-        json.addProperty("filename", fileName);
-        json.addProperty("mime_type", mimeType);
-        httpAgent.request(url, URI_PATCH, json.toString(), ApiResponse.DELETE, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
+        String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId, URI_META);
+        httpAgent.request(url, JsonUtils.createUpdatedMetaJson(fileName, mimeType), endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_PATCH, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.WRITE, APPLICATION_JSON));
     }
 
     @Override
     public AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
-        String url = getAttachmentUrlMeta(endPoint.mainUrl, lowerCountry, recordKey, fileId);
-        PopApiResponse response = httpAgent.request(url, URI_GET, null, ApiResponse.READ, endPoint.audience, endPoint.region, RETRY_CNT, APPLICATION_JSON);
-        return new Gson().fromJson(response.getContent(), AttachmentMeta.class);
+        String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId, URI_META);
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new HttpParameters(URI_GET, com.incountry.residence.sdk.tools.dao.impl.ApiResponse.READ, APPLICATION_JSON));
+        return (AttachmentMeta) JsonUtils.getDataFromJson(response.getContent(), AttachmentMeta.class);
     }
 
-    private String getAttachmentUrl(String endPoint, String country, String recordKey) {
-        return new StringBuilder(endPoint)
-                .append(STORAGE_URL)
-                .append(country)
-                .append(URI_DELIMITER)
-                .append(recordKey)
-                .append(URI_ATTACHMENTS).toString();
-
-    }
-
-    private String getAttachmentUrlWithFileId(String endPoint, String country, String recordKey, String fileId) {
-        return getAttachmentUrl(endPoint, country, recordKey).concat("/").concat(fileId);
-    }
-
-    private String getAttachmentUrlMeta(String endPoint, String country, String recordKey, String fileId) {
-        return getAttachmentUrlWithFileId(endPoint, country, recordKey, fileId).concat("/").concat("meta");
+    private String getAttachmentUrl(String... urlParts) {
+        return String.join(URI_DELIMITER, urlParts);
     }
 
     private String getRecordUrl(String endPoint, String country, String keyHash) {
         return new StringBuilder(endPoint)
+                .append(URI_DELIMITER)
                 .append(STORAGE_URL)
+                .append(URI_DELIMITER)
                 .append(country)
                 .append(URI_DELIMITER)
                 .append(keyHash).toString();
     }
 
     private String getRecordActionUrl(String endpoint, String country, String... other) {
-        StringBuilder builder = new StringBuilder(endpoint).append(STORAGE_URL);
+        StringBuilder builder = new StringBuilder(endpoint).append(URI_DELIMITER).append(STORAGE_URL).append(URI_DELIMITER);
         builder.append(country);
         for (String part : other) {
             builder.append(part);

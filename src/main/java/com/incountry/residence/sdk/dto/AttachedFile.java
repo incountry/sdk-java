@@ -19,4 +19,12 @@ public class AttachedFile {
     public String getFileExtension() {
         return fileExtension;
     }
+
+    @Override
+    public String toString() {
+        return "AttachedFile{" +
+                "fileContent=" + fileContent +
+                ", fileExtension=" + fileExtension +
+                '}';
+    }
 }

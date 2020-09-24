@@ -71,10 +71,10 @@ class SecretsTest {
         jsonWithoutSecretsDataFields.addProperty("version", 2);
         String jsonString = new Gson().toJson(jsonWithoutSecretsDataFields);
 
-        assertNotNull(JsonUtils.getSecretsDataFromJson(jsonString));
-        assertEquals(0, JsonUtils.getSecretsDataFromJson(jsonString).getCurrentVersion());
-        assertNull(JsonUtils.getSecretsDataFromJson(jsonString).getSecrets());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson("NotJsonString"));
+        assertNotNull(( JsonUtils.getDataFromJson(jsonString, SecretsData.class)));
+        assertEquals(0, ((SecretsData) JsonUtils.getDataFromJson(jsonString, SecretsData.class)).getCurrentVersion());
+        assertNull(((SecretsData) JsonUtils.getDataFromJson(jsonString, SecretsData.class)).getSecrets());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> JsonUtils.getDataFromJson("NotJsonString", SecretsData.class));
         assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
 
         JsonObject jsonWithSecret = new JsonObject();
@@ -87,7 +87,7 @@ class SecretsTest {
         jsonWithSecretsDataFields.addProperty("currentVersion", "1");
         jsonWithSecretsDataFields.add("secrets", array);
         jsonString = new Gson().toJson(jsonWithSecretsDataFields);
-        SecretsData data = JsonUtils.getSecretsDataFromJson(jsonString);
+        SecretsData data = (SecretsData) JsonUtils.getDataFromJson(jsonString, SecretsData.class);
 
         assertNotNull(data);
         assertEquals(1, data.getCurrentVersion());

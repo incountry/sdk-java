@@ -711,7 +711,7 @@ class StorageTest {
     }
 
     @Test
-    void updateAttachmentMetaWithIllegalParams() throws StorageClientException, StorageServerException, IOException {
+    void updateAttachmentMetaWithIllegalParams() throws StorageClientException, StorageServerException {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
@@ -740,8 +740,8 @@ class StorageTest {
         Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.deleteAttachment("us", recordKey, null));
-        assertEquals("File id can't be null", ex.getMessage());
+        assertEquals("File ID can't be null", ex.getMessage());
         ex = assertThrows(StorageClientException.class, () -> storage.deleteAttachment("us", recordKey, ""));
-        assertEquals("File id can't be null", ex.getMessage());
+        assertEquals("File ID can't be null", ex.getMessage());
     }
 }

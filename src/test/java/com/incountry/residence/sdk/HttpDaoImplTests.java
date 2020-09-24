@@ -684,36 +684,30 @@ class HttpDaoImplTests {
                                boolean encrypt) throws StorageClientException, StorageServerException {
 
         String fileId = "1";
-        String createdAt = "2020-08-28T12:35:58.383Z";
         String downloadLink = "some_link";
         String fileName = "test_file";
         String hash = "1234567890";
         String mimeType = "text/plain";
         int size = 1000;
-        String updatedAt = "2020-08-28T12:35:58.383Z";
 
         AttachmentMeta response = new AttachmentMeta();
-        response.setCreatedAt(createdAt);
         response.setDownloadLink(downloadLink);
         response.setFileId(fileId);
         response.setFileName(fileName);
         response.setHash(hash);
         response.setMimeType(mimeType);
         response.setSize(size);
-        response.setUpdatedAt(updatedAt);
 
         FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response));
         Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
 
         AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
         assertEquals(fileId, attachmentMeta.getFileId());
-        assertEquals(createdAt, attachmentMeta.getCreatedAt());
         assertEquals(downloadLink, attachmentMeta.getDownloadLink());
         assertEquals(fileName, attachmentMeta.getFileName());
         assertEquals(hash, attachmentMeta.getHash());
         assertEquals(mimeType, attachmentMeta.getMimeType());
         assertEquals(size, attachmentMeta.getSize());
-        assertEquals(updatedAt, attachmentMeta.getUpdatedAt());
     }
 
     private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";

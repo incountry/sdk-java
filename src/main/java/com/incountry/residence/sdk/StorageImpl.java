@@ -41,7 +41,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
-    private static final String MSG_ERR_NULL_FILE_ID = "File id can't be null";
+    private static final String MSG_ERR_NULL_FILE_ID = "File ID can't be null";
     private static final String MSG_ERR_NULL_KEY = "Key can't be null";
     private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
@@ -252,10 +252,7 @@ public class StorageImpl implements Storage {
     }
 
     private void checkAttachmentParameters(String country, String key, String fileId) throws StorageClientException {
-        if (fileId == null || fileId.isEmpty()) {
-            LOG.error(MSG_ERR_NULL_FILE_ID);
-            throw new StorageClientException(MSG_ERR_NULL_FILE_ID);
-        }
+        checkNotNull(fileId, MSG_ERR_NULL_FILE_ID);
         checkParameters(country, key);
     }
 
@@ -386,11 +383,6 @@ public class StorageImpl implements Storage {
 
     @Override
     public String addAttachment(String country, String recordKey, InputStream fileStream, boolean upsert) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment params (country={} , key={}, upsert={})",
-                    country, recordKey, upsert);
-        }
-
         try {
             if (fileStream == null || fileStream.available() == 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
@@ -399,6 +391,11 @@ public class StorageImpl implements Storage {
         } catch (IOException ex) {
             LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);
+        }
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("addAttachment params (country={} , key={}, fileStreamHash={}, upsert={})",
+                    country, recordKey, fileStream.hashCode(), upsert);
         }
         checkParameters(country, recordKey);
         return dao.addAttachment(country, recordKey, fileStream, upsert);
@@ -412,6 +409,7 @@ public class StorageImpl implements Storage {
         }
         checkAttachmentParameters(country, recordKey, fileId);
         dao.deleteAttachment(country, recordKey, fileId);
+        LOG.trace("deleteAttachment method result: true");
         return true;
     }
 
@@ -422,7 +420,6 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileId);
         }
         checkAttachmentParameters(country, recordKey, fileId);
-        checkParameters(country, recordKey);
         return dao.getAttachmentFile(country, recordKey, fileId);
     }
 
@@ -432,14 +429,8 @@ public class StorageImpl implements Storage {
             LOG.trace("updateAttachmentMeta params (country={} , key={}, fileId={}, fileName={}, mimeType={})",
                     country, recordKey, fileId, fileName, mimeType);
         }
-        if (fileName == null || fileName.isEmpty()) {
-            LOG.error(MSG_ERR_NULL_FILE_NAME);
-            throw new StorageClientException(MSG_ERR_NULL_FILE_NAME);
-        }
-        if (mimeType == null || mimeType.isEmpty()) {
-            LOG.error(MSG_ERR_NULL_FILE_MIME_TYPE);
-            throw new StorageClientException(MSG_ERR_NULL_FILE_MIME_TYPE);
-        }
+        checkNotNull(fileName, MSG_ERR_NULL_FILE_NAME);
+        checkNotNull(mimeType, MSG_ERR_NULL_FILE_MIME_TYPE);
         checkAttachmentParameters(country, recordKey, fileId);
         dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
     }
@@ -451,6 +442,8 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileId);
         }
         checkAttachmentParameters(country, recordKey, fileId);
-        return dao.getAttachmentMeta(country, recordKey, fileId);
+        AttachmentMeta attachmentMeta = dao.getAttachmentMeta(country, recordKey, fileId);
+        LOG.trace("getAttachmentMeta method result: {}", attachmentMeta);
+        return attachmentMeta;
     }
 }

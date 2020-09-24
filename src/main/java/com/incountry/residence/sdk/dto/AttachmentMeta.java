@@ -1,22 +1,24 @@
 package com.incountry.residence.sdk.dto;
 
+import java.util.Date;
+
 public class AttachmentMeta {
 
-    private String createdAt;
+    private Date createdAt;
+    private Date updatedAt;
     private String downloadLink;
     private String fileId;
     private String fileName;
     private String hash;
     private String mimeType;
     private int size;
-    private String updatedAt;
 
-    public String getCreatedAt() {
-        return createdAt;
+    public Date getCreatedAt() {
+        return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
+    public Date getUpdatedAt() {
+        return updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 
     public String getDownloadLink() {
@@ -67,25 +69,17 @@ public class AttachmentMeta {
         this.size = size;
     }
 
-    public String getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(String updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     @Override
     public String toString() {
         return "AttachmentMeta{" +
                 "createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 ", downloadLink=" + downloadLink +
                 ", fileId=" + fileId +
                 ", fileName=" + fileName +
                 ", hash=" + hash +
                 ", mimeType=" + mimeType +
                 ", size=" + size +
-                ", updatedAt=" + updatedAt +
                 '}';
     }
 }
