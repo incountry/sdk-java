@@ -49,24 +49,9 @@ class HttpAgentImplTest {
     private static final TokenClient TOKEN_CLIENT = new ApiKeyTokenClient("<api_key>");
     private static final String APPLICATION_JSON = "application/json";
 
-
     @Test
-    void testNullEndpointException() {
+    void testWithIllegalUrl() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "someBody", null, null, 0, new HttpParameters("GET", new HashMap<>(), APPLICATION_JSON)));
-        assertEquals("URL can't be null", ex.getMessage());
-    }
-
-    @Test
-    void testNullApiKeyException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "someBody", null, null, 0, new HttpParameters("GET", new HashMap<>(), APPLICATION_JSON)));
-        assertEquals("URL can't be null", ex.getMessage());
-    }
-
-    @Test
-    void testNullEnvIdException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, null, HttpClients.createDefault());
         StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "someBody", null, null, 0, new HttpParameters("GET", new HashMap<>(), APPLICATION_JSON)));
         assertEquals("URL can't be null", ex.getMessage());
     }
