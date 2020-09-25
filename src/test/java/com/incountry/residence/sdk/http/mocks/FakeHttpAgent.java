@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.http.mocks;
 
+import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 import com.incountry.residence.sdk.tools.models.HttpParameters;
 import com.incountry.residence.sdk.tools.models.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
@@ -16,7 +17,7 @@ public class FakeHttpAgent implements HttpAgent {
     private String response;
     private String callRegion;
     private List<String> responseList;
-    private Map<Integer, com.incountry.residence.sdk.tools.dao.impl.ApiResponse> codeMap;
+    private Map<Integer, ApiResponseCodes> codeMap;
     private int retryCount;
     private String audienceUrl;
 
@@ -56,7 +57,7 @@ public class FakeHttpAgent implements HttpAgent {
         return audienceUrl;
     }
 
-    public Map<Integer, com.incountry.residence.sdk.tools.dao.impl.ApiResponse> getCodeMap() {
+    public Map<Integer, ApiResponseCodes> getCodeMap() {
         return codeMap;
     }
 

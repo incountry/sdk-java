@@ -382,9 +382,9 @@ public class StorageImpl implements Storage {
     }
 
     @Override
-    public String addAttachment(String country, String recordKey, InputStream fileStream, boolean upsert) throws StorageClientException, StorageServerException {
+    public String addAttachment(String country, String recordKey, InputStream inputStream, boolean upsert) throws StorageClientException, StorageServerException {
         try {
-            if (fileStream == null || fileStream.available() == 0) {
+            if (inputStream == null || inputStream.available() == 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
                 throw new StorageClientException(MSG_ERR_NULL_FILE_INPUT_STREAM);
             }
@@ -394,11 +394,11 @@ public class StorageImpl implements Storage {
         }
 
         if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment params (country={} , key={}, fileStreamHash={}, upsert={})",
-                    country, recordKey, fileStream.hashCode(), upsert);
+            LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
+                    country, recordKey, inputStream.hashCode(), upsert);
         }
         checkParameters(country, recordKey);
-        String attachedFileId = dao.addAttachment(country, recordKey, fileStream, upsert);
+        String attachedFileId = dao.addAttachment(country, recordKey, inputStream, upsert);
         if (LOG.isTraceEnabled()) {
             LOG.trace("addAttachment results={}", attachedFileId);
         }
@@ -426,7 +426,11 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileId);
         }
         checkAttachmentParameters(country, recordKey, fileId);
-        return dao.getAttachmentFile(country, recordKey, fileId);
+        AttachedFile attachedFile = dao.getAttachmentFile(country, recordKey, fileId);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("getAttachmentFile results={}", attachedFile);
+        }
+        return attachedFile;
     }
 
     @Override

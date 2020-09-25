@@ -1,16 +1,16 @@
 package com.incountry.residence.sdk.tools.models;
 
-import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 
 import java.util.Map;
 
 public class HttpParameters {
 
     private String method;
-    private Map<Integer, ApiResponse> codeMap;
+    private Map<Integer, ApiResponseCodes> codeMap;
     private String contentType;
 
-    public HttpParameters(String method, Map<Integer, ApiResponse> codeMap, String contentType) {
+    public HttpParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType) {
         this.method = method;
         this.codeMap = codeMap;
         this.contentType = contentType;
@@ -24,11 +24,11 @@ public class HttpParameters {
         this.method = method;
     }
 
-    public Map<Integer, ApiResponse> getCodeMap() {
+    public Map<Integer, ApiResponseCodes> getCodeMap() {
         return codeMap;
     }
 
-    public void setCodeMap(Map<Integer, ApiResponse> codeMap) {
+    public void setCodeMap(Map<Integer, ApiResponseCodes> codeMap) {
         this.codeMap = codeMap;
     }
 
@@ -38,5 +38,14 @@ public class HttpParameters {
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpParameters{" +
+                "method=" + method +
+                ", codeMap=" + codeMap +
+                ", contentType=" + contentType +
+                '}';
     }
 }

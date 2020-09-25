@@ -5,13 +5,13 @@ import java.util.Map;
 public class ApiResponse {
 
     private String content;
-    private Map<CustomEnum, String> metaInfo;
+    private Map<MetaInfoTypes, String> metaInfo;
 
     public ApiResponse(String content) {
         this.content = content;
     }
 
-    public ApiResponse(String content, Map<CustomEnum, String> metaInfo) {
+    public ApiResponse(String content, Map<MetaInfoTypes, String> metaInfo) {
         this.content = content;
         this.metaInfo = metaInfo;
     }
@@ -24,11 +24,11 @@ public class ApiResponse {
         this.content = content;
     }
 
-    public Map<CustomEnum, String> getMetaInfo() {
+    public Map<MetaInfoTypes, String> getMetaInfo() {
         return metaInfo;
     }
 
-    public void setMetaInfo(Map<CustomEnum, String> metaInfo) {
+    public void setMetaInfo(Map<MetaInfoTypes, String> metaInfo) {
         this.metaInfo = metaInfo;
     }
 }

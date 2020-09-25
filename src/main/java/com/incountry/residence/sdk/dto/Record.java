@@ -301,7 +301,7 @@ public class Record {
         return attachedFiles;
     }
 
-    public Record setAttachedFiles(List<String> attachedFiles) {
+    protected Record setAttachedFiles(List<String> attachedFiles) {
         this.attachedFiles = attachedFiles;
         return this;
     }

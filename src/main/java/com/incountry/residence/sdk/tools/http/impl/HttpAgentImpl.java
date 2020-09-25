@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
-import com.incountry.residence.sdk.tools.models.CustomEnum;
+import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
+import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.models.HttpParameters;
 import com.incountry.residence.sdk.tools.models.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -59,12 +60,11 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
     public ApiResponse request(String url, String body,
                                String audience, String region, int retryCount, HttpParameters httpParameters) throws StorageServerException, StorageClientException {
         String method = httpParameters.getMethod();
-        Map<Integer, com.incountry.residence.sdk.tools.dao.impl.ApiResponse> codeMap = httpParameters.getCodeMap();
+        Map<Integer, ApiResponseCodes> codeMap = httpParameters.getCodeMap();
         if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (url={} , method={} , codeMap={})",
+            LOG.trace("HTTP request params (url={} , httpParameters={})",
                     url,
-                    method,
-                    codeMap);
+                    httpParameters);
         }
         if (url == null) {
             throw new StorageClientException(MSG_URL_NULL_ERR);
@@ -76,14 +76,14 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
             int status = response.getStatusLine().getStatusCode();
             HttpEntity responseEntity = response.getEntity();
-            Map<CustomEnum, String> metaInfo = new EnumMap<>(CustomEnum.class);
+            Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
             if (ContentType.get(responseEntity) != null && isFileDownloadRequest(url, httpParameters.getMethod())) {
                 String fileExtension = ContentType.get(responseEntity).getMimeType().split("/")[1];
-                metaInfo.put(CustomEnum.EXTENSION, fileExtension);
+                metaInfo.put(MetaInfoTypes.EXTENSION, fileExtension);
             }
             String actualResponseContent = EntityUtils.toString(response.getEntity());
             response.close();
-            com.incountry.residence.sdk.tools.dao.impl.ApiResponse expectedResponse = codeMap.get(status);
+            ApiResponseCodes expectedResponse = codeMap.get(status);
             boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
             boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse, retryCount);
             if (!isFinish) {
@@ -120,7 +120,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         return request;
     }
 
-    private boolean canRetry(com.incountry.residence.sdk.tools.dao.impl.ApiResponse params, int retryCount) {
+    private boolean canRetry(ApiResponseCodes params, int retryCount) {
         return params.isCanRetry() && retryCount > 0;
     }
 }
