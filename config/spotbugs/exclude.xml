@@ -16,4 +16,10 @@
         <Bug pattern="URLCONNECTION_SSRF_FD"/>
     </Match>
 
+    <Match>
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Method name="request" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH" />
+    </Match>
+
 </FindBugsFilter>
