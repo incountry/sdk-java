@@ -28,6 +28,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
     private static final String MSG_SERVER_ERROR = "Server request error: [URL=%s, method=%s]";
     private static final String MSG_URL_NULL_ERR = "URL can't be null";
+    private static final String MSG_REQ_PARAMS_NULL_ERR = "Request parameters can't be null";
     private static final String MSG_ERR_CONTENT = "Code=%d, endpoint=[%s], content=[%s]";
     private static final String BEARER = "Bearer ";
     private static final String AUTHORIZATION = "Authorization";
@@ -56,9 +57,12 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         this.httpClient = httpClient;
     }
 
-    private void checkUrl(String url) throws StorageClientException {
+    private void checkParameters(String url, RequestParameters requestParameters) throws StorageClientException {
         if (url == null) {
             throw new StorageClientException(MSG_URL_NULL_ERR);
+        }
+        if (requestParameters == null) {
+            throw new StorageClientException(MSG_REQ_PARAMS_NULL_ERR);
         }
     }
 
@@ -73,16 +77,11 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                     retryCount,
                     requestParameters != null ? requestParameters : null);
         }
-        checkUrl(url);
+        checkParameters(url, requestParameters);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         try {
-            HttpRequestBase request;
-            if (requestParameters.isFileUpload()) {
-                request = createFileUploadRequest(url, method, body, requestParameters.getFileName());
-            } else {
-                request = createRequest(url, method, body);
-            }
+            HttpRequestBase request = createRequest(url, method, body, requestParameters);
             addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
             CloseableHttpResponse response = httpClient.execute(request);
 

@@ -126,7 +126,7 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
                 LOG.trace(MSG_AUTH_URL, authUrl);
             }
 
-            HttpRequestBase request = createRequest(authUrl, POST, body);
+            HttpRequestBase request = createRequest(authUrl, POST, body, null);
             addHeaders(request);
             CloseableHttpResponse response = httpClient.execute(request);
 

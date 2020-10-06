@@ -2,6 +2,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.models.RequestParameters;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -34,7 +35,15 @@ public abstract class AbstractHttpRequestCreator {
     private static final String PATCH = "PATCH";
     private static final String FILE = "file";
 
-    protected HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
+    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws UnsupportedEncodingException, StorageServerException {
+        if (requestParameters != null && requestParameters.isFileUpload()) {
+            return createFileUploadRequest(url, method, body, requestParameters.getFileName());
+        } else {
+            return createSimpleRequest(url, method, body);
+        }
+    }
+
+    private HttpRequestBase createSimpleRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
         URI uri;
         try {
             uri = new URI(url);
@@ -65,7 +74,7 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    protected HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName) throws StorageServerException {
+    private HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName) throws StorageServerException {
         checkBody(body, method);
         URI uri;
         try {
