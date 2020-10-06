@@ -570,19 +570,24 @@ class HttpDaoImplTests {
                            boolean isKey,
                            boolean encrypt) throws StorageClientException, StorageServerException, IOException {
         String fileContent = "Hello world!";
+        String fileId = "123456";
+        String fileName = "sdk_incountry_unit_tests_file.txt";
 
-        FakeHttpAgent agent = new FakeHttpAgent("OK");
+        FakeHttpAgent agent = new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId));
         Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
-        String expectedPath = "/v2/storage/records/" + country + "/" + recordKey +  "/attachments";
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(recordKey);
+        String expectedPath = "/v2/storage/records/" + country + "/" + keyHash +  "/attachments";
 
-        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
 
-        storage.addAttachment(country, recordKey, fileInputStream, false);
+        String responseFileId = storage.addAttachment(country, recordKey, fileInputStream, fileName, false);
         String received = agent.getCallBody();
         String callPath = new URL(agent.getCallUrl()).getPath();
 
+        assertEquals(fileId, responseFileId);
         assertEquals(expectedPath, callPath);
         assertEquals(received, fileContent);
 
@@ -606,10 +611,12 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("{}");
         Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
         storage.deleteAttachment(country, recordKey, fileId);
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(recordKey);
         String expectedPath = "/v2/storage/records/"
                 .concat(country)
                 .concat("/")
-                .concat(recordKey)
+                .concat(keyHash)
                 .concat("/attachments/")
                 .concat(fileId);
         String callPath = new URL(agent.getCallUrl()).getPath();

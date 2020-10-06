@@ -55,6 +55,7 @@ public class JsonUtils {
     private static final String P_FILTER = "filter";
     private static final String P_FILE_NAME = "filename";
     private static final String P_MIME_TYPE = "mime_type";
+    private static final String P_ATTACHED_FILES = "attachments";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
     private static final String MSG_ERR_RESPONSE = "Response error";
@@ -62,7 +63,7 @@ public class JsonUtils {
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
             P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
-            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10);
+            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_ATTACHED_FILES);
 
     private JsonUtils() {
     }

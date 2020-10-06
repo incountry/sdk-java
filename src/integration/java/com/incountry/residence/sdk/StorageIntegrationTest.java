@@ -18,7 +18,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -126,10 +125,11 @@ public class StorageIntegrationTest {
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final int VERSION = 0;
-    private static final String FILE_EXTENSION = "txt";
     private static final String FILE_CONTENT = "Hello world!";
+    private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
     private static final String NEW_FILE_NAME = "new_sdk_incountry_test_file";
     private static final String NEW_FILE_MIME_TYPE = "text/plain";
+    private static final String FILE_NAME = "sdk_incountry_integration_tests_file.txt";
     private static String fileId;
 
     public static String loadFromEnv(String key) {
@@ -209,6 +209,16 @@ public class StorageIntegrationTest {
     }
 
     @Test
+    @Order(201)
+    void addAttachmentTest() throws StorageException, IOException {
+        Path tempFile = Files.createTempFile(FILE_NAME.split("\\.")[0], FILE_NAME.split("\\.")[1]);
+        Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        fileId = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, FILE_NAME, false);
+        Files.delete(tempFile);
+    }
+
+    @Test
     @Order(300)
     public void readTest() throws StorageException {
         Record incomingRecord = storage.read(MIDIPOP_COUNTRY, RECORD_KEY);
@@ -238,6 +248,7 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
         assertEquals(RANGE_KEY_10, incomingRecord.getRangeKey10());
+        assertEquals(1, incomingRecord.getAttachedFiles().size());
         assertNotNull(incomingRecord.getCreatedAt());
         assertNotNull(incomingRecord.getUpdatedAt());
     }
@@ -266,6 +277,41 @@ public class StorageIntegrationTest {
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
         assertEquals(KEY_2, incomingRecord.getKey2());
         assertEquals(KEY_3, incomingRecord.getKey3());
+    }
+
+    @Test
+    @Order(302)
+    void getAttachmentFileTest() throws StorageException, IOException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
+        assertEquals(FILE_CONTENT, incomingFileContent);
+    }
+
+    @Test
+    @Order(303)
+    void getAttachmentMetaTest() throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        assertEquals(fileId, meta.getFileId());
+        assertEquals(FILE_NAME, meta.getFileName());
+        assertEquals(DEFAULT_MIME_TYPE, meta.getMimeType());
+    }
+
+    @Test
+    @Order(304)
+    void updateAttachmentMetaTest() throws StorageException {
+        storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_FILE_MIME_TYPE);
+        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        assertEquals(fileId, meta.getFileId());
+        assertEquals(NEW_FILE_NAME, meta.getFileName());
+        assertEquals(NEW_FILE_MIME_TYPE, meta.getMimeType());
+    }
+
+    @Test
+    @Order(305)
+    void deleteAttachmentTest() throws StorageException {
+        storage.deleteAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        assertNull(file.getFileContent());
     }
 
     @Test
@@ -623,45 +669,5 @@ public class StorageIntegrationTest {
             }
             return null;
         };
-    }
-
-    @Disabled
-    @Test
-    void addAttachmentTest() throws StorageException, IOException {
-        Path tempFile = Files.createTempFile("sdk_incountry_integration_tests_file", FILE_EXTENSION);
-        InputStream fileInputStream = Files.newInputStream(tempFile);
-        Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
-        fileId = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, false);
-        Files.delete(tempFile);
-    }
-
-    @Disabled
-    @Test
-    void getAttachmentFileTest() throws StorageException, IOException {
-        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
-        String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
-        assertEquals(FILE_EXTENSION, file.getFileExtension());
-        assertEquals(FILE_CONTENT, incomingFileContent);
-    }
-
-    @Disabled
-    @Test
-    void updateAttachmentMetaTest() throws StorageException {
-        storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_FILE_MIME_TYPE);
-    }
-
-    @Disabled
-    @Test
-    void getAttachmentMetaTest() throws StorageException {
-        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
-        assertEquals(fileId, meta.getFileId());
-        assertEquals(NEW_FILE_NAME, meta.getFileName());
-        assertEquals(NEW_FILE_MIME_TYPE, meta.getMimeType());
-    }
-
-    @Disabled
-    @Test
-    void deleteAttachmentTest() throws StorageException {
-        storage.deleteAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
     }
 }

@@ -382,7 +382,11 @@ public class StorageImpl implements Storage {
     }
 
     @Override
-    public String addAttachment(String country, String recordKey, InputStream inputStream, boolean upsert) throws StorageClientException, StorageServerException {
+    public String addAttachment(String country, String recordKey, InputStream inputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
+                    country, recordKey, inputStream != null ? inputStream.hashCode() : null, upsert);
+        }
         try {
             if (inputStream == null || inputStream.available() == 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
@@ -392,13 +396,8 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);
         }
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
-                    country, recordKey, inputStream.hashCode(), upsert);
-        }
         checkParameters(country, recordKey);
-        String attachedFileId = dao.addAttachment(country, recordKey, inputStream, upsert);
+        String attachedFileId = dao.addAttachment(country, recordKey, inputStream, fileName, upsert, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("addAttachment results={}", attachedFileId);
         }
@@ -412,7 +411,7 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileId);
         }
         checkAttachmentParameters(country, recordKey, fileId);
-        dao.deleteAttachment(country, recordKey, fileId);
+        dao.deleteAttachment(country, recordKey, fileId, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("deleteAttachment results={}", true);
         }
@@ -426,7 +425,7 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileId);
         }
         checkAttachmentParameters(country, recordKey, fileId);
-        AttachedFile attachedFile = dao.getAttachmentFile(country, recordKey, fileId);
+        AttachedFile attachedFile = dao.getAttachmentFile(country, recordKey, fileId, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("getAttachmentFile results={}", attachedFile);
         }
@@ -442,7 +441,7 @@ public class StorageImpl implements Storage {
         checkNotNull(fileName, MSG_ERR_NULL_FILE_NAME);
         checkNotNull(mimeType, MSG_ERR_NULL_FILE_MIME_TYPE);
         checkAttachmentParameters(country, recordKey, fileId);
-        dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
+        dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType, cryptoManager);
     }
 
     @Override
@@ -452,7 +451,7 @@ public class StorageImpl implements Storage {
                     country, recordKey, fileId);
         }
         checkAttachmentParameters(country, recordKey, fileId);
-        AttachmentMeta attachmentMeta = dao.getAttachmentMeta(country, recordKey, fileId);
+        AttachmentMeta attachmentMeta = dao.getAttachmentMeta(country, recordKey, fileId, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("getAttachmentMeta results={}", attachmentMeta);
         }

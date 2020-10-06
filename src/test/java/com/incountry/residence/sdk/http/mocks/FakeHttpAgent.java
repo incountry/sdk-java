@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
-import com.incountry.residence.sdk.tools.models.HttpParameters;
+import com.incountry.residence.sdk.tools.models.RequestParameters;
 import com.incountry.residence.sdk.tools.models.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
@@ -30,11 +30,11 @@ public class FakeHttpAgent implements HttpAgent {
     }
 
     @Override
-    public ApiResponse request(String url, String body, String audience, String region, int retryCount, HttpParameters httpParameters) {
+    public ApiResponse request(String url, String body, String audience, String region, int retryCount, RequestParameters requestParameters) {
         this.callUrl = url;
-        this.callMethod = httpParameters.getMethod();
+        this.callMethod = requestParameters.getMethod();
         this.callBody = body;
-        this.codeMap = httpParameters.getCodeMap();
+        this.codeMap = requestParameters.getCodeMap();
         this.retryCount = retryCount;
         this.audienceUrl = audience;
         this.callRegion = region;

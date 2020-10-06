@@ -107,12 +107,13 @@ public interface Storage {
      * @param country country identifier
      * @param recordKey the record's recordKey
      * @param fileInputStream input data stream
+     * @param fileName file name
      * @param upsert http method flag, if true used PUT method otherwise POST
      * @return id of attached file
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
-    String addAttachment(String country, String recordKey, InputStream fileInputStream, boolean upsert) throws StorageClientException, StorageServerException;
+    String addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException;
 
     /**
      * Delete attached file of existing record

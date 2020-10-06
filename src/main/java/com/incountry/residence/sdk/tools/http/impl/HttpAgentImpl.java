@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
-import com.incountry.residence.sdk.tools.models.HttpParameters;
+import com.incountry.residence.sdk.tools.models.RequestParameters;
 import com.incountry.residence.sdk.tools.models.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -56,39 +56,54 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         this.httpClient = httpClient;
     }
 
-    @Override
-    public ApiResponse request(String url, String body,
-                               String audience, String region, int retryCount, HttpParameters httpParameters) throws StorageServerException, StorageClientException {
-        String method = httpParameters.getMethod();
-        Map<Integer, ApiResponseCodes> codeMap = httpParameters.getCodeMap();
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (url={} , httpParameters={})",
-                    url,
-                    httpParameters);
-        }
+    private void checkUrl(String url) throws StorageClientException {
         if (url == null) {
             throw new StorageClientException(MSG_URL_NULL_ERR);
         }
+    }
+
+    @Override
+    public ApiResponse request(String url, String body,
+                               String audience, String region, int retryCount, RequestParameters requestParameters) throws StorageServerException, StorageClientException {
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("HTTP request params (url={}, audience={}, region={}, retryCount={}, httpParameters={})",
+                    url,
+                    audience,
+                    region,
+                    retryCount,
+                    requestParameters != null ? requestParameters : null);
+        }
+        checkUrl(url);
+        String method = requestParameters.getMethod();
+        Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         try {
-            HttpRequestBase request = createRequest(url, method, body);
-            addHeaders(request, audience, region, httpParameters.getContentType());
+            HttpRequestBase request;
+            if (requestParameters.isFileUpload()) {
+                request = createFileUploadRequest(url, method, body, requestParameters.getFileName());
+            } else {
+                request = createRequest(url, method, body);
+            }
+            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
             HttpEntity responseEntity = response.getEntity();
             Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
-            if (ContentType.get(responseEntity) != null && isFileDownloadRequest(url, httpParameters.getMethod())) {
+            if (ContentType.get(responseEntity) != null && isFileDownloadRequest(url, requestParameters.getMethod())) {
                 String fileExtension = ContentType.get(responseEntity).getMimeType().split("/")[1];
                 metaInfo.put(MetaInfoTypes.EXTENSION, fileExtension);
             }
-            String actualResponseContent = EntityUtils.toString(response.getEntity());
+            String actualResponseContent = "";
+            if (response.getEntity() != null) {
+                actualResponseContent = EntityUtils.toString(response.getEntity());
+            }
             response.close();
             ApiResponseCodes expectedResponse = codeMap.get(status);
             boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
             boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse, retryCount);
             if (!isFinish) {
                 tokenClient.refreshToken(true, audience, region);
-                return request(url, body, audience, region, retryCount - 1, httpParameters);
+                return request(url, body, audience, region, retryCount - 1, requestParameters);
             }
             if (expectedResponse != null && expectedResponse.isIgnored()) {
                 return new ApiResponse(null);
@@ -97,6 +112,11 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 String errorMessage = String.format(MSG_ERR_CONTENT, status, url, actualResponseContent).replaceAll("[\r\n]", "");
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
+            }
+            ApiResponse apiResponse = new ApiResponse(actualResponseContent, metaInfo);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("HTTP response={}",
+                        apiResponse);
             }
             return new ApiResponse(actualResponseContent, metaInfo);
         } catch (IOException ex) {
@@ -109,11 +129,13 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         return url.contains(ATTACHMENTS) && !url.endsWith(META) && method.equals(METHOD_GET);
     }
 
-    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType) throws StorageServerException {
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType, boolean fileUploadFlag) throws StorageServerException {
         if (audience != null) {
             request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
         }
-        request.addHeader(CONTENT_TYPE, contentType);
+        if (!fileUploadFlag) {
+            request.addHeader(CONTENT_TYPE, contentType);
+        }
         request.addHeader(ENV_ID, environmentId);
         request.addHeader(USER_AGENT, userAgent);
 

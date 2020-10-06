@@ -31,4 +31,18 @@ public class ApiResponse {
     public void setMetaInfo(Map<MetaInfoTypes, String> metaInfo) {
         this.metaInfo = metaInfo;
     }
+
+    @Override
+    public String toString() {
+        if (content.length() < 1000) {
+            return "ApiResponse{" +
+                    "content=" + content +
+                    ", metaInfo=" + metaInfo +
+                    '}';
+        }
+        return "ApiResponse{" +
+                "metaInfo=" + metaInfo +
+                '}';
+
+    }
 }

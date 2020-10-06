@@ -2,19 +2,24 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractHttpRequestCreator {
     private static final Logger LOG = LogManager.getLogger(AbstractHttpRequestCreator.class);
@@ -27,6 +32,7 @@ public abstract class AbstractHttpRequestCreator {
     private static final String GET = "GET";
     private static final String PUT = "PUT";
     private static final String PATCH = "PATCH";
+    private static final String FILE = "file";
 
     protected HttpRequestBase createRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
         URI uri;
@@ -37,10 +43,7 @@ public abstract class AbstractHttpRequestCreator {
         }
 
         if (method.equals(POST)) {
-            if (body == null) {
-                LOG.error(MSG_ERR_NULL_BODY);
-                throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
-            }
+            checkBody(body, method);
             HttpPost request = new HttpPost(uri);
             StringEntity entity = new StringEntity(body);
             request.setEntity(entity);
@@ -59,6 +62,38 @@ public abstract class AbstractHttpRequestCreator {
             return request;
         } else {
             return new HttpDelete(uri);
+        }
+    }
+
+    protected HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName) throws StorageServerException {
+        checkBody(body, method);
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException ex) {
+            throw new StorageServerException(MSG_ERR_URL, ex);
+        }
+
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), ContentType.APPLICATION_OCTET_STREAM, fileName);
+        HttpEntity entity = builder.build();
+
+        if (method.equals(POST)) {
+            HttpPost request = new HttpPost(uri);
+            request.setEntity(entity);
+            return request;
+        } else {
+            HttpPut request = new HttpPut(uri);
+            request.setEntity(entity);
+            return request;
+        }
+    }
+
+    private void checkBody(String body, String method) throws StorageServerException {
+        if (body == null) {
+            LOG.error(MSG_ERR_NULL_BODY);
+            throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
         }
     }
 }

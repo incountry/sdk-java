@@ -679,28 +679,29 @@ class StorageTest {
         Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
         InputStream inputStream = null;
-        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        String fileName = "sdk_incountry_unit_tests_file.txt";
+        Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         try {
             inputStream = Files.newInputStream(tempFile);
             Files.write(tempFile, "Hello world!".getBytes(StandardCharsets.UTF_8));
 
             InputStream fileInputStream = inputStream;
-            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.addAttachment(null, recordKey, fileInputStream, false));
+            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.addAttachment(null, recordKey, fileInputStream, fileName, false));
             assertEquals("Country can't be null", ex.getMessage());
-            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("", recordKey, fileInputStream, false));
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("", recordKey, fileInputStream, fileName, false));
             assertEquals("Country can't be null", ex.getMessage());
-            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", null, fileInputStream, false));
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", null, fileInputStream, fileName, false));
             assertEquals("Key can't be null", ex.getMessage());
-            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", "", fileInputStream, false));
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", "", fileInputStream, fileName, false));
             assertEquals("Key can't be null", ex.getMessage());
-            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, null, false));
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, null, fileName, false));
             assertEquals("File input stream can't be null", ex.getMessage());
             ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
                 @Override
                 public int read() throws IOException {
                     return -1;
                 }
-            }, false));
+            }, fileName, false));
             assertEquals("File input stream can't be null", ex.getMessage());
         } finally {
             if (inputStream != null) {
