@@ -31,7 +31,6 @@ public abstract class AbstractHttpRequestCreator {
 
     private static final String POST = "POST";
     private static final String GET = "GET";
-    private static final String PUT = "PUT";
     private static final String PATCH = "PATCH";
     private static final String FILE = "file";
 
@@ -44,27 +43,18 @@ public abstract class AbstractHttpRequestCreator {
     }
 
     private HttpRequestBase createSimpleRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_URL, ex);
-        }
+        URI uri = createUri(url);
 
         if (method.equals(POST)) {
-            checkBody(body, method);
+            checkBodyForNull(body, method);
             HttpPost request = new HttpPost(uri);
             StringEntity entity = new StringEntity(body);
             request.setEntity(entity);
             return request;
         } else if (method.equals(GET)) {
             return new HttpGet(uri);
-        } else if (method.equals(PUT)) {
-            HttpPut request = new HttpPut(uri);
-            StringEntity entity = new StringEntity(body);
-            request.setEntity(entity);
-            return request;
         } else if (method.equals(PATCH)) {
+            checkBodyForNull(body, method);
             HttpPatch request = new HttpPatch(uri);
             StringEntity entity = new StringEntity(body);
             request.setEntity(entity);
@@ -76,12 +66,7 @@ public abstract class AbstractHttpRequestCreator {
 
     private HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName) throws StorageServerException {
         checkBody(body, method);
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_URL, ex);
-        }
+        URI uri = createUri(url);
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
@@ -100,9 +85,27 @@ public abstract class AbstractHttpRequestCreator {
     }
 
     private void checkBody(String body, String method) throws StorageServerException {
+        checkBodyForNull(body, method);
+        if (body.isEmpty()) {
+            LOG.error(MSG_ERR_NULL_BODY);
+            throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
+        }
+    }
+
+    private void checkBodyForNull(String body, String method) throws StorageServerException {
         if (body == null) {
             LOG.error(MSG_ERR_NULL_BODY);
             throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
         }
+    }
+
+    private URI createUri(String url) throws StorageServerException {
+        URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException ex) {
+            throw new StorageServerException(MSG_ERR_URL, ex);
+        }
+        return uri;
     }
 }

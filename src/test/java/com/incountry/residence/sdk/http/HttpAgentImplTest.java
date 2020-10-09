@@ -80,10 +80,69 @@ class HttpAgentImplTest {
     }
 
     @Test
+    void testPatchMethodWithFakeHttpServer() throws IOException, StorageException {
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
+        server.start();
+
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("PATCH", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
+        server.stop(0);
+    }
+
+    @Test
+    void testWithFakeHttpServerFileUpload() throws IOException, StorageException {
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
+        server.start();
+
+        String postMethod = "POST";
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")).getContent());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "", null, null, 0, new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
+        assertEquals("Server request error: POST", ex.getMessage());
+        assertEquals(StorageClientException.class, ex.getCause().getClass());
+        assertEquals("Body can't be null", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, null, null, null, 0, new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
+        assertEquals("Server request error: POST", ex.getMessage());
+        assertEquals(StorageClientException.class, ex.getCause().getClass());
+        assertEquals("Body can't be null", ex.getCause().getMessage());
+
+        String putMethod = "PUT";
+        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")).getContent());
+        ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
+        assertEquals("Server request error: PUT", ex.getMessage());
+        assertEquals(StorageClientException.class, ex.getCause().getClass());
+        assertEquals("Body can't be null", ex.getCause().getMessage());
+        ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, null, null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
+        assertEquals("Server request error: PUT", ex.getMessage());
+        assertEquals(StorageClientException.class, ex.getCause().getClass());
+        assertEquals("Body can't be null", ex.getCause().getMessage());
+        server.stop(0);
+    }
+
+    @Test
+    void negativeTestWithNullRequestParameters() {
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(ENDPOINT, "<body>", null, null, 0, null));
+        assertEquals("Request parameters can't be null", ex.getMessage());
+    }
+
+    @Test
+    void testDownloadFile() throws IOException, StorageException {
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT, "/attachments/file_id");
+        server.start();
+
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertNotNull(agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
+        server.stop(0);
+    }
+
+    @Test
     void testWithFakeHttpServerBadCode() throws IOException {
         int respCode = 555;
         String content = "{}";
-        String method = "POST";
         FakeHttpServer server = new FakeHttpServer(content, respCode, PORT);
         server.start();
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());

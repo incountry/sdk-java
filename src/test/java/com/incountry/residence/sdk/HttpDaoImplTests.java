@@ -43,10 +43,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -678,6 +680,7 @@ class HttpDaoImplTests {
         assertEquals(mimeType, received.get("mime_type").getAsString());
     }
 
+    @SuppressWarnings({"java:S5785", "java:S5863"})
     @ParameterizedTest
     @MethodSource("recordArgs")
     void getAttachmentMetaTest(String country,
@@ -715,6 +718,16 @@ class HttpDaoImplTests {
         assertEquals(hash, attachmentMeta.getHash());
         assertEquals(mimeType, attachmentMeta.getMimeType());
         assertEquals(size, attachmentMeta.getSize());
+        assertNull(attachmentMeta.getCreatedAt());
+        assertNull(attachmentMeta.getUpdatedAt());
+
+        assertEquals(response, attachmentMeta);
+        assertEquals(attachmentMeta, attachmentMeta);
+        assertFalse(attachmentMeta.equals(new Object()));
+        assertFalse(attachmentMeta.equals(null));
+
+        int hashCode = Objects.hash(null, null, downloadLink, fileId, fileName, hash, mimeType, size);
+        assertEquals(hashCode, attachmentMeta.hashCode());
     }
 
     private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";

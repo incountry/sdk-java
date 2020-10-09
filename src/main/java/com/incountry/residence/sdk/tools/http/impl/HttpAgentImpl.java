@@ -37,7 +37,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
     private static final String USER_AGENT = "User-Agent";
     private static final String ATTACHMENTS = "attachments";
     private static final String META = "meta";
-    private static final String METHOD_GET = "meta";
+    private static final String METHOD_GET = "GET";
 
     private final TokenClient tokenClient;
     private final String environmentId;
@@ -117,7 +117,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 LOG.trace("HTTP response={}",
                         apiResponse);
             }
-            return new ApiResponse(actualResponseContent, metaInfo);
+            return apiResponse;
         } catch (IOException ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
             throw new StorageServerException(errorMessage, ex);

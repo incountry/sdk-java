@@ -18,13 +18,6 @@ public class RequestParameters {
         this.contentType = contentType;
     }
 
-    public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType, boolean fileUpload) {
-        this.method = method;
-        this.codeMap = codeMap;
-        this.contentType = contentType;
-        this.fileUpload = fileUpload;
-    }
-
     public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType, boolean fileUpload, String fileName) {
         this.method = method;
         this.codeMap = codeMap;

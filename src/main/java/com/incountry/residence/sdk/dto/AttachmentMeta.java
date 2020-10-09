@@ -78,19 +78,6 @@ public class AttachmentMeta {
         this.size = size;
     }
 
-    protected AttachmentMeta copy() {
-        AttachmentMeta newAttachmentMeta = new AttachmentMeta();
-        newAttachmentMeta.createdAt = createdAt;
-        newAttachmentMeta.updatedAt = updatedAt;
-        newAttachmentMeta.downloadLink = downloadLink;
-        newAttachmentMeta.fileId = fileId;
-        newAttachmentMeta.fileName = fileName;
-        newAttachmentMeta.hash = hash;
-        newAttachmentMeta.mimeType = mimeType;
-        newAttachmentMeta.size = size;
-        return newAttachmentMeta;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(createdAt, updatedAt, downloadLink, fileId, fileName, hash, mimeType, size);

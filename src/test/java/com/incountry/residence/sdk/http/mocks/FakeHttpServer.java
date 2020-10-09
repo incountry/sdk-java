@@ -24,6 +24,12 @@ public class FakeHttpServer {
         server.createContext("/", new FakeHandler(response, responseCode));
     }
 
+    public FakeHttpServer(String response, int responseCode, int port, String path) throws IOException {
+        server = HttpServer.create();
+        server.bind(new InetSocketAddress("localhost", port), 0);
+        server.createContext(path, new FakeHandler(response, responseCode));
+    }
+
     public FakeHttpServer(List<String> responseList, int responseCode, int port) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 0);
@@ -107,6 +113,7 @@ public class FakeHttpServer {
                 }
             }
             byte[] bytes = currentResponse != null ? currentResponse.getBytes(StandardCharsets.UTF_8) : new byte[0];
+            exchange.getResponseHeaders().set("Content-Type", "text/plain");
             exchange.sendResponseHeaders(currentCode, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
