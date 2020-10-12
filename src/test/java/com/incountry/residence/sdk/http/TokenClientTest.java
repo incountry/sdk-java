@@ -203,24 +203,24 @@ class TokenClientTest {
 
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-null]", ex.getMessage());
-        Object[] expectedClasses = new Object[]{HttpHostConnectException.class, UnknownHostException.class};
-        Assertions.assertTrue(Arrays.asList(expectedClasses).contains(ex.getCause().getClass()));
+        List<Class> expectedClasses = Arrays.asList(HttpHostConnectException.class, UnknownHostException.class);
+        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-emea]", ex.getMessage());
-        Assertions.assertTrue(Arrays.asList(expectedClasses).contains(ex.getCause().getClass()));
+        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-apac-localhost.localhost, audience=audience-apac]", ex.getMessage());
-        Assertions.assertTrue(Arrays.asList(expectedClasses).contains(ex.getCause().getClass()));
+        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-amer]", ex.getMessage());
-        Assertions.assertTrue(Arrays.asList(expectedClasses).contains(ex.getCause().getClass()));
+        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
         ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-wrong_value]", ex.getMessage());
-        Assertions.assertTrue(Arrays.asList(expectedClasses).contains(ex.getCause().getClass()));
+        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
     }
 
     @Test
