@@ -203,7 +203,6 @@ class TokenClientTest {
 
         StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-null]", ex.getMessage());
-        assertEquals(HttpHostConnectException.class, ex.getCause().getClass());
         Object[] expectedClasses = new Object[]{HttpHostConnectException.class, UnknownHostException.class};
         Assertions.assertTrue(Arrays.asList(expectedClasses).contains(ex.getCause().getClass()));
 
