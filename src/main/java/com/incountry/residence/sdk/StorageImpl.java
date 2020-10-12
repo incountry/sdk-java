@@ -294,7 +294,7 @@ public class StorageImpl implements Storage {
                 batchRecord.getTotal() - batchRecord.getRecords().size(),
                 batchRecord.getErrors());
         if (LOG.isTraceEnabled()) {
-            LOG.trace("batchWrite results={}", result);
+            LOG.trace("migrate results={}", result);
         }
         return result;
     }
