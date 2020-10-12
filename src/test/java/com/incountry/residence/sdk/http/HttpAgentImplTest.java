@@ -56,13 +56,6 @@ class HttpAgentImplTest {
     }
 
     @Test
-    void testNullApiKeyException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
-        assertEquals("URL can't be null", ex.getMessage());
-    }
-
-    @Test
     void testNullEnvIdException() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, null, HttpClients.createDefault());
         StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "GET", "someBody", new HashMap<>(), null, null, 0));
