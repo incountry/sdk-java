@@ -47,6 +47,7 @@ import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -126,11 +127,12 @@ public class StorageIntegrationTest {
 
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = "Hello world!";
-    private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
+    private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
     private static final String NEW_FILE_NAME = "new_sdk_incountry_test_file";
-    private static final String NEW_FILE_MIME_TYPE = "text/plain";
-    private static final String FILE_NAME = "sdk_incountry_integration_tests_file.txt";
+    private static final String MIME_TYPE = "text/plain";
+    private static final String FILE_NAME = UUID.randomUUID().toString() + ".txt";
     private static String fileId;
+    private static Map<String, String> attachmentFiles = new HashMap<>();
 
     public static String loadFromEnv(String key) {
         return System.getenv(key);
@@ -208,9 +210,10 @@ public class StorageIntegrationTest {
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
+    @SuppressWarnings("java:S2696")
     @Test
     @Order(201)
-    void addAttachmentTest() throws StorageException, IOException {
+    public void addAttachmentTest() throws StorageException, IOException {
         Path tempFile = Files.createTempFile(FILE_NAME.split("\\.")[0], FILE_NAME.split("\\.")[1]);
         Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
         InputStream fileInputStream = Files.newInputStream(tempFile);
@@ -293,17 +296,17 @@ public class StorageIntegrationTest {
         AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
         assertEquals(fileId, meta.getFileId());
         assertEquals(FILE_NAME, meta.getFileName());
-        assertEquals(DEFAULT_MIME_TYPE, meta.getMimeType());
+        assertTrue(meta.getMimeType().contains(DEFAULT_MIME_TYPE));
     }
 
     @Test
     @Order(304)
     void updateAttachmentMetaTest() throws StorageException {
-        storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_FILE_MIME_TYPE);
+        storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, MIME_TYPE);
         AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
         assertEquals(fileId, meta.getFileId());
         assertEquals(NEW_FILE_NAME, meta.getFileName());
-        assertEquals(NEW_FILE_MIME_TYPE, meta.getMimeType());
+        assertEquals(MIME_TYPE, meta.getMimeType());
     }
 
     @Test
@@ -313,6 +316,67 @@ public class StorageIntegrationTest {
         AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
         assertNull(file.getFileContent());
     }
+
+    @Test
+    @Order(306)
+    void addAttachmentMultipleFilesTest() throws StorageException, IOException {
+        for (int i = 0; i < 3; i++) {
+            String fileName = UUID.randomUUID().toString();
+            String fileContent = UUID.randomUUID().toString();
+            Path tempFile = Files.createTempFile(fileName, ".txt");
+            Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+            InputStream fileInputStream = Files.newInputStream(tempFile);
+            String idFile = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, fileName, false);
+            attachmentFiles.put(idFile, fileContent);
+            Files.delete(tempFile);
+        }
+        attachmentFiles.forEach((idFile, fileContent) -> {
+            try {
+                AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, idFile);
+                String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
+                assertEquals(fileContent, incomingFileContent);
+            } catch (StorageException | IOException exception) {
+                LOG.error("Exception during attached files reading", exception);
+            }
+        });
+    }
+
+    @Test
+    @Order(307)
+    public void deleteOneOfAttachmentMultipleFilesTest() throws StorageException {
+        storage.deleteAttachment(MIDIPOP_COUNTRY, RECORD_KEY, (String) attachmentFiles.keySet().toArray()[0]);
+        Record incomingRecord = storage.read(MIDIPOP_COUNTRY, RECORD_KEY);
+        assertEquals(2, incomingRecord.getAttachedFiles().size());
+    }
+
+    @Test
+    @Order(308)
+    public void getAttachmentFileFromUnexistingRecordTest() throws StorageException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, UUID.randomUUID().toString(), fileId);
+        assertNull(file.getFileContent());
+    }
+
+    @Test
+    @Order(309)
+    public void getUnexistingAttachmentFileTest() throws StorageException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString());
+        assertNull(file.getFileContent());
+    }
+
+    @Test
+    @Order(310)
+    public void getAttachmentMetaFromUnexistingFileTest() throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString());
+        assertNull(meta);
+    }
+
+    @Test
+    @Order(311)
+    public void updateAttachmentMetaForUnexistingFileTest() {
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString(), NEW_FILE_NAME, MIME_TYPE));
+        assertTrue(ex.getMessage().contains("Code=404"));
+    }
+
 
     @Test
     @Order(400)

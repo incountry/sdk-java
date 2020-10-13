@@ -257,7 +257,7 @@ public class HttpDaoImpl implements Dao {
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, cryptoManager.createKeyHash(recordKey), URI_ATTACHMENTS, fileId, URI_META);
         ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.GET_ATTACHMENT_META, APPLICATION_JSON));
-        return (AttachmentMeta) JsonUtils.getDataFromJson(response.getContent(), AttachmentMeta.class);
+        return JsonUtils.getDataFromAttachmentMetaJson(response.getContent());
     }
 
     private String getAttachmentUrl(String... urlParts) {

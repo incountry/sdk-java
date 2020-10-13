@@ -2,6 +2,8 @@ package com.incountry.residence.sdk;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
@@ -21,6 +23,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
@@ -669,8 +672,81 @@ class StorageTest {
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
     }
 
+    @RepeatedTest(3)
+    void addAttachmentTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
+        String recordKey = "key";
+        String fileName = "sdk_incountry_unit_tests_file.txt";
+        String fileId = "123456";
+        String fileContent = "Hello world!";
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId))));
+        Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+        String responseFileId = storage.addAttachment("us", recordKey, fileInputStream, fileName, false);
+        assertEquals(fileId, responseFileId);
+        fileInputStream.close();
+        Files.delete(tempFile);
+    }
+
+    @RepeatedTest(3)
+    void deleteAttachmentTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
+        String recordKey = "key";
+        String country = "us";
+        String fileId = "1";
+        FakeHttpAgent agent = new FakeHttpAgent("{}");
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        assertTrue(storage.deleteAttachment(country, recordKey, fileId));
+    }
+
+    @RepeatedTest(3)
+    void getAttachmentTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
+        String recordKey = "key";
+        String country = "us";
+        String fileId = "123456";
+        String fileContent = "Hello world!";
+        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+
+        String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse)));
+
+        AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
+        assertNull(file.getFileExtension());
+    }
+
+    @RepeatedTest(3)
+    void getAttachmentMetaTest(RepetitionInfo repeatInfo) throws StorageException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
+        String recordKey = "key";
+        String country = "us";
+        String fileId = "1";
+        String downloadLink = "some_link";
+        String fileName = "test_file";
+        String hash = "1234567890";
+        String mimeType = "text/plain";
+        int size = 1000;
+
+        JsonObject response = new JsonObject();
+        response.addProperty("file_id", fileId);
+        response.addProperty("download_link", downloadLink);
+        response.addProperty("filename", fileName);
+        response.addProperty("hash", hash);
+        response.addProperty("mime_type", mimeType);
+        response.addProperty("size", size);
+
+        FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response));
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
+        assertEquals(JsonUtils.getDataFromAttachmentMetaJson(response.toString()), attachmentMeta);
+    }
+
     @Test
-    void addAttachmentTestWithIllegalParams() throws StorageClientException, StorageServerException, IOException {
+    void addAttachmentTestWithIllegalParams() throws StorageException, IOException {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
@@ -711,8 +787,9 @@ class StorageTest {
         }
     }
 
-    @Test
-    void updateAttachmentMetaWithIllegalParams() throws StorageClientException, StorageServerException {
+    @RepeatedTest(3)
+    void updateAttachmentMetaWithIllegalParams(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)

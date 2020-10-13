@@ -43,12 +43,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -700,13 +698,13 @@ class HttpDaoImplTests {
         String mimeType = "text/plain";
         int size = 1000;
 
-        AttachmentMeta response = new AttachmentMeta();
-        response.setDownloadLink(downloadLink);
-        response.setFileId(fileId);
-        response.setFileName(fileName);
-        response.setHash(hash);
-        response.setMimeType(mimeType);
-        response.setSize(size);
+        JsonObject response = new JsonObject();
+        response.addProperty("file_id", fileId);
+        response.addProperty("download_link", downloadLink);
+        response.addProperty("filename", fileName);
+        response.addProperty("hash", hash);
+        response.addProperty("mime_type", mimeType);
+        response.addProperty("size", size);
 
         FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response));
         Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
@@ -720,14 +718,6 @@ class HttpDaoImplTests {
         assertEquals(size, attachmentMeta.getSize());
         assertNull(attachmentMeta.getCreatedAt());
         assertNull(attachmentMeta.getUpdatedAt());
-
-        assertEquals(response, attachmentMeta);
-        assertEquals(attachmentMeta, attachmentMeta);
-        assertFalse(attachmentMeta.equals(new Object()));
-        assertFalse(attachmentMeta.equals(null));
-
-        int hashCode = Objects.hash(null, null, downloadLink, fileId, fileName, hash, mimeType, size);
-        assertEquals(hashCode, attachmentMeta.hashCode());
     }
 
     private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";

@@ -1,11 +1,13 @@
 package com.incountry.residence.sdk.tools;
 
 import com.google.gson.FieldNamingPolicy;
+import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterNumberParam;
@@ -23,6 +25,7 @@ import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +59,19 @@ public class JsonUtils {
     private static final String P_FILE_NAME = "filename";
     private static final String P_MIME_TYPE = "mime_type";
     private static final String P_ATTACHED_FILES = "attachments";
+
+    private static final String AM_IN_CREATED_AT = "created_at";
+    private static final String AM_IN_UPDATED_AT = "updated_at";
+    private static final String AM_IN_DOWNLOAD_LINK = "download_link";
+    private static final String AM_IN_FILE_ID = "file_id";
+    private static final String AM_IN_FILE_NAME = "filename";
+    private static final String AM_IN_MIME_TYPE = "mime_type";
+    private static final String AM_OUT_CREATED_AT = "createdAt";
+    private static final String AM_OUT_UPDATED_AT = "updatedAt";
+    private static final String AM_OUT_DOWNLOAD_LINK = "downloadLink";
+    private static final String AM_OUT_FILE_ID = "fileId";
+    private static final String AM_OUT_FILE_NAME = "fileName";
+    private static final String AM_OUT_MIME_TYPE = "mimeType";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
     private static final String MSG_ERR_RESPONSE = "Response error";
@@ -290,6 +306,37 @@ public class JsonUtils {
             throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }
         return result;
+    }
+
+    public static AttachmentMeta getDataFromAttachmentMetaJson(String string) {
+        Gson gson = new GsonBuilder().setFieldNamingStrategy(new AttachmentMetaStrategy()).create();
+        return gson.fromJson(string, AttachmentMeta.class);
+    }
+
+    static class AttachmentMetaStrategy implements FieldNamingStrategy {
+
+        @Override
+        public String translateName(Field field) {
+            if (field.getName().equals(AM_OUT_CREATED_AT)) {
+                return AM_IN_CREATED_AT;
+            }
+            if (field.getName().equals(AM_OUT_UPDATED_AT)) {
+                return AM_IN_UPDATED_AT;
+            }
+            if (field.getName().equals(AM_OUT_DOWNLOAD_LINK)) {
+                return AM_IN_DOWNLOAD_LINK;
+            }
+            if (field.getName().equals(AM_OUT_FILE_ID)) {
+                return AM_IN_FILE_ID;
+            }
+            if (field.getName().equals(AM_OUT_FILE_NAME)) {
+                return AM_IN_FILE_NAME;
+            }
+            if (field.getName().equals(AM_OUT_MIME_TYPE)) {
+                return AM_IN_MIME_TYPE;
+            }
+            return field.getName();
+        }
     }
 
     public static Map<String, POP> getMidiPops(String response, String uriStart, String uriEnd) throws StorageServerException {

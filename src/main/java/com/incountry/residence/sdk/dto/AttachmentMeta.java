@@ -1,24 +1,16 @@
 package com.incountry.residence.sdk.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.Date;
 import java.util.Objects;
 
 public class AttachmentMeta {
 
-    @SerializedName("created_at")
     private Date createdAt;
-    @SerializedName("updated_at")
     private Date updatedAt;
-    @SerializedName("download_link")
     private String downloadLink;
-    @SerializedName("file_id")
     private String fileId;
-    @SerializedName("filename")
     private String fileName;
     private String hash;
-    @SerializedName("mime_type")
     private String mimeType;
     private int size;
 

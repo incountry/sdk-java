@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,6 +62,7 @@ class RecordTest {
     public String errorCorrectionKey1;
     public String errorCorrectionKey2;
     public String precommit;
+    public List<AttachmentMeta> attachmentMeta;
 
     @BeforeEach
     public void init() {
@@ -89,6 +92,20 @@ class RecordTest {
         precommit = "precommit";
         errorCorrectionKey1 = "errorCorrectionKey1";
         errorCorrectionKey2 = "errorCorrectionKey2";
+        attachmentMeta = createAttachmentMetaList();
+    }
+
+    private static List<AttachmentMeta> createAttachmentMetaList() {
+        AttachmentMeta attachmentMeta = new AttachmentMeta();
+        attachmentMeta.setDownloadLink("123456");
+        attachmentMeta.setFileId("some_link");
+        attachmentMeta.setFileName("test_file");
+        attachmentMeta.setHash("1234567890");
+        attachmentMeta.setMimeType("text/plain");
+        attachmentMeta.setSize(1000);
+        List<AttachmentMeta> attachmentMetaList = new ArrayList<>();
+        attachmentMetaList.add(attachmentMeta);
+        return attachmentMetaList;
     }
 
     @Test
@@ -120,7 +137,8 @@ class RecordTest {
                 .setProfileKey(profileKey)
                 .setRangeKey1(rangeKey1)
                 .setKey2(key2)
-                .setKey3(key3);
+                .setKey3(key3)
+                .setAttachedFiles(attachmentMeta);
         JsonObject recordJsonObject = JsonUtils.toJson(record, null);
         assertEquals(jsonObject.get("record_key"), recordJsonObject.get("record_key"));
         assertEquals(jsonObject.get("body"), recordJsonObject.get("body"));
@@ -240,7 +258,8 @@ class RecordTest {
                 .setBody(body)
                 .setServiceKey1(errorCorrectionKey1)
                 .setServiceKey2(errorCorrectionKey2)
-                .setPrecommitBody(precommit);
+                .setPrecommitBody(precommit)
+                .setAttachedFiles(attachmentMeta);
 
         CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
         String recordString = JsonUtils.toJsonString(record3, cryptoManager);
@@ -264,6 +283,11 @@ class RecordTest {
 
         record4 = JsonUtils.recordFromString(recordString, cryptoManager)
                 .setProfileKey(record4.getProfileKey() + UUID.randomUUID());
+        assertNotEquals(record3, record4);
+
+        record4.getAttachedFiles().add(new AttachmentMeta());
+        record4 = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setAttachedFiles(record4.getAttachedFiles());
         assertNotEquals(record3, record4);
 
         checkKeys(record3, recordString, cryptoManager);

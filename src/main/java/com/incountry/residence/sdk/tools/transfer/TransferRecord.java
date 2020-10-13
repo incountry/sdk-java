@@ -54,6 +54,7 @@ public class TransferRecord extends Record {
         setRangeKey8(record.getRangeKey8());
         setRangeKey9(record.getRangeKey9());
         setRangeKey10(record.getRangeKey10());
+        setAttachedFiles(record.getAttachedFiles());
 
         Map.Entry<String, Integer> encBodyAndVersion = cryptoManager.encrypt(bodyJsonString);
         setBody(encBodyAndVersion.getKey());

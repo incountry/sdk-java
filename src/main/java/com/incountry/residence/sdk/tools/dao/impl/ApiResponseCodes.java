@@ -80,7 +80,7 @@ public class ApiResponseCodes {
 
         map = new HashMap<>();
         map.put(200, new ApiResponseCodes(false, false));
-        map.put(404, new ApiResponseCodes(true, true));
+        map.put(404, new ApiResponseCodes(true, false));
         map.put(401, new ApiResponseCodes(true, false, true));
         UPDATE_ATTACHMENT_META = Collections.unmodifiableMap(map);
 

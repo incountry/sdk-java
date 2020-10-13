@@ -70,7 +70,7 @@ public abstract class AbstractHttpRequestCreator {
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), ContentType.APPLICATION_OCTET_STREAM, fileName);
+        builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), ContentType.MULTIPART_FORM_DATA, fileName);
         HttpEntity entity = builder.build();
 
         if (method.equals(POST)) {
