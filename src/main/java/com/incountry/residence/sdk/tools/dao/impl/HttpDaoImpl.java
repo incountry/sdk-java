@@ -236,11 +236,17 @@ public class HttpDaoImpl implements Dao {
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, cryptoManager.createKeyHash(recordKey), URI_ATTACHMENTS, fileId);
         ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.GET_ATTACHMENT_FILE, APPLICATION_JSON));
         InputStream content = response.getContent() == null ? null : new ByteArrayInputStream(response.getContent().getBytes(StandardCharsets.UTF_8));
+        String fileName = null;
         String fileExtension = null;
-        if (response.getMetaInfo() != null && response.getMetaInfo().containsKey(MetaInfoTypes.EXTENSION)) {
-            fileExtension = response.getMetaInfo().get(MetaInfoTypes.EXTENSION);
+        if (response.getMetaInfo() != null) {
+            if (response.getMetaInfo().containsKey(MetaInfoTypes.NAME)) {
+                fileName = response.getMetaInfo().get(MetaInfoTypes.NAME);
+            }
+            if (response.getMetaInfo().containsKey(MetaInfoTypes.EXTENSION)) {
+                fileExtension = response.getMetaInfo().get(MetaInfoTypes.EXTENSION);
+            }
         }
-        return new AttachedFile(content, fileExtension);
+        return new AttachedFile(content, fileName, fileExtension);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
+import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.models.RequestParameters;
 import com.incountry.residence.sdk.tools.models.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
@@ -20,6 +21,7 @@ public class FakeHttpAgent implements HttpAgent {
     private Map<Integer, ApiResponseCodes> codeMap;
     private int retryCount;
     private String audienceUrl;
+    private Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
 
     public FakeHttpAgent(String response) {
         this.response = response;
@@ -27,6 +29,11 @@ public class FakeHttpAgent implements HttpAgent {
 
     public FakeHttpAgent(List<String> responseList) {
         this.responseList = responseList;
+    }
+
+    public FakeHttpAgent(String response, Map<MetaInfoTypes, String> metaInfo) {
+        this.response = response;
+        this.metaInfo = metaInfo;
     }
 
     @Override
@@ -38,7 +45,7 @@ public class FakeHttpAgent implements HttpAgent {
         this.retryCount = retryCount;
         this.audienceUrl = audience;
         this.callRegion = region;
-        return new ApiResponse(getResponse(), new HashMap<>());
+        return new ApiResponse(getResponse(), metaInfo);
     }
 
     public String getCallUrl() {

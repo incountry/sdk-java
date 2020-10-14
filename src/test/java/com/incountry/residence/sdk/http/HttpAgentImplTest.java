@@ -71,7 +71,12 @@ class HttpAgentImplTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpAgent agent;
+        if (repeatInfo.getCurrentRepetition() == 2) {
+            agent = new HttpAgentImpl(TOKEN_CLIENT, null, HttpClients.createDefault());
+        } else {
+            agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        }
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
         assertNotNull(agent.request(ENDPOINT, "", null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, null, null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE, APPLICATION_JSON)));
@@ -138,6 +143,38 @@ class HttpAgentImplTest {
         assertNotNull(agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
         server.stop(0);
     }
+
+    @Test
+    void testWithDifferentUrlsAndMethods() throws IOException, StorageException {
+        int respCode = 200;
+        FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT, "/attachments/file_id/meta");
+        server.start();
+
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertNotNull(agent.request("http://localhost:8769/attachments/file_id/meta", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
+        agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertNotNull(agent.request("http://localhost:8769/attachments/file_id/meta", "<body>", null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE, APPLICATION_JSON)).getContent());
+        server.stop(0);
+
+        server = new FakeHttpServer("{}", 405, PORT, "/attachments/file_id");
+        server.start();
+        HttpAgent agent1 = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent1.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE, APPLICATION_JSON)));
+        assertTrue(ex.getMessage().contains("Code=405"));
+        server.stop(0);
+    }
+
+    @Test
+    void testWithNullResponse() throws IOException, StorageException {
+        int respCode = 204;
+        FakeHttpServer server = new FakeHttpServer("", respCode, PORT, "/attachments/file_id");
+        server.start();
+
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertNotNull(agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("DELETE", ApiResponseCodes.DELETE_ATTACHMENT, APPLICATION_JSON)).getContent());
+        server.stop(0);
+    }
+
 
     @Test
     void testWithFakeHttpServerBadCode() throws IOException {

@@ -683,7 +683,7 @@ class StorageTest {
         Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
-        String responseFileId = storage.addAttachment("us", recordKey, fileInputStream, fileName, false);
+        String responseFileId = storage.addAttachment("us", recordKey, fileInputStream, fileName, true);
         assertEquals(fileId, responseFileId);
         fileInputStream.close();
         Files.delete(tempFile);

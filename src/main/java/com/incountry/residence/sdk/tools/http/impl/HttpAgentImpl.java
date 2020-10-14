@@ -9,6 +9,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -21,6 +23,8 @@ import org.apache.logging.log4j.LogManager;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAgent {
 
@@ -38,6 +42,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
     private static final String ATTACHMENTS = "attachments";
     private static final String META = "meta";
     private static final String METHOD_GET = "GET";
+    private static final String CONTENT_DISPOSITION = "Content-disposition";
 
     private final TokenClient tokenClient;
     private final String environmentId;
@@ -89,8 +94,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             HttpEntity responseEntity = response.getEntity();
             Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
             if (ContentType.get(responseEntity) != null && isFileDownloadRequest(url, requestParameters.getMethod())) {
-                String fileExtension = ContentType.get(responseEntity).getMimeType().split("/")[1];
-                metaInfo.put(MetaInfoTypes.EXTENSION, fileExtension);
+                metaInfo = getResponseMetaInfo(response);
             }
             String actualResponseContent = "";
             if (response.getEntity() != null) {
@@ -122,6 +126,20 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
             throw new StorageServerException(errorMessage, ex);
         }
+    }
+
+    private Map<MetaInfoTypes, String> getResponseMetaInfo(CloseableHttpResponse response) {
+        Header[] contentDispositionHeader = response.getHeaders(CONTENT_DISPOSITION);
+        Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
+        if (contentDispositionHeader.length != 0) {
+            Pattern pattern = Pattern.compile(".*filename\\*=UTF-8\\'\\'(.*)");
+            Matcher matcher = pattern.matcher(contentDispositionHeader[0].getValue());
+            matcher.matches();
+            String fileName = matcher.group(1);
+            metaInfo.put(MetaInfoTypes.NAME, fileName);
+            metaInfo.put(MetaInfoTypes.EXTENSION, FilenameUtils.getExtension(fileName));
+        }
+        return metaInfo;
     }
 
     private boolean isFileDownloadRequest(String url, String method) {

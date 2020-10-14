@@ -114,6 +114,7 @@ public class FakeHttpServer {
             }
             byte[] bytes = currentResponse != null ? currentResponse.getBytes(StandardCharsets.UTF_8) : new byte[0];
             exchange.getResponseHeaders().set("Content-Type", "text/plain");
+            exchange.getResponseHeaders().set("Content-disposition", "attachment; filename*=UTF-8''filename.txt");
             exchange.sendResponseHeaders(currentCode, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);
