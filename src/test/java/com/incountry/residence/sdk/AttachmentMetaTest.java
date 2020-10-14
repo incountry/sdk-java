@@ -5,6 +5,7 @@ import com.incountry.residence.sdk.tools.JsonUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class AttachmentMetaTest {
@@ -16,6 +17,7 @@ class AttachmentMetaTest {
     private static String mimeType = "text/plain";
     private static int size = 1000;
 
+    @SuppressWarnings("java:S5785")
     @Test
     void testEquals() {
 
@@ -57,7 +59,7 @@ class AttachmentMetaTest {
         assertEquals(attachmentMeta1, attachmentMeta1);
         assertNotEquals(new AttachmentMeta(), attachmentMeta1);
         assertNotEquals(attachmentMeta1, new Object());
-        assertNotEquals(null, attachmentMeta1);
+        assertFalse(attachmentMeta1.equals(null));
 
         String createUpdateAt = "2020-10-09T10:52:54+00:00";
 

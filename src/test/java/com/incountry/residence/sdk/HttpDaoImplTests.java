@@ -644,16 +644,35 @@ class HttpDaoImplTests {
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
 
-        Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
-        metaInfo.put(MetaInfoTypes.NAME, "fileName");
-        metaInfo.put(MetaInfoTypes.EXTENSION, "txt");
+        Map<MetaInfoTypes, String> metaInfo1 = new HashMap<>();
+        metaInfo1.put(MetaInfoTypes.NAME, "fileName");
+        metaInfo1.put(MetaInfoTypes.EXTENSION, "txt");
 
         String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
-        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, metaInfo);
+        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, metaInfo1);
         Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
 
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
+
+        agent = new FakeHttpAgent(null, null);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileContent());
+
+        Map<MetaInfoTypes, String> metaInfo2 = new HashMap<>();
+        metaInfo2.put(MetaInfoTypes.NAME, "fileName");
+        agent = new FakeHttpAgent(null, metaInfo2);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileExtension());
+
+        Map<MetaInfoTypes, String> metaInfo3 = new HashMap<>();
+        metaInfo3.put(MetaInfoTypes.EXTENSION, "txt");
+        agent = new FakeHttpAgent(null, metaInfo3);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileName());
 
         fileInputStream.close();
         Files.delete(tempFile);

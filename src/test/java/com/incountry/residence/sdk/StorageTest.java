@@ -23,6 +23,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -38,7 +39,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -707,16 +710,23 @@ class StorageTest {
         String country = "us";
         String fileId = "123456";
         String fileContent = "Hello world!";
-        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        String fileName = "sdk_incountry_unit_tests_file";
+        String fileExtension = "txt";
+        Path tempFile = Files.createTempFile(fileName, fileExtension);
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
 
+        Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
+        metaInfo.put(MetaInfoTypes.NAME, fileName);
+        metaInfo.put(MetaInfoTypes.EXTENSION, fileExtension);
         String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
-        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse)));
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo)));
 
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
+
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
-        assertNull(file.getFileExtension());
+        assertEquals(fileName, file.getFileName());
+        assertEquals(fileExtension, file.getFileExtension());
     }
 
     @RepeatedTest(3)
