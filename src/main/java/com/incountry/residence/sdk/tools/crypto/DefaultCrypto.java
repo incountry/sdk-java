@@ -11,6 +11,8 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
@@ -103,8 +105,9 @@ public class DefaultCrypto implements Crypto {
         return new String(decryptedText, charset);
     }
 
-    private static byte[] generateStrongPasswordHash(String password, byte[] salt, int iterations, int length) throws StorageCryptoException {
-        char[] chars = password.toCharArray();
+    private byte[] generateStrongPasswordHash(byte[] password, byte[] salt, int iterations, int length) throws StorageCryptoException {
+        CharBuffer charBuffer = charset.decode(ByteBuffer.wrap(password));
+        char[] chars = charBuffer.array();
         PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
         byte[] strongPasswordHash;
         try {
@@ -120,7 +123,7 @@ public class DefaultCrypto implements Crypto {
 
     private byte[] getKey(byte[] salt, SecretKey secretKey) throws StorageCryptoException {
         if (secretKey.isKey()) {
-            return secretKey.getSecret().getBytes(charset);
+            return secretKey.getSecret();
         }
         return generateStrongPasswordHash(secretKey.getSecret(), salt, PBKDF2_ITERATIONS_COUNT, KEY_LENGTH);
     }

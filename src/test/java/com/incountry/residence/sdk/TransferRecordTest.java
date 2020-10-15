@@ -18,6 +18,7 @@ import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransferRecordTest {
 
-    private static final String SECRET = "secret";
+    private static final byte[] SECRET = "secret".getBytes(StandardCharsets.UTF_8);
     private static final String ENVIRONMENT_ID = "envId";
 
     private CryptoManager cryptoManager;

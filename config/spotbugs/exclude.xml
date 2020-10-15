@@ -4,6 +4,8 @@
         <Or>
             <Class name="com.incountry.residence.sdk.tools.transfer.TransferPop"/>
             <Class name="com.incountry.residence.sdk.StorageImpl"/>
+            <Class name="com.incountry.residence.sdk.tools.JsonUtils"/>
+            <Class name="com.incountry.residence.sdk.tools.JsonUtils$SecretKeyContainer"/>
         </Or>
         <Bug code="NP,SIC,SS,ST,UrF,UuF,UwF"/>
     </Match>

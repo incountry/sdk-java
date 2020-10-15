@@ -51,10 +51,10 @@ public class CryptoUtils {
             LOG.error(message);
             throw new StorageClientException(message);
         }
-        testEncryption(crypto, secretsData);
+        validateEncryption(crypto, secretsData);
     }
 
-    private static void testEncryption(Crypto crypto, SecretsData secretsData) throws StorageClientException {
+    private static void validateEncryption(Crypto crypto, SecretsData secretsData) throws StorageClientException {
         Optional<SecretKey> secretKeyOptional = secretsData.getSecrets().stream().filter(SecretKey::isForCustomEncryption).findFirst();
         if (!secretKeyOptional.isPresent()) {
             LOG.error(MSG_ERR_NO_CUSTOM_KEY);

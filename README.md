@@ -164,12 +164,12 @@ public class SecretKey {
     /**
     * Creates a secret key
     *
-    * @param secret  secret/key
+    * @param secret  secret/key as byte array from UTF8 String
     * @param version secret version, should be a non-negative integer
     * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isKey)
+    public SecretKey(byte[] secret, int version, boolean isKey)
               throws StorageClientException {...}
     //...
 }
@@ -691,7 +691,7 @@ You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKey
 ```java
 public class SecretKey {
     /**
-     * @param secret secret/key
+     * @param secret secret/key as byte array from UTF8 String
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption
@@ -700,7 +700,7 @@ public class SecretKey {
      *                              moment, not both
      * @throws StorageClientException when parameter validation fails
      */
-    public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
+    public SecretKey(byte[] secret, int version, boolean isKey, boolean isForCustomEncryption)
               throws StorageClientException {...}
     //...
 }

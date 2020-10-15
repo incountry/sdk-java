@@ -3,6 +3,8 @@ package com.incountry.residence.sdk.crypto.testimpl;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 
+import java.nio.charset.StandardCharsets;
+
 public class CryptoStub implements Crypto {
 
     private boolean current;
@@ -13,12 +15,14 @@ public class CryptoStub implements Crypto {
 
     @Override
     public String encrypt(String text, SecretKey secretKey) {
-        return text != null ? text + ":" + secretKey.getSecret() : secretKey.getSecret();
+        String key = new String(secretKey.getSecret(), StandardCharsets.UTF_8);
+        return text != null ? text + ":" + key : key;
     }
 
     @Override
     public String decrypt(String cipherText, SecretKey secretKey) {
-        return cipherText.equals(secretKey.getSecret()) ? null : cipherText.substring(0, cipherText.lastIndexOf(":" + secretKey.getSecret()));
+        String key = new String(secretKey.getSecret(), StandardCharsets.UTF_8);
+        return cipherText.equals(key) ? null : cipherText.substring(0, cipherText.lastIndexOf(":" + key));
     }
 
     @Override

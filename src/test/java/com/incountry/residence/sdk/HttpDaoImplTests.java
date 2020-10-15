@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpDaoImplTests {
 
-    private String secret = "passwordpasswordpasswordpassword";
+    private byte[] secret = "passwordpasswordpasswordpassword".getBytes(StandardCharsets.UTF_8);
     private int version = 0;
     private int currentVersion = 0;
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
