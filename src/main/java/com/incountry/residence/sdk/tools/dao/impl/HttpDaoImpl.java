@@ -19,9 +19,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpDaoImpl implements Dao {
 
@@ -41,9 +41,9 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_FIND = "/find";
     private static final String URI_BATCH_WRITE = "/batchWrite";
     private static final String URI_DELIMITER = "/";
-    private static final long DEFAULT_UPDATE_INTERVAL = 60_000;
+    private static final long DEFAULT_UPDATE_INTERVAL = 300_000;
 
-    private final Map<String, POP> popMap = new HashMap<>();
+    private final Map<String, POP> popMap = new ConcurrentHashMap<>();
 
     private final HttpAgent httpAgent;
     private final String endPointUrl;
@@ -68,14 +68,12 @@ public class HttpDaoImpl implements Dao {
         this.endPointMask = endpointMask;
         this.httpAgent = agent;
         if (isDefaultEndpoint) {
-            synchronized (popMap) {
-                loadCountries();
-            }
+            loadCountries();
         }
     }
 
     private void loadCountries() throws StorageServerException, StorageClientException {
-        //update country list cache every 1 min
+        //update country list cache every 5 min
         if (System.currentTimeMillis() - lastLoadedTime < DEFAULT_UPDATE_INTERVAL) {
             return;
         }
@@ -83,10 +81,22 @@ public class HttpDaoImpl implements Dao {
             LOG.debug("Start loading country list");
         }
         String content;
-        popMap.clear();
+
         content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
-        popMap.putAll(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
-        lastLoadedTime = System.currentTimeMillis();
+        Map<String, POP> newCountryMap = JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK);
+        if (newCountryMap.size() > 0) {
+            synchronized (popMap) {
+                if (System.currentTimeMillis() - lastLoadedTime < DEFAULT_UPDATE_INTERVAL) {
+                    return;
+                }
+                popMap.clear();
+                popMap.putAll(newCountryMap);
+                lastLoadedTime = System.currentTimeMillis();
+            }
+
+        }
+
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded country list: {}", popMap.keySet());
         }
@@ -105,8 +115,8 @@ public class HttpDaoImpl implements Dao {
     }
 
     private POP getPopIfCountryIsMidPop(String country) throws StorageServerException, StorageClientException {
+        loadCountries();
         synchronized (popMap) {
-            loadCountries();
             return popMap.get(country);
         }
     }
