@@ -167,5 +167,13 @@ class SecretsTest {
         assertTrue(ex3.getMessage().startsWith("Wrong key length for secret key with 'isKey==true'. Should be"));
         SecretKey.validateSecretKey("secret".getBytes(StandardCharsets.UTF_8), 0, false, false);
         SecretKey.validateSecretKey("secret".getBytes(StandardCharsets.UTF_8), 0, false, true);
+        StorageClientException ex4 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(new byte[]{}, 0, false, true));
+        assertEquals("Secret can't be null", ex4.getMessage());
+        StorageClientException ex5 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("".getBytes(StandardCharsets.UTF_8), 0, false, true));
+        assertEquals("Secret can't be null", ex5.getMessage());
+        StorageClientException ex6 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(null, 0, false, true));
+        assertEquals("Secret can't be null", ex6.getMessage());
     }
+
+
 }
