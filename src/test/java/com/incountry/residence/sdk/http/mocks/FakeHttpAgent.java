@@ -1,9 +1,9 @@
 package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
-import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
-import com.incountry.residence.sdk.tools.models.RequestParameters;
-import com.incountry.residence.sdk.tools.models.ApiResponse;
+import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
+import com.incountry.residence.sdk.tools.containers.RequestParameters;
+import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
 import java.util.HashMap;

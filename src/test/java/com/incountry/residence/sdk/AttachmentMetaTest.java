@@ -1,5 +1,7 @@
 package com.incountry.residence.sdk;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import org.junit.jupiter.api.Test;
@@ -26,33 +28,43 @@ class AttachmentMetaTest {
         assertEquals(attachmentMeta2, attachmentMeta1);
         assertEquals(attachmentMeta1, attachmentMeta2);
 
-        attachmentMeta1.setDownloadLink(downloadLink);
-        attachmentMeta2.setDownloadLink(downloadLink);
+        Gson gson = new Gson();
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.addProperty("downloadLink", downloadLink);
+        attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
+        attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
+
         assertEquals(attachmentMeta2, attachmentMeta1);
 
-        attachmentMeta2.setFileId(fileId);
+        jsonObject.addProperty("fileId", fileId);
+        attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertNotEquals(attachmentMeta2, attachmentMeta1);
-        attachmentMeta1.setFileId(fileId);
+        attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertEquals(attachmentMeta2, attachmentMeta1);
 
-        attachmentMeta1.setFileName(fileName);
+        jsonObject.addProperty("fileName", fileName);
+        attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertNotEquals(attachmentMeta2, attachmentMeta1);
-        attachmentMeta2.setFileName(fileName);
+        attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertEquals(attachmentMeta2, attachmentMeta1);
 
-        attachmentMeta1.setHash(hash);
+        jsonObject.addProperty("hash", hash);
+        attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertNotEquals(attachmentMeta2, attachmentMeta1);
-        attachmentMeta2.setHash(hash);
+        attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertEquals(attachmentMeta2, attachmentMeta1);
 
-        attachmentMeta1.setMimeType(mimeType);
+        jsonObject.addProperty("mimeType", mimeType);
+        attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertNotEquals(attachmentMeta2, attachmentMeta1);
-        attachmentMeta2.setMimeType(mimeType);
+        attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertEquals(attachmentMeta2, attachmentMeta1);
 
-        attachmentMeta1.setSize(size);
+        jsonObject.addProperty("size", size);
+        attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertNotEquals(attachmentMeta2, attachmentMeta1);
-        attachmentMeta2.setSize(size);
+        attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertEquals(attachmentMeta2, attachmentMeta1);
 
         assertEquals(attachmentMeta2, attachmentMeta1);
@@ -76,21 +88,17 @@ class AttachmentMetaTest {
 
     @Test
     void testHashCode() {
-        AttachmentMeta attachmentMeta1 = new AttachmentMeta();
-        attachmentMeta1.setDownloadLink(downloadLink);
-        attachmentMeta1.setFileId(fileId);
-        attachmentMeta1.setFileName(fileName);
-        attachmentMeta1.setHash(hash);
-        attachmentMeta1.setMimeType(mimeType);
-        attachmentMeta1.setSize(size);
+        Gson gson = new Gson();
 
-        AttachmentMeta attachmentMeta2 = new AttachmentMeta();
-        attachmentMeta2.setDownloadLink(downloadLink);
-        attachmentMeta2.setFileId(fileId);
-        attachmentMeta2.setFileName(fileName);
-        attachmentMeta2.setHash(hash);
-        attachmentMeta2.setMimeType(mimeType);
-        attachmentMeta2.setSize(size);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("downloadLink", downloadLink);
+        jsonObject.addProperty("fileId", fileId);
+        jsonObject.addProperty("fileName", fileName);
+        jsonObject.addProperty("hash", hash);
+        jsonObject.addProperty("mimeType", mimeType);
+        jsonObject.addProperty("size", size);
+        AttachmentMeta attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
+        AttachmentMeta attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
 
         assertEquals(attachmentMeta1, attachmentMeta2);
         assertEquals(attachmentMeta1.hashCode(), attachmentMeta2.hashCode());

@@ -1,9 +1,9 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
-import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
-import com.incountry.residence.sdk.tools.models.RequestParameters;
-import com.incountry.residence.sdk.tools.models.ApiResponse;
+import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
+import com.incountry.residence.sdk.tools.containers.RequestParameters;
+import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
@@ -21,6 +21,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -87,7 +90,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
-            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
+            addHeaders(request, audience, region, requestParameters.getContentType());
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
@@ -109,7 +112,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 return request(url, body, audience, region, retryCount - 1, requestParameters);
             }
             if (expectedResponse != null && expectedResponse.isIgnored()) {
-                return new ApiResponse(null);
+                return new ApiResponse(null, null);
             }
             if (expectedResponse == null || expectedResponse.isError()) {
                 String errorMessage = String.format(MSG_ERR_CONTENT, status, url, actualResponseContent).replaceAll("[\r\n]", "");
@@ -128,14 +131,14 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         }
     }
 
-    private Map<MetaInfoTypes, String> getResponseMetaInfo(CloseableHttpResponse response) {
+    private Map<MetaInfoTypes, String> getResponseMetaInfo(CloseableHttpResponse response) throws UnsupportedEncodingException {
         Header[] contentDispositionHeader = response.getHeaders(CONTENT_DISPOSITION);
         Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
         if (contentDispositionHeader.length != 0) {
             Pattern pattern = Pattern.compile(".*filename\\*=UTF-8\\'\\'(.*)");
             Matcher matcher = pattern.matcher(contentDispositionHeader[0].getValue());
             matcher.matches();
-            String fileName = matcher.group(1);
+            String fileName = URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.name());
             metaInfo.put(MetaInfoTypes.NAME, fileName);
             metaInfo.put(MetaInfoTypes.EXTENSION, FilenameUtils.getExtension(fileName));
         }
@@ -146,11 +149,11 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         return url.contains(ATTACHMENTS) && !url.endsWith(META) && method.equals(METHOD_GET);
     }
 
-    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType, boolean fileUploadFlag) throws StorageServerException {
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType) throws StorageServerException {
         if (audience != null) {
             request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
         }
-        if (!fileUploadFlag) {
+        if (!contentType.isEmpty()) {
             request.addHeader(CONTENT_TYPE, contentType);
         }
         request.addHeader(ENV_ID, environmentId);

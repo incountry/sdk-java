@@ -56,8 +56,8 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_NULL_FILE_NAME = "File name can't be null";
     private static final String MSG_ERR_NULL_FILE_MIME_TYPE = "MIME type can't be null";
-    private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "File input stream can't be null";
-    private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "File input stream is not available";
+    private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
+    private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
@@ -387,6 +387,7 @@ public class StorageImpl implements Storage {
             LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
                     country, recordKey, inputStream != null ? inputStream.hashCode() : null, upsert);
         }
+        checkParameters(country, recordKey);
         try {
             if (inputStream == null || inputStream.available() == 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
@@ -396,7 +397,6 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);
         }
-        checkParameters(country, recordKey);
         String attachedFileId = dao.addAttachment(country, recordKey, inputStream, fileName, upsert, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("addAttachment results={}", attachedFileId);
@@ -413,7 +413,7 @@ public class StorageImpl implements Storage {
         checkAttachmentParameters(country, recordKey, fileId);
         dao.deleteAttachment(country, recordKey, fileId, cryptoManager);
         if (LOG.isTraceEnabled()) {
-            LOG.trace("deleteAttachment results={}", true);
+            LOG.trace("deleteAttachment results=true");
         }
         return true;
     }

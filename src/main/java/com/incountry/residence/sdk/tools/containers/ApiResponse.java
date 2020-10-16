@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.tools.models;
+package com.incountry.residence.sdk.tools.containers;
 
 import java.util.Map;
 
@@ -6,10 +6,6 @@ public class ApiResponse {
 
     private String content;
     private Map<MetaInfoTypes, String> metaInfo;
-
-    public ApiResponse(String content) {
-        this.content = content;
-    }
 
     public ApiResponse(String content, Map<MetaInfoTypes, String> metaInfo) {
         this.content = content;
@@ -20,10 +16,6 @@ public class ApiResponse {
         return content;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
     public Map<MetaInfoTypes, String> getMetaInfo() {
         return metaInfo;
     }
@@ -31,6 +23,7 @@ public class ApiResponse {
     @Override
     public String toString() {
             return "ApiResponse{" +
+                    "content=" + content +
                     ", metaInfo=" + metaInfo +
                     '}';
     }

@@ -130,7 +130,7 @@ public class StorageIntegrationTest {
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
     private static final String NEW_FILE_NAME = "new_sdk_incountry_test_file";
     private static final String MIME_TYPE = "text/plain";
-    private static final String FILE_NAME = UUID.randomUUID().toString() + ".txt";
+    private static final String FILE_NAME = "Naïve file.txt";
     private static String fileId;
     private static Map<String, String> attachmentFiles = new HashMap<>();
 
@@ -288,6 +288,7 @@ public class StorageIntegrationTest {
         AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
         String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
         assertEquals(FILE_CONTENT, incomingFileContent);
+        assertEquals(FILE_NAME, file.getFileName());
     }
 
     @Test

@@ -96,13 +96,14 @@ class RecordTest {
     }
 
     private static List<AttachmentMeta> createAttachmentMetaList() {
-        AttachmentMeta attachmentMeta = new AttachmentMeta();
-        attachmentMeta.setDownloadLink("123456");
-        attachmentMeta.setFileId("some_link");
-        attachmentMeta.setFileName("test_file");
-        attachmentMeta.setHash("1234567890");
-        attachmentMeta.setMimeType("text/plain");
-        attachmentMeta.setSize(1000);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("downloadLink", "123456");
+        jsonObject.addProperty("fileId", "some_link");
+        jsonObject.addProperty("fileName", "test_file");
+        jsonObject.addProperty("hash", "1234567890");
+        jsonObject.addProperty("mimeType", "text/plain");
+        jsonObject.addProperty("size", 1000);
+        AttachmentMeta attachmentMeta = new Gson().fromJson(jsonObject, AttachmentMeta.class);
         List<AttachmentMeta> attachmentMetaList = new ArrayList<>();
         attachmentMetaList.add(attachmentMeta);
         return attachmentMetaList;

@@ -23,7 +23,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.models.MetaInfoTypes;
+import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -781,14 +781,14 @@ class StorageTest {
             ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", "", fileInputStream, fileName, false));
             assertEquals("Key can't be null", ex.getMessage());
             ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, null, fileName, false));
-            assertEquals("File input stream can't be null", ex.getMessage());
+            assertEquals("Input stream can't be null", ex.getMessage());
             ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
                 @Override
                 public int read() throws IOException {
                     return -1;
                 }
             }, fileName, false));
-            assertEquals("File input stream can't be null", ex.getMessage());
+            assertEquals("Input stream can't be null", ex.getMessage());
         } finally {
             if (inputStream != null) {
                 inputStream.close();

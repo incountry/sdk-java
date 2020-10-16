@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.models.RequestParameters;
+import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -70,6 +70,7 @@ public abstract class AbstractHttpRequestCreator {
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.setCharset(StandardCharsets.UTF_8);
         builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), ContentType.MULTIPART_FORM_DATA, fileName);
         HttpEntity entity = builder.build();
 

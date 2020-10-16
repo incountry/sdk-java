@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.tools.models;
+package com.incountry.residence.sdk.tools.containers;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 
@@ -11,12 +11,6 @@ public class RequestParameters {
     private String contentType;
     private boolean fileUpload;
     private String fileName;
-
-    public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType) {
-        this.method = method;
-        this.codeMap = codeMap;
-        this.contentType = contentType;
-    }
 
     public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType, boolean fileUpload, String fileName) {
         this.method = method;
@@ -52,6 +46,8 @@ public class RequestParameters {
                 "method=" + method +
                 ", codeMap=" + codeMap +
                 ", contentType=" + contentType +
+                ", fileUpload=" + fileUpload +
+                ", fileName=" + fileName +
                 '}';
     }
 }
