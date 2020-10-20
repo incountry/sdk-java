@@ -586,11 +586,11 @@ class HttpDaoImplTests {
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
 
-        String responseFileId = storage.addAttachment(country, recordKey, fileInputStream, fileName, false);
+        AttachmentMeta attachmentMeta = storage.addAttachment(country, recordKey, fileInputStream, fileName, false);
         String received = agent.getCallBody();
         String callPath = new URL(agent.getCallUrl()).getPath();
 
-        assertEquals(fileId, responseFileId);
+        assertEquals(fileId, attachmentMeta.getFileId());
         assertEquals(expectedPath, callPath);
         assertEquals(received, fileContent);
 
@@ -738,7 +738,7 @@ class HttpDaoImplTests {
         AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
         assertEquals(fileId, attachmentMeta.getFileId());
         assertEquals(downloadLink, attachmentMeta.getDownloadLink());
-        assertEquals(fileName, attachmentMeta.getFileName());
+        assertEquals(fileName, attachmentMeta.getFilename());
         assertEquals(hash, attachmentMeta.getHash());
         assertEquals(mimeType, attachmentMeta.getMimeType());
         assertEquals(size, attachmentMeta.getSize());

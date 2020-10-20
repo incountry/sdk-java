@@ -7,6 +7,10 @@ public class ApiResponse {
     private String content;
     private Map<MetaInfoTypes, String> metaInfo;
 
+    public ApiResponse() {
+        this(null, null);
+    }
+
     public ApiResponse(String content, Map<MetaInfoTypes, String> metaInfo) {
         this.content = content;
         this.metaInfo = metaInfo;

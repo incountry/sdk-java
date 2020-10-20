@@ -24,13 +24,13 @@ public interface Dao {
 
     BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
-    String addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, String mimeType, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
     void deleteAttachment(String country, String recordKey, String fileId, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
     AttachedFile getAttachmentFile(String country, String recordKey, String fileId, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
-    void updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
+    AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
     AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 }

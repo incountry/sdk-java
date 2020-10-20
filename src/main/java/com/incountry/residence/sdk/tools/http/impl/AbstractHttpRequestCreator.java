@@ -26,7 +26,7 @@ public abstract class AbstractHttpRequestCreator {
     private static final Logger LOG = LogManager.getLogger(AbstractHttpRequestCreator.class);
 
     private static final String MSG_ERR_URL = "URL error";
-    private static final String MSG_ERR_SERVER_REQUES = "Server request error: %s";
+    private static final String MSG_ERR_SERVER_REQUEST = "Server request error: %s";
     private static final String MSG_ERR_NULL_BODY = "Body can't be null";
 
     private static final String POST = "POST";
@@ -36,7 +36,7 @@ public abstract class AbstractHttpRequestCreator {
 
     protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws UnsupportedEncodingException, StorageServerException {
         if (requestParameters != null && requestParameters.isFileUpload()) {
-            return createFileUploadRequest(url, method, body, requestParameters.getFileName());
+            return createFileUploadRequest(url, method, body, requestParameters.getFileName(), requestParameters.getContentType());
         } else {
             return createSimpleRequest(url, method, body);
         }
@@ -64,14 +64,20 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName) throws StorageServerException {
+    private HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName, String mimeTypeString) throws StorageServerException {
         checkBody(body, method);
         URI uri = createUri(url);
+        ContentType mimeType;
+        if (mimeTypeString == null || mimeTypeString.isEmpty()) {
+            mimeType = ContentType.DEFAULT_BINARY;
+        } else {
+            mimeType = ContentType.create(mimeTypeString);
+        }
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         builder.setCharset(StandardCharsets.UTF_8);
-        builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), ContentType.MULTIPART_FORM_DATA, fileName);
+        builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), mimeType, fileName);
         HttpEntity entity = builder.build();
 
         if (method.equals(POST)) {
@@ -89,14 +95,14 @@ public abstract class AbstractHttpRequestCreator {
         checkBodyForNull(body, method);
         if (body.isEmpty()) {
             LOG.error(MSG_ERR_NULL_BODY);
-            throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
+            throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUEST, method), new StorageClientException(MSG_ERR_NULL_BODY));
         }
     }
 
     private void checkBodyForNull(String body, String method) throws StorageServerException {
         if (body == null) {
             LOG.error(MSG_ERR_NULL_BODY);
-            throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUES, method), new StorageClientException(MSG_ERR_NULL_BODY));
+            throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUEST, method), new StorageClientException(MSG_ERR_NULL_BODY));
         }
     }
 

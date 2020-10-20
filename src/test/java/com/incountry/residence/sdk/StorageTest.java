@@ -686,8 +686,8 @@ class StorageTest {
         Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
-        String responseFileId = storage.addAttachment("us", recordKey, fileInputStream, fileName, true);
-        assertEquals(fileId, responseFileId);
+        AttachmentMeta attachmentMeta = storage.addAttachment("us", recordKey, fileInputStream, fileName, true);
+        assertEquals(fileId, attachmentMeta.getFileId());
         fileInputStream.close();
         Files.delete(tempFile);
     }
@@ -808,14 +808,10 @@ class StorageTest {
         Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
         String fileId = "123";
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, null, "text/plain"));
-        assertEquals("File name can't be null", ex.getMessage());
-        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "", "text/plain"));
-        assertEquals("File name can't be null", ex.getMessage());
-        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "test_file", null));
-        assertEquals("MIME type can't be null", ex.getMessage());
-        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "test_file", ""));
-        assertEquals("MIME type can't be null", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, null, null));
+        assertEquals("File name and MIME type can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, "", ""));
+        assertEquals("File name and MIME type can't be null", ex.getMessage());
     }
 
     @Test

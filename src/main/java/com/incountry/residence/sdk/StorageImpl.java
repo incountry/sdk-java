@@ -54,8 +54,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
-    private static final String MSG_ERR_NULL_FILE_NAME = "File name can't be null";
-    private static final String MSG_ERR_NULL_FILE_MIME_TYPE = "MIME type can't be null";
+    private static final String MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE = "File name and MIME type can't be null";
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
 
@@ -246,6 +245,13 @@ public class StorageImpl implements Storage {
         }
     }
 
+    private static void checkFileNameAndMimeType(String fileName, String mimeType) throws StorageClientException {
+        if ((fileName == null || fileName.isEmpty()) && (mimeType == null || mimeType.isEmpty())) {
+            LOG.error(MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE);
+            throw new StorageClientException(MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE);
+        }
+    }
+
     private void checkParameters(String country, String key) throws StorageClientException {
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(key, MSG_ERR_NULL_KEY);
@@ -382,7 +388,12 @@ public class StorageImpl implements Storage {
     }
 
     @Override
-    public String addAttachment(String country, String recordKey, InputStream inputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException {
+    public AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException {
+        return addAttachment(country, recordKey, fileInputStream, fileName, upsert, null);
+    }
+
+    @Override
+    public AttachmentMeta addAttachment(String country, String recordKey, InputStream inputStream, String fileName, boolean upsert, String mimeType) throws StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
                     country, recordKey, inputStream != null ? inputStream.hashCode() : null, upsert);
@@ -397,11 +408,11 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);
         }
-        String attachedFileId = dao.addAttachment(country, recordKey, inputStream, fileName, upsert, cryptoManager);
+        AttachmentMeta attachmentMeta = dao.addAttachment(country, recordKey, inputStream, fileName, upsert, mimeType, cryptoManager);
         if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment results={}", attachedFileId);
+            LOG.trace("addAttachment results={}", attachmentMeta);
         }
-        return attachedFileId;
+        return attachmentMeta;
     }
 
     @Override
@@ -433,15 +444,18 @@ public class StorageImpl implements Storage {
     }
 
     @Override
-    public void updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException {
+    public AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("updateAttachmentMeta params (country={} , key={}, fileId={}, fileName={}, mimeType={})",
                     country, recordKey, fileId, fileName, mimeType);
         }
-        checkNotNull(fileName, MSG_ERR_NULL_FILE_NAME);
-        checkNotNull(mimeType, MSG_ERR_NULL_FILE_MIME_TYPE);
+        checkFileNameAndMimeType(fileName, mimeType);
         checkAttachmentParameters(country, recordKey, fileId);
-        dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType, cryptoManager);
+        AttachmentMeta attachmentMeta = dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType, cryptoManager);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("updateAttachmentMeta results={}", attachmentMeta);
+        }
+        return attachmentMeta;
     }
 
     @Override

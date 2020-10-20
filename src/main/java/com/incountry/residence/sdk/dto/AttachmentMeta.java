@@ -9,7 +9,7 @@ public class AttachmentMeta {
     private Date updatedAt;
     private String downloadLink;
     private String fileId;
-    private String fileName;
+    private String filename;
     private String hash;
     private String mimeType;
     private int size;
@@ -30,8 +30,8 @@ public class AttachmentMeta {
         return fileId;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getFilename() {
+        return filename;
     }
 
     public String getHash() {
@@ -48,7 +48,7 @@ public class AttachmentMeta {
 
     @Override
     public int hashCode() {
-        return Objects.hash(createdAt, updatedAt, downloadLink, fileId, fileName, hash, mimeType, size);
+        return Objects.hash(createdAt, updatedAt, downloadLink, fileId, filename, hash, mimeType, size);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class AttachmentMeta {
                 Objects.equals(updatedAt, attachmentMeta.updatedAt) &&
                 Objects.equals(downloadLink, attachmentMeta.downloadLink) &&
                 Objects.equals(fileId, attachmentMeta.fileId) &&
-                Objects.equals(fileName, attachmentMeta.fileName) &&
+                Objects.equals(filename, attachmentMeta.filename) &&
                 Objects.equals(hash, attachmentMeta.hash) &&
                 Objects.equals(mimeType, attachmentMeta.mimeType) &&
                 Objects.equals(size, attachmentMeta.size);
@@ -75,11 +75,11 @@ public class AttachmentMeta {
         return "AttachmentMeta{" +
                 "createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
-                ", downloadLink=" + downloadLink +
-                ", fileId=" + fileId +
-                ", fileName=" + fileName +
-                ", hash=" + hash +
-                ", mimeType=" + mimeType +
+                ", downloadLink=" + downloadLink.hashCode() +
+                ", fileId=" + fileId.hashCode() +
+                ", filename=" + filename.hashCode() +
+                ", hash=" + hash.hashCode() +
+                ", mimeType=" + mimeType.hashCode() +
                 ", size=" + size +
                 '}';
     }

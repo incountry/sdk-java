@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
+import com.incountry.residence.sdk.tools.NullChecker;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
@@ -65,15 +66,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         this.httpClient = httpClient;
     }
 
-    private void checkParameters(String url, RequestParameters requestParameters) throws StorageClientException {
-        if (url == null) {
-            throw new StorageClientException(MSG_URL_NULL_ERR);
-        }
-        if (requestParameters == null) {
-            throw new StorageClientException(MSG_REQ_PARAMS_NULL_ERR);
-        }
-    }
-
+    @SuppressWarnings("java:S2259")
     @Override
     public ApiResponse request(String url, String body,
                                String audience, String region, int retryCount, RequestParameters requestParameters) throws StorageServerException, StorageClientException {
@@ -85,12 +78,13 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                     retryCount,
                     requestParameters != null ? requestParameters : null);
         }
-        checkParameters(url, requestParameters);
+        NullChecker.checkNull(LOG, url, new StorageClientException(MSG_URL_NULL_ERR), MSG_URL_NULL_ERR);
+        NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
-            addHeaders(request, audience, region, requestParameters.getContentType());
+            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
@@ -106,13 +100,13 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             response.close();
             ApiResponseCodes expectedResponse = codeMap.get(status);
             boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
-            boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse, retryCount);
+            boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse.isCanRetry(), retryCount);
             if (!isFinish) {
                 tokenClient.refreshToken(true, audience, region);
                 return request(url, body, audience, region, retryCount - 1, requestParameters);
             }
             if (expectedResponse != null && expectedResponse.isIgnored()) {
-                return new ApiResponse(null, null);
+                return new ApiResponse();
             }
             if (expectedResponse == null || expectedResponse.isError()) {
                 String errorMessage = String.format(MSG_ERR_CONTENT, status, url, actualResponseContent).replaceAll("[\r\n]", "");
@@ -149,11 +143,11 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         return url.contains(ATTACHMENTS) && !url.endsWith(META) && method.equals(METHOD_GET);
     }
 
-    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType) throws StorageServerException {
+    private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType, boolean isFileUpload) throws StorageServerException {
         if (audience != null) {
             request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
         }
-        if (!contentType.isEmpty()) {
+        if (!isFileUpload) {
             request.addHeader(CONTENT_TYPE, contentType);
         }
         request.addHeader(ENV_ID, environmentId);
@@ -162,7 +156,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         return request;
     }
 
-    private boolean canRetry(ApiResponseCodes params, int retryCount) {
-        return params.isCanRetry() && retryCount > 0;
+    private boolean canRetry(boolean isCanRetry, int retryCount) {
+        return isCanRetry && retryCount > 0;
     }
 }

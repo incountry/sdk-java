@@ -43,7 +43,7 @@ class AttachmentMetaTest {
         attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertEquals(attachmentMeta2, attachmentMeta1);
 
-        jsonObject.addProperty("fileName", fileName);
+        jsonObject.addProperty("filename", fileName);
         attachmentMeta1 = gson.fromJson(jsonObject, AttachmentMeta.class);
         assertNotEquals(attachmentMeta2, attachmentMeta1);
         attachmentMeta2 = gson.fromJson(jsonObject, AttachmentMeta.class);

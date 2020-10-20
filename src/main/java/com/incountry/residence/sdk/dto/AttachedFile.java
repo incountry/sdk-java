@@ -30,7 +30,7 @@ public class AttachedFile {
     public String toString() {
         return "AttachedFile{" +
                 "fileContent=" + fileContent +
-                ", fileName=" + fileName +
+                ", fileName=" + fileName.hashCode() +
                 ", fileExtension=" + fileExtension +
                 '}';
     }
