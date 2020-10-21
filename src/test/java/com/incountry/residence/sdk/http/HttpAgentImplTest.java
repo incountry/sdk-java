@@ -115,6 +115,8 @@ class HttpAgentImplTest {
 
         String putMethod = "PUT";
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")).getContent());
+        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, "", true, "file.txt")).getContent());
+        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, null, true, "file.txt")).getContent());
         ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
         assertEquals("Server request error: PUT", ex.getMessage());
         assertEquals(StorageClientException.class, ex.getCause().getClass());
@@ -141,6 +143,11 @@ class HttpAgentImplTest {
 
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         assertNotNull(agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE)).getContent());
+        server.stop(0);
+
+        server = new FakeHttpServer("{}", respCode, PORT, "/attachments");
+        server.start();
+        assertNotNull(agent.request("http://localhost:8769/attachments/", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE)).getContent());
         server.stop(0);
     }
 

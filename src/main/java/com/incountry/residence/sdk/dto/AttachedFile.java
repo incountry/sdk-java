@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 public class AttachedFile {
 
-    private InputStream fileContent;
+    private final InputStream fileContent;
     private String fileName;
     private String fileExtension;
 

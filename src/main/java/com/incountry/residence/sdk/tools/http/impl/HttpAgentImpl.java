@@ -66,7 +66,6 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         this.httpClient = httpClient;
     }
 
-    @SuppressWarnings("java:S2259")
     @Override
     public ApiResponse request(String url, String body,
                                String audience, String region, int retryCount, RequestParameters requestParameters) throws StorageServerException, StorageClientException {
@@ -76,7 +75,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                     audience,
                     region,
                     retryCount,
-                    requestParameters != null ? requestParameters : null);
+                    requestParameters);
         }
         NullChecker.checkNull(LOG, url, new StorageClientException(MSG_URL_NULL_ERR), MSG_URL_NULL_ERR);
         NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);

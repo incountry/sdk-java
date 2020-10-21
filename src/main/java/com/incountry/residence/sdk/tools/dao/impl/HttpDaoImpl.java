@@ -170,11 +170,7 @@ public class HttpDaoImpl implements Dao {
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordUrl(endPoint.mainUrl, lowerCountry, key);
         ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.READ));
-        if (response.getContent() == null) {
-            return null;
-        } else {
-            return JsonUtils.recordFromString(response.getContent(), cryptoManager);
-        }
+        return response.getContent() == null ? null : JsonUtils.recordFromString(response.getContent(), cryptoManager);
     }
 
     @Override
@@ -234,12 +230,8 @@ public class HttpDaoImpl implements Dao {
         String fileName = null;
         String fileExtension = null;
         if (response.getMetaInfo() != null) {
-            if (response.getMetaInfo().containsKey(MetaInfoTypes.NAME)) {
-                fileName = response.getMetaInfo().get(MetaInfoTypes.NAME);
-            }
-            if (response.getMetaInfo().containsKey(MetaInfoTypes.EXTENSION)) {
-                fileExtension = response.getMetaInfo().get(MetaInfoTypes.EXTENSION);
-            }
+            fileName = response.getMetaInfo().get(MetaInfoTypes.NAME);
+            fileExtension = response.getMetaInfo().get(MetaInfoTypes.EXTENSION);
         }
         return new AttachedFile(content, fileName, fileExtension);
     }
