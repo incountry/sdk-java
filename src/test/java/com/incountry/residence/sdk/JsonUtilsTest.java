@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk;
 
+import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterNumberParam;
@@ -108,5 +109,39 @@ class JsonUtilsTest {
         Record record1 = new Record("recordKey", "body").setProfileKey("profileKey");
         BatchRecord batchRecord1 = JsonUtils.batchRecordFromString(content1, new CryptoManager(null, "envId", null, false));
         assertEquals(record1, batchRecord1.getRecords().get(0));
+    }
+
+    @Test
+    void testCreateUpdatedMetaJson() {
+        String fileNameProperty = "filename";
+        String mimeTypeProperty = "mime_type";
+        String fileName = "file.txt";
+        String mimeType = "application/json";
+
+        String json = JsonUtils.createUpdatedMetaJson(fileName, mimeType);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(fileNameProperty, fileName);
+        jsonObject.addProperty(mimeTypeProperty, mimeType);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson(fileName, null);
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(fileNameProperty, fileName);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson(fileName, "");
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(fileNameProperty, fileName);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson(null, mimeType);
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(mimeTypeProperty, mimeType);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson("", mimeType);
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(mimeTypeProperty, mimeType);
+        assertEquals(json, jsonObject.toString());
     }
 }

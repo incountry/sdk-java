@@ -730,6 +730,39 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
+    void updateAttachmentMetaTest(RepetitionInfo repeatInfo) throws StorageException {
+        iterateLogLevel(repeatInfo, StorageImpl.class);
+        String recordKey = "key";
+        String country = "us";
+        String fileId = "1";
+        String downloadLink = "some_link";
+        String fileName = "test_file";
+        String hash = "1234567890";
+        String mimeType = "text/plain";
+        int size = 1000;
+
+        JsonObject response = new JsonObject();
+        response.addProperty("file_id", fileId);
+        response.addProperty("download_link", downloadLink);
+        response.addProperty("filename", fileName);
+        response.addProperty("hash", hash);
+        response.addProperty("mime_type", mimeType);
+        response.addProperty("size", size);
+
+        FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response));
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+
+        AttachmentMeta attachmentMeta = storage.updateAttachmentMeta(country, recordKey, fileId, fileName, null);
+        assertEquals(JsonUtils.getDataFromAttachmentMetaJson(response.toString()), attachmentMeta);
+
+        attachmentMeta = storage.updateAttachmentMeta(country, recordKey, fileId, null, mimeType);
+        assertEquals(JsonUtils.getDataFromAttachmentMetaJson(response.toString()), attachmentMeta);
+
+        attachmentMeta = storage.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
+        assertEquals(JsonUtils.getDataFromAttachmentMetaJson(response.toString()), attachmentMeta);
+    }
+
+    @RepeatedTest(3)
     void getAttachmentMetaTest(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         String recordKey = "key";
