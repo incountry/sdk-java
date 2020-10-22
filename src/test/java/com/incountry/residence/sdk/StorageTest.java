@@ -834,6 +834,18 @@ class StorageTest {
                 }
             }, fileName, false));
             assertEquals("User's InputStream reading error", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    throw new IOException();
+                }
+
+                @Override
+                public int available() throws IOException {
+                    throw new IOException();
+                }
+            }, fileName, false));
+            assertEquals("Input stream is not available", ex.getMessage());
         } finally {
             if (inputStream != null) {
                 inputStream.close();
