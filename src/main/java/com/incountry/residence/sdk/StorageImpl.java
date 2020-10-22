@@ -388,8 +388,18 @@ public class StorageImpl implements Storage {
     }
 
     @Override
+    public AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName) throws StorageClientException, StorageServerException {
+        return addAttachment(country, recordKey, fileInputStream, fileName, false, null);
+    }
+
+    @Override
     public AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException {
         return addAttachment(country, recordKey, fileInputStream, fileName, upsert, null);
+    }
+
+    @Override
+    public AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, String mimeType) throws StorageClientException, StorageServerException {
+        return addAttachment(country, recordKey, fileInputStream, fileName, false, null);
     }
 
     @Override

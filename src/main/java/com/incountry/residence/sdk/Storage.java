@@ -108,12 +108,39 @@ public interface Storage {
      * @param recordKey       the record's recordKey
      * @param fileInputStream input data stream
      * @param fileName        file name
+     * @return AttachmentMeta object which contains id of attached file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName) throws StorageClientException, StorageServerException;
+
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
      * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
      * @return AttachmentMeta object which contains id of attached file
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
     AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException;
+
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @param mimeType        mime type for attached file
+     * @return AttachmentMeta object which contains id of attached file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, String mimeType) throws StorageClientException, StorageServerException;
 
     /**
      * Add attached file to existing record
@@ -174,7 +201,7 @@ public interface Storage {
      * @param country   country identifier
      * @param recordKey the record's recordKey
      * @param fileId    file identifier
-     * @return AttachmentMeta object which contains required meta information
+     * @return AttachmentMeta object which contains required meta information fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
