@@ -10,7 +10,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -133,7 +132,6 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             matcher.matches();
             String fileName = URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.name());
             metaInfo.put(MetaInfoTypes.NAME, fileName);
-            metaInfo.put(MetaInfoTypes.EXTENSION, FilenameUtils.getExtension(fileName));
         }
         return metaInfo;
     }

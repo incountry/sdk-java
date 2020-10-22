@@ -6,12 +6,10 @@ public class AttachedFile {
 
     private final InputStream fileContent;
     private final String fileName;
-    private final String fileExtension;
 
-    public AttachedFile(InputStream fileContent, String fileName, String fileExtension) {
+    public AttachedFile(InputStream fileContent, String fileName) {
         this.fileContent = fileContent;
         this.fileName = fileName;
-        this.fileExtension = fileExtension;
     }
 
     public InputStream getFileContent() {
@@ -22,16 +20,11 @@ public class AttachedFile {
         return fileName;
     }
 
-    public String getFileExtension() {
-        return fileExtension;
-    }
-
     @Override
     public String toString() {
         return "AttachedFile{" +
                 "fileContent=" + fileContent +
                 ", fileName=" + fileName.hashCode() +
-                ", fileExtension=" + fileExtension +
                 '}';
     }
 }

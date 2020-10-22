@@ -688,6 +688,21 @@ class StorageTest {
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
         AttachmentMeta attachmentMeta = storage.addAttachment("us", recordKey, fileInputStream, fileName, true);
         assertEquals(fileId, attachmentMeta.getFileId());
+
+        fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+        attachmentMeta = storage.addAttachment("us", recordKey, fileInputStream, fileName);
+        assertEquals(fileId, attachmentMeta.getFileId());
+
+        fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+        attachmentMeta = storage.addAttachment("us", recordKey, fileInputStream, fileName, "text/plain");
+        assertEquals(fileId, attachmentMeta.getFileId());
+
+        fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+        attachmentMeta = storage.addAttachment("us", recordKey, fileInputStream, fileName, true, "text/plain");
+        assertEquals(fileId, attachmentMeta.getFileId());
         fileInputStream.close();
         Files.delete(tempFile);
     }
@@ -718,7 +733,6 @@ class StorageTest {
 
         Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
         metaInfo.put(MetaInfoTypes.NAME, fileName);
-        metaInfo.put(MetaInfoTypes.EXTENSION, fileExtension);
         String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo)));
 
@@ -726,7 +740,6 @@ class StorageTest {
 
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
         assertEquals(fileName, file.getFileName());
-        assertEquals(fileExtension, file.getFileExtension());
     }
 
     @RepeatedTest(3)

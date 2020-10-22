@@ -108,7 +108,7 @@ public interface Storage {
      * @param recordKey       the record's recordKey
      * @param fileInputStream input data stream
      * @param fileName        file name
-     * @return AttachmentMeta object which contains id of attached file
+     * @return AttachmentMeta object which contains fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
@@ -122,7 +122,7 @@ public interface Storage {
      * @param fileInputStream input data stream
      * @param fileName        file name
      * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
-     * @return AttachmentMeta object which contains id of attached file
+     * @return AttachmentMeta object which contains fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
@@ -136,7 +136,7 @@ public interface Storage {
      * @param fileInputStream input data stream
      * @param fileName        file name
      * @param mimeType        mime type for attached file
-     * @return AttachmentMeta object which contains id of attached file
+     * @return AttachmentMeta object which contains fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
@@ -151,7 +151,7 @@ public interface Storage {
      * @param fileName        file name
      * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
      * @param mimeType        mime type for attached file
-     * @return AttachmentMeta object which contains id of attached file
+     * @return AttachmentMeta object which contains fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */

@@ -228,12 +228,10 @@ public class HttpDaoImpl implements Dao {
         ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.GET_ATTACHMENT_FILE));
         InputStream content = response.getContent() == null ? null : new ByteArrayInputStream(response.getContent().getBytes(StandardCharsets.UTF_8));
         String fileName = null;
-        String fileExtension = null;
         if (response.getMetaInfo() != null) {
             fileName = response.getMetaInfo().get(MetaInfoTypes.NAME);
-            fileExtension = response.getMetaInfo().get(MetaInfoTypes.EXTENSION);
         }
-        return new AttachedFile(content, fileName, fileExtension);
+        return new AttachedFile(content, fileName);
     }
 
     @Override
