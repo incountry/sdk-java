@@ -822,6 +822,18 @@ class StorageTest {
                 }
             }, fileName, false));
             assertEquals("Input stream can't be null", ex.getMessage());
+            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    throw new IOException();
+                }
+
+                @Override
+                public int available() throws IOException {
+                    return 1;
+                }
+            }, fileName, false));
+            assertEquals("User's InputStream reading error", ex.getMessage());
         } finally {
             if (inputStream != null) {
                 inputStream.close();

@@ -5,8 +5,8 @@ import java.io.InputStream;
 public class AttachedFile {
 
     private final InputStream fileContent;
-    private String fileName;
-    private String fileExtension;
+    private final String fileName;
+    private final String fileExtension;
 
     public AttachedFile(InputStream fileContent, String fileName, String fileExtension) {
         this.fileContent = fileContent;
