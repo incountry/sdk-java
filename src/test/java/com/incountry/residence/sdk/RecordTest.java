@@ -2,6 +2,7 @@ package com.incountry.residence.sdk;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
@@ -268,6 +269,34 @@ class RecordTest {
 
         checkKeys(record3, recordString, cryptoManager);
         checkRangeKeys(record3, recordString, cryptoManager);
+
+        String attachmentMetaJson = "{\n" +
+                "   \"downloadLink\":\"123456\",\n" +
+                "   \"fileId\":\"some_link\",\n" +
+                "   \"fileName\":\"test_file\",\n" +
+                "   \"hash\":\"1234567890\",\n" +
+                "   \"mimeType\":\"text/plain\",\n" +
+                "   \"size\":1000\n" +
+                "}";
+        JsonArray jsonArray = new JsonArray();
+        jsonArray.add(new Gson().fromJson(attachmentMetaJson, JsonObject.class));
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("body", "test");
+        jsonObject.addProperty("env_id", "5422b4ba-016d-4a3b-aea5-a832083697b1");
+        jsonObject.addProperty("record_key", "write_record_key");
+        jsonObject.addProperty("key2", "key2");
+        jsonObject.addProperty("key3", "key3");
+        jsonObject.addProperty("profile_key", "profileKey");
+        jsonObject.addProperty("range_key1", 1);
+        jsonObject.addProperty("version", 2);
+
+        Record recordWithoutAttachmentMeta = JsonUtils.recordFromString(jsonObject.toString(), null);
+
+        jsonObject.add("attachments", jsonArray);
+
+        Record recordWithAttachmentMeta = JsonUtils.recordFromString(jsonObject.toString(), null);
+        assertNotEquals(recordWithoutAttachmentMeta, recordWithAttachmentMeta);
     }
 
     private void checkRangeKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
