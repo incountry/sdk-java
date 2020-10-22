@@ -18,4 +18,11 @@
         <Bug pattern="URLCONNECTION_SSRF_FD"/>
     </Match>
 
+    <Match>
+        <Or>
+            <Class name="com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl"/>
+        </Or>
+        <Bug code="JLM"/>
+    </Match>
+
 </FindBugsFilter>

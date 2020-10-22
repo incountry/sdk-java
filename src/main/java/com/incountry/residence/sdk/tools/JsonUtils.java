@@ -58,7 +58,7 @@ public class JsonUtils {
     private static final String P_FILTER = "filter";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-    private static final String MSG_ERR_RESPONSE = "Response error";
+    private static final String MSG_ERR_RESPONSE = "Response parse error [response=%s]";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
@@ -131,7 +131,7 @@ public class JsonUtils {
         try {
             tempRecord = gson.fromJson(jsonString, TransferRecord.class);
         } catch (JsonSyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(String.format(MSG_ERR_RESPONSE, jsonString), ex);
         }
         TransferRecord.validate(tempRecord);
         if (tempRecord.getVersion() == null) {
@@ -170,7 +170,7 @@ public class JsonUtils {
         try {
             transferBatch = gson.fromJson(responseString, TransferBatch.class);
         } catch (JsonSyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(String.format(MSG_ERR_RESPONSE, responseString), ex);
         }
         transferBatch.validate();
         List<Record> records = new ArrayList<>();
@@ -304,7 +304,7 @@ public class JsonUtils {
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
         } catch (JsonSyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(String.format(MSG_ERR_RESPONSE, response), ex);
         }
         Map<String, POP> result = new HashMap<>();
         TransferPopList.validatePopList(popList);

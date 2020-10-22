@@ -322,7 +322,7 @@ class TransferRecordTest {
                 "}";
         CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
         StorageServerException exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson1, cryptoManager));
-        assertEquals("Response error", exception.getMessage());
+        assertEquals("Response parse error [response=" + responseJson1 + "]", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
         assertEquals(ParseException.class, exception.getCause().getCause().getClass());
         assertEquals("Failed to parse date [\"SOME_ILLEGAL_DATE\"]: Invalid number: SOME", exception.getCause().getCause().getMessage());
@@ -337,7 +337,7 @@ class TransferRecordTest {
                 "}";
 
         exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson2, cryptoManager));
-        assertEquals("Response error", exception.getMessage());
+        assertEquals("Response parse error [response=" + responseJson2 + "]", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
         assertEquals(ParseException.class, exception.getCause().getCause().getClass());
         assertEquals("Failed to parse date [\"123321\"]: 123321", exception.getCause().getCause().getMessage());
@@ -352,7 +352,7 @@ class TransferRecordTest {
                 "}";
 
         exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson3, cryptoManager));
-        assertEquals("Response error", exception.getMessage());
+        assertEquals("Response parse error [response=" + responseJson3 + "]", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
         assertEquals(ParseException.class, exception.getCause().getCause().getClass());
         assertEquals("Failed to parse date [\"\"]: (java.lang.NumberFormatException)", exception.getCause().getCause().getMessage());

@@ -7,6 +7,7 @@ import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.POP;
@@ -22,13 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 
 public class HttpDaoImpl implements Dao {
 
+    private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
+
     private static final String DEFAULT_ENDPOINT = "https://us-mt-01.api.incountry.io";
     private static final int RETRY_CNT = 1;
-
-    private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
     private static final String DEFAULT_COUNTRY_ENDPOINT = "https://portal-backend.incountry.com/countries";
     private static final String DEFAULT_ENDPOINT_MASK = "-mt-01.api.incountry.io";
     private static final String DEFAULT_COUNTRY = "us";
@@ -43,16 +46,19 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_DELIMITER = "/";
     private static final long DEFAULT_UPDATE_INTERVAL = 300_000;
 
-    private final Map<String, POP> popMap = new ConcurrentHashMap<>();
+    private static final String MSG_ERR_LOAD_COUNTRIES = "Error during country list loading";
+    private static final String MSG_ERR_COUNTRIES_ARE_EMPTY = "Country list is empty";
+
+    private Map<String, POP> popMap = new ConcurrentHashMap<>();
 
     private final HttpAgent httpAgent;
     private final String endPointUrl;
     private final String endPointMask;
     private final boolean isDefaultEndpoint;
     private final String countriesEndpoint;
-    private volatile long lastLoadedTime;
+    private final AtomicLong lastLoadedTime = new AtomicLong(0);
 
-    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) throws StorageServerException, StorageClientException {
+    public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) {
         this(endPoint, endpointMask, countriesEndpoint,
                 ProxyUtils.createLoggingProxyForPublicMethods(
                         new HttpAgentImpl(
@@ -61,7 +67,7 @@ public class HttpDaoImpl implements Dao {
                                 httpClient)));
     }
 
-    public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) throws StorageServerException, StorageClientException {
+    public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) {
         isDefaultEndpoint = (endPoint == null);
         this.endPointUrl = isDefaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
@@ -72,39 +78,37 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    private void loadCountries() throws StorageServerException, StorageClientException {
+    private void loadCountries() {
         //update country list cache every 5 min
-        if (System.currentTimeMillis() - lastLoadedTime < DEFAULT_UPDATE_INTERVAL) {
+        if (System.currentTimeMillis() - lastLoadedTime.get() < DEFAULT_UPDATE_INTERVAL) {
             return;
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Start loading country list");
         }
-        String content;
-
-        content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
-        Map<String, POP> newCountryMap = JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK);
-        if (newCountryMap.size() > 0) {
-            synchronized (popMap) {
-                if (System.currentTimeMillis() - lastLoadedTime < DEFAULT_UPDATE_INTERVAL) {
-                    return;
-                }
-                popMap.clear();
-                popMap.putAll(newCountryMap);
-                lastLoadedTime = System.currentTimeMillis();
+        synchronized (lastLoadedTime) {
+            if (System.currentTimeMillis() - lastLoadedTime.get() < DEFAULT_UPDATE_INTERVAL) {
+                return;
             }
-
+            try {
+                String content = httpAgent.request(countriesEndpoint, URI_GET, null, ApiResponse.COUNTRY, null, null, RETRY_CNT);
+                ConcurrentHashMap<String, POP> newCountryMap = new ConcurrentHashMap<>(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
+                if (newCountryMap.size() > 0) {
+                    popMap = newCountryMap;
+                }
+            } catch (StorageException ex) {
+                LOG.error(MSG_ERR_LOAD_COUNTRIES, ex);
+            }
+            lastLoadedTime.set(System.currentTimeMillis());
         }
-
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("Loaded country list: {}", popMap.keySet());
         }
     }
 
-    private EndPoint getEndpoint(String country) throws StorageServerException, StorageClientException {
+    private EndPoint getEndpoint(String country) throws StorageServerException {
         if (isDefaultEndpoint) {
-            POP pop = getPopIfCountryIsMidPop(country);
+            POP pop = getMidPop(country);
             if (pop != null) { //mid pop for default endpoint
                 return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
             }
@@ -114,11 +118,13 @@ public class HttpDaoImpl implements Dao {
         return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
     }
 
-    private POP getPopIfCountryIsMidPop(String country) throws StorageServerException, StorageClientException {
+    private POP getMidPop(String country) throws StorageServerException {
         loadCountries();
-        synchronized (popMap) {
-            return popMap.get(country);
+        Map<String, POP> tempMap = popMap;
+        if (popMap.isEmpty()) {
+            throw new StorageServerException(MSG_ERR_COUNTRIES_ARE_EMPTY);
         }
+        return tempMap.get(country);
     }
 
     private String getAudienceForMiniPop(String mainUrl, String country) {
