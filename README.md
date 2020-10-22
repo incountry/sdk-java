@@ -37,8 +37,7 @@ public class StorageImpl implements Storage {
    *
    * @param config A container with configuration for Storage initialization
    * @return instance of Storage
-   * @throws StorageClientException if configuration validation finished with errors
-   * @throws StorageServerException if server connection failed or server response error
+   * @throws StorageClientException if configuration validation finished with errors   
    */
   public static Storage getInstance(StorageConfig config)
                                     throws StorageClientException, StorageServerException  {...}
