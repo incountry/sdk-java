@@ -219,6 +219,7 @@ public class StorageIntegrationTest {
         InputStream fileInputStream = Files.newInputStream(tempFile);
         AttachmentMeta attachmentMeta = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, FILE_NAME, false, DEFAULT_MIME_TYPE);
         fileId = attachmentMeta.getFileId();
+        assertEquals(FILE_NAME, attachmentMeta.getFilename());
         Files.delete(tempFile);
     }
 
