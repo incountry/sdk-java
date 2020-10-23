@@ -16,4 +16,16 @@
         <Bug pattern="URLCONNECTION_SSRF_FD"/>
     </Match>
 
+    <Match>
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Method name="request" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH" />
+    </Match>
+
+    <Match>
+        <Class name="com.incountry.residence.sdk.StorageIntegrationTest" />
+        <Method name="addAttachmentTest" />
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
+    </Match>
+
 </FindBugsFilter>

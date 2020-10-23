@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -22,6 +24,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
@@ -30,12 +34,18 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
@@ -549,6 +559,182 @@ class HttpDaoImplTests {
         assertEquals("https://super-server.io https://ag-custom-02.io", agent.getAudienceUrl());
 
 
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void addAttachmentTest(String country,
+                           String recordKey,
+                           String body,
+                           String key2,
+                           String key3,
+                           String profileKey,
+                           Long rangeKey1,
+                           boolean isKey,
+                           boolean encrypt) throws StorageClientException, StorageServerException, IOException {
+        String fileContent = "Hello world!";
+        String fileId = "123456";
+        String fileName = "sdk_incountry_unit_tests_file.txt";
+
+        FakeHttpAgent agent = new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId));
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(recordKey);
+        String expectedPath = "/v2/storage/records/" + country + "/" + keyHash +  "/attachments";
+
+        Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+
+        AttachmentMeta attachmentMeta = storage.addAttachment(country, recordKey, fileInputStream, fileName, false);
+        String received = agent.getCallBody();
+        String callPath = new URL(agent.getCallUrl()).getPath();
+
+        assertEquals(fileId, attachmentMeta.getFileId());
+        assertEquals(expectedPath, callPath);
+        assertEquals(received, fileContent);
+
+        fileInputStream.close();
+        Files.delete(tempFile);
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void deleteAttachmentTest(String country,
+                              String recordKey,
+                              String body,
+                              String key2,
+                              String key3,
+                              String profileKey,
+                              Long rangeKey1,
+                              boolean isKey,
+                              boolean encrypt) throws StorageClientException, StorageServerException, IOException {
+
+        String fileId = "1";
+        FakeHttpAgent agent = new FakeHttpAgent("{}");
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        storage.deleteAttachment(country, recordKey, fileId);
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(recordKey);
+        String expectedPath = "/v2/storage/records/"
+                .concat(country)
+                .concat("/")
+                .concat(keyHash)
+                .concat("/attachments/")
+                .concat(fileId);
+        String callPath = new URL(agent.getCallUrl()).getPath();
+        assertEquals(expectedPath, callPath);
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void getAttachmentFileTest(String country,
+                               String recordKey,
+                               String body,
+                               String key2,
+                               String key3,
+                               String profileKey,
+                               Long rangeKey1,
+                               boolean isKey,
+                               boolean encrypt) throws StorageClientException, StorageServerException, IOException {
+        String fileId = "1";
+        String fileContent = "Hello world!";
+
+        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+
+        Map<MetaInfoTypes, String> metaInfo1 = new HashMap<>();
+        metaInfo1.put(MetaInfoTypes.NAME, "fileName");
+
+        String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
+        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, metaInfo1);
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+
+        AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
+
+        agent = new FakeHttpAgent(null, null);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileContent());
+
+        Map<MetaInfoTypes, String> metaInfo3 = new HashMap<>();
+        agent = new FakeHttpAgent(null, metaInfo3);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileName());
+
+        fileInputStream.close();
+        Files.delete(tempFile);
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void updateAttachmentMetaTest(String country,
+                                  String recordKey,
+                                  String body,
+                                  String key2,
+                                  String key3,
+                                  String profileKey,
+                                  Long rangeKey1,
+                                  boolean isKey,
+                                  boolean encrypt) throws StorageClientException, StorageServerException {
+
+        String fileId = "1";
+        String fileName = "test_file";
+        String mimeType = "text/plain";
+
+        FakeHttpAgent agent = new FakeHttpAgent("{}");
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+
+        storage.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
+
+        JsonObject received = new Gson().fromJson(agent.getCallBody(), JsonObject.class);
+        assertEquals(fileName, received.get("filename").getAsString());
+        assertEquals(mimeType, received.get("mime_type").getAsString());
+    }
+
+    @SuppressWarnings({"java:S5785", "java:S5863"})
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void getAttachmentMetaTest(String country,
+                               String recordKey,
+                               String body,
+                               String key2,
+                               String key3,
+                               String profileKey,
+                               Long rangeKey1,
+                               boolean isKey,
+                               boolean encrypt) throws StorageClientException, StorageServerException {
+
+        String fileId = "1";
+        String downloadLink = "some_link";
+        String fileName = "test_file";
+        String hash = "1234567890";
+        String mimeType = "text/plain";
+        int size = 1000;
+
+        JsonObject response = new JsonObject();
+        response.addProperty("file_id", fileId);
+        response.addProperty("download_link", downloadLink);
+        response.addProperty("filename", fileName);
+        response.addProperty("hash", hash);
+        response.addProperty("mime_type", mimeType);
+        response.addProperty("size", size);
+
+        FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response));
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+
+        AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
+        assertEquals(fileId, attachmentMeta.getFileId());
+        assertEquals(downloadLink, attachmentMeta.getDownloadLink());
+        assertEquals(fileName, attachmentMeta.getFilename());
+        assertEquals(hash, attachmentMeta.getHash());
+        assertEquals(mimeType, attachmentMeta.getMimeType());
+        assertEquals(size, attachmentMeta.getSize());
+        assertNull(attachmentMeta.getCreatedAt());
+        assertNull(attachmentMeta.getUpdatedAt());
     }
 
     private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";

@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterNumberParam;
@@ -18,7 +19,6 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.transfer.TransferBatch;
 import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
@@ -54,6 +54,10 @@ public class JsonUtils {
     private static final String P_OFFSET = "offset";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
+    private static final String P_FILE_NAME = "filename";
+    private static final String P_MIME_TYPE = "mime_type";
+    private static final String P_ATTACHED_FILES = "attachments";
+
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
     private static final String MSG_ERR_RESPONSE = "Response error";
@@ -61,7 +65,7 @@ public class JsonUtils {
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
             P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
-            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10);
+            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_ATTACHED_FILES);
 
     private JsonUtils() {
     }
@@ -280,14 +284,19 @@ public class JsonUtils {
         return array;
     }
 
-    public static SecretsData getSecretsDataFromJson(String string) throws StorageClientException {
-        SecretsData result;
+    public static <T> Object getDataFromJson(String string, Class<T> clazz) throws StorageClientException {
+        T result;
         try {
-            result = new Gson().fromJson(string, SecretsData.class);
+            result = new Gson().fromJson(string, clazz);
         } catch (JsonSyntaxException e) {
             throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }
         return result;
+    }
+
+    public static AttachmentMeta getDataFromAttachmentMetaJson(String json) {
+        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+        return gson.fromJson(json, AttachmentMeta.class);
     }
 
     public static Map<String, POP> getMidiPops(String response, String uriStart, String uriEnd) throws StorageServerException {
@@ -305,5 +314,16 @@ public class JsonUtils {
             }
         }
         return result;
+    }
+
+    public static String createUpdatedMetaJson(String fileName, String mimeType) {
+        JsonObject json = new JsonObject();
+        if (fileName != null && !fileName.isEmpty()) {
+            json.addProperty(P_FILE_NAME, fileName);
+        }
+        if (mimeType != null && !mimeType.isEmpty()) {
+            json.addProperty(P_MIME_TYPE, mimeType);
+        }
+        return json.toString();
     }
 }

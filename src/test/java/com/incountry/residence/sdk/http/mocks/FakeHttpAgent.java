@@ -1,8 +1,12 @@
 package com.incountry.residence.sdk.http.mocks;
 
-import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
+import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
+import com.incountry.residence.sdk.tools.containers.RequestParameters;
+import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,9 +18,10 @@ public class FakeHttpAgent implements HttpAgent {
     private String response;
     private String callRegion;
     private List<String> responseList;
-    private Map<Integer, ApiResponse> codeMap;
+    private Map<Integer, ApiResponseCodes> codeMap;
     private int retryCount;
     private String audienceUrl;
+    private Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
 
     public FakeHttpAgent(String response) {
         this.response = response;
@@ -26,16 +31,21 @@ public class FakeHttpAgent implements HttpAgent {
         this.responseList = responseList;
     }
 
+    public FakeHttpAgent(String response, Map<MetaInfoTypes, String> metaInfo) {
+        this.response = response;
+        this.metaInfo = metaInfo;
+    }
+
     @Override
-    public String request(String url, String method, String body, Map<Integer, ApiResponse> codeMap, String audience, String region, int retryCount) {
+    public ApiResponse request(String url, String body, String audience, String region, int retryCount, RequestParameters requestParameters) {
         this.callUrl = url;
-        this.callMethod = method;
+        this.callMethod = requestParameters.getMethod();
         this.callBody = body;
-        this.codeMap = codeMap;
+        this.codeMap = requestParameters.getCodeMap();
         this.retryCount = retryCount;
         this.audienceUrl = audience;
         this.callRegion = region;
-        return getResponse();
+        return new ApiResponse(getResponse(), metaInfo);
     }
 
     public String getCallUrl() {
@@ -54,7 +64,7 @@ public class FakeHttpAgent implements HttpAgent {
         return audienceUrl;
     }
 
-    public Map<Integer, ApiResponse> getCodeMap() {
+    public Map<Integer, ApiResponseCodes> getCodeMap() {
         return codeMap;
     }
 

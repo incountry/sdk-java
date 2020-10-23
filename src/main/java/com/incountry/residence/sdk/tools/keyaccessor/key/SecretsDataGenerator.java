@@ -38,7 +38,7 @@ public class SecretsDataGenerator {
      * @throws StorageClientException when parameter validation fails
      */
     public static SecretsData fromJson(String secretsDataJson) throws StorageClientException {
-        SecretsData data = JsonUtils.getSecretsDataFromJson(secretsDataJson);
+        SecretsData data = (SecretsData) JsonUtils.getDataFromJson(secretsDataJson, SecretsData.class);
         SecretsData.validate(data.getSecrets(), data.getCurrentVersion());
         return data;
     }

@@ -1,6 +1,8 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.crypto.testimpl.FernetCrypto;
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -13,6 +15,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
@@ -20,6 +23,11 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,6 +47,7 @@ import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -117,6 +126,13 @@ public class StorageIntegrationTest {
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
     private static final int VERSION = 0;
+    private static final String FILE_CONTENT = "Hello world!";
+    private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
+    private static final String NEW_FILE_NAME = "new_sdk_incountry_test_file";
+    private static final String MIME_TYPE = "text/plain";
+    private static final String FILE_NAME = "Naïve file.txt";
+    private static String fileId;
+    private static Map<String, String> attachmentFiles = new HashMap<>();
 
     public static String loadFromEnv(String key) {
         return System.getenv(key);
@@ -194,6 +210,19 @@ public class StorageIntegrationTest {
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
+    @SuppressWarnings("java:S2696")
+    @Test
+    @Order(201)
+    public void addAttachmentTest() throws StorageException, IOException {
+        Path tempFile = Files.createTempFile(FILE_NAME.split("\\.")[0], FILE_NAME.split("\\.")[1]);
+        Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        AttachmentMeta attachmentMeta = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, FILE_NAME, false, DEFAULT_MIME_TYPE);
+        fileId = attachmentMeta.getFileId();
+        assertEquals(FILE_NAME, attachmentMeta.getFilename());
+        Files.delete(tempFile);
+    }
+
     @Test
     @Order(300)
     public void readTest() throws StorageException {
@@ -224,6 +253,7 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
         assertEquals(RANGE_KEY_10, incomingRecord.getRangeKey10());
+        assertEquals(1, incomingRecord.getAttachments().size());
         assertNotNull(incomingRecord.getCreatedAt());
         assertNotNull(incomingRecord.getUpdatedAt());
     }
@@ -253,6 +283,102 @@ public class StorageIntegrationTest {
         assertEquals(KEY_2, incomingRecord.getKey2());
         assertEquals(KEY_3, incomingRecord.getKey3());
     }
+
+    @Test
+    @Order(302)
+    void getAttachmentFileTest() throws StorageException, IOException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
+        assertEquals(FILE_CONTENT, incomingFileContent);
+        assertEquals(FILE_NAME, file.getFileName());
+    }
+
+    @Test
+    @Order(303)
+    void getAttachmentMetaTest() throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        assertEquals(fileId, meta.getFileId());
+        assertEquals(FILE_NAME, meta.getFilename());
+        assertTrue(meta.getMimeType().contains(DEFAULT_MIME_TYPE));
+    }
+
+    @Test
+    @Order(304)
+    void updateAttachmentMetaTest() throws StorageException {
+        AttachmentMeta meta = storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, MIME_TYPE);
+        assertEquals(fileId, meta.getFileId());
+        assertEquals(NEW_FILE_NAME, meta.getFilename());
+        assertEquals(MIME_TYPE, meta.getMimeType());
+    }
+
+    @Test
+    @Order(305)
+    void deleteAttachmentTest() throws StorageException {
+        storage.deleteAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, fileId);
+        assertNull(file.getFileContent());
+    }
+
+    @Test
+    @Order(306)
+    void addAttachmentMultipleFilesTest() throws StorageException, IOException {
+        for (int i = 0; i < 3; i++) {
+            String fileName = UUID.randomUUID().toString();
+            String fileContent = UUID.randomUUID().toString();
+            Path tempFile = Files.createTempFile(fileName, ".txt");
+            Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+            InputStream fileInputStream = Files.newInputStream(tempFile);
+            AttachmentMeta attachmentMeta = storage.addAttachment(MIDIPOP_COUNTRY, RECORD_KEY, fileInputStream, fileName, false);
+            attachmentFiles.put(attachmentMeta.getFileId(), fileContent);
+            Files.delete(tempFile);
+        }
+        attachmentFiles.forEach((idFile, fileContent) -> {
+            try {
+                AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, idFile);
+                String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
+                assertEquals(fileContent, incomingFileContent);
+            } catch (StorageException | IOException exception) {
+                LOG.error("Exception during attached files reading", exception);
+            }
+        });
+    }
+
+    @Test
+    @Order(307)
+    public void deleteOneOfAttachmentMultipleFilesTest() throws StorageException {
+        storage.deleteAttachment(MIDIPOP_COUNTRY, RECORD_KEY, (String) attachmentFiles.keySet().toArray()[0]);
+        Record incomingRecord = storage.read(MIDIPOP_COUNTRY, RECORD_KEY);
+        assertEquals(2, incomingRecord.getAttachments().size());
+    }
+
+    @Test
+    @Order(308)
+    public void getAttachmentFileFromUnexistingRecordTest() throws StorageException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, UUID.randomUUID().toString(), fileId);
+        assertNull(file.getFileContent());
+    }
+
+    @Test
+    @Order(309)
+    public void getUnexistingAttachmentFileTest() throws StorageException {
+        AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString());
+        assertNull(file.getFileContent());
+    }
+
+    @Test
+    @Order(310)
+    public void getAttachmentMetaFromUnexistingFileTest() throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString());
+        assertNull(meta);
+    }
+
+    @Test
+    @Order(311)
+    public void updateAttachmentMetaForUnexistingFileTest() {
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString(), NEW_FILE_NAME, MIME_TYPE));
+        assertTrue(ex.getMessage().contains("Code=404"));
+    }
+
 
     @Test
     @Order(400)

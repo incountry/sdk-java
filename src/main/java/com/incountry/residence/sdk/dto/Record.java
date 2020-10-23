@@ -1,7 +1,10 @@
 package com.incountry.residence.sdk.dto;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Record {
     private String recordKey;
@@ -32,6 +35,7 @@ public class Record {
     private String serviceKey2;
     protected Date createdAt;
     protected Date updatedAt;
+    private List<AttachmentMeta> attachments = new ArrayList<>();
 
     /**
      * Minimalistic constructor
@@ -295,6 +299,15 @@ public class Record {
         return updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 
+    public List<AttachmentMeta> getAttachments() {
+        return attachments;
+    }
+
+    protected Record setAttachments(List<AttachmentMeta> attachedFiles) {
+        this.attachments = attachedFiles;
+        return this;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -331,7 +344,8 @@ public class Record {
                 Objects.equals(serviceKey1, record.serviceKey1) &&
                 Objects.equals(serviceKey2, record.serviceKey2) &&
                 Objects.equals(createdAt, record.createdAt) &&
-                Objects.equals(updatedAt, record.updatedAt);
+                Objects.equals(updatedAt, record.updatedAt) &&
+                Objects.equals(attachments, record.attachments);
     }
 
     @Override
@@ -339,7 +353,7 @@ public class Record {
         return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
                 body, profileKey, precommitBody, serviceKey1, serviceKey2,
-                createdAt, updatedAt);
+                createdAt, updatedAt, attachments);
     }
 
     /**
@@ -376,6 +390,7 @@ public class Record {
         newRecord.serviceKey2 = serviceKey2;
         newRecord.createdAt = getCreatedAt();
         newRecord.updatedAt = getUpdatedAt();
+        newRecord.attachments = attachments == null ? new ArrayList<>() : attachments.stream().collect(Collectors.toList());
         return newRecord;
     }
 }
