@@ -72,7 +72,7 @@ class JsonUtilsTest {
     @Test
     void negativeTestIncorrectJson() {
         StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getMidiPops("json", "https://app.start", "end.com"));
-        assertEquals("Response error", ex.getMessage());
+        assertEquals("Response parse error", ex.getMessage());
     }
 
     @Test

@@ -67,9 +67,8 @@ public class StorageImpl implements Storage {
      *
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
-    public static Storage getInstance() throws StorageClientException, StorageServerException {
+    public static Storage getInstance() throws StorageClientException {
         return getInstance((SecretKeyAccessor) null);
     }
 
@@ -79,9 +78,8 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
-    public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException, StorageServerException {
+    public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .useEnvIdFromEnv()
@@ -101,10 +99,9 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
-            throws StorageClientException, StorageServerException {
+            throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setEnvId(environmentID)
@@ -119,10 +116,9 @@ public class StorageImpl implements Storage {
      * @param config A container with configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(StorageConfig config)
-            throws StorageClientException, StorageServerException {
+            throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params config={}", config);
         }
@@ -133,7 +129,7 @@ public class StorageImpl implements Storage {
         return getInstance(config, null);
     }
 
-    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException, StorageServerException {
+    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? String.format(StorageConfig.MSG_SECURE, environmentID.hashCode()) : null,
@@ -148,7 +144,7 @@ public class StorageImpl implements Storage {
     }
 
     private static Storage getInstance(StorageConfig config, Dao dao)
-            throws StorageClientException, StorageServerException {
+            throws StorageClientException {
         checkNotNull(config.getEnvId(), MSG_ERR_PASS_ENV);
         if (config.getApiKey() != null && config.getClientId() != null) {
             LOG.error(MSG_ERR_AUTH_DUPL);
@@ -182,7 +178,7 @@ public class StorageImpl implements Storage {
         return builder.build();
     }
 
-    private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
+    private static Dao initDao(StorageConfig config, Dao dao) throws StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
             Integer httpPoolSize = config.getMaxHttpPoolSize();

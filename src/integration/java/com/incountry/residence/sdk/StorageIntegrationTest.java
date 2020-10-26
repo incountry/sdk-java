@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -106,7 +107,7 @@ public class StorageIntegrationTest {
 
     private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
-    private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
+    private static final byte[] ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab".getBytes(StandardCharsets.UTF_8);
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);

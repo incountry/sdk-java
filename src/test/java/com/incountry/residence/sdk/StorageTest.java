@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,7 +46,7 @@ class StorageTest {
     private static final int PORT = 8767;
     private static final String ENVIRONMENT_ID = "envId";
     private static final String FAKE_ENDPOINT = "http://fakeEndpoint.localhost:8081";
-    private static final String SECRET = "passwordpasswordpasswordpassword";
+    private static final byte[] SECRET = "passwordpasswordpasswordpassword".getBytes(StandardCharsets.UTF_8);
     private static final String COUNTRY = "us";
     private static final String RECORD_KEY = "some_key";
     private static final String KEY_2 = "key2";
@@ -455,7 +456,7 @@ class StorageTest {
     @RepeatedTest(3)
     void testInitErrorOnInsufficientArgs(RepetitionInfo repeatInfo) throws StorageClientException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(null, null, null, secretKeyAccessor));
         assertEquals("Please pass environment_id param or set INC_ENVIRONMENT_ID env var", ex1.getMessage());
@@ -505,7 +506,7 @@ class StorageTest {
 
     @Test
     void testPositiveWithConstructor2() throws StorageClientException, StorageServerException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, "apiKey", FAKE_ENDPOINT, secretKeyAccessor);
         assertNotNull(storage);
@@ -513,7 +514,7 @@ class StorageTest {
 
     @Test
     void testPositiveWithConstructor3() throws StorageClientException, StorageServerException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)
@@ -526,7 +527,7 @@ class StorageTest {
 
     @Test
     void testNegativeWithConstructor3emptyApikey() throws StorageClientException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)
@@ -544,7 +545,7 @@ class StorageTest {
 
     @Test
     void positiveTestWithClientId() throws StorageClientException, StorageServerException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)
@@ -557,7 +558,7 @@ class StorageTest {
 
     @Test
     void negativeTestNullClientSecret() throws StorageClientException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)
@@ -570,7 +571,7 @@ class StorageTest {
 
     @Test
     void negativeTestEmptySecret() throws StorageClientException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)
@@ -584,7 +585,7 @@ class StorageTest {
 
     @Test
     void negativeTestBothAuth() throws StorageClientException {
-        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret", 1, false)), 1);
+        SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENVIRONMENT_ID)

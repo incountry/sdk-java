@@ -28,8 +28,10 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then # Fetch the PR branch with comple
   git fetch --no-tags https://github.com/${TRAVIS_PULL_REQUEST_SLUG}.git +refs/heads/${TRAVIS_BRANCH}:refs/remotes/origin/${TRAVIS_BRANCH}
 fi
 
-# Perform the build
-gradle build jacocoTestReport sonarqube
+# Perform the build without unit tests
+gradle build --exclude-task test
+# Separate command to run unit tests with full log at console output
+gradle test jacocoTestReport sonarqube
 
 if [[ "$TRAVIS_PULL_REQUEST" == 'false' ]] && branch_matches "^master$|^develop$|^SB_*|^RC_*"; then
   npm install -g snyk

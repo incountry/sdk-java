@@ -18,6 +18,7 @@ import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransferRecordTest {
 
-    private static final String SECRET = "secret";
+    private static final byte[] SECRET = "secret".getBytes(StandardCharsets.UTF_8);
     private static final String ENVIRONMENT_ID = "envId";
 
     private CryptoManager cryptoManager;
@@ -321,7 +322,7 @@ class TransferRecordTest {
                 "}";
         CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
         StorageServerException exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson1, cryptoManager));
-        assertEquals("Response error", exception.getMessage());
+        assertEquals("Response parse error", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
         assertEquals(ParseException.class, exception.getCause().getCause().getClass());
         assertEquals("Failed to parse date [\"SOME_ILLEGAL_DATE\"]: Invalid number: SOME", exception.getCause().getCause().getMessage());
@@ -336,7 +337,7 @@ class TransferRecordTest {
                 "}";
 
         exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson2, cryptoManager));
-        assertEquals("Response error", exception.getMessage());
+        assertEquals("Response parse error", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
         assertEquals(ParseException.class, exception.getCause().getCause().getClass());
         assertEquals("Failed to parse date [\"123321\"]: 123321", exception.getCause().getCause().getMessage());
@@ -351,7 +352,7 @@ class TransferRecordTest {
                 "}";
 
         exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson3, cryptoManager));
-        assertEquals("Response error", exception.getMessage());
+        assertEquals("Response parse error", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
         assertEquals(ParseException.class, exception.getCause().getCause().getClass());
         assertEquals("Failed to parse date [\"\"]: (java.lang.NumberFormatException)", exception.getCause().getCause().getMessage());
