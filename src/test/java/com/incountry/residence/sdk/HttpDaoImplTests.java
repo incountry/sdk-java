@@ -54,7 +54,7 @@ class HttpDaoImplTests {
     private int currentVersion = 0;
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
-    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException, StorageServerException {
+    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         return StorageImpl.getInstance("envId", encrypt ? secretKeyAccessor : null, dao);
     }
@@ -194,7 +194,7 @@ class HttpDaoImplTests {
     }
 
     @Test
-    void batchWriteNullTest() throws StorageServerException, StorageClientException {
+    void batchWriteNullTest() throws StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
@@ -321,7 +321,7 @@ class HttpDaoImplTests {
         assertNull(nullRecord);
 
         StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
-        assertEquals("Response parse error [response=StringNotJson]", ex1.getMessage());
+        assertEquals("Response parse error", ex1.getMessage());
         assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", ex1.getCause().getMessage());
 
         StorageServerException ex2 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
@@ -344,7 +344,7 @@ class HttpDaoImplTests {
         assertNotNull(batchRecord);
         assertTrue(batchRecord.getRecords().size() > 0);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.find(country, builder));
-        assertEquals("Response parse error [response=StringNotJson]", ex.getMessage());
+        assertEquals("Response parse error", ex.getMessage());
     }
 
     @Test
