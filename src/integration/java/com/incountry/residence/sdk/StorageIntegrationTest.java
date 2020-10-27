@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.io.ByteArrayInputStream;
@@ -50,7 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
+@TestInstance(PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageIntegrationTest {
 
@@ -129,10 +132,10 @@ public class StorageIntegrationTest {
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = UUID.randomUUID().toString();
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
-    private static final String NEW_FILE_NAME = "new_sdk_incountry_test_file";
+    private static final String NEW_FILE_NAME = UUID.randomUUID().toString() + ".txt";
     private static final String MIME_TYPE = "text/plain";
     private static final String FILE_NAME = UUID.randomUUID().toString() + ".txt";
-    private static String fileId;
+    private String fileId;
     private static Map<String, String> attachmentFiles = new HashMap<>();
 
     public static String loadFromEnv(String key) {
@@ -211,7 +214,6 @@ public class StorageIntegrationTest {
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
-    @SuppressWarnings("java:S2696")
     @Test
     @Order(250)
     public void addAttachmentTest() throws StorageException, IOException {
@@ -356,33 +358,34 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(356)
-    public void getAttachmentFileFromUnexistingRecordTest() throws StorageException {
+    public void getAttachmentFileFromNonExistentRecordTest() throws StorageException {
         AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, UUID.randomUUID().toString(), fileId);
         assertNull(file.getFileContent());
     }
 
     @Test
     @Order(357)
-    public void getUnexistingAttachmentFileTest() throws StorageException {
+    public void getNonExistentAttachmentFileTest() throws StorageException {
         AttachedFile file = storage.getAttachmentFile(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString());
         assertNull(file.getFileContent());
     }
 
     @Test
     @Order(358)
-    public void getAttachmentMetaFromUnexistingFileTest() throws StorageException {
+    public void getAttachmentMetaFromNonExistentFileTest() throws StorageException {
         AttachmentMeta meta = storage.getAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString());
         assertNull(meta);
     }
 
     @Test
     @Order(359)
-    public void updateAttachmentMetaForUnexistingFileTest() {
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, UUID.randomUUID().toString(), NEW_FILE_NAME, MIME_TYPE));
+    public void updateAttachmentMetaForNonExistentFileTest() {
+        String nonExistentFileId = UUID.randomUUID().toString();
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.updateAttachmentMeta(MIDIPOP_COUNTRY, RECORD_KEY, nonExistentFileId, NEW_FILE_NAME, MIME_TYPE));
         assertTrue(ex.getMessage().contains("Code=404"));
+        assertTrue(ex.getMessage().contains(nonExistentFileId));
     }
 
-    @SuppressWarnings("java:S2696")
     @Test
     @Order(360)
     public void addAttachmentWithUnusualFileNameTest() throws StorageException, IOException {
