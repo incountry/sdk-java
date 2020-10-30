@@ -76,7 +76,7 @@ class AllSdkEncryptionTest {
 
     static {
         try {
-            cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false);
+            cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false, true);
         } catch (StorageClientException ex) {
             LOG.error(ex.getMessage());
         }

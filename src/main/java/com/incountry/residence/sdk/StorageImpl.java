@@ -57,6 +57,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE = "File name and MIME type can't be null";
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
+    private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
@@ -165,7 +166,7 @@ public class StorageImpl implements Storage {
         StorageImpl instance = new StorageImpl();
         instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys(), config.isHashSearchKeys());
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
@@ -262,6 +263,25 @@ public class StorageImpl implements Storage {
         checkParameters(country, key);
     }
 
+    private void checkKey(String key) throws StorageClientException {
+        if (key != null && key.length() > 256) {
+            LOG.error(MSG_ERR_KEY_LENGTH);
+            throw new StorageClientException(MSG_ERR_KEY_LENGTH);
+        }
+    }
+
+    private void checkRecordsKeys(Record record) throws StorageClientException {
+        checkKey(record.getKey1());
+        checkKey(record.getKey2());
+        checkKey(record.getKey3());
+        checkKey(record.getKey4());
+        checkKey(record.getKey5());
+        checkKey(record.getKey6());
+        checkKey(record.getKey7());
+        checkKey(record.getKey8());
+        checkKey(record.getKey9());
+        checkKey(record.getKey10());
+    }
 
     public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
@@ -272,6 +292,7 @@ public class StorageImpl implements Storage {
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkParameters(country, record.getRecordKey());
+        checkRecordsKeys(record);
         dao.createRecord(country, record, cryptoManager);
         return record;
     }
@@ -329,6 +350,7 @@ public class StorageImpl implements Storage {
         } else {
             for (Record record : records) {
                 checkParameters(country, record.getRecordKey());
+                checkRecordsKeys(record);
             }
             dao.createBatch(records, country, cryptoManager);
         }

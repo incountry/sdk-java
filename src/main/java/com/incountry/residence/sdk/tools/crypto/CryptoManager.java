@@ -48,10 +48,12 @@ public class CryptoManager {
     private String envId;
     private boolean usePTEncryption;
     private boolean normalizeKeys;
+    private boolean hashSearchKeys;
 
-    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean normalizeKeys)
+    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean normalizeKeys, boolean hashSearchKeys)
             throws StorageClientException {
         this.normalizeKeys = normalizeKeys;
+        this.hashSearchKeys = hashSearchKeys;
         initFields(keyAccessor, envId);
         initCustomEncryptionMap(customEncryptionList);
         if (!usePTEncryption) {
@@ -158,6 +160,13 @@ public class CryptoManager {
             throw new StorageClientException(MSG_NULL_SECRET);
         }
         return result;
+    }
+
+    public String createSearchKeyHash(String key) {
+        if (hashSearchKeys) {
+            return createKeyHash(key);
+        }
+        return key;
     }
 
     public String createKeyHash(String key) {

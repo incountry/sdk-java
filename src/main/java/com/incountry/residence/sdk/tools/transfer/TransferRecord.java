@@ -31,16 +31,16 @@ public class TransferRecord extends Record {
 
     public TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
         super(cryptoManager.createKeyHash(record.getRecordKey()));
-        setKey1(cryptoManager.createKeyHash(record.getKey1()));
-        setKey2(cryptoManager.createKeyHash(record.getKey2()));
-        setKey3(cryptoManager.createKeyHash(record.getKey3()));
-        setKey4(cryptoManager.createKeyHash(record.getKey4()));
-        setKey5(cryptoManager.createKeyHash(record.getKey5()));
-        setKey6(cryptoManager.createKeyHash(record.getKey6()));
-        setKey7(cryptoManager.createKeyHash(record.getKey7()));
-        setKey8(cryptoManager.createKeyHash(record.getKey8()));
-        setKey9(cryptoManager.createKeyHash(record.getKey9()));
-        setKey10(cryptoManager.createKeyHash(record.getKey10()));
+        setKey1(cryptoManager.createSearchKeyHash(record.getKey1()));
+        setKey2(cryptoManager.createSearchKeyHash(record.getKey2()));
+        setKey3(cryptoManager.createSearchKeyHash(record.getKey3()));
+        setKey4(cryptoManager.createSearchKeyHash(record.getKey4()));
+        setKey5(cryptoManager.createSearchKeyHash(record.getKey5()));
+        setKey6(cryptoManager.createSearchKeyHash(record.getKey6()));
+        setKey7(cryptoManager.createSearchKeyHash(record.getKey7()));
+        setKey8(cryptoManager.createSearchKeyHash(record.getKey8()));
+        setKey9(cryptoManager.createSearchKeyHash(record.getKey9()));
+        setKey10(cryptoManager.createSearchKeyHash(record.getKey10()));
         setProfileKey(cryptoManager.createKeyHash(record.getProfileKey()));
         setServiceKey1(cryptoManager.createKeyHash(record.getServiceKey1()));
         setServiceKey2(cryptoManager.createKeyHash(record.getServiceKey2()));

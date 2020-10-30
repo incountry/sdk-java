@@ -47,7 +47,7 @@ class CryptoManagerTest {
 
     @Test
     void testWithNormalEncryption() throws StorageClientException, StorageCryptoException {
-        CryptoManager cryptoManager = new CryptoManager(() -> secretsData, null, null, false);
+        CryptoManager cryptoManager = new CryptoManager(() -> secretsData, null, null, false, true);
         for (String plainText : plainTexts) {
             Map.Entry<String, Integer> encrypted = cryptoManager.encrypt(plainText);
             String decrypted = cryptoManager.decrypt(encrypted.getKey(), encrypted.getValue());
@@ -58,7 +58,7 @@ class CryptoManagerTest {
 
     @Test
     void testWithPTEncryption() throws StorageClientException, StorageCryptoException {
-        CryptoManager crypto = new CryptoManager(null, "", null, false);
+        CryptoManager crypto = new CryptoManager(null, "", null, false, true);
         String expectedVersion = "pt";
         for (String plainText : plainTexts) {
             Map.Entry<String, Integer> encrypted = crypto.encrypt(plainText);
@@ -72,7 +72,7 @@ class CryptoManagerTest {
 
     @Test
     void testV1Decryption() throws StorageCryptoException, StorageClientException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false);
+        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
@@ -80,7 +80,7 @@ class CryptoManagerTest {
 
     @Test
     void testV2Decryption() throws StorageCryptoException, StorageClientException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false);
+        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
         String encrypted = "2:MyAeMDU3wnlWiqooUM4aStpDvW7JKU0oKBQN4WI0Wyl2vSuSmTIu8TY7Z9ljYeaLfg8ti3mhIJhbLSBNu/AmvMPBZsl6CmSC1KcbZ4kATJQtmZolidyXUGBlXC52xvAnFFGnk2s=";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
@@ -88,7 +88,7 @@ class CryptoManagerTest {
 
     @Test
     void testVPTDecryptionWithoutEnc() throws StorageCryptoException, StorageClientException {
-        CryptoManager cryptoManager = new CryptoManager(null, "", null, false);
+        CryptoManager cryptoManager = new CryptoManager(null, "", null, false, true);
         String encrypted = "pt:SW5Db3VudHJ5";
         String decrypted = cryptoManager.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
@@ -96,7 +96,7 @@ class CryptoManagerTest {
 
     @Test
     void testVPTDecryptionWithEnc() throws StorageCryptoException, StorageClientException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, "", null, false);
+        CryptoManager crypto = new CryptoManager(() -> secretsData, "", null, false, true);
         String encrypted = "pt:SW5Db3VudHJ5";
         String decrypted = crypto.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
@@ -109,7 +109,7 @@ class CryptoManagerTest {
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
-        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false);
+        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> crypto.decrypt(encrypted, keyVersion));
         assertEquals("Data encryption error", ex.getMessage());
@@ -139,20 +139,20 @@ class CryptoManagerTest {
 
     @Test
     void positiveGetNullSecretVersion() throws StorageClientException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false);
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
         assertNull(manager.getCurrentSecretVersion());
     }
 
     @Test
     void positiveDecryptNull() throws StorageClientException, StorageCryptoException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false);
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
         assertNull(manager.decrypt(null, 1));
         assertNull(manager.decrypt("", 1));
     }
 
     @Test
     void negativeNoSecretProvided() throws StorageClientException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false);
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> manager.decrypt(encrypted, keyVersion));
         assertEquals(String.format("No secret provided. Cannot decrypt record: %s", encrypted), ex.getMessage());
@@ -164,13 +164,13 @@ class CryptoManagerTest {
         SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null, false, true));
         assertEquals("Secret not found for 'version'=1 with 'isForCustomEncryption'=false", ex.getMessage());
     }
 
     @Test
     void positiveTestConstructor2WithoutEncryption() throws StorageClientException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false);
+        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
         assertNotNull(manager);
     }
 
@@ -179,7 +179,7 @@ class CryptoManagerTest {
         SecretKeyAccessor accessor = () -> {
             throw new NullPointerException();
         };
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID", null, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, "ENV_ID", null, false, true));
         assertEquals("Unexpected exception", ex.getMessage());
         assertEquals(NullPointerException.class, ex.getCause().getClass());
     }
@@ -187,7 +187,7 @@ class CryptoManagerTest {
     @Test
     void testLowerCasingForKeys() throws StorageClientException {
         String someKey = "FilterValue123~!@#$%^&*()_+";
-        CryptoManager crypto = new CryptoManager(null, "envId", null, true);
+        CryptoManager crypto = new CryptoManager(null, "envId", null, true, true);
         assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toLowerCase()));
         assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toUpperCase()));
     }
@@ -195,7 +195,7 @@ class CryptoManagerTest {
     @Test
     void nullVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
-        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false);
+        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false, true);
         String text = "Some secret text";
         Map.Entry<String, Integer> encrypted = manager.encrypt(text);
         String decrypted = manager.decrypt(encrypted.getKey(), null);
@@ -205,7 +205,7 @@ class CryptoManagerTest {
     @Test
     void illegalVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
-        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false);
+        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false, true);
         String text = "Some secret text";
         Map.Entry<String, Integer> encrypted = manager.encrypt(text);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(encrypted.getKey(), 100500));

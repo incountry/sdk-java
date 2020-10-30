@@ -139,7 +139,7 @@ class RecordTest {
                 .setRangeKey1(rangeKey1)
                 .setKey2(key2)
                 .setKey3(key3);
-        CryptoManager crypto = new CryptoManager(null, "envId", null, false);
+        CryptoManager crypto = new CryptoManager(null, "envId", null, false, true);
         String recordJson = JsonUtils.toJsonString(record, crypto);
         assertEquals("{\"version\":0," +
                         "\"is_encrypted\":false," +
@@ -243,7 +243,7 @@ class RecordTest {
                 .setServiceKey2(errorCorrectionKey2)
                 .setPrecommitBody(precommit);
 
-        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false, true);
         String recordString = JsonUtils.toJsonString(record3, cryptoManager);
         Record record4 = JsonUtils.recordFromString(recordString, cryptoManager);
         assertEquals(record3, record4);

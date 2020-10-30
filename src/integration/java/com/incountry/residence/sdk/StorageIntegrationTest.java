@@ -164,7 +164,8 @@ public class StorageIntegrationTest {
                 .setApiKey(loadFromEnv(INT_INC_API_KEY))
                 .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setNormalizeKeys(true);
+                .setNormalizeKeys(true)
+                .setHashSearchKeys(false);
         storageIgnoreCase = StorageImpl.getInstance(config);
     }
 
@@ -481,8 +482,8 @@ public class StorageIntegrationTest {
 
         builder = builder.clear()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toLowerCase())
-                .keyEq(StringField.KEY2, KEY_2.toLowerCase())
-                .keyEq(StringField.KEY3, KEY_3.toLowerCase())
+                .keyEq(StringField.KEY2, KEY_2)
+                .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toLowerCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
@@ -492,8 +493,8 @@ public class StorageIntegrationTest {
 
         builder = builder.clear()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toUpperCase())
-                .keyEq(StringField.KEY2, KEY_2.toUpperCase())
-                .keyEq(StringField.KEY3, KEY_3.toUpperCase())
+                .keyEq(StringField.KEY2, KEY_2)
+                .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toUpperCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);

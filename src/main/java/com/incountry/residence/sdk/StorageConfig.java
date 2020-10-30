@@ -36,6 +36,7 @@ public class StorageConfig {
     private String defaultAuthEndpoint;
     private Integer maxHttpPoolSize;
     private Integer maxHttpConnectionsPerRoute;
+    private boolean hashSearchKeys = true;
 
     public String getEnvId() {
         return envId;
@@ -317,6 +318,15 @@ public class StorageConfig {
      */
     public StorageConfig setCountriesEndpoint(String countriesEndpoint) {
         this.countriesEndpoint = countriesEndpoint;
+        return this;
+    }
+
+    public boolean isHashSearchKeys() {
+        return hashSearchKeys;
+    }
+
+    public StorageConfig setHashSearchKeys(boolean hashSearchKeys) {
+        this.hashSearchKeys = hashSearchKeys;
         return this;
     }
 

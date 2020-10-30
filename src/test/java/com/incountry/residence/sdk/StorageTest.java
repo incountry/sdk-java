@@ -75,7 +75,7 @@ class StorageTest {
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, version);
         secretKeyAccessor = () -> secretsData;
-        cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false);
+        cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false, true);
     }
 
     @RepeatedTest(3)
@@ -256,7 +256,7 @@ class StorageTest {
     @Test
     void testFindWithEncByMultipleSecrets() throws StorageException {
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("otherpassword");
-        CryptoManager otherManager = new CryptoManager(accessor, ENVIRONMENT_ID, null, false);
+        CryptoManager otherManager = new CryptoManager(accessor, ENVIRONMENT_ID, null, false, true);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
@@ -350,8 +350,8 @@ class StorageTest {
 
     @Test
     void testFindWithEncAndFoundPTE() throws StorageException {
-        CryptoManager cryptoAsInStorage = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
-        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        CryptoManager cryptoAsInStorage = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false, true);
+        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false, true);
         Record recWithEnc = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
@@ -373,8 +373,8 @@ class StorageTest {
 
     @Test
     void testFindWithoutEncWithEncryptedData() throws StorageException {
-        CryptoManager cryptoWithEnc = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
-        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        CryptoManager cryptoWithEnc = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false, true);
+        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false, true);
         Record recWithEnc = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
