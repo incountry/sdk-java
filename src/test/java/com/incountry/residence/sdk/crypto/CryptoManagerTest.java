@@ -4,16 +4,21 @@ import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -36,6 +41,14 @@ class CryptoManagerTest {
             "こんにちは", // Japanese
             "你好", // <- Chinese
     };
+
+    private static Stream<Arguments> getEncryptedString() {
+        return Stream.of(
+                Arguments.of("1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29"),
+                Arguments.of("2:MyAeMDU3wnlWiqooUM4aStpDvW7JKU0oKBQN4WI0Wyl2vSuSmTIu8TY7Z9ljYeaLfg8ti3mhIJhbLSBNu/AmvMPBZsl6CmSC1KcbZ4kATJQtmZolidyXUGBlXC52xvAnFFGnk2s="),
+                Arguments.of("pt:SW5Db3VudHJ5")
+        );
+    }
 
     @BeforeEach
     public void init() throws StorageClientException {
@@ -71,22 +84,6 @@ class CryptoManagerTest {
     }
 
     @Test
-    void testV1Decryption() throws StorageCryptoException, StorageClientException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
-        String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
-        String decrypted = crypto.decrypt(encrypted, keyVersion);
-        assertEquals("InCountry", decrypted);
-    }
-
-    @Test
-    void testV2Decryption() throws StorageCryptoException, StorageClientException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
-        String encrypted = "2:MyAeMDU3wnlWiqooUM4aStpDvW7JKU0oKBQN4WI0Wyl2vSuSmTIu8TY7Z9ljYeaLfg8ti3mhIJhbLSBNu/AmvMPBZsl6CmSC1KcbZ4kATJQtmZolidyXUGBlXC52xvAnFFGnk2s=";
-        String decrypted = crypto.decrypt(encrypted, keyVersion);
-        assertEquals("InCountry", decrypted);
-    }
-
-    @Test
     void testVPTDecryptionWithoutEnc() throws StorageCryptoException, StorageClientException {
         CryptoManager cryptoManager = new CryptoManager(null, "", null, false, true);
         String encrypted = "pt:SW5Db3VudHJ5";
@@ -94,13 +91,12 @@ class CryptoManagerTest {
         assertEquals("InCountry", decrypted);
     }
 
-    @Test
-    void testVPTDecryptionWithEnc() throws StorageCryptoException, StorageClientException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, "", null, false, true);
-        String encrypted = "pt:SW5Db3VudHJ5";
+    @ParameterizedTest
+    @MethodSource("getEncryptedString")
+    void testDecryption(String encrypted) throws StorageException {
+        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
         String decrypted = crypto.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
-
     }
 
     @Test
