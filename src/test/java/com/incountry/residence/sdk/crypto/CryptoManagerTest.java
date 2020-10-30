@@ -193,6 +193,15 @@ class CryptoManagerTest {
     }
 
     @Test
+    void testCreateSearchKeyHash() throws StorageClientException {
+        String someKey = "FilterValue123~!@#$%^&*()_+";
+        CryptoManager crypto = new CryptoManager(null, "envId", null, true, false);
+        assertEquals(someKey, crypto.createSearchKeyHash(someKey));
+        crypto = new CryptoManager(null, "envId", null, true, true);
+        assertEquals(crypto.createKeyHash(someKey), crypto.createSearchKeyHash(someKey.toLowerCase()));
+    }
+
+    @Test
     void nullVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
         CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false, true);

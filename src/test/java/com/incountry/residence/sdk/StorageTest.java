@@ -36,6 +36,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -673,6 +674,29 @@ class StorageTest {
                 .setMaxHttpConnectionsPerRoute(-1);
         ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
+    }
+
+    @Test
+    void negativeTestIllegalRecordKeysLength() throws StorageException {
+        String generatedString = new SecureRandom().ints(97, 123) // from 'a' to 'z'
+                .limit(300)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(1)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>")
+                .setMaxHttpPoolSize(1)
+                .setHashSearchKeys(true);
+        Storage storage = StorageImpl.getInstance(config);
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(generatedString)
+                .setKey3(KEY_3);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, record));
+        assertEquals("key1-key10 length can't be more than 256 chars", ex.getMessage());
     }
 
     @RepeatedTest(3)
