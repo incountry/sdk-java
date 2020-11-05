@@ -253,14 +253,14 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private void checkParameters(String country, String key) throws StorageClientException {
+    private void checkCountryAndRecordKey(String country, String key) throws StorageClientException {
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
     private void checkAttachmentParameters(String country, String key, String fileId) throws StorageClientException {
         checkNotNull(fileId, MSG_ERR_NULL_FILE_ID);
-        checkParameters(country, key);
+        checkCountryAndRecordKey(country, key);
     }
 
     private void checkKey(String key) throws StorageClientException {
@@ -270,7 +270,7 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private void checkRecordsKeys(Record record) throws StorageClientException {
+    private void checkRecordSearchKeys(Record record) throws StorageClientException {
         checkKey(record.getKey1());
         checkKey(record.getKey2());
         checkKey(record.getKey3());
@@ -291,8 +291,8 @@ public class StorageImpl implements Storage {
                     record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
-        checkParameters(country, record.getRecordKey());
-        checkRecordsKeys(record);
+        checkCountryAndRecordKey(country, record.getRecordKey());
+        checkRecordSearchKeys(record);
         dao.createRecord(country, record, cryptoManager);
         return record;
     }
@@ -304,7 +304,7 @@ public class StorageImpl implements Storage {
                     country,
                     recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, recordKey);
+        checkCountryAndRecordKey(country, recordKey);
         Record record = dao.read(country, recordKey, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
@@ -349,8 +349,8 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
             for (Record record : records) {
-                checkParameters(country, record.getRecordKey());
-                checkRecordsKeys(record);
+                checkCountryAndRecordKey(country, record.getRecordKey());
+                checkRecordSearchKeys(record);
             }
             dao.createBatch(records, country, cryptoManager);
         }
@@ -363,7 +363,7 @@ public class StorageImpl implements Storage {
                     country,
                     recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, recordKey);
+        checkCountryAndRecordKey(country, recordKey);
         dao.delete(country, recordKey, cryptoManager);
         return true;
     }
@@ -430,7 +430,7 @@ public class StorageImpl implements Storage {
             LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
                     country, recordKey, inputStream != null ? inputStream.hashCode() : null, upsert);
         }
-        checkParameters(country, recordKey);
+        checkCountryAndRecordKey(country, recordKey);
         try {
             if (inputStream == null || inputStream.available() == 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);

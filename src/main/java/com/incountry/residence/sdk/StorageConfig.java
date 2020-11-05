@@ -346,6 +346,7 @@ public class StorageConfig {
         newInstance.setAuthEndpoints(getAuthEndpoints());
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
         newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
+        newInstance.setHashSearchKeys(isHashSearchKeys());
         return newInstance;
     }
 
@@ -366,6 +367,7 @@ public class StorageConfig {
                 ", defaultAuthEndpoint='" + defaultAuthEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
                 ", httpPoolSize='" + maxHttpPoolSize + '\'' +
+                ", ignoreKeysHashing='" + hashSearchKeys + '\'' +
                 '}';
     }
 

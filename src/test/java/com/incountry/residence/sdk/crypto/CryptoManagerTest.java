@@ -31,6 +31,7 @@ class CryptoManagerTest {
     private SecretsData secretsData;
     private String secret;
     private Integer keyVersion;
+    private static final String ENV_ID = "ENV_ID";
 
     private String[] plainTexts = {"",
             "Hello", // <-- English
@@ -56,6 +57,14 @@ class CryptoManagerTest {
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
+    }
+
+    @ParameterizedTest
+    @MethodSource("getEncryptedString")
+    void testDecryption(String encrypted) throws StorageException {
+        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
+        String decrypted = crypto.decrypt(encrypted, keyVersion);
+        assertEquals("InCountry", decrypted);
     }
 
     @Test
@@ -88,14 +97,6 @@ class CryptoManagerTest {
         CryptoManager cryptoManager = new CryptoManager(null, "", null, false, true);
         String encrypted = "pt:SW5Db3VudHJ5";
         String decrypted = cryptoManager.decrypt(encrypted, keyVersion);
-        assertEquals("InCountry", decrypted);
-    }
-
-    @ParameterizedTest
-    @MethodSource("getEncryptedString")
-    void testDecryption(String encrypted) throws StorageException {
-        CryptoManager crypto = new CryptoManager(() -> secretsData, null, null, false, true);
-        String decrypted = crypto.decrypt(encrypted, keyVersion);
         assertEquals("InCountry", decrypted);
     }
 
@@ -135,20 +136,20 @@ class CryptoManagerTest {
 
     @Test
     void positiveGetNullSecretVersion() throws StorageClientException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
+        CryptoManager manager = new CryptoManager(null, ENV_ID, null, false, true);
         assertNull(manager.getCurrentSecretVersion());
     }
 
     @Test
     void positiveDecryptNull() throws StorageClientException, StorageCryptoException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
+        CryptoManager manager = new CryptoManager(null, ENV_ID, null, false, true);
         assertNull(manager.decrypt(null, 1));
         assertNull(manager.decrypt("", 1));
     }
 
     @Test
     void negativeNoSecretProvided() throws StorageClientException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
+        CryptoManager manager = new CryptoManager(null, ENV_ID, null, false, true);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> manager.decrypt(encrypted, keyVersion));
         assertEquals(String.format("No secret provided. Cannot decrypt record: %s", encrypted), ex.getMessage());
@@ -166,7 +167,7 @@ class CryptoManagerTest {
 
     @Test
     void positiveTestConstructor2WithoutEncryption() throws StorageClientException {
-        CryptoManager manager = new CryptoManager(null, "ENV_ID", null, false, true);
+        CryptoManager manager = new CryptoManager(null, ENV_ID, null, false, true);
         assertNotNull(manager);
     }
 
@@ -183,7 +184,7 @@ class CryptoManagerTest {
     @Test
     void testLowerCasingForKeys() throws StorageClientException {
         String someKey = "FilterValue123~!@#$%^&*()_+";
-        CryptoManager crypto = new CryptoManager(null, "envId", null, true, true);
+        CryptoManager crypto = new CryptoManager(null, ENV_ID, null, true, true);
         assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toLowerCase()));
         assertEquals(crypto.createKeyHash(someKey), crypto.createKeyHash(someKey.toUpperCase()));
     }
@@ -191,16 +192,16 @@ class CryptoManagerTest {
     @Test
     void testCreateSearchKeyHash() throws StorageClientException {
         String someKey = "FilterValue123~!@#$%^&*()_+";
-        CryptoManager crypto = new CryptoManager(null, "envId", null, true, false);
+        CryptoManager crypto = new CryptoManager(null, ENV_ID, null, true, false);
         assertEquals(someKey, crypto.createSearchKeyHash(someKey));
-        crypto = new CryptoManager(null, "envId", null, true, true);
+        crypto = new CryptoManager(null, ENV_ID, null, true, true);
         assertEquals(crypto.createKeyHash(someKey), crypto.createSearchKeyHash(someKey.toLowerCase()));
     }
 
     @Test
     void nullVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
-        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false, true);
+        CryptoManager manager = new CryptoManager(() -> secretsData, ENV_ID, null, false, true);
         String text = "Some secret text";
         Map.Entry<String, Integer> encrypted = manager.encrypt(text);
         String decrypted = manager.decrypt(encrypted.getKey(), null);
@@ -210,7 +211,7 @@ class CryptoManagerTest {
     @Test
     void illegalVersionTest() throws StorageClientException, StorageCryptoException {
         SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
-        CryptoManager manager = new CryptoManager(() -> secretsData, "ENV_ID", null, false, true);
+        CryptoManager manager = new CryptoManager(() -> secretsData, ENV_ID, null, false, true);
         String text = "Some secret text";
         Map.Entry<String, Integer> encrypted = manager.encrypt(text);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(encrypted.getKey(), 100500));
