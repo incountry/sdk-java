@@ -358,7 +358,12 @@ class HttpDaoImplTests {
 
     @Test
     void testLoadCountriesPopApiResponse() throws StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse,
+        String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";
+        String countryLoadBadResponseEmptyName = "{ \"countries\": [{\"direct\":true, \"name\": \"\" } ] }";
+        String countryLoadBadResponseNullId = "{ \"countries\": [{\"name\":\"USA\" } ] }";
+        String countryLoadBadResponseEmptyId = "{ \"countries\": [{\"name\":\"USA\",\"id\":\"\" } ] }";
+        String countryLoadBadResponseEmptyCountries = "{ \"countries\": [ ] }";
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(COUNTRY_LOAD_RESPONSE,
                 "StringNotJson",
                 countryLoadBadResponseNullName,
                 countryLoadBadResponseEmptyName,
@@ -380,7 +385,7 @@ class HttpDaoImplTests {
     @RepeatedTest(3)
     void testLoadCountriesInDefaultEndPoint(RepetitionInfo repeatInfo) throws StorageServerException, StorageCryptoException, StorageClientException {
         iterateLogLevel(repeatInfo, HttpDaoImpl.class);
-        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE);
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, null, "https://localhost:8080", agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
@@ -398,20 +403,20 @@ class HttpDaoImplTests {
         //country 'PU' has no separate endpoint
         storage.write("PU", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("pu", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
         //country 'SU' is not in country list
         storage.write("SU", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("su", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
     }
 
     @Test
     void testLoadCountriesInDefaultEndPointWithMask() throws StorageServerException, StorageCryptoException, StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE);
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, "-test-01.debug.org", null, agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
@@ -439,7 +444,7 @@ class HttpDaoImplTests {
         storage.write("PU", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("pu", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
@@ -448,7 +453,7 @@ class HttpDaoImplTests {
         storage.write("SU", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("su", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
@@ -517,7 +522,7 @@ class HttpDaoImplTests {
         assertEquals("https://custom.io", agent.getAudienceUrl());
 
         //storage has only endpoint mask
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage = initializeStorage(false, false, new HttpDaoImpl(null, "-custom-01.test.io", null, agent));
         //US is midpop
         agent.setResponse("OK");
@@ -732,13 +737,7 @@ class HttpDaoImplTests {
         assertNull(attachmentMeta.getUpdatedAt());
     }
 
-    private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";
-    private String countryLoadBadResponseEmptyName = "{ \"countries\": [{\"direct\":true, \"name\": \"\" } ] }";
-    private String countryLoadBadResponseNullId = "{ \"countries\": [{\"name\":\"USA\" } ] }";
-    private String countryLoadBadResponseEmptyId = "{ \"countries\": [{\"name\":\"USA\",\"id\":\"\" } ] }";
-    private String countryLoadBadResponseEmptyCountries = "{ \"countries\": [ ] }";
-
-    private String countryLoadResponse = "{\n" +
+    private static final String COUNTRY_LOAD_RESPONSE = "{\n" +
             "  \"countries\": [\n" +
             "    {\n" +
             "      \"direct\": true,\n" +

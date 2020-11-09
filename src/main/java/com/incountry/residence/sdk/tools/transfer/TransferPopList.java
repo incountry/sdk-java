@@ -17,7 +17,7 @@ public class TransferPopList {
     List<TransferPop> countries;
 
     public static void validatePopList(TransferPopList popList) throws StorageServerException {
-        if (popList == null || popList.countries == null || popList.countries.isEmpty()) {
+        if (popList == null || popList.countries == null) {
             LOG.error(MSG_ERR_NULL_POPLIST);
             throw new StorageServerException(MSG_ERR_NULL_POPLIST);
         }
