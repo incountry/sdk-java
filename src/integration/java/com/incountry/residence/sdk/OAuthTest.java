@@ -28,7 +28,7 @@ import static com.incountry.residence.sdk.StorageIntegrationTest.INT_COUNTRIES_L
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_ID;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_SECRET;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_DEFAULT_AUTH_ENDPOINT;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENPOINT_MASK;
+import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENDPOINT_MASK;
 import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENVIRONMENT_ID_OAUTH;
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,7 +45,7 @@ public class OAuthTest {
     private static final String END_POINT = loadFromEnv(INT_INC_ENDPOINT);
     private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_OAUTH);
     private static final String COUNTRY = loadFromEnv(INT_INC_COUNTRY);
-    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
+    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENDPOINT_MASK);
     private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 

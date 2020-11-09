@@ -107,7 +107,7 @@ public class HttpDaoImpl implements Dao {
                 return;
             }
             try {
-                ApiResponse response = httpAgent.request(countriesEndpoint, null, null, null,RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.COUNTRY));
+                ApiResponse response = httpAgent.request(countriesEndpoint, null, null, null, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.COUNTRY));
                 String content = response.getContent();
                 ConcurrentHashMap<String, POP> newCountryMap = new ConcurrentHashMap<>(JsonUtils.getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
                 if (newCountryMap.size() > 0) {

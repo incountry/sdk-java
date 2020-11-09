@@ -40,7 +40,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -576,7 +575,7 @@ class HttpDaoImplTests {
         Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
         CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
         String keyHash = cryptoManager.createKeyHash(recordKey);
-        String expectedPath = "/v2/storage/records/" + country + "/" + keyHash +  "/attachments";
+        String expectedPath = "/v2/storage/records/" + country + "/" + keyHash + "/attachments";
 
         Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         InputStream fileInputStream = Files.newInputStream(tempFile);
