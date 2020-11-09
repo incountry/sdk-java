@@ -3,7 +3,6 @@ package com.incountry.residence.sdk.keyaccessor;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
@@ -72,9 +71,9 @@ class SecretsTest {
         jsonWithoutSecretsDataFields.addProperty("version", 2);
         final String jsonString = new Gson().toJson(jsonWithoutSecretsDataFields);
 
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson(jsonString));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(jsonString));
         assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
-        ex = assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson("NotJsonString"));
+        ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson("NotJsonString"));
         assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
 
         JsonObject jsonWithSecret = new JsonObject();
@@ -87,7 +86,7 @@ class SecretsTest {
         jsonWithSecretsDataFields.addProperty("currentVersion", "1");
         jsonWithSecretsDataFields.add("secrets", array);
         String jsonString2 = new Gson().toJson(jsonWithSecretsDataFields);
-        SecretsData data = JsonUtils.getSecretsDataFromJson(jsonString2);
+        SecretsData data = SecretsDataGenerator.fromJson(jsonString2);
 
         assertNotNull(data);
         assertEquals(1, data.getCurrentVersion());
