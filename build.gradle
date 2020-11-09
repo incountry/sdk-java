@@ -69,7 +69,7 @@ dependencies {
 apply plugin: 'org.owasp.dependencycheck'
 dependencyCheck {
     data {
-        directory="$projectDir/dependencyCheck"
+        directory = "$projectDir/dependencyCheck"
     }
     failOnError = true
 }
@@ -114,6 +114,10 @@ sonarqube {
         property "sonar.organization", "incountry"
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/jacoco/test/jacocoTestReport.xml"
+        property "sonar.buildbreaker.skip", "false"
+        property "sonar.qualitygate.wait", "true"
+        property "sonar.qualitygate.timeout", "300"
+        property "sonar.verbose", "false"
     }
 }
 
@@ -181,7 +185,9 @@ uploadArchives {
 
 test {
     useJUnitPlatform()
+    maxParallelForks = 4
 }
+
 
 jar {
     manifest {
@@ -235,19 +241,6 @@ tasks.withType(Test) {
         showExceptions true
         showCauses true
         showStackTraces true
-
-        // set options for log level DEBUG and INFO
-        debug {
-            events TestLogEvent.STARTED,
-                    TestLogEvent.FAILED,
-                    TestLogEvent.PASSED,
-                    TestLogEvent.SKIPPED,
-                    TestLogEvent.STANDARD_ERROR,
-                    TestLogEvent.STANDARD_OUT
-            exceptionFormat TestExceptionFormat.FULL
-        }
-        info.events = debug.events
-        info.exceptionFormat = debug.exceptionFormat
 
         afterSuite { desc, result ->
             if (!desc.parent) { // will match the outermost suite

@@ -12,6 +12,7 @@ import com.incountry.residence.sdk.tools.transfer.TransferBatch;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +67,7 @@ class TransferBatchTest {
     @Test
     void negativeValidateTestWithMetaCountMoreThenMetaTotal() throws StorageException {
         int version = 0;
-        SecretKey secretKey = new SecretKey("secret", version, false);
+        SecretKey secretKey = new SecretKey("secret".getBytes(StandardCharsets.UTF_8), version, false);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, version);

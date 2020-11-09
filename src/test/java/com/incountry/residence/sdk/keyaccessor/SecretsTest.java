@@ -11,6 +11,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,49 +20,49 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SecretsTest {
-    private static final String PASSWORD_32 = "password__password__password__32";
+    private static final byte[] PASSWORD_32 = "password__password__password__32".getBytes(StandardCharsets.UTF_8);
 
     @Test
     void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
-        int version = 1;
-        boolean isKey = true;
-        boolean isForCustomEncryption = false;
-        SecretKey secretKey = new SecretKey(PASSWORD_32, version, isKey, isForCustomEncryption);
-        List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(secretKey);
-        int currentVersion = 1;
-        SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
-        String secretKeyString = new Gson().toJson(secretsData);
-
+        String secretKeyString = "{\n" +
+                "  \"secrets\": [\n" +
+                "    {\n" +
+                "      \"secret\": \"password__password__password__32\",\n" +
+                "      \"version\": 1,\n" +
+                "      \"isKey\": true,\n" +
+                "      \"isForCustomEncryption\": false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"currentVersion\": 1\n" +
+                "}";
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyString);
         SecretsData resultSecretsData = accessor.getSecretsData();
-        assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-        assertEquals(PASSWORD_32, resultSecretsData.getSecrets().get(0).getSecret());
-        assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
-        assertEquals(isKey, resultSecretsData.getSecrets().get(0).isKey());
-        assertEquals(isForCustomEncryption, resultSecretsData.getSecrets().get(0).isForCustomEncryption());
+        assertEquals(1, resultSecretsData.getCurrentVersion());
+        assertTrue(Arrays.equals(PASSWORD_32, resultSecretsData.getSecrets().get(0).getSecret()));
+        assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
+        assertTrue(resultSecretsData.getSecrets().get(0).isKey());
+        assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
     void testConvertStringToSecretsDataWhenSecretKeyStringIsNotJson() throws Exception {
-        String secret = "user_password";
+        String secretString = "user_password";
         int version = 0;
         int currentVersion = 0;
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentVersion());
-        assertEquals(secret, resultSecretsData.getSecrets().get(0).getSecret());
+        assertTrue(Arrays.equals(secretString.getBytes(StandardCharsets.UTF_8), resultSecretsData.getSecrets().get(0).getSecret()));
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
         assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
-    void testIsJson() throws StorageClientException {
+    void secretsFromJsonTest() throws StorageClientException {
         JsonObject jsonWithoutSecretsDataFields = new JsonObject();
         jsonWithoutSecretsDataFields.addProperty("body", "<body>");
         jsonWithoutSecretsDataFields.addProperty("record_key", "<recordKey>");
@@ -69,12 +70,11 @@ class SecretsTest {
         jsonWithoutSecretsDataFields.addProperty("profile_key", "<profileKey>");
         jsonWithoutSecretsDataFields.addProperty("range_key1", 1);
         jsonWithoutSecretsDataFields.addProperty("version", 2);
-        String jsonString = new Gson().toJson(jsonWithoutSecretsDataFields);
+        final String jsonString = new Gson().toJson(jsonWithoutSecretsDataFields);
 
-        assertNotNull(JsonUtils.getDataFromJson(jsonString, SecretsData.class));
-        assertEquals(0, ((SecretsData) JsonUtils.getDataFromJson(jsonString, SecretsData.class)).getCurrentVersion());
-        assertNull(((SecretsData) JsonUtils.getDataFromJson(jsonString, SecretsData.class)).getSecrets());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> JsonUtils.getDataFromJson("NotJsonString", SecretsData.class));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson(jsonString));
+        assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> JsonUtils.getSecretsDataFromJson("NotJsonString"));
         assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
 
         JsonObject jsonWithSecret = new JsonObject();
@@ -86,13 +86,13 @@ class SecretsTest {
         JsonObject jsonWithSecretsDataFields = new JsonObject();
         jsonWithSecretsDataFields.addProperty("currentVersion", "1");
         jsonWithSecretsDataFields.add("secrets", array);
-        jsonString = new Gson().toJson(jsonWithSecretsDataFields);
-        SecretsData data = (SecretsData) JsonUtils.getDataFromJson(jsonString, SecretsData.class);
+        String jsonString2 = new Gson().toJson(jsonWithSecretsDataFields);
+        SecretsData data = JsonUtils.getSecretsDataFromJson(jsonString2);
 
         assertNotNull(data);
         assertEquals(1, data.getCurrentVersion());
         assertEquals(1, data.getSecrets().size());
-        assertEquals("someSecret", data.getSecrets().get(0).getSecret());
+        assertTrue(Arrays.equals("someSecret".getBytes(StandardCharsets.UTF_8), data.getSecrets().get(0).getSecret()));
         assertEquals(1, data.getSecrets().get(0).getVersion());
         assertFalse(data.getSecrets().get(0).isForCustomEncryption());
     }
@@ -111,14 +111,14 @@ class SecretsTest {
                 "}";
 
         StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretDataWrongJson));
-        assertEquals("Secret can't be null", ex.getMessage());
+        assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
     }
 
     @Test
     void testValidationOfSecretsData() throws StorageClientException {
-        SecretKey secretKey1 = new SecretKey("password1", 0, false);
-        SecretKey secretKey2 = new SecretKey("password2", 1, false);
-        SecretKey secretKey3 = new SecretKey("password3", 0, false);
+        SecretKey secretKey1 = new SecretKey("password1".getBytes(StandardCharsets.UTF_8), 0, false);
+        SecretKey secretKey2 = new SecretKey("password2".getBytes(StandardCharsets.UTF_8), 1, false);
+        SecretKey secretKey3 = new SecretKey("password3".getBytes(StandardCharsets.UTF_8), 0, false);
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2, secretKey3), 1));
         assertTrue(ex1.getMessage().startsWith("SecretKey versions must be unique. Got duplicates for:"));
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), 2));
@@ -127,15 +127,17 @@ class SecretsTest {
 
     @Test
     void secretsDataToStringTest() throws StorageClientException {
-        String expected = "SecretsData{secrets=[SecretKey{secret=HASH[1267537070], version=0, isKey=false, isForCustomEncryption=false}], currentVersion=0}";
+        String expectedStart = "SecretsData{secrets=[SecretKey{secret=HASH[";
+        String expectedEnd = "], version=0, isKey=false, isForCustomEncryption=false}], currentVersion=0}";
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData secretsData = accessor.getSecretsData();
-        assertEquals(expected, secretsData.toString());
+        assertTrue(secretsData.toString().startsWith(expectedStart));
+        assertTrue(secretsData.toString().endsWith(expectedEnd));
     }
 
     @Test
     void secretsDataNegativeVersionTest() throws StorageClientException {
-        List<SecretKey> secrets = Collections.singletonList(new SecretKey("password", 1, false));
+        List<SecretKey> secrets = Collections.singletonList(new SecretKey("password".getBytes(StandardCharsets.UTF_8), 1, false));
         StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretsData(secrets, -1));
         assertEquals("Current version must be >= 0", ex.getMessage());
     }
@@ -150,7 +152,7 @@ class SecretsTest {
 
     @Test
     void secretsKeyWrongLength() {
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretKey("123", 1, true));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretKey("123".getBytes(StandardCharsets.UTF_8), 1, true));
         assertTrue(ex.getMessage().startsWith("Wrong key length for secret key with 'isKey==true'. Should be"));
 
     }
@@ -159,11 +161,17 @@ class SecretsTest {
     void testValidationOfSecretKey() throws StorageClientException {
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(PASSWORD_32, 0, true, true));
         assertEquals("SecretKey can have either 'isKey' or 'isForCustomEncryption' set to True, not both", ex1.getMessage());
-        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, true));
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret".getBytes(StandardCharsets.UTF_8), 0, true, true));
         assertTrue(ex2.getMessage().startsWith("Wrong key length for secret key with 'isKey==true'. Should be"));
-        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret", 0, true, false));
+        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("secret".getBytes(StandardCharsets.UTF_8), 0, true, false));
         assertTrue(ex3.getMessage().startsWith("Wrong key length for secret key with 'isKey==true'. Should be"));
-        SecretKey.validateSecretKey("secret", 0, false, false);
-        SecretKey.validateSecretKey("secret", 0, false, true);
+        SecretKey.validateSecretKey("secret".getBytes(StandardCharsets.UTF_8), 0, false, false);
+        SecretKey.validateSecretKey("secret".getBytes(StandardCharsets.UTF_8), 0, false, true);
+        StorageClientException ex4 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(new byte[]{}, 0, false, true));
+        assertEquals("Secret can't be null", ex4.getMessage());
+        StorageClientException ex5 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey("".getBytes(StandardCharsets.UTF_8), 0, false, true));
+        assertEquals("Secret can't be null", ex5.getMessage());
+        StorageClientException ex6 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(null, 0, false, true));
+        assertEquals("Secret can't be null", ex6.getMessage());
     }
 }

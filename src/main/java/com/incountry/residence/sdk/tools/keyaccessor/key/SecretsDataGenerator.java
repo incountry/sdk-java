@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.tools.keyaccessor.key;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class SecretsDataGenerator {
      * @throws StorageClientException when parameter validation fails
      */
     public static SecretsData fromPassword(String password) throws StorageClientException {
-        SecretKey secretKey = new SecretKey(password, DEFAULT_VERSION, false);
+        SecretKey secretKey = new SecretKey(password.getBytes(StandardCharsets.UTF_8), DEFAULT_VERSION, false);
         List<SecretKey> secretKeys = new ArrayList<>();
         secretKeys.add(secretKey);
         return new SecretsData(secretKeys, DEFAULT_VERSION);
@@ -38,8 +39,6 @@ public class SecretsDataGenerator {
      * @throws StorageClientException when parameter validation fails
      */
     public static SecretsData fromJson(String secretsDataJson) throws StorageClientException {
-        SecretsData data = (SecretsData) JsonUtils.getDataFromJson(secretsDataJson, SecretsData.class);
-        SecretsData.validate(data.getSecrets(), data.getCurrentVersion());
-        return data;
+        return JsonUtils.getSecretsDataFromJson(secretsDataJson);
     }
 }

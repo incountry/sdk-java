@@ -19,11 +19,14 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.transfer.TransferBatch;
 import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,7 +63,7 @@ public class JsonUtils {
 
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-    private static final String MSG_ERR_RESPONSE = "Response error";
+    private static final String MSG_ERR_RESPONSE = "Response parse error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
@@ -284,6 +287,23 @@ public class JsonUtils {
         return array;
     }
 
+    public static SecretsData getSecretsDataFromJson(String string) throws StorageClientException {
+        SecretsData result;
+        try {
+            SecretsDataContainer container = new Gson().fromJson(string, SecretsDataContainer.class);
+            List<SecretKey> secrets = new ArrayList<>();
+            if (container.secrets != null) {
+                for (SecretKeyContainer key : container.secrets) {
+                    secrets.add(new SecretKey(key.secret.getBytes(StandardCharsets.UTF_8), key.version, key.isKey, key.isForCustomEncryption));
+                }
+            }
+            result = new SecretsData(secrets, container.currentVersion);
+        } catch (JsonSyntaxException | NullPointerException e) {
+            throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
+        }
+        return result;
+    }
+
     public static <T> Object getDataFromJson(String string, Class<T> clazz) throws StorageClientException {
         T result;
         try {
@@ -325,5 +345,17 @@ public class JsonUtils {
             json.addProperty(P_MIME_TYPE, mimeType);
         }
         return json.toString();
+    }
+
+    private static class SecretsDataContainer {
+        List<SecretKeyContainer> secrets;
+        Integer currentVersion;
+    }
+
+    private static class SecretKeyContainer {
+        String secret;
+        Integer version;
+        boolean isKey;
+        boolean isForCustomEncryption;
     }
 }

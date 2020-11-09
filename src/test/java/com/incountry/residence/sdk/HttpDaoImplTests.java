@@ -40,6 +40,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,12 +59,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpDaoImplTests {
 
-    private String secret = "passwordpasswordpasswordpassword";
+    private byte[] secret = "passwordpasswordpasswordpassword".getBytes(StandardCharsets.UTF_8);
     private int version = 0;
     private int currentVersion = 0;
     private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
 
-    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException, StorageServerException {
+    private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
         return StorageImpl.getInstance("envId", encrypt ? secretKeyAccessor : null, dao);
     }
@@ -203,7 +204,7 @@ class HttpDaoImplTests {
     }
 
     @Test
-    void batchWriteNullTest() throws StorageServerException, StorageClientException {
+    void batchWriteNullTest() throws StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
@@ -330,7 +331,7 @@ class HttpDaoImplTests {
         assertNull(nullRecord);
 
         StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
-        assertEquals("Response error", ex1.getMessage());
+        assertEquals("Response parse error", ex1.getMessage());
         assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", ex1.getCause().getMessage());
 
         StorageServerException ex2 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
@@ -353,11 +354,11 @@ class HttpDaoImplTests {
         assertNotNull(batchRecord);
         assertTrue(batchRecord.getRecords().size() > 0);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.find(country, builder));
-        assertEquals("Response error", ex.getMessage());
+        assertEquals("Response parse error", ex.getMessage());
     }
 
     @Test
-    void testLoadCountriesPopApiResponse() throws StorageServerException, StorageClientException {
+    void testLoadCountriesPopApiResponse() throws StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse,
                 "StringNotJson",
                 countryLoadBadResponseNullName,
@@ -365,21 +366,16 @@ class HttpDaoImplTests {
                 countryLoadBadResponseNullId,
                 countryLoadBadResponseEmptyId,
                 countryLoadBadResponseEmptyCountries));
-        Dao dao = new HttpDaoImpl(null, null, null, agent);
-        assertNotNull(dao);
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
-        assertEquals("Response error", ex.getMessage());
-        assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
-        assertEquals("Response error: country name is empty TransferPop{name='null', id='null', status='null', region='null', direct=true}", ex.getMessage());
-        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
-        assertEquals("Response error: country name is empty TransferPop{name='', id='null', status='null', region='null', direct=true}", ex.getMessage());
-        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
-        assertEquals("Response error: country id is empty TransferPop{name='USA', id='null', status='null', region='null', direct=false}", ex.getMessage());
-        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
-        assertEquals("Response error: country id is empty TransferPop{name='USA', id='', status='null', region='null', direct=false}", ex.getMessage());
-        ex = assertThrows(StorageServerException.class, () -> new HttpDaoImpl(null, null, null, agent));
-        assertEquals("Response error: country list is empty", ex.getMessage());
+        Dao correctDao = new HttpDaoImpl(null, null, null, agent);
+        assertNotNull(correctDao);
+
+        CryptoManager manager = initCryptoManager(false, false);
+        for (int i = 0; i < 6; i++) {
+            StorageServerException ex = assertThrows(StorageServerException.class, () ->
+                    new HttpDaoImpl(null, null, null, agent)
+                            .read("US", "recordKey", manager));
+            assertEquals("Country list is empty", ex.getMessage());
+        }
     }
 
     @RepeatedTest(3)
