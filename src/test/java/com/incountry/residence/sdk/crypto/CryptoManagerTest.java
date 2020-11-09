@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
@@ -29,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class CryptoManagerTest {
 
     private SecretsData secretsData;
-    private String secret;
+    private byte[] secret;
     private Integer keyVersion;
     private static final String ENV_ID = "ENV_ID";
 
@@ -53,7 +54,7 @@ class CryptoManagerTest {
 
     @BeforeEach
     public void init() throws StorageClientException {
-        secret = "password";
+        secret = "password".getBytes(StandardCharsets.UTF_8);
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
@@ -102,7 +103,7 @@ class CryptoManagerTest {
 
     @Test
     void testDecryptionErrorOnSecretMismatch() throws StorageClientException {
-        secret = "otherpassword";
+        secret = "otherpassword".getBytes(StandardCharsets.UTF_8);
         keyVersion = 0;
         SecretKey secretKey = new SecretKey(secret, keyVersion, false);
         secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
@@ -158,7 +159,7 @@ class CryptoManagerTest {
     @Test
     void negativeTestWrongKeyType() throws StorageClientException {
         int keyVersion = 1;
-        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12", keyVersion, false, true);
+        SecretKey secretKey = new SecretKey("123456789_123456789_123456789_12".getBytes(StandardCharsets.UTF_8), keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, "ENV_ID", null, false, true));

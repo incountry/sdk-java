@@ -33,8 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CustomCryptoTest {
 
-    private static final String CUSTOM_PASSWORD_1 = "123456789_123456789_123456789_12";
-    private static final String CUSTOM_PASSWORD_2 = "123456789!123456789_123456789%Ab";
+    private static final byte[] CUSTOM_PASSWORD_1 = "123456789_123456789_123456789_12".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] CUSTOM_PASSWORD_2 = "123456789!123456789_123456789%Ab".getBytes(StandardCharsets.UTF_8);
     private static final String ENV_ID = "envId";
     private static final String FAKE_ENDPOINT = "http://localhost";
     private static final String API_KEY = "apiKey";

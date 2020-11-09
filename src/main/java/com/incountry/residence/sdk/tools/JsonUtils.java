@@ -70,8 +70,7 @@ public class JsonUtils {
 
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-    private static final String MSG_ERR_RESPONSE = "Response error";
-    private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
+    private static final String MSG_ERR_RESPONSE = "Response parse error";
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
             P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
@@ -298,16 +297,6 @@ public class JsonUtils {
         List<String> values = (cryptoManager != null ? hashValue(param, paramName, cryptoManager) : param.getValues());
         values.forEach(array::add);
         return array;
-    }
-
-    public static <T> Object getDataFromJson(String string, Class<T> clazz) throws StorageClientException {
-        T result;
-        try {
-            result = new Gson().fromJson(string, clazz);
-        } catch (JsonSyntaxException e) {
-            throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
-        }
-        return result;
     }
 
     public static AttachmentMeta getDataFromAttachmentMetaJson(String json) {

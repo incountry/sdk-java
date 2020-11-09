@@ -41,7 +41,7 @@ public class SecretsData {
         return currentVersion;
     }
 
-    public static void validate(List<SecretKey> secrets, int currentVersion) throws StorageClientException {
+    private static void validate(List<SecretKey> secrets, int currentVersion) throws StorageClientException {
         if (secrets == null || secrets.isEmpty()) {
             LOG.error(MSG_ERR_EMPTY_SECRETS);
             throw new StorageClientException(MSG_ERR_EMPTY_SECRETS);
