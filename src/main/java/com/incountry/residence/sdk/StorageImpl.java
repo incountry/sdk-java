@@ -4,6 +4,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -15,6 +16,11 @@ import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -36,15 +42,18 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
-    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
     private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
+    private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
+    private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
-    private static final Integer DEFAULT_TIMEOUT = 30;
+    private static final int DEFAULT_HTTP_TIMEOUT = 30;
+    private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
 
     private CryptoManager cryptoManager;
     private Dao dao;
@@ -58,9 +67,8 @@ public class StorageImpl implements Storage {
      *
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
-    public static Storage getInstance() throws StorageClientException, StorageServerException {
+    public static Storage getInstance() throws StorageClientException {
         return getInstance((SecretKeyAccessor) null);
     }
 
@@ -70,9 +78,8 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
-    public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException, StorageServerException {
+    public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .useEnvIdFromEnv()
@@ -92,10 +99,9 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
-            throws StorageClientException, StorageServerException {
+            throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setEnvId(environmentID)
@@ -107,13 +113,12 @@ public class StorageImpl implements Storage {
     /**
      * creating Storage instance
      *
-     * @param config Configuration for Storage initialization
+     * @param config A container with configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageServerException if server connection failed or server response error
      */
     public static Storage getInstance(StorageConfig config)
-            throws StorageClientException, StorageServerException {
+            throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params config={}", config);
         }
@@ -124,7 +129,7 @@ public class StorageImpl implements Storage {
         return getInstance(config, null);
     }
 
-    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException, StorageServerException {
+    public static Storage getInstance(String environmentID, SecretKeyAccessor secretKeyAccessor, Dao dao) throws StorageClientException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params (environmentID={} , secretKeyAccessor={} , dao={})",
                     environmentID != null ? String.format(StorageConfig.MSG_SECURE, environmentID.hashCode()) : null,
@@ -139,7 +144,7 @@ public class StorageImpl implements Storage {
     }
 
     private static Storage getInstance(StorageConfig config, Dao dao)
-            throws StorageClientException, StorageServerException {
+            throws StorageClientException {
         checkNotNull(config.getEnvId(), MSG_ERR_PASS_ENV);
         if (config.getApiKey() != null && config.getClientId() != null) {
             LOG.error(MSG_ERR_AUTH_DUPL);
@@ -152,16 +157,37 @@ public class StorageImpl implements Storage {
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
-    private static Dao initDao(StorageConfig config, Dao dao) throws StorageServerException, StorageClientException {
+    private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
+        if (httpTimeout == null) {
+            httpTimeout = DEFAULT_HTTP_TIMEOUT;
+        }
+        httpTimeout *= 1000; //expected value in ms
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(httpTimeout)
+                .setSocketTimeout(httpTimeout)
+                .build();
+        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
+        if (poolSize == null) {
+            poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
+        }
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(poolSize);
+        connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
+        builder.setConnectionManager(connectionManager);
+
+        return builder.build();
+    }
+
+    private static Dao initDao(StorageConfig config, Dao dao) throws StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
-            if (httpTimeout != null && httpTimeout < 1) {
-                LOG.error(MSG_ERR_ILLEGAL_TIMEOUT);
-                throw new StorageClientException(MSG_ERR_ILLEGAL_TIMEOUT);
-            } else if (httpTimeout == null) {
-                httpTimeout = DEFAULT_TIMEOUT;
-            }
-            httpTimeout *= 1000; //expected value in ms
+            Integer httpPoolSize = config.getMaxHttpPoolSize();
+            Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
+            checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
+            checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
+            checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
+
+            CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 checkNotNull(config.getClientId(), MSG_ERR_PASS_CLIENT_ID);
@@ -171,7 +197,8 @@ public class StorageImpl implements Storage {
                         config.getEnvId(),
                         config.getClientId(),
                         config.getClientSecret(),
-                        httpTimeout);
+                        httpClient
+                );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
@@ -185,9 +212,17 @@ public class StorageImpl implements Storage {
                     config.getEndpointMask(),
                     config.getCountriesEndpoint(),
                     tokenClient,
-                    httpTimeout);
+                    httpClient);
         } else {
             return dao;
+        }
+    }
+
+    private static void checkPositiveOrNull(Integer intValue, String errorMessage) throws StorageClientException {
+        if (intValue != null && intValue < 1) {
+            String errMessage = String.format(errorMessage, intValue);
+            LOG.error(errMessage);
+            throw new StorageClientException(errMessage);
         }
     }
 
@@ -197,7 +232,6 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(nullErrorMessage);
         }
     }
-
 
     private void checkParameters(String country, String key) throws StorageClientException {
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
@@ -212,20 +246,20 @@ public class StorageImpl implements Storage {
                     record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
-        checkParameters(country, record.getKey());
+        checkParameters(country, record.getRecordKey());
         dao.createRecord(country, record, cryptoManager);
         return record;
     }
 
 
-    public Record read(String country, String key) throws StorageClientException, StorageServerException, StorageCryptoException {
+    public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("read params (country={} , key={})",
+            LOG.trace("read params (country={} , recordKey={})",
                     country,
-                    key != null ? MSG_SIMPLE_SECURE : null);
+                    recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, key);
-        Record record = dao.read(country, key, cryptoManager);
+        checkParameters(country, recordKey);
+        Record record = dao.read(country, recordKey, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
         }
@@ -235,9 +269,7 @@ public class StorageImpl implements Storage {
     public MigrateResult migrate(String country, int limit) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
-            LOG.trace("migrate params (country={} , limit={})",
-                    country,
-                    limit);
+            LOG.trace("migrate params (country={} , limit={})", country, limit);
         }
         if (!encrypted) {
             LOG.error(MSG_ERR_MIGR_NOT_SUPPORT);
@@ -249,12 +281,16 @@ public class StorageImpl implements Storage {
         }
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
-                .versionNotEq(String.valueOf(cryptoManager.getCurrentSecretVersion()));
+                .keyNotEq(StringField.VERSION, String.valueOf(cryptoManager.getCurrentSecretVersion()));
         BatchRecord batchRecord = find(country, builder);
-        batchWrite(country, batchRecord.getRecords());
-        MigrateResult result = new MigrateResult(batchRecord.getCount(), batchRecord.getTotal() - batchRecord.getCount());
+        if (!batchRecord.getRecords().isEmpty()) {
+            batchWrite(country, batchRecord.getRecords());
+        }
+        MigrateResult result = new MigrateResult(batchRecord.getRecords().size(),
+                batchRecord.getTotal() - batchRecord.getRecords().size(),
+                batchRecord.getErrors());
         if (LOG.isTraceEnabled()) {
-            LOG.trace("batchWrite results={}", result);
+            LOG.trace("migrate results={}", result);
         }
         return result;
     }
@@ -271,21 +307,21 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
             for (Record record : records) {
-                checkParameters(country, record.getKey());
+                checkParameters(country, record.getRecordKey());
             }
             dao.createBatch(records, country, cryptoManager);
         }
         return new BatchRecord(records, 0, 0, 0, 0, null);
     }
 
-    public boolean delete(String country, String key) throws StorageClientException, StorageServerException {
+    public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace("delete params (country={} , key={})",
                     country,
-                    key != null ? MSG_SIMPLE_SECURE : null);
+                    recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, key);
-        dao.delete(country, key, cryptoManager);
+        checkParameters(country, recordKey);
+        dao.delete(country, recordKey, cryptoManager);
         return true;
     }
 

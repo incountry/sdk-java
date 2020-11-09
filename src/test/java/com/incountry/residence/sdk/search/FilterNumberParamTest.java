@@ -9,6 +9,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_NOT;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -58,5 +59,19 @@ class FilterNumberParamTest {
         FilterNumberParam numberParam = new Gson().fromJson(numberFilterJson, FilterNumberParam.class);
         Long[] values = numberParam.getValues();
         assertEquals(0, values.length);
+
+        String numberFilterJson1 = "{values: []}";
+        FilterNumberParam numberParam1 = new Gson().fromJson(numberFilterJson1, FilterNumberParam.class);
+        Long[] values1 = numberParam1.getValues();
+        assertEquals(0, values1.length);
+    }
+
+    @Test
+    void filterNumberParamCopyTest() throws StorageClientException {
+        FilterNumberParam numberParam = new FilterNumberParam(OPER_GT, 0L, OPER_LT, 100L);
+        FilterNumberParam numberParamCopy = numberParam.copy();
+        assertArrayEquals(numberParam.getValues(), numberParamCopy.getValues());
+        assertEquals(numberParam.getOperator1(), numberParamCopy.getOperator1());
+        assertEquals(numberParam.getOperator2(), numberParamCopy.getOperator2());
     }
 }

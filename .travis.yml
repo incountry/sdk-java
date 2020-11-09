@@ -13,17 +13,47 @@ sudo: false
 notifications:
   email: false
 
-before_install:
-  # for sonar test coverage metric
-  - git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/develop:refs/remotes/origin/develop
-  - git fetch --no-tags https://github.com/incountry/sdk-java.git +refs/heads/master:refs/remotes/origin/master
-  # for using gradle 6.5 instead of default 5 in travis
-  - wget https://services.gradle.org/distributions/gradle-6.5-bin.zip
-  - unzip -qq gradle-6.5-bin.zip
-  - export GRADLE_HOME=$PWD/gradle-6.5
-  - export PATH=$GRADLE_HOME/bin:$PATH
-  - gradle -v
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 
-script:
-  - gradle build jacocoTestReport sonarqube
-  - gradle integrationTest
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - dependencyCheck
+    - gradle-container
+
+before_install:
+  # Get used Gradle version and download URL from file 'gradle-wrapper.properties'
+  - while IFS='=' read -r key value; do key=$(echo $key | tr '.' '_'); eval ${key}=\${value}; done < "gradle/wrapper/gradle-wrapper.properties"; gradleUrl=$(echo ${distributionUrl} | tr -d \\)
+  # Get gradle zip file name and gradle directory name
+  - arr=(${gradleUrl//// }); gradleZipFile=${arr[${#arr[*]}-1]}
+  - arr2=(${gradleZipFile//-bin/ }); gradleDirectory=$arr2
+  # Check if Gradle binaries exist. If not, download them
+  - if [ -d "$PWD/gradle-container/$gradleDirectory" ]; then mv $PWD/gradle-container/$gradleDirectory $PWD; else wget -q ${gradleUrl}; unzip -qq ${gradleZipFile}; fi
+  - export GRADLE_HOME=$PWD/${gradleDirectory}; export PATH=$GRADLE_HOME/bin:$PATH
+
+jobs:
+  include:
+    - stage: build
+      name: "Build the code, scan with Snyk, run tests & Sonar"
+      script:
+        # Print debug information
+        - echo "Building for branch=$TRAVIS_BRANCH, PR=${TRAVIS_PULL_REQUEST} ..."; env | grep "COMMIT\|PULL\|BRANCH"
+        # Perform the build
+        - ./travis-build.sh
+        # move custom Gradle binaries to the cache
+        - rm -rf $PWD/gradle-container/*
+        - mv $PWD/$gradleDirectory $PWD/gradle-container
+    - stage: build
+      name: "Run integration tests"
+      script:
+        - gradle integrationTest
+
+stages:
+  - name: build
+
+env:
+  global:
+    - APP_NAME=sdk-java

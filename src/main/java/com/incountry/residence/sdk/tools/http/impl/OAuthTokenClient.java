@@ -7,16 +7,13 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.version.Version;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
@@ -24,7 +21,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuthTokenClient implements TokenClient {
+public class OAuthTokenClient extends AbstractHttpRequestCreator implements TokenClient {
 
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
     private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audience={}";
@@ -36,12 +33,12 @@ public class OAuthTokenClient implements TokenClient {
     private static final String EMEA = "emea";
 
     //error messages
-    private static final String MSG_ERR_AUTH = "Unexpected exception during authorization";
+    private static final String MSG_ERR_AUTH = "Unexpected exception during authorization, params [OAuth URL=%s, audience=%s]";
     private static final String MSG_ERR_NULL_TOKEN = "Token is null";
     private static final String MSG_ERR_EXPIRES = "Token TTL is invalid";
     private static final String MSG_ERR_INVALID_TYPE = "Token type is invalid";
     private static final String MSG_ERR_INVALID_SCOPE = "Token scope is invalid";
-    private static final String MSG_RESPONSE_ERR = "Error in parsing authorization response";
+    private static final String MSG_RESPONSE_ERR = "Error in parsing authorization response: '%s'";
     private static final String MSG_ERR_PARAMS = "Can't use param 'authEndpoints' without setting 'defaultAuthEndpoint'";
     private static final String MSG_ERR_ILLEGAL_AUTH_ENDPOINTS = "Parameter 'authEndpoints' contains null keys/values";
 
@@ -58,13 +55,13 @@ public class OAuthTokenClient implements TokenClient {
 
     private final String basicAuthToken;
     private final String scope;
-    private final Integer timeoutInMs;
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
     private final Map<String, String> regionMap = new HashMap<>();
     private final String defaultAuthEndpoint;
+    private final CloseableHttpClient httpClient;
 
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
-                            String secret, Integer timeoutInMs) throws StorageClientException {
+                            String secret, CloseableHttpClient httpClient) throws StorageClientException {
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
             if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
@@ -75,7 +72,7 @@ public class OAuthTokenClient implements TokenClient {
         }
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.timeoutInMs = timeoutInMs;
+        this.httpClient = httpClient;
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
@@ -109,32 +106,45 @@ public class OAuthTokenClient implements TokenClient {
         return token.getKey();
     }
 
+    private HttpRequestBase addHeaders(HttpRequestBase request) {
+        request.addHeader(AUTHORIZATION, basicAuthToken);
+        request.addHeader(CONTENT_TYPE, APPLICATION_URLENCODED);
+        request.addHeader(USER_AGENT, USER_AGENT_VALUE);
+        return request;
+    }
+
     private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
+        String body = String.format(BODY, audience, scope);
+        String authUrl = null;
         try {
-            String body = String.format(BODY, audience, scope);
-            HttpURLConnection con = getConnection(region);
-            con.setReadTimeout(timeoutInMs);
-            con.setConnectTimeout(timeoutInMs);
-            OutputStream os = con.getOutputStream();
-            os.write(body.getBytes(CHARSET));
-            os.flush();
-            os.close();
-            int status = con.getResponseCode();
+            authUrl = regionMap.get(region);
+            if (authUrl == null) {
+                authUrl = defaultAuthEndpoint;
+            }
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(MSG_AUTH_URL, authUrl);
+            }
+
+            HttpRequestBase request = createRequest(authUrl, POST, body);
+            addHeaders(request);
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            int status = response.getStatusLine().getStatusCode();
+            String responseContent = EntityUtils.toString(response.getEntity());
+            response.close();
             boolean isSuccess = status == 200;
-            InputStream stream = isSuccess ? con.getInputStream() : con.getErrorStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, CHARSET));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = reader.readLine()) != null) {
-                content.append(inputLine);
-            }
-            reader.close();
+
             if (!isSuccess) {
-                throw createAndLogException(MSG_RESPONSE_ERR + ": '" + content.toString() + "'");
+                throw createAndLogException(String.format(MSG_RESPONSE_ERR, responseContent));
             }
-            return validateAndGet(content.toString());
-        } catch (IOException ex) {
-            throw new StorageServerException(MSG_ERR_AUTH, ex);
+            return validateAndGet(responseContent);
+        } catch (StorageServerException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            String errorMessage = String.format(MSG_ERR_AUTH, authUrl, audience);
+            LOG.error(errorMessage);
+            throw new StorageServerException(errorMessage, ex);
         }
     }
 
@@ -158,7 +168,9 @@ public class OAuthTokenClient implements TokenClient {
             }
             return new AbstractMap.SimpleEntry<>(token.accessToken, System.currentTimeMillis() + token.expiresIn * 1_000L);
         } catch (JsonSyntaxException jsonSyntaxException) {
-            throw new StorageServerException(MSG_RESPONSE_ERR, jsonSyntaxException);
+            String errorMessage = String.format(MSG_RESPONSE_ERR, response);
+            LOG.error(errorMessage);
+            throw new StorageServerException(errorMessage, jsonSyntaxException);
         }
     }
 
@@ -166,24 +178,6 @@ public class OAuthTokenClient implements TokenClient {
         message = message.replaceAll("[\r\n]", "");
         LOG.error(message);
         return new StorageServerException(message);
-    }
-
-    private HttpURLConnection getConnection(String region) throws IOException {
-        String authUrl = regionMap.get(region);
-        if (authUrl == null) {
-            authUrl = defaultAuthEndpoint;
-        }
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(MSG_AUTH_URL, authUrl);
-        }
-        URL url = new URL(authUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod(POST);
-        connection.setRequestProperty(AUTHORIZATION, basicAuthToken);
-        connection.setRequestProperty(CONTENT_TYPE, APPLICATION_URLENCODED);
-        connection.setRequestProperty(USER_AGENT, USER_AGENT_VALUE);
-        connection.setDoOutput(true);
-        return connection;
     }
 
     private String getCredentialsBase64(String clientId, String secret) {

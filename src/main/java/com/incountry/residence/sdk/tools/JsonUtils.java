@@ -18,13 +18,16 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.transfer.TransferBatch;
 import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +36,19 @@ import java.util.stream.Collectors;
 public class JsonUtils {
 
     private static final String P_BODY = "body";
-    private static final String P_KEY = "key";
-    private static final String P_KEY_2 = "key2";
-    private static final String P_KEY_3 = "key3";
-    private static final String P_PROFILE_KEY = "profile_key";
-    private static final String P_RANGE_KEY = "range_key";
+    private static final String P_PRECOMMIT_BODY = "precommit_body";
+    private static final String P_RANGE_KEY_1 = "range_key1";
+    private static final String P_RANGE_KEY_2 = "range_key2";
+    private static final String P_RANGE_KEY_3 = "range_key3";
+    private static final String P_RANGE_KEY_4 = "range_key4";
+    private static final String P_RANGE_KEY_5 = "range_key5";
+    private static final String P_RANGE_KEY_6 = "range_key6";
+    private static final String P_RANGE_KEY_7 = "range_key7";
+    private static final String P_RANGE_KEY_8 = "range_key8";
+    private static final String P_RANGE_KEY_9 = "range_key9";
+    private static final String P_RANGE_KEY_10 = "range_key10";
+    private static final String P_CREATED_AT = "created_at";
+    private static final String P_UPDATED_AT = "updated_at";
     private static final String P_PAYLOAD = "payload";
     private static final String P_META = "meta";
     private static final String P_VERSION = "version";
@@ -47,8 +58,12 @@ public class JsonUtils {
     private static final String P_FILTER = "filter";
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-    private static final String MSG_ERR_RESPONSE = "Response error";
+    private static final String MSG_ERR_RESPONSE = "Response parse error";
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
+
+    private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
+            P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
+            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10);
 
     private JsonUtils() {
     }
@@ -68,9 +83,7 @@ public class JsonUtils {
         if (cryptoManager == null) {
             return recordJsonObj;
         }
-        //store keys in new composite body with encryption
-        recordJsonObj.remove(P_BODY);
-        recordJsonObj.remove(P_RANGE_KEY);
+        REMOVE_KEYS.forEach(recordJsonObj::remove);
         JsonObject bodyJsonObj = new JsonObject();
         if (record.getBody() != null) {
             bodyJsonObj.addProperty(P_PAYLOAD, record.getBody());
@@ -87,20 +100,19 @@ public class JsonUtils {
      * @param cryptoManager crypto object
      * @return JsonObject with properties corresponding to FindFilter object properties
      */
-    public static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
+    private static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject json = new JsonObject();
         if (filter != null) {
-            addToJson(json, P_KEY, filter.getKeyFilter(), cryptoManager);
-            addToJson(json, P_KEY_2, filter.getKey2Filter(), cryptoManager);
-            addToJson(json, P_KEY_3, filter.getKey3Filter(), cryptoManager);
-            addToJson(json, P_PROFILE_KEY, filter.getProfileKeyFilter(), cryptoManager);
-            addToJson(json, P_VERSION, filter.getVersionFilter(), cryptoManager);
-            FilterNumberParam range = filter.getRangeKeyFilter();
-            if (range != null) {
-                json.add(P_RANGE_KEY, range.isConditional() ? conditionJSON(range) : valueJSON(range));
-            }
+            filter.getStringFilterMap().forEach((stringField, filterStringParam) ->
+                    addToJson(json, stringField.toString().toLowerCase(), filterStringParam, cryptoManager));
+            filter.getNumberFilterMap().forEach((numberField, filterNumberParam) ->
+                    addRangeToJson(json, numberField.toString().toLowerCase(), filterNumberParam));
         }
         return json;
+    }
+
+    private static void addRangeToJson(JsonObject json, String jsonKey, FilterNumberParam rangeFilter) {
+        json.add(jsonKey, rangeFilter.isConditional() ? conditionJSON(rangeFilter) : valueJSON(rangeFilter));
     }
 
     /**
@@ -121,7 +133,7 @@ public class JsonUtils {
         } catch (JsonSyntaxException ex) {
             throw new StorageServerException(MSG_ERR_RESPONSE, ex);
         }
-        tempRecord.validate();
+        TransferRecord.validate(tempRecord);
         if (tempRecord.getVersion() == null) {
             tempRecord.setVersion(0);
         }
@@ -129,12 +141,10 @@ public class JsonUtils {
     }
 
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
-        if (param != null) {
-            if (paramName.equals(P_VERSION)) {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
-            } else {
-                json.add(paramName, param.isNotCondition() ? addNotCondition(param, cryptoManager, true) : toJsonArray(param, cryptoManager));
-            }
+        if (paramName.equals(P_VERSION)) {
+            json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
+        } else {
+            json.add(paramName, param.isNotCondition() ? addNotCondition(param, cryptoManager, true) : toJsonArray(param, cryptoManager));
         }
     }
 
@@ -167,7 +177,7 @@ public class JsonUtils {
         if (transferBatch.getMeta().getCount() != 0) {
             for (TransferRecord tempRecord : transferBatch.getData()) {
                 try {
-                    tempRecord.validate();
+                    TransferRecord.validate(tempRecord);
                     if (tempRecord.getVersion() == null) {
                         tempRecord.setVersion(0);
                     }
@@ -182,9 +192,6 @@ public class JsonUtils {
     }
 
     private static JsonArray valueJSON(FilterNumberParam range) {
-        if (range.getValues() == null || range.getValues().length == 0) {
-            return null;
-        }
         JsonArray array = new JsonArray();
         for (long i : range.getValues()) {
             array.add(i);
@@ -201,7 +208,13 @@ public class JsonUtils {
         return object;
     }
 
-    private static JsonObject findOptionstoJson(int limit, int offset) {
+    private static JsonObject findOptionstoJson(FindFilter filter) {
+        int limit = FindFilter.MAX_LIMIT;
+        int offset = FindFilter.DEFAULT_OFFSET;
+        if (filter != null) {
+            limit = filter.getLimit();
+            offset = filter.getOffset();
+        }
         JsonObject object = new JsonObject();
         object.addProperty(P_LIMIT, limit);
         object.addProperty(P_OFFSET, offset);
@@ -213,7 +226,7 @@ public class JsonUtils {
     }
 
     public static JsonArray toJsonInt(FilterStringParam param) {
-        if (param == null || param.getValues() == null) {
+        if (param == null) {
             return null;
         }
         JsonArray array = new JsonArray();
@@ -255,12 +268,12 @@ public class JsonUtils {
     public static String toJsonString(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject object = new JsonObject();
         object.add(P_FILTER, JsonUtils.toJson(filter, cryptoManager));
-        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter.getLimit(), filter.getOffset()));
+        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter));
         return object.toString();
     }
 
     public static JsonArray toJsonArray(FilterStringParam param, CryptoManager cryptoManager) {
-        if (param == null || param.getValues() == null) {
+        if (param == null) {
             return null;
         }
         JsonArray array = new JsonArray();
@@ -272,8 +285,15 @@ public class JsonUtils {
     public static SecretsData getSecretsDataFromJson(String string) throws StorageClientException {
         SecretsData result;
         try {
-            result = new Gson().fromJson(string, SecretsData.class);
-        } catch (JsonSyntaxException e) {
+            SecretsDataContainer container = new Gson().fromJson(string, SecretsDataContainer.class);
+            List<SecretKey> secrets = new ArrayList<>();
+            if (container.secrets != null) {
+                for (SecretKeyContainer key : container.secrets) {
+                    secrets.add(new SecretKey(key.secret.getBytes(StandardCharsets.UTF_8), key.version, key.isKey, key.isForCustomEncryption));
+                }
+            }
+            result = new SecretsData(secrets, container.currentVersion);
+        } catch (JsonSyntaxException | NullPointerException e) {
             throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }
         return result;
@@ -294,5 +314,17 @@ public class JsonUtils {
             }
         }
         return result;
+    }
+
+    private static class SecretsDataContainer {
+        List<SecretKeyContainer> secrets;
+        Integer currentVersion;
+    }
+
+    private static class SecretKeyContainer {
+        String secret;
+        Integer version;
+        boolean isKey;
+        boolean isForCustomEncryption;
     }
 }

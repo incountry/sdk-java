@@ -1,5 +1,10 @@
 InCountry Storage SDK
 ===========
+[![Build Status](https://travis-ci.com/incountry/sdk-java.svg?branch=master)](https://travis-ci.com/incountry/sdk-java)
+[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=alert_status)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
+[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
+[![Known Vulnerabilities](https://snyk.io/test/github/incountry/sdk-java/badge.svg?targetFile=build.gradle)](https://snyk.io/test/github/incountry/sdk-java?targetFile=build.gradle)
+
 Installation
 -----
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
@@ -9,13 +14,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>2.1.0</version>
+  <version>3.0.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:2.1.0"
+compile "com.incountry:incountry-java-client:3.0.0"
 ```
 
 Countries List
@@ -30,34 +35,58 @@ public class StorageImpl implements Storage {
   /**
    * creating Storage instance
    *
-   * @param environmentID     Required to be passed in, or as environment variable INC_API_KEY
-                              with {@link #getInstance()}
-   * @param apiKey            Required to be passed in, or as environment variable INC_ENVIRONMENT_ID
-                              with {@link #getInstance()}
-   * @param endpoint          Optional. Defines API URL.
-   *                          Default endpoint will be used if this param is null
-   * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
+   * @param config A container with configuration for Storage initialization
    * @return instance of Storage
-   * @throws StorageClientException if configuration validation finished with errors
-   * @throws StorageServerException if server connection failed or server response error
+   * @throws StorageClientException if configuration validation finished with errors   
    */
-  public static Storage getInstance(String environmentID, String apiKey, String endpoint,
-                            SecretKeyAccessor secretKeyAccessor) throws StorageServerException {...}
+  public static Storage getInstance(StorageConfig config)
+                                    throws StorageClientException, StorageServerException  {...}
 //...
 }
 ```
+StorageConfig provides the following parameters:
+```java
+/**
+ * container with Storage configuration, using pattern 'builder'
+ */
+public class StorageConfig {
+    //...
+    /** Required to be passed in, or as environment variable INC_API_KEY */
+    private String envId;
+    /** Required when using API key authorization, or as environment variable */
+    private String apiKey;
+    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */
+    private String endPoint;
+    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
+    private SecretKeyAccessor secretKeyAccessor;
+    /** Optional. List of custom encryption configurations */
+    private List<Crypto> customEncryptionConfigsList;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
+    private String clientId;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
+    private String clientSecret;
+    //...
+```
 
-Parameters `environmentID` and `apiKey` (or `clientId` and `clientSecret` instead of `apiKey`) can be fetched from your dashboard on `Incountry` site.
+---
+**WARNING**
+
+API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
+
+---
+
+Parameters `environmentID`, `clientId` and `clientSecret` can be fetched from your dashboard on `Incountry` site.
 
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
 Below is an example how to create a storage instance:
 ```java
-SecretKeyAccessor secretKeyAccessor = () -> SecretsDataGenerator.fromPassword("<password>");
-String endPoint = "https://us-mt-01.api.incountry.io";
-String envId = "<env_id>";
-String apiKey = "<api_key>";
-Storage storage = StorageImpl.getInstance(envId, apiKey, endPoint, secretKeyAccessor);
+SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
+StorageConfig config = new StorageConfig()
+    .setEnvId("<env_id>")
+    .setApiKey("<api_key>")
+    .setSecretKeyAccessor(accessor);
+Storage storage=StorageImpl.getInstance(config);
 ```
 
 #### oAuth Authentication
@@ -79,7 +108,11 @@ StorageConfig config = new StorageConfig()
    .setAuthEndpoints(authEndpointsMap)
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
-   .setEnvId(ENV_ID);
+   .setEnvId(ENV_ID)
+   //HTTP connections pool size, optional, defaults to 20
+   .setMaxHttpPoolSize(32)
+   //max HTTP connections per route, optional, defaults to MaxHttpPoolSize
+   .setMaxHttpConnectionsPerRoute(8);
 Storage storage = StorageImpl.getInstance(config);
 ```
 
@@ -130,12 +163,12 @@ public class SecretKey {
     /**
     * Creates a secret key
     *
-    * @param secret  secret/key
+    * @param secret  secret/key as byte array from UTF8 String
     * @param version secret version, should be a non-negative integer
     * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isKey)
+    public SecretKey(byte[] secret, int version, boolean isKey)
               throws StorageClientException {...}
     //...
 }
@@ -172,23 +205,23 @@ You can also use `SecretsDataGenerator` class for creating `SecretsData` instanc
     SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
     ```
 
-    ```javascript
-    {
+```javascript
+{
     "secrets": [
         {
-        "secret": "secret0",
-        "version": 0,
-        "isKey": false
+            "secret": "secret0",
+            "version": 0,
+            "isKey": false
         },
         {
-        "secret": "secret1",
-        "version": 1,
-        "isKey": false
+            "secret": "secret1",
+            "version": 1,
+            "isKey": false
         }
     ],
     "currentVersion": 1
-    }
-    ```
+}
+```
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
 
@@ -225,47 +258,86 @@ public interface Storage {
 Here is how you initialize a record object:
 ```java
 public class Record {
-    /**
-     * Full constructor
-     *
-     * @param key        Required, record key
-     * @param body       Optional, data to be stored and encrypted
-     * @param profileKey Optional, profile key
-     * @param rangeKey   Optional, range key
-     * @param key2       Optional, key2
-     * @param key3       Optional, key3
-     */
-    public Record(String key, String body, String profileKey, Long rangeKey, String key2, String key3)
+   /**
+    * Minimalistic constructor
+    *
+    * @param recordKey record key
+    */
+    public Record(String recordKey) {...};
+
+   /**
+    * Overloaded constructor
+    *
+    * @param recordKey record key
+    * @param body      data to be stored and encrypted
+    */
+    public Record(String recordKey, String body) {...}
     //...
 }
 ```
 
 Below is the example of how you may use `write` method:
 ```java
-key = "user_1";
-body = "some PII data";
-profileKey = "customer";
-rangeKey = 10000l;
-key2 = "english";
-key3 = "insurance";
-Record record = new Record(key, body, profileKey, rangeKey, key2, key3);
+Record record = new Record("some_key")
+    .setBody("some PII data")
+    .setProfileKey("customer")
+    .setKey1("hatchback")
+    .setKey2("english")
+    .setKey3("insurance")
+    .setRangeKey1(10_000L)
 storage.write("us", record);
 ```
 
-#### Encryption
-InCountry uses client-side encryption for your data. Note that only body is encrypted. Some of other fields are hashed.
-Here is how data is transformed and stored in InCountry database:
+#### List of available record fields
+v3.0.0 release introduced a series of new fields available for storage. Below is an exhaustive list of fields available for storage in InCountry along with their types and  storage methods - each field is either encrypted, hashed or stored as is:
 ```java
 public class Record {
-    private String key;          // hashed
-    private String body;         // encrypted
-    private String profileKey;   // hashed
-    private Long rangeKey;       // plain
-    private String key2;         // hashed
-    private String key3;         // hashed
-    //...
-}
+    //String fields, hashed
+    private String recordKey;
+    private String key1;
+    private String key2;
+    private String key3;
+    private String key4;
+    private String key5;
+    private String key6;
+    private String key7;
+    private String key8;
+    private String key9;
+    private String key10;
+    private String profileKey;
+    private String serviceKey1;
+    private String serviceKey2;
+    //String fields, encrypted
+    private String body;
+    private String precommitBody;
+    //Long fields, plain
+    private Long rangeKey1;
+    private Long rangeKey2;
+    private Long rangeKey3;
+    private Long rangeKey4;
+    private Long rangeKey5;
+    private Long rangeKey6;
+    private Long rangeKey7;
+    private Long rangeKey8;
+    private Long rangeKey9;
+    private Long rangeKey10;
+    //Readonly service fields, date in ISO format
+    protected Date createdAt;
+    protected Date updatedAt;
 ```
+You can access all the properties using appropriate getters and setters, for example:
+
+```java
+String key2 = record.getKey2();
+String body = record.getBody();
+
+record.setProfileKey("customer")
+    .setRangeKey1(1_000L)
+    .setKey3("grey");
+```
+
+#### Date fields
+Use `createdAt` and `updatedAt` fields to access date-related information about records. `createdAt` indicates date when the record was initially created in the target country. `updatedAt` shows the date of the latest write operation for the given `recordKey`
 
 ### Batches
 
@@ -291,27 +363,27 @@ public interface Storage {
  Below is the example of how you may use `batchWrite` method
 ```java
 List<Record> list = new ArrayList<>();
-list.add(new Record(firstKey, firstBody, firstProfileKey, firstRangeKey, firstKey2, firstKey3));
-list.add(new Record(secondKey, secondBody, secondProfileKey, secondRangeKey, secondKey2, secondKey3));
+list.add(new Record("some_record_key","some PII data"));
+list.add(new Record("another_record_key","another PII data"));
 storage.batchWrite("us", list);
 ```
 
 ### Reading stored data
 
-Stored record can be read by `key` using `read` method.
+Stored record can be read by `recordKey` using `read` method.
 ```java
 public interface Storage {
    /**
     * Read data from remote storage
     *
     * @param country   country identifier
-    * @param key record unique identifier
+    * @param recordKey record unique identifier
     * @return Record object which contains required data
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record read(String country, String key)
+    Record read(String country, String recordKey)
         throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -319,19 +391,10 @@ public interface Storage {
 
 Below is the example of how you may use `read` method:
  ```java
-String key = "user_1";
-Record record = storage.read("us", key);
+String recordKey = "user_1";
+Record record = storage.read("us", recordKey);
 String decryptedBody = record.getBody();
  ```
-
-`Record` contains the following properties: `key`, `body`, `key2`, `key3`, `profileKey`, `rangeKey`.
-
-These properties can be accessed using getters, for example:
-
-```java
-String key2 = record.getKey2();
-String body = record.getBody();
-```
 
 ### Find records
 
@@ -359,9 +422,9 @@ Use `FindFilterBuilder` class to refine your find request.
 Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                  .key2Eq("someKey")
-                  .key3Eq("firstValue","secondValue")
-                  .rangeKeyBetween(123l, 456l);
+                  .keyEq(StringField.KEY2, "someKey")
+                  .keyEq(StringField.KEY3, "firstValue", "secondValue")
+                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L);
 
 BatchRecord findResult = storage.find("us", builder);
 if (findResult.getCount() > 0) {
@@ -372,7 +435,7 @@ if (findResult.getCount() > 0) {
 
 The request will return records, filtered according to the following pseudo-sql
 ```sql
-key2 = 'someKey' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey` < = 456)
+key2 = 'someKey' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey1` < = 456)
 ```
 
 All conditions added via `FindFilterBuilder` are joined using logical `AND`. You may not add multiple conditions for the same key - if you do only the last one will be used.
@@ -388,24 +451,18 @@ BatchRecord records = storage.find("us", builder);
 Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
 EQUALS         (FindFilterBuilder::keyEq)
-               (FindFilterBuilder::key2Eq)
-               (FindFilterBuilder::key3Eq)
-               (FindFilterBuilder::profileKeyEq)
 NOT_EQUALS     (FindFilterBuilder::keyNotEq)
-               (FindFilterBuilder::key2NotEq)
-               (FindFilterBuilder::key3NotEq)
-               (FindFilterBuilder::profileKeyNotEq)
 ```
 
-You can use the following builder methods for filtering by numerical `rangeKey` field:
+You can use the following builder methods for filtering by numerical fields:
 ```java
-EQUALS              (FindFilterBuilder::rangeKeyEq)
-IN                  (FindFilterBuilder::rangeKeyIn)
-GREATER             (FindFilterBuilder::rangeKeyGT)
-GREATER OR EQUALS   (FindFilterBuilder::rangeKeyGTE)
-LESS                (FindFilterBuilder::rangeKeyLT)
-LESS OR EQUALS      (FindFilterBuilder::rangeKeyLTE)
-BETWEEN             (FindFilterBuilder::rangeKeyBetween)
+EQUALS              (FindFilterBuilder::keyEq)
+IN                  (FindFilterBuilder::keyIn)
+GREATER             (FindFilterBuilder::keyGT)
+GREATER OR EQUALS   (FindFilterBuilder::keyGTE)
+LESS                (FindFilterBuilder::keyLT)
+LESS OR EQUALS      (FindFilterBuilder::keyLTE)
+BETWEEN             (FindFilterBuilder::keyBetween)
 ```
 
 Method `find` returns `BatchRecord` object which contains a list of `Record` and some metadata:
@@ -454,9 +511,9 @@ It works the same way as `find` but returns the first record or `null` if no rec
 Here is the example of how `findOne` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
-                .key2Eq("someKey")
-                .key3Eq("firstValue", "secondValue")
-                .rangeKeyBetween(123l, 456l);
+                  .keyEq(StringField.KEY2, "someKey")
+                  .keyEq(StringField.KEY3, "firstValue", "secondValue")
+                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L);
 
 Record record = storage.findOne("us", builder);
 //...
@@ -471,21 +528,22 @@ public interface Storage {
     * Delete record from remote storage
     *
     * @param country   country code of the record
-    * @param key the record's key
+    * @param recordKey the record's key
     * @return true when record was deleted
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed
     */
-    boolean delete(String country, String key)
+    boolean delete(String country, String recordKey)
             throws StorageClientException, StorageServerException;
     //...
 }
 ```
 
+
 Below is the example of how you may use `delete` method:
  ```java
-String key = "user_1";
-storage.delete("us", key);
+String recordKey = "user_1";
+storage.delete("us", recordKey);
  ```
 
 Data Migration and Key Rotation support
@@ -560,38 +618,12 @@ public void test() {
 Custom Encryption Support
 -----
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
-One of the overloaded versions of the method `getInstance` in class `StorageImpl` allows you to pass a list of custom encryption implementations:
 
-```java
-/**
-  * creating Storage instance
-  *
-  * @param config Configuration for Storage initialization
-  * @return instance of Storage
-  * @throws StorageClientException if configuration validation finished with errors
-  * @throws StorageCryptoException if custom encryption fails during initialization
-  * @throws StorageServerException if server connection failed or server response error
-  */
-public static Storage getInstance(StorageConfig config)
-              throws StorageClientException, StorageServerException {...}
-```
-
-Class `StorageConfig` is a container with Storage configuration, using Builder pattern. Use method `setCustomEncryptionConfigsList` for passing a list of custom encryption implementations:
+Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
 
 ```java
 public class StorageConfig {
-   private String envId;
-       private String apiKey;
-       private String endPoint;
-       private SecretKeyAccessor secretKeyAccessor;
-       private List<Crypto> customEncryptionConfigsList;
-       private boolean normalizeKeys;
-       private String clientId;
-       private String clientSecret;
-       private String authEndPoint;
-       private Integer httpTimeout;
     //...
-
     /**
      * for custom encryption
      *
@@ -602,20 +634,6 @@ public class StorageConfig {
         this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
     }
-
-    /**
-     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
-     * Default value is 30 seconds.
-     *
-     * @param httpTimeout timeout in seconds
-     * @return StorageConfig
-     */
-    public StorageConfig setHttpTimeout(Integer httpTimeout) {
-        this.httpTimeout = httpTimeout;
-        return this;
-    }
-
-
     //...
 }
 ```
@@ -672,7 +690,7 @@ You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKey
 ```java
 public class SecretKey {
     /**
-     * @param secret secret/key
+     * @param secret secret/key as byte array from UTF8 String
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption
@@ -681,7 +699,7 @@ public class SecretKey {
      *                              moment, not both
      * @throws StorageClientException when parameter validation fails
      */
-    public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
+    public SecretKey(byte[] secret, int version, boolean isKey, boolean isForCustomEncryption)
               throws StorageClientException {...}
     //...
 }
@@ -766,14 +784,18 @@ Project dependencies
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 
-| **GroupId**              | **ArtifactId**       | **Version** | **Type** |
-| :---:                    | :---:                | :---:       | :---:    |
-| javax.xml.bind           | jaxb-api             | 2.3.1       | jar      |
-| javax.activation         | javax.activation-api | 1.2.0        | jar      |
-| commons-codec            | commons-codec        | 1.14        | jar      |
-| org.apache.logging.log4j | log4j-api            | 2.13.2      | jar      |
-| org.apache.logging.log4j | log4j-core           | 2.13.2      | jar      |
-| com.google.code.gson     | gson                 | 2.8.6       | jar      |
+| **GroupId**               | **ArtifactId**       | **Version** | **Type** |
+| :---:                     | :---:                | :---:       | :---:    |
+| javax.xml.bind            | jaxb-api             | 2.3.1       | jar      |
+| javax.activation          | javax.activation-api | 1.2.0       | jar      |
+| commons-codec             | commons-codec        | 1.14        | jar      |
+| commons-logging           | commons-logging      | 1.2         | jar      |
+| org.apache.logging.log4j  | log4j-api            | 2.13.3      | jar      |
+| org.apache.logging.log4j  | log4j-core           | 2.13.3      | jar      |
+| org.apache.logging.log4j  | log4j-core-jcl       | 2.13.3      | jar      |
+| org.apache.httpcomponents | httpclient           | 4.5.12      | jar      |
+| org.apache.httpcomponents | httpcore             | 4.4.13      | jar      |
+| com.google.code.gson      | gson                 | 2.8.6       | jar      |
 
 #### Dependency Tree
 ```
@@ -781,10 +803,17 @@ compileClasspath
 +--- javax.xml.bind:jaxb-api:2.3.1
 |    \--- javax.activation:javax.activation-api:1.2.0
 +--- commons-codec:commons-codec:1.14
-+--- org.apache.logging.log4j:log4j-api:2.13.2
-+--- org.apache.logging.log4j:log4j-core:2.13.2
-|    \--- org.apache.logging.log4j:log4j-api:2.13.2
-\--- com.google.code.gson:gson:2.8.6
++--- com.google.code.gson:gson:2.8.6
++--- org.apache.logging.log4j:log4j-api:2.13.3
++--- org.apache.logging.log4j:log4j-core:2.13.3
+|    \--- org.apache.logging.log4j:log4j-api:2.13.3
++--- org.apache.logging.log4j:log4j-jcl:2.13.3
+|    +--- commons-logging:commons-logging:1.2
+|    \--- org.apache.logging.log4j:log4j-api:2.13.3
+\--- org.apache.httpcomponents:httpclient:4.5.12
+     +--- org.apache.httpcomponents:httpcore:4.4.13
+     +--- commons-logging:commons-logging:1.2
+     \--- commons-codec:commons-codec:1.11 -> 1.14
 ```
 
 ### Minimal JVM memory options

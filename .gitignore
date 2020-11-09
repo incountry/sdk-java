@@ -2,6 +2,7 @@
 /target/
 .idea
 build
+dependencyCheck
 gradle
 .gradle
 *.iml

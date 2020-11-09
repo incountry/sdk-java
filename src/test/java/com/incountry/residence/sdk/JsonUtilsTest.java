@@ -1,11 +1,13 @@
 package com.incountry.residence.sdk;
 
-import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.dto.search.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -13,6 +15,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import org.junit.jupiter.api.Test;
 
+import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,46 +24,55 @@ class JsonUtilsTest {
 
     @Test
     void testBetweenFilter() throws StorageClientException {
-        String expected = "{\"filter\":{\"range_key\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, 9).build(), null);
+        String expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        String fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, 9).build(), null);
         assertEquals(expected, fact);
 
-        expected = "{\"filter\":{\"range_key\":{\"$gte\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, true, 9, false).build(), null);
+        expected = "{\"filter\":{\"range_key1\":{\"$gte\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, true, 9, false).build(), null);
         assertEquals(expected, fact);
 
-        expected = "{\"filter\":{\"range_key\":{\"$gt\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, false, 9, true).build(), null);
+        expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lte\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, false, 9, true).build(), null);
         assertEquals(expected, fact);
 
-        expected = "{\"filter\":{\"range_key\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
-        fact = JsonUtils.toJsonString(FindFilterBuilder.create().rangeKeyBetween(2, false, 9, false).build(), null);
+        expected = "{\"filter\":{\"range_key1\":{\"$gt\":2,\"$lt\":9}},\"options\":{\"limit\":100,\"offset\":0}}";
+        fact = JsonUtils.toJsonString(FindFilterBuilder.create().keyBetween(NumberField.RANGE_KEY1, 2, false, 9, false).build(), null);
+        assertEquals(expected, fact);
+    }
+
+    @Test
+    void testWithOneFilter() throws StorageClientException {
+        String expected = "{\"filter\":{\"range_key1\":{\"$gt\":1}},\"options\":{\"limit\":100,\"offset\":0}}";
+        FindFilter findFilter = new FindFilter();
+        findFilter.setNumberFilter(NumberField.RANGE_KEY1, new FilterNumberParam(OPER_GT, 1L));
+        String fact = JsonUtils.toJsonString(findFilter, null);
         assertEquals(expected, fact);
     }
 
     @Test
     void testNullFilterToJson() {
-        JsonObject json = JsonUtils.toJson((FindFilter) null, null);
-        assertEquals("{}", json.toString());
+        String jsonString = JsonUtils.toJsonString((FindFilter) null, null);
+        assertEquals("{\"filter\":{},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }
 
     @Test
     void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
-        filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, true));
-        JsonObject json = JsonUtils.toJson(filter, new CryptoManager(null, "envId", null, false));
-        assertEquals("{\"version\":{\"$not\":[1]}}", json.toString());
+        filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, true));
+        String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
+        assertEquals("{\"filter\":{\"version\":{\"$not\":[1]}},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         filter = new FindFilter();
-        filter.setVersionFilter(new FilterStringParam(new String[]{"1"}, false));
-        json = JsonUtils.toJson(filter, new CryptoManager(null, "envId", null, false));
-        assertEquals("{\"version\":[1]}", json.toString());
+        filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
+        jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
+        assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }
 
     @Test
     void negativeTestIncorrectJson() {
         StorageServerException ex = assertThrows(StorageServerException.class, () -> JsonUtils.getMidiPops("json", "https://app.start", "end.com"));
-        assertEquals("Response error", ex.getMessage());
+        assertEquals("Response parse error", ex.getMessage());
     }
 
     @Test
@@ -87,9 +99,14 @@ class JsonUtilsTest {
 
     @Test
     void testBatchRecordFromStringWithNullVersion() throws StorageException {
-        String content = "{\"data\":[{\"key\":\"9ba998c3650c4150d54dd22f3f35f45081c8f5399da625677efde99550447966\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5IiwicHJvZmlsZV9rZXkiOiJwcm9maWxlS2V5In19\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
-        Record record = new Record("key", "body", "profileKey", null, null, null);
+        String content = "{\"data\":[{\"version\":0,\"is_encrypted\":false,\"record_key\":\"cd59def71c1fc1c42bce810ee3e629c345f749cd988d28ab4639311de36ca867\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsicmVjb3JkX2tleSI6InJlY29yZEtleSIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
+        Record record = new Record("recordKey", "body").setProfileKey("profileKey");
         BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, new CryptoManager(null, "envId", null, false));
         assertEquals(record, batchRecord.getRecords().get(0));
+
+        String content1 = "{\"data\":[{\"is_encrypted\":false,\"record_key\":\"cd59def71c1fc1c42bce810ee3e629c345f749cd988d28ab4639311de36ca867\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsicmVjb3JkX2tleSI6InJlY29yZEtleSIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
+        Record record1 = new Record("recordKey", "body").setProfileKey("profileKey");
+        BatchRecord batchRecord1 = JsonUtils.batchRecordFromString(content1, new CryptoManager(null, "envId", null, false));
+        assertEquals(record1, batchRecord1.getRecords().get(0));
     }
 }
