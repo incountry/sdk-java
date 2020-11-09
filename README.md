@@ -1,6 +1,6 @@
 InCountry Storage SDK
 ===========
-[![Build Status](https://travis-ci.com/incountry/sdk-java.svg?branch=master)](https://travis-ci.com/incountry/sdk-java) 
+[![Build Status](https://travis-ci.com/incountry/sdk-java.svg?branch=master)](https://travis-ci.com/incountry/sdk-java)
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=alert_status)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 [![Known Vulnerabilities](https://snyk.io/test/github/incountry/sdk-java/badge.svg?targetFile=build.gradle)](https://snyk.io/test/github/incountry/sdk-java?targetFile=build.gradle)
@@ -14,7 +14,7 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>3.0.0</version>
+  <version>3.1.0</version>
 </dependency>
 ```
 
@@ -37,8 +37,7 @@ public class StorageImpl implements Storage {
    *
    * @param config A container with configuration for Storage initialization
    * @return instance of Storage
-   * @throws StorageClientException if configuration validation finished with errors
-   * @throws StorageServerException if server connection failed or server response error
+   * @throws StorageClientException if configuration validation finished with errors   
    */
   public static Storage getInstance(StorageConfig config)
                                     throws StorageClientException, StorageServerException  {...}
@@ -54,21 +53,29 @@ public class StorageConfig {
     //...
     /** Required to be passed in, or as environment variable INC_API_KEY */
     private String envId;
-    /** Required when using API key authorization, or as environment variable */   
+    /** Required when using API key authorization, or as environment variable */
     private String apiKey;
-    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */ 
+    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */
     private String endPoint;
-    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */    
+    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
     private SecretKeyAccessor secretKeyAccessor;
     /** Optional. List of custom encryption configurations */
-    private List<Crypto> customEncryptionConfigsList;    
+    private List<Crypto> customEncryptionConfigsList;
     /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
     private String clientId;
     /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
     private String clientSecret;
     //...
 ```
-Parameters `environmentID` and `apiKey` (or `clientId` and `clientSecret` instead of `apiKey`) can be fetched from your dashboard on `Incountry` site.
+
+---
+**WARNING**
+
+API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
+
+---
+
+Parameters `environmentID`, `clientId` and `clientSecret` can be fetched from your dashboard on `Incountry` site.
 
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
@@ -77,7 +84,7 @@ Below is an example how to create a storage instance:
 SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
     .setEnvId("<env_id>")
-    .setApiKey("<api_key>")    
+    .setApiKey("<api_key>")
     .setSecretKeyAccessor(accessor);
 Storage storage=StorageImpl.getInstance(config);
 ```
@@ -156,12 +163,12 @@ public class SecretKey {
     /**
     * Creates a secret key
     *
-    * @param secret  secret/key
+    * @param secret  secret/key as byte array from UTF8 String
     * @param version secret version, should be a non-negative integer
     * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
     */
-    public SecretKey(String secret, int version, boolean isKey)
+    public SecretKey(byte[] secret, int version, boolean isKey)
               throws StorageClientException {...}
     //...
 }
@@ -256,15 +263,15 @@ public class Record {
     *
     * @param recordKey record key
     */
-    public Record(String recordKey) {...};        
-    
+    public Record(String recordKey) {...};
+
    /**
     * Overloaded constructor
     *
     * @param recordKey record key
     * @param body      data to be stored and encrypted
     */
-    public Record(String recordKey, String body) {...}                    
+    public Record(String recordKey, String body) {...}
     //...
 }
 ```
@@ -313,7 +320,7 @@ public class Record {
     private Long rangeKey7;
     private Long rangeKey8;
     private Long rangeKey9;
-    private Long rangeKey10;    
+    private Long rangeKey10;
     //Readonly service fields, date in ISO format
     protected Date createdAt;
     protected Date updatedAt;
@@ -416,8 +423,8 @@ Below is the example how to use `find` method along with `FindFilterBuilder`:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .keyEq(StringField.KEY2, "someKey")
-                  .keyEq(StringField.KEY3, "firstValue", "secondValue") 
-                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L);                                                    
+                  .keyEq(StringField.KEY3, "firstValue", "secondValue")
+                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L);
 
 BatchRecord findResult = storage.find("us", builder);
 if (findResult.getCount() > 0) {
@@ -443,8 +450,8 @@ BatchRecord records = storage.find("us", builder);
 
 Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
-EQUALS         (FindFilterBuilder::keyEq)               
-NOT_EQUALS     (FindFilterBuilder::keyNotEq)               
+EQUALS         (FindFilterBuilder::keyEq)
+NOT_EQUALS     (FindFilterBuilder::keyNotEq)
 ```
 
 You can use the following builder methods for filtering by numerical fields:
@@ -505,8 +512,8 @@ Here is the example of how `findOne` method can be used:
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                   .keyEq(StringField.KEY2, "someKey")
-                  .keyEq(StringField.KEY3, "firstValue", "secondValue") 
-                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L); 
+                  .keyEq(StringField.KEY3, "firstValue", "secondValue")
+                  .keyEq(NumberField.RANGE_KEY1, 123L, 456L);
 
 Record record = storage.findOne("us", builder);
 //...
@@ -615,7 +622,7 @@ SDK supports the ability to provide custom encryption/decryption methods if you 
 Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
 
 ```java
-public class StorageConfig {   
+public class StorageConfig {
     //...
     /**
      * for custom encryption
@@ -626,7 +633,7 @@ public class StorageConfig {
     public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
         this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
-    }    
+    }
     //...
 }
 ```
@@ -683,7 +690,7 @@ You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKey
 ```java
 public class SecretKey {
     /**
-     * @param secret secret/key
+     * @param secret secret/key as byte array from UTF8 String
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption
@@ -692,7 +699,7 @@ public class SecretKey {
      *                              moment, not both
      * @throws StorageClientException when parameter validation fails
      */
-    public SecretKey(String secret, int version, boolean isKey, boolean isForCustomEncryption)
+    public SecretKey(byte[] secret, int version, boolean isKey, boolean isForCustomEncryption)
               throws StorageClientException {...}
     //...
 }

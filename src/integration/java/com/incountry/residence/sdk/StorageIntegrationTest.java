@@ -69,7 +69,7 @@ public class StorageIntegrationTest {
     public static final String INT_INC_HTTP_POOL_SIZE = "INT_INC_HTTP_POOL_SIZE";
     public static final String INT_INC_EMEA_AUTH_ENDPOINT = "INT_INC_EMEA_AUTH_ENDPOINT";
     public static final String INT_INC_APAC_AUTH_ENDPOINT = "INT_INC_APAC_AUTH_ENDPOINT";
-    public static final String INT_INC_ENPOINT_MASK = "INT_INC_ENPOINT_MASK";
+    public static final String INT_INC_ENDPOINT_MASK = "INT_INC_ENDPOINT_MASK";
     public static final String INT_COUNTRIES_LIST_ENDPOINT = "INT_COUNTRIES_LIST_ENDPOINT";
 
     private static final Logger LOG = LogManager.getLogger(StorageIntegrationTest.class);
@@ -119,13 +119,13 @@ public class StorageIntegrationTest {
 
     private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
-    private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
+    private static final byte[] ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab".getBytes(StandardCharsets.UTF_8);
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
     private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
     private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
-    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENPOINT_MASK);
+    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENDPOINT_MASK);
     private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_OAUTH);
     private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
 
