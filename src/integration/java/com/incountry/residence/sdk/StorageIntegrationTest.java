@@ -101,8 +101,6 @@ public class StorageIntegrationTest {
     private static final String RECORD_KEY_WITHOUT_ENCRYPTION = "RecordKeyWithoutEncryption" + TEMP;
     private static final String BATCH_RECORD_KEY_WITH_UNHESH_SEARCHKEYS = "BatchRecordKeyWithUnheshSearchKeys" + TEMP;
     private static final String RECORD_KEY_WITH_UNHASHED_SEARCHKEYS = "RecordKeyWithUnhashedSearchKeys" + TEMP;
-    private static final String RECORD_KEY_WITH_SECRET_AS_KEY = "BatchRecordKeyWithSecretAsKey" + TEMP;
-    private static final String BATCH_RECORD_KEY_WITH_SECRET_AS_KEY = "RecordKeyWithSecretAsKey" + TEMP;
 
     private static final String ATTACHMENT_RECORD_KEY = "AttachmentRecordKey" + TEMP;
     private static final String RECORD_KEY_IGNORE_CASE = RECORD_KEY_WITH_ENCRYPTION + "_IgnorE_CasE";
@@ -209,17 +207,6 @@ public class StorageIntegrationTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
-
-        SecretKey secretKeyWithSecretAsKey = new SecretKey(ENCRYPTION_SECRET, VERSION, true);
-        List<SecretKey> secretKeyList2 = new ArrayList<>();
-        secretKeyList2.add(secretKeyWithSecretAsKey);
-        SecretsData secretsDataWithSecretAsKey = new SecretsData(secretKeyList2, VERSION);
-        config = new StorageConfig()
-                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
-                .setApiKey(loadFromEnv(INT_INC_API_KEY))
-                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
-                .setSecretKeyAccessor(() -> secretsDataWithSecretAsKey);
-        storageWithSecretAsKey = StorageImpl.getInstance(config);
     }
 
     @AfterAll
@@ -231,8 +218,7 @@ public class StorageIntegrationTest {
         return Stream.of(
                 Arguments.of(storageWithApiKey, RECORD_KEY_WITH_ENCRYPTION, BATCH_RECORD_KEY_WITH_ENCRYPTION, KEY_2_WITH_ENCRYPTION),
                 Arguments.of(storageWithoutEncryption, RECORD_KEY_WITHOUT_ENCRYPTION, BATCH_RECORD_KEY_WITHOUT_ENCRYPTION, KEY_2_WITHOUT_ENCRYPTION),
-                Arguments.of(storageWithUnhashedKeys, RECORD_KEY_WITH_UNHASHED_SEARCHKEYS, BATCH_RECORD_KEY_WITH_UNHESH_SEARCHKEYS, KEY_2_WITH_UNHESH_SEARCHKEYS),
-                Arguments.of(storageWithSecretAsKey, RECORD_KEY_WITH_SECRET_AS_KEY, BATCH_RECORD_KEY_WITH_SECRET_AS_KEY, KEY_2_WITH_SECRET_AS_KEY)
+                Arguments.of(storageWithUnhashedKeys, RECORD_KEY_WITH_UNHASHED_SEARCHKEYS, BATCH_RECORD_KEY_WITH_UNHESH_SEARCHKEYS, KEY_2_WITH_UNHESH_SEARCHKEYS)
         );
     }
 
@@ -486,10 +472,13 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_BODY, record.getBody());
     }
 
-    @ParameterizedTest
-    @MethodSource("storageProvider")
-    @Order(500)
-    public void customEncryptionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+//    @Test
+//    @Order(500)
+//    public void customEncryptionTest() throws StorageException {
+@ParameterizedTest
+@MethodSource("storageProvider")
+@Order(500)
+public void customEncryptionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION + 1, false, true);
         List<SecretKey> secretKeyList = new ArrayList<>(secretKeyAccessor.getSecretsData().getSecrets());
         secretKeyList.add(customSecretKey);
@@ -506,11 +495,14 @@ public class StorageIntegrationTest {
                 .setCustomEncryptionConfigsList(cryptoList);
 
         Storage storage2 = StorageImpl.getInstance(config);
-        String customRecordKey = recordKey + "_custom";
+//        String customRecordKey = recordKey + "_custom";
+//        String recordKey = "RecordKey" + TEMP;
+        String customRecordKey = "RecordKey" + TEMP + "_custom";
         Record record = new Record(customRecordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
+//                .setKey2(KEY_2)
                 .setKey2(key2)
                 .setKey3(KEY_3);
         storage2.write(MIDIPOP_COUNTRY, record);
@@ -523,6 +515,7 @@ public class StorageIntegrationTest {
         assertEquals(record.getKey2(), record1.getKey2());
         assertEquals(record.getKey3(), record1.getKey3());
         //read recorded record with default encryption
+//        Record record2 = storage2.read(MIDIPOP_COUNTRY, recordKey);
         Record record2 = storage2.read(MIDIPOP_COUNTRY, recordKey);
         assertEquals(RECORD_BODY, record2.getBody());
         //find record with custom enc
