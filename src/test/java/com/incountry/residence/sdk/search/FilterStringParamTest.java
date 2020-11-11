@@ -25,14 +25,6 @@ class FilterStringParamTest {
     }
 
     @Test
-    void toJSONStringWithCryptoNullTest() throws StorageClientException {
-        String filterValue = "filterValue";
-        FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
-        JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, "", null);
-        assertEquals(filterValue, jsonArray.get(0).getAsString());
-    }
-
-    @Test
     void toJSONIntTest() throws StorageClientException {
         int filterValue = 1;
         FilterStringParam filterStringParam = new FilterStringParam(new String[]{Integer.toString(filterValue)});

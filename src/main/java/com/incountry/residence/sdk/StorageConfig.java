@@ -325,6 +325,12 @@ public class StorageConfig {
         return hashSearchKeys;
     }
 
+    /**
+     * if false - key1-key10 will be not hashed. default is false
+     *
+     * @param hashSearchKeys value
+     * @return StorageConfig
+     */
     public StorageConfig setHashSearchKeys(boolean hashSearchKeys) {
         this.hashSearchKeys = hashSearchKeys;
         return this;
