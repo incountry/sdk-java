@@ -472,13 +472,10 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_BODY, record.getBody());
     }
 
-//    @Test
-//    @Order(500)
-//    public void customEncryptionTest() throws StorageException {
-@ParameterizedTest
-@MethodSource("storageProvider")
-@Order(500)
-public void customEncryptionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    @ParameterizedTest
+    @MethodSource("storageProvider")
+    @Order(500)
+    public void customEncryptionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION + 1, false, true);
         List<SecretKey> secretKeyList = new ArrayList<>(secretKeyAccessor.getSecretsData().getSecrets());
         secretKeyList.add(customSecretKey);
@@ -495,14 +492,11 @@ public void customEncryptionTest(Storage storage, String recordKey, String batch
                 .setCustomEncryptionConfigsList(cryptoList);
 
         Storage storage2 = StorageImpl.getInstance(config);
-//        String customRecordKey = recordKey + "_custom";
-//        String recordKey = "RecordKey" + TEMP;
         String customRecordKey = "RecordKey" + TEMP + "_custom";
         Record record = new Record(customRecordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
-//                .setKey2(KEY_2)
                 .setKey2(key2)
                 .setKey3(KEY_3);
         storage2.write(MIDIPOP_COUNTRY, record);
@@ -515,7 +509,6 @@ public void customEncryptionTest(Storage storage, String recordKey, String batch
         assertEquals(record.getKey2(), record1.getKey2());
         assertEquals(record.getKey3(), record1.getKey3());
         //read recorded record with default encryption
-//        Record record2 = storage2.read(MIDIPOP_COUNTRY, recordKey);
         Record record2 = storage2.read(MIDIPOP_COUNTRY, recordKey);
         assertEquals(RECORD_BODY, record2.getBody());
         //find record with custom enc
