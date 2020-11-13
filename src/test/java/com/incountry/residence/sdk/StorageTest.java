@@ -719,6 +719,16 @@ class StorageTest {
         assertEquals("key1-key10 length can't be more than 256 chars", ex.getMessage());
     }
 
+    @Test
+    void searchKeysTest() throws StorageException {
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.KEY1, "key1")
+                .keyEq(StringField.SEARCH_KEYS, "search_keys");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
+        assertEquals("Existence key1-key10 and search_keys at the same time is not acceptable", ex.getMessage());
+    }
+
     @RepeatedTest(3)
     void addAttachmentTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
         iterateLogLevel(repeatInfo, StorageImpl.class);

@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -721,8 +722,47 @@ public class StorageIntegrationTest {
         Files.delete(tempFile);
     }
 
+    @Disabled
     @Test
     @Order(900)
+    public void findWithSearchKeys() throws StorageException {
+        StorageConfig config = new StorageConfig()
+                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setApiKey(loadFromEnv(INT_INC_API_KEY))
+                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT));
+        Storage storage = StorageImpl.getInstance(config);
+        Record record = new Record(RECORD_KEY_WITH_ENCRYPTION)
+                .setBody(RECORD_BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(WRITE_RANGE_KEY_1)
+                .setRangeKey2(RANGE_KEY_2)
+                .setRangeKey3(RANGE_KEY_3)
+                .setRangeKey4(RANGE_KEY_4)
+                .setRangeKey5(RANGE_KEY_5)
+                .setRangeKey6(RANGE_KEY_6)
+                .setRangeKey7(RANGE_KEY_7)
+                .setRangeKey8(RANGE_KEY_8)
+                .setRangeKey9(RANGE_KEY_9)
+                .setRangeKey10(RANGE_KEY_10)
+                .setKey1(KEY_1)
+                .setPrecommitBody(PRECOMMIT_BODY)
+                .setServiceKey1(SERVICE_KEY_1)
+                .setServiceKey2(SERVICE_KEY_2);
+        storage.write(MIDIPOP_COUNTRY, record);
+
+
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.SEARCH_KEYS, KEY_1);
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
+
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
+
+        storage.delete(MIDIPOP_COUNTRY, RECORD_KEY_WITH_ENCRYPTION);
+    }
+
+    @Test
+    @Order(1000)
     public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
         SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
         List<SecretKey> secretKeyList = new ArrayList<>();

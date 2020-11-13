@@ -5,6 +5,7 @@ import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -29,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Basic implementation
@@ -58,6 +60,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
     private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
+    private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "Existence key1-key10 and search_keys at the same time is not acceptable";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
@@ -279,6 +282,25 @@ public class StorageImpl implements Storage {
         checkKey(record.getKey10());
     }
 
+    private void checkSearchKeys(FindFilterBuilder builder) throws StorageClientException {
+        FindFilter findFilter = builder.build();
+        Set<StringField> searchKeys = findFilter.getStringFilterMap().keySet();
+        if ((searchKeys.contains(StringField.KEY1)
+                || searchKeys.contains(StringField.KEY2)
+                || searchKeys.contains(StringField.KEY3)
+                || searchKeys.contains(StringField.KEY4)
+                || searchKeys.contains(StringField.KEY5)
+                || searchKeys.contains(StringField.KEY6)
+                || searchKeys.contains(StringField.KEY7)
+                || searchKeys.contains(StringField.KEY8)
+                || searchKeys.contains(StringField.KEY9)
+                || searchKeys.contains(StringField.KEY10))
+                && searchKeys.contains(StringField.SEARCH_KEYS)) {
+            LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+            throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+        }
+    }
+
     public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
@@ -375,6 +397,7 @@ public class StorageImpl implements Storage {
         }
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(builder, MSG_ERR_NULL_FILTERS);
+        checkSearchKeys(builder);
         BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);

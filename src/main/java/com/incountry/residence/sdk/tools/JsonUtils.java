@@ -67,6 +67,7 @@ public class JsonUtils {
     private static final String P_KEY_8 = "key8";
     private static final String P_KEY_9 = "key9";
     private static final String P_KEY_10 = "key10";
+    private static final String P_SEARCH_KEYS = "search_keys";
 
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
@@ -157,6 +158,8 @@ public class JsonUtils {
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
         if (paramName.equals(P_VERSION)) {
             json.add(paramName, param.isNotCondition() ? addNotCondition(param, paramName, null, false) : toJsonInt(param));
+        } else if (paramName.equals(P_SEARCH_KEYS)) {
+            json.addProperty(P_SEARCH_KEYS, param.getValues().get(0));
         } else {
             json.add(paramName, param.isNotCondition() ? addNotCondition(param, paramName, cryptoManager, true) : toJsonArray(param, paramName, cryptoManager));
         }
