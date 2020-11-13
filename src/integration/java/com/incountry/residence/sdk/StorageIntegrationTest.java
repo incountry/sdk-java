@@ -88,7 +88,6 @@ public class StorageIntegrationTest {
     private Storage storageWithApiKey;
     private Storage storageWithoutEncryption;
     private Storage storageWithUnhashedKeys;
-    private Storage storageWithSecretAsKey;
     private Storage storageForAttachment;
     private SecretKeyAccessor secretKeyAccessor;
 
@@ -111,7 +110,6 @@ public class StorageIntegrationTest {
     private static final String KEY_2_WITH_ENCRYPTION = "Key2WithEncryption" + TEMP;
     private static final String KEY_2_WITHOUT_ENCRYPTION = "Key2WithoutEncryption" + TEMP;
     private static final String KEY_2_WITH_UNHESH_SEARCHKEYS = "Key2WithUnheshSearchkeys" + TEMP;
-    private static final String KEY_2_WITH_SECRET_AS_KEY = "Key2WithSecretAsKey" + TEMP;
     private static final String KEY_3 = "Key3" + TEMP;
     private static final String KEY_4 = "Key4" + TEMP;
     private static final String KEY_5 = "Key5" + TEMP;
