@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.tools.keyaccessor.key;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -16,6 +17,7 @@ public class SecretKey {
     private static final String MSG_ERR_OPTION = "SecretKey can have either 'isKey' or 'isForCustomEncryption' set to True, not both";
     private static final String MSG_ERR_KEY_LEN = "Wrong key length for secret key with 'isKey==true'. Should be "
             + KEY_LENGTH + " characters ‘utf8’";
+    private static final String MSG_ERR_BASE64_SECRET = "Secret must be base64";
 
     private final byte[] secret;
     private final int version;
@@ -86,6 +88,10 @@ public class SecretKey {
         if (isKey && isForCustomEncryption) {
             LOG.error(MSG_ERR_OPTION);
             throw new StorageClientException(MSG_ERR_OPTION);
+        }
+        if (isKey && !Base64.isBase64(secret)) {
+            LOG.error(MSG_ERR_BASE64_SECRET);
+            throw new StorageClientException(MSG_ERR_BASE64_SECRET);
         }
     }
 

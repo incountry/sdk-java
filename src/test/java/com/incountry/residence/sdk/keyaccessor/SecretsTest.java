@@ -173,4 +173,11 @@ class SecretsTest {
         StorageClientException ex6 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(null, 0, false, true));
         assertEquals("Secret can't be null", ex6.getMessage());
     }
+
+    @Test
+    void testWithSecretNotBase64() {
+        String secret = "passwordpasswordpasswordpasswor*";
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretKey(secret.getBytes(StandardCharsets.UTF_8), 1, true));
+        assertEquals(ex.getMessage(), "Secret must be base64");
+    }
 }
