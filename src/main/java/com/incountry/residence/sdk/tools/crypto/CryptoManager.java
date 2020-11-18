@@ -60,9 +60,6 @@ public class CryptoManager {
         if (!usePTEncryption) {
             getSecret(null, currentCrypto != null);
         }
-        if (!hashSearchKeys) {
-            System.out.println();
-        }
     }
 
     private void initFields(SecretKeyAccessor keyAccessor, String envId) {
