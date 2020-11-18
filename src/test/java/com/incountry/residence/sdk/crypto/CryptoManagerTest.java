@@ -196,7 +196,7 @@ class CryptoManagerTest {
         CryptoManager crypto = new CryptoManager(null, ENV_ID, null, true, false);
         assertEquals(someKey, crypto.createSearchKeyHash(someKey));
         crypto = new CryptoManager(null, ENV_ID, null, true, true);
-        assertEquals(crypto.createKeyHash(someKey), crypto.createSearchKeyHash(someKey.toLowerCase()));
+        assertEquals(crypto.createKeyHash(someKey), crypto.createSearchKeyHash(someKey));
     }
 
     @Test
