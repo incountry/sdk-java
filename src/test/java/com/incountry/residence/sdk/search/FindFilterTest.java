@@ -43,8 +43,6 @@ class FindFilterTest {
         String jsonString = JsonUtils.toJsonString(findFilter,  new CryptoManager(() -> secretsData, envId, null, false, true));
 
         assertTrue(jsonString.contains("\"record_key\":{\"$not\":[\"" + DigestUtils.sha256Hex((recordKey + ":" + envId).getBytes(StandardCharsets.UTF_8)) + "\"]}"));
-//        assertTrue(jsonString.contains("\"record_key\":{\"$not\":[\"" + "3a6f0c06fc9344b0a9885e45dac2385eeac23b49d7608e2efa24a21d2d353a68" + "\"]}"));
-//        assertTrue(jsonString.contains("\"profile_key\":{\"$not\":[\"" + "08f377ef929c1c98ff7bfa25410979640c6fcbb0f651f1834bd2db2688273473" + "\"]}"));
         assertTrue(jsonString.contains("\"profile_key\":{\"$not\":[\"" + DigestUtils.sha256Hex((profileKey + ":" + envId).getBytes(StandardCharsets.UTF_8)) + "\"]}"));
         assertTrue(jsonString.contains("\"version\":{\"$not\":[" + version + "]}"));
         assertTrue(jsonString.contains("\"options\":{\"limit\":100,\"offset\":0}"));
