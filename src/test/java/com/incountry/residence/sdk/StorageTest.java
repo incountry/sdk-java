@@ -708,7 +708,7 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>")
                 .setMaxHttpPoolSize(1)
-                .setHashSearchKeys(true);
+                .setHashSearchKeys(false);
         Storage storage = StorageImpl.getInstance(config);
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
