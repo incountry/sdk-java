@@ -67,6 +67,7 @@ public class StorageImpl implements Storage {
     private CryptoManager cryptoManager;
     private Dao dao;
     private boolean encrypted;
+    private boolean hashSearchKeys;
 
     private StorageImpl() {
     }
@@ -163,6 +164,7 @@ public class StorageImpl implements Storage {
         instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
         instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys(), config.isHashSearchKeys());
+        instance.hashSearchKeys = config.isHashSearchKeys();
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
@@ -267,16 +269,18 @@ public class StorageImpl implements Storage {
     }
 
     private void checkRecordSearchKeys(Record record) throws StorageClientException {
-        checkKey(record.getKey1());
-        checkKey(record.getKey2());
-        checkKey(record.getKey3());
-        checkKey(record.getKey4());
-        checkKey(record.getKey5());
-        checkKey(record.getKey6());
-        checkKey(record.getKey7());
-        checkKey(record.getKey8());
-        checkKey(record.getKey9());
-        checkKey(record.getKey10());
+        if (!hashSearchKeys) {
+            checkKey(record.getKey1());
+            checkKey(record.getKey2());
+            checkKey(record.getKey3());
+            checkKey(record.getKey4());
+            checkKey(record.getKey5());
+            checkKey(record.getKey6());
+            checkKey(record.getKey7());
+            checkKey(record.getKey8());
+            checkKey(record.getKey9());
+            checkKey(record.getKey10());
+        }
     }
 
     public Record write(String country, Record record) throws
