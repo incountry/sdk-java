@@ -724,11 +724,25 @@ class StorageTest {
     @Test
     void searchKeysTest() throws StorageException {
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
-        FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(StringField.KEY1, "key1")
-                .keyEq(StringField.SEARCH_KEYS, "search_keys");
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
-        assertEquals("Existence key1-key10 and search_keys at the same time is not acceptable", ex.getMessage());
+        StringField[] keys  = {
+                StringField.KEY1,
+                StringField.KEY2,
+                StringField.KEY3,
+                StringField.KEY4,
+                StringField.KEY5,
+                StringField.KEY6,
+                StringField.KEY7,
+                StringField.KEY8,
+                StringField.KEY9,
+                StringField.KEY10,
+        };
+        for (StringField key : keys) {
+            FindFilterBuilder builder = FindFilterBuilder.create()
+                    .keyEq(key, "key")
+                    .keyEq(StringField.SEARCH_KEYS, "search_keys");
+            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
+            assertEquals("Existence key1-key10 and search_keys at the same time is not acceptable", ex.getMessage());
+        }
     }
 
     @RepeatedTest(3)
