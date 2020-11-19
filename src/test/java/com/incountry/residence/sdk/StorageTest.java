@@ -708,15 +708,17 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setEnvId("<envId>")
                 .setMaxHttpPoolSize(1)
-                .setHashSearchKeys(true);
+                .setHashSearchKeys(false);
         Storage storage = StorageImpl.getInstance(config);
+
         Record record = new Record(RECORD_KEY, BODY)
-                .setProfileKey(PROFILE_KEY)
-                .setRangeKey1(RANGE_KEY_1)
-                .setKey2(generatedString)
-                .setKey3(KEY_3);
+                .setKey10(generatedString);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, record));
         assertEquals("key1-key10 length can't be more than 256 chars", ex.getMessage());
+        Record record1 = new Record(RECORD_KEY, BODY)
+                .setKey10("generatedString");
+        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record1));
+        assertTrue(ex1.getMessage().startsWith("Server request error"));
     }
 
     @Test

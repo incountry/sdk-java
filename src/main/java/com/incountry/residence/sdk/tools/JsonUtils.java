@@ -238,8 +238,8 @@ public class JsonUtils {
         return object;
     }
 
-    private static List<String> hashValue(FilterStringParam param, String paramsName, CryptoManager cryptoManager) {
-        if (SEARCH_KEYS.contains(paramsName)) {
+    private static List<String> hashValue(FilterStringParam param, String paramName, CryptoManager cryptoManager) {
+        if (SEARCH_KEYS.contains(paramName)) {
             return param.getValues().stream().map(cryptoManager::createSearchKeyHash).collect(Collectors.toList());
         }
         return param.getValues().stream().map(cryptoManager::createKeyHash).collect(Collectors.toList());
@@ -297,7 +297,7 @@ public class JsonUtils {
             return null;
         }
         JsonArray array = new JsonArray();
-        List<String> values = (cryptoManager != null ? hashValue(param, paramName, cryptoManager) : param.getValues());
+        List<String> values = (hashValue(param, paramName, cryptoManager));
         values.forEach(array::add);
         return array;
     }

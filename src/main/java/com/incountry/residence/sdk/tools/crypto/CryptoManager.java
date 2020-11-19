@@ -6,6 +6,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -170,7 +171,7 @@ public class CryptoManager {
             return null;
         }
         String stringToHash = key + ":" + envId;
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(normalizeKeys ? stringToHash.toLowerCase() : stringToHash);
+        return DigestUtils.sha256Hex(normalizeKeys ? stringToHash.toLowerCase() : stringToHash);
     }
 
     public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {
