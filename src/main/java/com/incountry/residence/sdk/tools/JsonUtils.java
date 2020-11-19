@@ -57,6 +57,16 @@ public class JsonUtils {
     private static final String P_FILE_NAME = "filename";
     private static final String P_MIME_TYPE = "mime_type";
     private static final String P_ATTACHED_FILES = "attachments";
+    private static final String P_KEY_1 = "key1";
+    private static final String P_KEY_2 = "key2";
+    private static final String P_KEY_3 = "key3";
+    private static final String P_KEY_4 = "key4";
+    private static final String P_KEY_5 = "key5";
+    private static final String P_KEY_6 = "key6";
+    private static final String P_KEY_7 = "key7";
+    private static final String P_KEY_8 = "key8";
+    private static final String P_KEY_9 = "key9";
+    private static final String P_KEY_10 = "key10";
 
     /*error messages */
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
@@ -65,6 +75,9 @@ public class JsonUtils {
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
             P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
             P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_ATTACHED_FILES);
+
+    private static final List<String> SEARCH_KEYS = Arrays.asList(P_KEY_1, P_KEY_2, P_KEY_3, P_KEY_4, P_KEY_5, P_KEY_6,
+            P_KEY_7, P_KEY_8, P_KEY_9, P_KEY_10);
 
     private JsonUtils() {
     }
@@ -143,9 +156,9 @@ public class JsonUtils {
 
     private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
         if (paramName.equals(P_VERSION)) {
-            json.add(paramName, param.isNotCondition() ? addNotCondition(param, null, false) : toJsonInt(param));
+            json.add(paramName, param.isNotCondition() ? addNotCondition(param, paramName, null, false) : toJsonInt(param));
         } else {
-            json.add(paramName, param.isNotCondition() ? addNotCondition(param, cryptoManager, true) : toJsonArray(param, cryptoManager));
+            json.add(paramName, param.isNotCondition() ? addNotCondition(param, paramName, cryptoManager, true) : toJsonArray(param, paramName, cryptoManager));
         }
     }
 
@@ -157,8 +170,8 @@ public class JsonUtils {
      * @param isForString   the condition must be added for string params
      * @return JsonObject with added 'not' condition
      */
-    private static JsonObject addNotCondition(FilterStringParam param, CryptoManager cryptoManager, boolean isForString) {
-        JsonArray arr = isForString ? toJsonArray(param, cryptoManager) : toJsonInt(param);
+    private static JsonObject addNotCondition(FilterStringParam param, String paramName, CryptoManager cryptoManager, boolean isForString) {
+        JsonArray arr = isForString ? toJsonArray(param, paramName, cryptoManager) : toJsonInt(param);
         JsonObject object = new JsonObject();
         object.add(FindFilterBuilder.OPER_NOT, arr);
         return object;
@@ -222,7 +235,10 @@ public class JsonUtils {
         return object;
     }
 
-    private static List<String> hashValue(FilterStringParam param, CryptoManager cryptoManager) {
+    private static List<String> hashValue(FilterStringParam param, String paramName, CryptoManager cryptoManager) {
+        if (SEARCH_KEYS.contains(paramName)) {
+            return param.getValues().stream().map(cryptoManager::createSearchKeyHash).collect(Collectors.toList());
+        }
         return param.getValues().stream().map(cryptoManager::createKeyHash).collect(Collectors.toList());
     }
 
@@ -273,12 +289,12 @@ public class JsonUtils {
         return object.toString();
     }
 
-    public static JsonArray toJsonArray(FilterStringParam param, CryptoManager cryptoManager) {
+    public static JsonArray toJsonArray(FilterStringParam param, String paramName, CryptoManager cryptoManager) {
         if (param == null) {
             return null;
         }
         JsonArray array = new JsonArray();
-        List<String> values = (cryptoManager != null ? hashValue(param, cryptoManager) : param.getValues());
+        List<String> values = (hashValue(param, paramName, cryptoManager));
         values.forEach(array::add);
         return array;
     }

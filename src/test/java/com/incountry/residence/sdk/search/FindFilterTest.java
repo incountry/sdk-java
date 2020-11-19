@@ -4,8 +4,15 @@ import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
+import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,10 +34,16 @@ class FindFilterTest {
         findFilter.setStringFilter(StringField.VERSION, versionFilterParam);
         findFilter.setStringFilter(StringField.RECORD_KEY, recordKeyFilterParam);
         findFilter.setStringFilter(StringField.PROFILE_KEY, profileKeyFilterParam);
-        String jsonString = JsonUtils.toJsonString(findFilter, null);
 
-        assertTrue(jsonString.contains("\"record_key\":{\"$not\":[\"" + recordKey + "\"]}"));
-        assertTrue(jsonString.contains("\"profile_key\":{\"$not\":[\"" + profileKey + "\"]}"));
+        String envId = null;
+        byte[] secret = "password".getBytes(StandardCharsets.UTF_8);
+        Integer keyVersion = 0;
+        SecretKey secretKey = new SecretKey(secret, keyVersion, false);
+        SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
+        String jsonString = JsonUtils.toJsonString(findFilter,  new CryptoManager(() -> secretsData, envId, null, false, true));
+
+        assertTrue(jsonString.contains("\"record_key\":{\"$not\":[\"" + DigestUtils.sha256Hex((recordKey + ":" + envId).getBytes(StandardCharsets.UTF_8)) + "\"]}"));
+        assertTrue(jsonString.contains("\"profile_key\":{\"$not\":[\"" + DigestUtils.sha256Hex((profileKey + ":" + envId).getBytes(StandardCharsets.UTF_8)) + "\"]}"));
         assertTrue(jsonString.contains("\"version\":{\"$not\":[" + version + "]}"));
         assertTrue(jsonString.contains("\"options\":{\"limit\":100,\"offset\":0}"));
     }

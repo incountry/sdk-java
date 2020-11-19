@@ -70,7 +70,7 @@ class HttpDaoImplTests {
 
     private CryptoManager initCryptoManager(boolean isKey, boolean encrypt) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        return new CryptoManager(encrypt ? secretKeyAccessor : null, "envId", null, false);
+        return new CryptoManager(encrypt ? secretKeyAccessor : null, "envId", null, false, true);
     }
 
 
