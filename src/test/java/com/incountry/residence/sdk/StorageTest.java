@@ -741,7 +741,7 @@ class StorageTest {
                     .keyEq(key, "key")
                     .keyEq(StringField.SEARCH_KEYS, "search_keys");
             StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
-            assertEquals("Existence key1-key10 and search_keys at the same time is not acceptable", ex.getMessage());
+            assertEquals("search_keys cannot be used in conjunction with regular key1...key10 lookup", ex.getMessage());
         }
     }
 

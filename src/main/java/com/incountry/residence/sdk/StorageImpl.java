@@ -60,7 +60,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
     private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
-    private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "Existence key1-key10 and search_keys at the same time is not acceptable";
+    private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "search_keys cannot be used in conjunction with regular key1...key10 lookup";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
