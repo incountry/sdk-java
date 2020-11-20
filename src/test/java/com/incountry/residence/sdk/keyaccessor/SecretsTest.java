@@ -176,8 +176,18 @@ class SecretsTest {
 
     @Test
     void testWithSecretNotBase64() {
-        String secret = "passwordpasswordpasswordpasswor*";
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new SecretKey(secret.getBytes(StandardCharsets.UTF_8), 1, true));
+        String secretKeyString = "{\n" +
+                "  \"secrets\": [\n" +
+                "    {\n" +
+                "      \"secret\": \"passwordpasswordpasswordpasswor*\",\n" +
+                "      \"version\": 1,\n" +
+                "      \"isKey\": true,\n" +
+                "      \"isForCustomEncryption\": false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"currentVersion\": 1\n" +
+                "}";
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretKeyString));
         assertEquals(ex.getMessage(), "Secret must be base64");
     }
 }
