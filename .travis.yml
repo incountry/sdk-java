@@ -21,7 +21,6 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-    - dependencyCheck
     - gradle-container
 
 before_install:
