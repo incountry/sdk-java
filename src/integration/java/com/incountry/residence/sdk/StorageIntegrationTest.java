@@ -19,7 +19,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -739,14 +738,14 @@ public class StorageIntegrationTest {
         Files.delete(tempFile);
     }
 
-    @Disabled
     @Test
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
         StorageConfig config = new StorageConfig()
                 .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
                 .setApiKey(loadFromEnv(INT_INC_API_KEY))
-                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT));
+                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
+                .setHashSearchKeys(false);
         Storage storage = StorageImpl.getInstance(config);
         Record record = new Record(RECORD_KEY_WITH_ENCRYPTION)
                 .setBody(RECORD_BODY)
@@ -769,7 +768,7 @@ public class StorageIntegrationTest {
 
 
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, KEY_1);
+                .keyEq(StringField.SEARCH_KEYS, KEY_1.split("-")[2]);
         BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
 
         assertEquals(1, batchRecord.getCount());
