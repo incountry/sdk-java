@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.tools.dao.impl;
 
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
@@ -7,7 +8,6 @@ import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -199,11 +199,11 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public BatchRecord find(String country, FindFilterBuilder builder, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
+    public BatchRecord find(String country, FindFilter findFilter, CryptoManager cryptoManager) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endpoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endpoint.mainUrl, lowerCountry, URI_FIND);
-        String postData = JsonUtils.toJsonString(builder.build(), cryptoManager);
+        String postData = JsonUtils.toJsonString(findFilter, cryptoManager);
         ApiResponse response = httpAgent.request(url, postData, endpoint.audience, endpoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.FIND));
         if (response.getContent() == null) {
             return new BatchRecord(new ArrayList<>(), 0, 0, 0, 0, null);
