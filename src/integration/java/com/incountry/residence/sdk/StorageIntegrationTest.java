@@ -745,7 +745,9 @@ public class StorageIntegrationTest {
                 .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
-                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
+                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
+                .setEndpointMask(ENDPOINT_MASK)
+                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
                 .setHashSearchKeys(false);
         Storage storage = StorageImpl.getInstance(config);
         Record record = new Record(RECORD_KEY_WITH_ENCRYPTION)
