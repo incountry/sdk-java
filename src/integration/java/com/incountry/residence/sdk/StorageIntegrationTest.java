@@ -743,7 +743,8 @@ public class StorageIntegrationTest {
     public void findWithSearchKeys() throws StorageException {
         StorageConfig config = new StorageConfig()
                 .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
-                .setApiKey(loadFromEnv(INT_INC_API_KEY))
+                .setClientId(CLIENT_ID)
+                .setClientSecret(SECRET)
                 .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setHashSearchKeys(false);
         Storage storage = StorageImpl.getInstance(config);
@@ -765,7 +766,6 @@ public class StorageIntegrationTest {
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
         storage.write(MIDIPOP_COUNTRY, record);
-
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq(StringField.SEARCH_KEYS, KEY_1.split("-")[2]);
