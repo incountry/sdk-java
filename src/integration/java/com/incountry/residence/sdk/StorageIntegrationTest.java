@@ -742,7 +742,7 @@ public class StorageIntegrationTest {
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setEnvId(ENV_ID)
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
                 .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
