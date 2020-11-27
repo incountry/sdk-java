@@ -166,8 +166,12 @@ public class StorageIntegrationTest {
         return value == null ? defaultValue : value;
     }
 
+    @SuppressWarnings("java:S2629")
     @BeforeAll
     public void initializeStorages() throws StorageException {
+        LOG.info("env id oauth={} _ {}", ENV_ID.substring(0, 1), ENV_ID.substring(1));
+        String envIdApikey = loadFromEnv(INT_INC_ENVIRONMENT_ID);
+        LOG.info("env id apikey={} _ {}", envIdApikey.substring(0, 1), envIdApikey.substring(1));
         SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
