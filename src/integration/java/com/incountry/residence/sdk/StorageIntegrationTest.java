@@ -14,6 +14,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
+import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -741,10 +742,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
-        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
-        List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(secretKey);
-        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
+        SecretsData secretsData = SecretsDataGenerator.fromPassword(new String(ENCRYPTION_SECRET, StandardCharsets.UTF_8));
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
                 .setClientId(CLIENT_ID)
