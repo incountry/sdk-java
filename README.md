@@ -546,6 +546,168 @@ String recordKey = "user_1";
 storage.delete("us", recordKey);
  ```
 
+Attaching files to a record
+-----
+
+InCountry Storage allows you to attach files to the previously created records. Attachments meta information is available through the attachments field of Record object.
+```java
+public class Record {
+    /** ... other fields ...  */
+    private List<AttachmentMeta> attachments;
+}
+
+public class AttachmentMeta {
+    private Date createdAt;
+    private Date updatedAt;
+    private String downloadLink;
+    private String fileId;
+    private String filename;
+    private String hash;
+    private String mimeType;
+    private int size;
+}
+```
+
+### Adding attachments
+
+The addAttachment method allows you to add or replace attachments. File data can be provided as InputStream.
+```java
+public interface Storage {
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
+     * @param mimeType        mime type for attached file
+     * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, String mimeType)
+             throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+    File initialFile = new File("/example.txt");
+    InputStream fileInputStream = new FileInputStream(initialFile);
+    storage.addAttachment(COUNTRY, RECORD_KEY, fileInputStream, "example.txt", false, MIME_TYPE);
+```
+
+### Deleting attachments
+
+The deleteAttachment method allows you to delete attachment using its fileId.
+```java
+public interface Storage {
+    /**
+     * Delete attached file of existing record
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return true when file was deleted
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    boolean deleteAttachment(String country, String recordKey, String fileId) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+storage.deleteAttachment(COUNTRY, RECORD_KEY, fileId);
+```
+
+### Downloading attachments
+
+The getAttachmentFile method allows you to download attachment contents. It returns object with InputStream and filename.
+```java
+public interface Storage {
+    /**
+     * Get attached file of existing record
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return AttachedFile object which contains required file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachedFile getAttachmentFile(String country, String recordKey, String fileId) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+AttachedFile file = storageForAttachment.getAttachmentFile(COUNTRY, RECORD_KEY, fileId);
+
+public class AttachedFile {
+    private final InputStream fileContent;
+    private final String fileName;
+}
+```
+
+### Working with attachment meta info
+
+The getAttachmentMeta method allows you to retrieve attachment's metadata using its fileId.
+```java
+public interface Storage {
+    /**
+     * Get attached file meta information
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return AttachmentMeta object which contains required meta information fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+AttachmentMeta meta = storageForAttachment.getAttachmentMeta(COUNTRY, RECORD_KEY, fileId);
+```
+
+The updateAttachmentMeta method allows you to update attachment's metadata (MIME type and file name).
+```java
+public interface Storage {
+    /**
+     * Update attached file meta information
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @param fileName  file name which is not mandatory (can be null) if mimeType passed
+     * @param mimeType  file MIME type which is not mandatory (can be null) if fileName passed
+     * @return AttachmentMeta object which contains updated fields
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+AttachmentMeta meta = storage.updateAttachmentMeta(COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
+```
+
 Data Migration and Key Rotation support
 -----
 
