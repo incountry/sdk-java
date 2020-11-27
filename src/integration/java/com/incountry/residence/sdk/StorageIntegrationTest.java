@@ -741,6 +741,10 @@ public class StorageIntegrationTest {
     @Test
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
+        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
+        List<SecretKey> secretKeyList = new ArrayList<>();
+        secretKeyList.add(secretKey);
+        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
         StorageConfig config = new StorageConfig()
                 .setEnvId(ENV_ID)
                 .setClientId(CLIENT_ID)
@@ -748,6 +752,7 @@ public class StorageIntegrationTest {
                 .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
                 .setEndpointMask(ENDPOINT_MASK)
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
+                .setSecretKeyAccessor(() -> secretsData)
                 .setHashSearchKeys(false);
         Storage storage = StorageImpl.getInstance(config);
         Record record = new Record(RECORD_KEY_WITH_ENCRYPTION)
