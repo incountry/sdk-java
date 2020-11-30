@@ -379,7 +379,7 @@ public class StorageImpl implements Storage {
         }
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(builder, MSG_ERR_NULL_FILTERS);
-        BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
+        BatchRecord batchRecord = dao.find(country, builder.build(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
         }

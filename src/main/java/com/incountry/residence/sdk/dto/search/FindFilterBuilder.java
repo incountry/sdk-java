@@ -1,11 +1,19 @@
 package com.incountry.residence.sdk.dto.search;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.Set;
 
 /**
  * Builder for cosy creation of FindFilter
  */
 public class FindFilterBuilder {
+
+    private static final Logger LOG = LogManager.getLogger(FindFilterBuilder.class);
+
+    private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup";
 
     public static final String OPER_NOT = "$not";
     public static final String OPER_GT = "$gt";
@@ -28,6 +36,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilter build() throws StorageClientException {
+        checkSearchKeys();
         return filter.copy();
     }
 
@@ -98,5 +107,23 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder copy() throws StorageClientException {
         return new FindFilterBuilder(this.filter.copy());
+    }
+
+    private void checkSearchKeys() throws StorageClientException {
+        Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
+        if ((searchKeys.contains(StringField.KEY1)
+                || searchKeys.contains(StringField.KEY2)
+                || searchKeys.contains(StringField.KEY3)
+                || searchKeys.contains(StringField.KEY4)
+                || searchKeys.contains(StringField.KEY5)
+                || searchKeys.contains(StringField.KEY6)
+                || searchKeys.contains(StringField.KEY7)
+                || searchKeys.contains(StringField.KEY8)
+                || searchKeys.contains(StringField.KEY9)
+                || searchKeys.contains(StringField.KEY10))
+                && searchKeys.contains(StringField.SEARCH_KEYS)) {
+            LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+            throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+        }
     }
 }

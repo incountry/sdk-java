@@ -68,6 +68,11 @@ class JsonUtilsTest {
         filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
         jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
+
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.SEARCH_KEYS, "search_keys");
+        jsonString = JsonUtils.toJsonString(builder.build(), new CryptoManager(null, "envId", null, false, true));
+        assertEquals("{\"filter\":{\"search_keys\":\"search_keys\"},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }
 
     @Test
@@ -93,10 +98,10 @@ class JsonUtilsTest {
         assertNull(JsonUtils.toJsonInt(null));
     }
 
-//    @Test
-//    void testPassNullToJsonArray() {
-//        assertNull(JsonUtils.toJsonArray(null, null));
-//    }
+    @Test
+    void testPassNullToJsonArray() {
+        assertNull(JsonUtils.toJsonArray(null, null, null));
+    }
 
     @Test
     void testBatchRecordFromStringWithNullVersion() throws StorageException {

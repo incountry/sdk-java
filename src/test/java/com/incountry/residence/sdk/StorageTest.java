@@ -721,6 +721,30 @@ class StorageTest {
         assertTrue(ex1.getMessage().startsWith("Server request error"));
     }
 
+    @Test
+    void searchKeysTest() throws StorageException {
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
+        StringField[] keys  = {
+                StringField.KEY1,
+                StringField.KEY2,
+                StringField.KEY3,
+                StringField.KEY4,
+                StringField.KEY5,
+                StringField.KEY6,
+                StringField.KEY7,
+                StringField.KEY8,
+                StringField.KEY9,
+                StringField.KEY10,
+        };
+        for (StringField key : keys) {
+            FindFilterBuilder builder = FindFilterBuilder.create()
+                    .keyEq(key, "key")
+                    .keyEq(StringField.SEARCH_KEYS, "search_keys");
+            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
+            assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
+        }
+    }
+
     @RepeatedTest(3)
     void addAttachmentTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
