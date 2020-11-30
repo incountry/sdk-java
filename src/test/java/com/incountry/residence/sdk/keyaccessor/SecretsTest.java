@@ -188,6 +188,6 @@ class SecretsTest {
                 "  \"currentVersion\": 1\n" +
                 "}";
         StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretKeyString));
-        assertEquals(ex.getMessage(), "Secret must be base64");
+        assertEquals("Secret must be base64", ex.getMessage());
     }
 }
