@@ -68,7 +68,7 @@ class CustomCryptoTest {
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false);
+        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false, true);
         assertNotNull(cryptoManager);
     }
 
@@ -79,7 +79,7 @@ class CustomCryptoTest {
         SecretKey secretKey = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), keyVersion);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(secretKeyAccessor, ENV_ID, cryptoList, false, true));
         assertTrue(ex.getMessage().startsWith("Validation failed for custom encryption config with version"));
     }
 
@@ -193,7 +193,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> encryptionResult = manager.encrypt(text);
         assertEquals(keyVersion, encryptionResult.getValue());
@@ -209,7 +209,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
 
         String wrongCipherText1 = CryptoManager.PREFIX_CUSTOM_ENCRYPTION + UUID.randomUUID() + ":123";
         StorageCryptoException ex1 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(wrongCipherText1, keyVersion));
@@ -222,7 +222,7 @@ class CustomCryptoTest {
 
         Crypto anotherCrypto = new PseudoCustomCrypto(true);
         cryptoList = Collections.singletonList(anotherCrypto);
-        CryptoManager anotherManager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager anotherManager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
         String encryptedAnother = anotherManager.encrypt(BODY_FOR_ENCRYPTION).getKey();
         StorageCryptoException ex3 = assertThrows(StorageCryptoException.class, () -> manager.decrypt(encryptedAnother, keyVersion));
         assertEquals("Unknown custom encryption version: PseudoCustomCrypto", ex3.getMessage());
@@ -236,7 +236,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         StorageCryptoException ex1 = assertThrows(StorageCryptoException.class, () -> manager.encrypt(text));
@@ -253,7 +253,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList, false));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new CryptoManager(accessor, ENV_ID, cryptoList, false, true));
         assertTrue(ex.getMessage().startsWith("Validation failed for custom encryption config with version"));
     }
 
@@ -265,7 +265,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
         String text = BODY_FOR_ENCRYPTION;
         Map.Entry<String, Integer> result = manager.encrypt(text);
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> manager.encrypt(text));
@@ -284,7 +284,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
         assertEquals("Unexpected exception", ex.getMessage());
         assertEquals(ArrayIndexOutOfBoundsException.class, ex.getCause().getClass());
@@ -299,7 +299,7 @@ class CustomCryptoTest {
         SecretKey secretKey1 = new SecretKey(CUSTOM_PASSWORD_1, keyVersion, false, true);
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), keyVersion);
         SecretKeyAccessor accessor = () -> data;
-        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false);
+        CryptoManager manager = new CryptoManager(accessor, ENV_ID, cryptoList, false, true);
         Map.Entry<String, Integer> result = manager.encrypt(BODY_FOR_ENCRYPTION);
         assertEquals(keyVersion, result.getValue());
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(result.getKey(), keyVersion + 1));

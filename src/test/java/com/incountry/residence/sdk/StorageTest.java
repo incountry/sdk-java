@@ -37,6 +37,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,7 +77,7 @@ class StorageTest {
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, version);
         secretKeyAccessor = () -> secretsData;
-        cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false);
+        cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false, true);
     }
 
     @RepeatedTest(3)
@@ -276,7 +277,7 @@ class StorageTest {
     @Test
     void testFindWithEncByMultipleSecrets() throws StorageException {
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("otherpassword");
-        CryptoManager otherManager = new CryptoManager(accessor, ENVIRONMENT_ID, null, false);
+        CryptoManager otherManager = new CryptoManager(accessor, ENVIRONMENT_ID, null, false, true);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(2, 0)
@@ -370,8 +371,8 @@ class StorageTest {
 
     @Test
     void testFindWithEncAndFoundPTE() throws StorageException {
-        CryptoManager cryptoAsInStorage = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
-        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        CryptoManager cryptoAsInStorage = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false, true);
+        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false, true);
         Record recWithEnc = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
@@ -393,8 +394,8 @@ class StorageTest {
 
     @Test
     void testFindWithoutEncWithEncryptedData() throws StorageException {
-        CryptoManager cryptoWithEnc = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false);
-        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        CryptoManager cryptoWithEnc = new CryptoManager(() -> secretKeyAccessor.getSecretsData(), ENVIRONMENT_ID, null, false, true);
+        CryptoManager cryptoWithPT = new CryptoManager(null, ENVIRONMENT_ID, null, false, true);
         Record recWithEnc = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
@@ -693,6 +694,55 @@ class StorageTest {
                 .setMaxHttpConnectionsPerRoute(-1);
         ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
+    }
+
+    @Test
+    void negativeTestIllegalRecordKeysLength() throws StorageException {
+        String generatedString = new SecureRandom().ints(97, 123) // from 'a' to 'z'
+                .limit(300)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(1)
+                .setEndPoint("http://localhost:" + PORT)
+                .setApiKey("<apiKey>")
+                .setEnvId("<envId>")
+                .setMaxHttpPoolSize(1)
+                .setHashSearchKeys(false);
+        Storage storage = StorageImpl.getInstance(config);
+
+        Record record = new Record(RECORD_KEY, BODY)
+                .setKey10(generatedString);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, record));
+        assertEquals("key1-key10 length can't be more than 256 chars", ex.getMessage());
+        Record record1 = new Record(RECORD_KEY, BODY)
+                .setKey10("generatedString");
+        StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record1));
+        assertTrue(ex1.getMessage().startsWith("Server request error"));
+    }
+
+    @Test
+    void searchKeysTest() throws StorageException {
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
+        StringField[] keys  = {
+                StringField.KEY1,
+                StringField.KEY2,
+                StringField.KEY3,
+                StringField.KEY4,
+                StringField.KEY5,
+                StringField.KEY6,
+                StringField.KEY7,
+                StringField.KEY8,
+                StringField.KEY9,
+                StringField.KEY10,
+        };
+        for (StringField key : keys) {
+            FindFilterBuilder builder = FindFilterBuilder.create()
+                    .keyEq(key, "key")
+                    .keyEq(StringField.SEARCH_KEYS, "search_keys");
+            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
+            assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
+        }
     }
 
     @RepeatedTest(3)

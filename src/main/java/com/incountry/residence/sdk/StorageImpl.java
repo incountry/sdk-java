@@ -57,6 +57,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE = "File name and MIME type can't be null";
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
+    private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
@@ -66,6 +67,7 @@ public class StorageImpl implements Storage {
     private CryptoManager cryptoManager;
     private Dao dao;
     private boolean encrypted;
+    private boolean hashSearchKeys;
 
     private StorageImpl() {
     }
@@ -161,7 +163,8 @@ public class StorageImpl implements Storage {
         StorageImpl instance = new StorageImpl();
         instance.dao = initDao(config, dao);
         instance.encrypted = config.getSecretKeyAccessor() != null;
-        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys());
+        instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys(), config.isHashSearchKeys());
+        instance.hashSearchKeys = config.isHashSearchKeys();
         return ProxyUtils.createLoggingProxyForPublicMethods(instance);
     }
 
@@ -248,16 +251,37 @@ public class StorageImpl implements Storage {
         }
     }
 
-    private void checkParameters(String country, String key) throws StorageClientException {
+    private void checkCountryAndRecordKey(String country, String key) throws StorageClientException {
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(key, MSG_ERR_NULL_KEY);
     }
 
     private void checkAttachmentParameters(String country, String key, String fileId) throws StorageClientException {
         checkNotNull(fileId, MSG_ERR_NULL_FILE_ID);
-        checkParameters(country, key);
+        checkCountryAndRecordKey(country, key);
     }
 
+    private void checkKey(String key) throws StorageClientException {
+        if (key != null && key.length() > 256) {
+            LOG.error(MSG_ERR_KEY_LENGTH);
+            throw new StorageClientException(MSG_ERR_KEY_LENGTH);
+        }
+    }
+
+    private void checkRecordSearchKeys(Record record) throws StorageClientException {
+        if (!hashSearchKeys) {
+            checkKey(record.getKey1());
+            checkKey(record.getKey2());
+            checkKey(record.getKey3());
+            checkKey(record.getKey4());
+            checkKey(record.getKey5());
+            checkKey(record.getKey6());
+            checkKey(record.getKey7());
+            checkKey(record.getKey8());
+            checkKey(record.getKey9());
+            checkKey(record.getKey10());
+        }
+    }
 
     public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
@@ -267,7 +291,8 @@ public class StorageImpl implements Storage {
                     record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
-        checkParameters(country, record.getRecordKey());
+        checkCountryAndRecordKey(country, record.getRecordKey());
+        checkRecordSearchKeys(record);
         dao.createRecord(country, record, cryptoManager);
         return record;
     }
@@ -279,7 +304,7 @@ public class StorageImpl implements Storage {
                     country,
                     recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, recordKey);
+        checkCountryAndRecordKey(country, recordKey);
         Record record = dao.read(country, recordKey, cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", record != null ? record.hashCode() : null);
@@ -328,7 +353,8 @@ public class StorageImpl implements Storage {
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
         } else {
             for (Record record : records) {
-                checkParameters(country, record.getRecordKey());
+                checkCountryAndRecordKey(country, record.getRecordKey());
+                checkRecordSearchKeys(record);
             }
             dao.createBatch(records, country, cryptoManager);
         }
@@ -341,7 +367,7 @@ public class StorageImpl implements Storage {
                     country,
                     recordKey != null ? MSG_SIMPLE_SECURE : null);
         }
-        checkParameters(country, recordKey);
+        checkCountryAndRecordKey(country, recordKey);
         dao.delete(country, recordKey, cryptoManager);
         return true;
     }
@@ -353,7 +379,7 @@ public class StorageImpl implements Storage {
         }
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(builder, MSG_ERR_NULL_FILTERS);
-        BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
+        BatchRecord batchRecord = dao.find(country, builder.build(), cryptoManager);
         if (LOG.isTraceEnabled()) {
             LOG.trace("find results ({})", batchRecord);
         }
@@ -408,7 +434,7 @@ public class StorageImpl implements Storage {
             LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
                     country, recordKey, inputStream != null ? inputStream.hashCode() : null, upsert);
         }
-        checkParameters(country, recordKey);
+        checkCountryAndRecordKey(country, recordKey);
         try {
             if (inputStream == null || inputStream.available() == 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);

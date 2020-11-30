@@ -6,9 +6,6 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath "org.owasp:dependency-check-gradle:${dependencyCheckVersion}"
-    }
 }
 
 plugins {
@@ -65,16 +62,6 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: "${commonsIoVersion}"
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version: "${apacheHttpMimeVersion}"
 }
-
-apply plugin: 'org.owasp.dependencycheck'
-dependencyCheck {
-    data {
-        directory = "$projectDir/dependencyCheck"
-    }
-    failOnError = true
-}
-
-check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
 spotbugs {

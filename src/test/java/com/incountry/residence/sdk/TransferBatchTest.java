@@ -72,7 +72,7 @@ class TransferBatchTest {
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, version);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, "envId", null, false);
+        CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, "envId", null, false, true);
 
         TransferBatch transferBatch = new TransferBatch();
         BatchRecord batchRecord = new BatchRecord(null, 2, 2, 0, 1, new ArrayList<>());

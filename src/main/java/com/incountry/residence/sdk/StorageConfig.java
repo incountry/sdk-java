@@ -36,6 +36,7 @@ public class StorageConfig {
     private String defaultAuthEndpoint;
     private Integer maxHttpPoolSize;
     private Integer maxHttpConnectionsPerRoute;
+    private boolean hashSearchKeys = true;
 
     public String getEnvId() {
         return envId;
@@ -320,6 +321,21 @@ public class StorageConfig {
         return this;
     }
 
+    public boolean isHashSearchKeys() {
+        return hashSearchKeys;
+    }
+
+    /**
+     * if false - key1-key10 will be not hashed. default is false
+     *
+     * @param hashSearchKeys value
+     * @return StorageConfig
+     */
+    public StorageConfig setHashSearchKeys(boolean hashSearchKeys) {
+        this.hashSearchKeys = hashSearchKeys;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -336,6 +352,7 @@ public class StorageConfig {
         newInstance.setAuthEndpoints(getAuthEndpoints());
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
         newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
+        newInstance.setHashSearchKeys(isHashSearchKeys());
         return newInstance;
     }
 
@@ -356,6 +373,7 @@ public class StorageConfig {
                 ", defaultAuthEndpoint='" + defaultAuthEndpoint + '\'' +
                 ", httpTimeout='" + httpTimeout + '\'' +
                 ", httpPoolSize='" + maxHttpPoolSize + '\'' +
+                ", ignoreKeysHashing='" + hashSearchKeys + '\'' +
                 '}';
     }
 

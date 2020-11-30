@@ -51,7 +51,7 @@ class TransferRecordTest {
         secretKeyList.add(secretKey);
         SecretsData secretsData = new SecretsData(secretKeyList, version);
         secretKeyAccessor = () -> secretsData;
-        cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false);
+        cryptoManager = new CryptoManager(secretKeyAccessor, ENVIRONMENT_ID, null, false, true);
 
         gson = new GsonBuilder()
                 .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -207,7 +207,7 @@ class TransferRecordTest {
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "{\"test\":}");
         assertTrue(transferRecord.isEncrypted());
 
-        CryptoManager cryptoManagerWithoutEnc = new CryptoManager(null, ENVIRONMENT_ID, null, false);
+        CryptoManager cryptoManagerWithoutEnc = new CryptoManager(null, ENVIRONMENT_ID, null, false, true);
         transferRecord = new TransferRecord(record, cryptoManagerWithoutEnc, "{\"test\":}");
         assertFalse(transferRecord.isEncrypted());
 
@@ -254,7 +254,7 @@ class TransferRecordTest {
                 "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
                 "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
                 "}";
-        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false, true);
         Record record1 = JsonUtils.recordFromString(responseJson, cryptoManager);
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss Z");
         assertEquals(dateFormat.parse("2020-01-01 09:30:45 +0000"), record1.getCreatedAt());
@@ -320,7 +320,7 @@ class TransferRecordTest {
                 "  \"key3\": \"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\",\n" +
                 "  \"body\": \"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsia2V5Ijoia2V5MSIsImtleTIiOiJrZXkyIiwia2V5MyI6ImtleTMifX0=\"\n" +
                 "}";
-        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false, true);
         StorageServerException exception = assertThrows(StorageServerException.class, () -> JsonUtils.recordFromString(responseJson1, cryptoManager));
         assertEquals("Response parse error", exception.getMessage());
         assertEquals(JsonSyntaxException.class, exception.getCause().getClass());
