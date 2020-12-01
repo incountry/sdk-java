@@ -5,8 +5,7 @@ InCountry Storage SDK
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 [![Known Vulnerabilities](https://snyk.io/test/github/incountry/sdk-java/badge.svg?targetFile=build.gradle)](https://snyk.io/test/github/incountry/sdk-java?targetFile=build.gradle)
 
-Installation
------
+## Installation
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
 
 For Maven users please add this section to your dependencies list
@@ -23,13 +22,25 @@ For Gradle users please add this line to your dependencies list
 compile "com.incountry:incountry-java-client:3.0.0"
 ```
 
-Countries List
-----
+## Countries List
 For a full list of supported countries and their codes please [follow this link](countries.md).
 
-Usage
------
-Use `StorageImpl` class to access your data in InCountry using Java SDK.
+
+## Quickstart guide
+To access your data in InCountry Platform by using Java SDK, you need to create an instance of the Storage class using the getInstance method and pass StorageConfig object to it. You can retrieve the `CLIENT_ID`, `CLIENT_SECRET` and `ENV_ID` variables from your dashboard on InCountry Portal.
+```java
+
+config = new StorageConfig()
+        .setEnvId(ENV_ID)
+        .setClientId(CLIENT_ID)
+        .setClientSecret(CLIENT_SECRET)
+storageOrdinary = StorageImpl.getInstance(config);
+
+```
+
+## Storage Configuration
+
+Below you can find a full list of possible configuration options for creating a Storage instance.
 ```java
 public class StorageImpl implements Storage {
   /**
@@ -75,11 +86,9 @@ API Key authorization is being deprecated. We keep backwards compatibility for `
 
 ---
 
-Parameters `environmentID`, `clientId` and `clientSecret` can be fetched from your dashboard on `Incountry` site.
-
 You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
 
-Below is an example how to create a storage instance:
+Below you can find API Key authorization usage example:
 ```java
 SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
@@ -89,11 +98,11 @@ StorageConfig config = new StorageConfig()
 Storage storage=StorageImpl.getInstance(config);
 ```
 
-#### oAuth Authentication
+#### oAuth options configuration
 
-SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
+The SDK allows to precisely configure oAuth authorization endpoints (if needed). Use this option only if your plan configuration requires so.
 
-Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+Below you can find the example of how to create a storage instance with custom oAuth endpoints:
 ```java
 Map<String, String> authEndpointsMap = new HashMap<>();
 authEndpointsMap.put("emea", "https://auth-server-emea.com");
@@ -586,8 +595,7 @@ public class MigrateResult {
 
 For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
 
-Error Handling
------
+## Error Handling
 
 InCountry Java SDK throws following Exceptions:
 - **StorageClientException** - used for various input validation errors
@@ -615,8 +623,8 @@ public void test() {
 }
 ```
 
-Custom Encryption Support
------
+## Custom Encryption Support
+
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
 
 Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
@@ -779,8 +787,7 @@ public class FernetCrypto implements Crypto {
 }
 ```
 
-Project dependencies
------
+## Project dependencies
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 
