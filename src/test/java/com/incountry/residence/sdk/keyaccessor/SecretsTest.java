@@ -35,13 +35,13 @@ class SecretsTest {
                 "    {\n" +
                 "      \"secret\": \"" + key + "\",\n" +
                 "      \"version\": 1,\n" +
-                "      \"isKey\": true,\n" +
-                "      \"isForCustomEncryption\": false\n" +
+                "      \"isKey\": %s,\n" +
+                "      \"isForCustomEncryption\": %s\n" +
                 "    }\n" +
                 "  ],\n" +
                 "  \"currentVersion\": 1\n" +
                 "}";
-        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyStringIsKey);
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(String.format(secretKeyStringIsKey, true, false));
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(1, resultSecretsData.getCurrentVersion());
         assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecret()));
@@ -49,18 +49,7 @@ class SecretsTest {
         assertTrue(resultSecretsData.getSecrets().get(0).isKey());
         assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
 
-        String secretKeyStringIsForCustomEncryption = "{\n" +
-                "  \"secrets\": [\n" +
-                "    {\n" +
-                "      \"secret\": \"" + key + "\",\n" +
-                "      \"version\": 1,\n" +
-                "      \"isKey\": false,\n" +
-                "      \"isForCustomEncryption\": true\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"currentVersion\": 1\n" +
-                "}";
-        accessor = () -> SecretsDataGenerator.fromJson(secretKeyStringIsForCustomEncryption);
+        accessor = () -> SecretsDataGenerator.fromJson(String.format(secretKeyStringIsKey, false, true));
         resultSecretsData = accessor.getSecretsData();
         assertEquals(1, resultSecretsData.getCurrentVersion());
         assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecret()));
