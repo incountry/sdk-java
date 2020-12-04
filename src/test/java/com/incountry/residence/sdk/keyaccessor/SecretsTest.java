@@ -30,7 +30,7 @@ class SecretsTest {
     @Test
     void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
         String key = Base64.getEncoder().encodeToString("123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
-        String secretKeyString = "{\n" +
+        String secretKeyStringIsKey = "{\n" +
                 "  \"secrets\": [\n" +
                 "    {\n" +
                 "      \"secret\": \"" + key + "\",\n" +
@@ -41,13 +41,32 @@ class SecretsTest {
                 "  ],\n" +
                 "  \"currentVersion\": 1\n" +
                 "}";
-        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyString);
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyStringIsKey);
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(1, resultSecretsData.getCurrentVersion());
         assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecret()));
         assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
         assertTrue(resultSecretsData.getSecrets().get(0).isKey());
         assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
+
+        String secretKeyStringIsForCustomEncryption = "{\n" +
+                "  \"secrets\": [\n" +
+                "    {\n" +
+                "      \"secret\": \"" + key + "\",\n" +
+                "      \"version\": 1,\n" +
+                "      \"isKey\": false,\n" +
+                "      \"isForCustomEncryption\": true\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"currentVersion\": 1\n" +
+                "}";
+        accessor = () -> SecretsDataGenerator.fromJson(secretKeyStringIsForCustomEncryption);
+        resultSecretsData = accessor.getSecretsData();
+        assertEquals(1, resultSecretsData.getCurrentVersion());
+        assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecret()));
+        assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
+        assertFalse(resultSecretsData.getSecrets().get(0).isKey());
+        assertTrue(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
