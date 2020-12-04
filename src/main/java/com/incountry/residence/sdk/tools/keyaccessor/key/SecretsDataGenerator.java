@@ -7,6 +7,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,9 +54,14 @@ public class SecretsDataGenerator {
             List<SecretKey> secrets = new ArrayList<>();
             if (container.secrets != null) {
                 for (SecretKeyContainer key : container.secrets) {
-                    byte[] byteKey = key.secret.getBytes(StandardCharsets.UTF_8);
-                    base64Validation(key.isKey, byteKey);
-                    secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                    if (key.isForCustomEncryption || key.isKey) {
+                        base64Validation(key.secret);
+                        byte[] byteKey = DatatypeConverter.parseBase64Binary(key.secret);
+                        secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                    } else {
+                        byte[] byteKey = key.secret.getBytes(StandardCharsets.UTF_8);
+                        secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                    }
                 }
             }
             result = new SecretsData(secrets, container.currentVersion);
@@ -65,8 +71,8 @@ public class SecretsDataGenerator {
         return result;
     }
 
-    private static void base64Validation(boolean isKey, byte[] byteKey) throws StorageClientException {
-        if (isKey && !Base64.isBase64(byteKey)) {
+    private static void base64Validation(String byteKey) throws StorageClientException {
+        if (!Base64.isBase64(byteKey)) {
             LOG.error(MSG_ERR_BASE64_SECRET);
             throw new StorageClientException(MSG_ERR_BASE64_SECRET);
         }
