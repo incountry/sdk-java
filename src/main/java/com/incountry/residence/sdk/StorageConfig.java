@@ -326,7 +326,7 @@ public class StorageConfig {
     }
 
     /**
-     * if false - key1-key10 will be not hashed. default is false
+     * if false - key1-key10 will be not hashed. default is true
      *
      * @param hashSearchKeys value
      * @return StorageConfig
