@@ -743,6 +743,29 @@ class StorageTest {
             StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
             assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
         }
+        FindFilterBuilder builder1 = FindFilterBuilder.create()
+                .keyNotEq(StringField.SEARCH_KEYS, "search_keys");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder1));
+        assertEquals("SEARCH_KEYS cannot be used with 'not equals' condition", ex.getMessage());
+
+        FindFilterBuilder builder2 = FindFilterBuilder.create()
+                .keyEq(StringField.SEARCH_KEYS, "search_keys1", "search_keys2");
+        ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder2));
+        assertEquals("SEARCH_KEYS is not supporting multiple value", ex.getMessage());
+
+        FindFilterBuilder builder3 = FindFilterBuilder.create()
+                .keyEq(StringField.SEARCH_KEYS, "se");
+        ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder3));
+        assertEquals("SEARCH_KEYS must be more than 3 and less then 200", ex.getMessage());
+
+        String generatedString = new SecureRandom().ints(97, 123) // from 'a' to 'z'
+                .limit(201)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+        FindFilterBuilder builder4 = FindFilterBuilder.create()
+                .keyEq(StringField.SEARCH_KEYS, generatedString);
+        ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder4));
+        assertEquals("SEARCH_KEYS must be more than 3 and less then 200", ex.getMessage());
     }
 
     @RepeatedTest(3)
