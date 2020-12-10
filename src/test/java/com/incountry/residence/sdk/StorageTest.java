@@ -722,14 +722,13 @@ class StorageTest {
     }
 
     @Test
-    void searchKeysTest() {
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
-                .keyEq(StringField.KEY1, "key")
-                .searchKeysLike("search_keys"));
+    void searchKeysTest() throws StorageClientException {
+        FindFilterBuilder filterBuilder1 = FindFilterBuilder.create().keyEq(StringField.KEY1, "key");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> filterBuilder1.searchKeysLike("search_keys"));
         assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
 
-        ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
-                .searchKeysLike("search_keys")
+        FindFilterBuilder filterBuilder2 = FindFilterBuilder.create().searchKeysLike("search_keys");
+        ex = assertThrows(StorageClientException.class, () -> filterBuilder2
                 .keyEq(StringField.KEY1, "key"));
         assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
 

@@ -26,7 +26,7 @@ public class FindFilterBuilder {
     public static final String OPER_LTE = "$lte";
 
     private FindFilter filter;
-    private static List<StringField> keys = new ArrayList<StringField>();
+    private static List<StringField> keys = new ArrayList<>();
 
     static {
         keys.add(StringField.KEY1);
