@@ -725,7 +725,7 @@ public class StorageIntegrationTest {
         storageNonHashing.write(MIDIPOP_COUNTRY, record);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, KEY_1.split("-")[2]);
+                .searchKeysLike(KEY_1.split("-")[2]);
         BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
 
         assertEquals(1, batchRecord.getCount());
