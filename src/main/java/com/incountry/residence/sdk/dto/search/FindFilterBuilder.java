@@ -16,7 +16,7 @@ public class FindFilterBuilder {
     private static final Logger LOG = LogManager.getLogger(FindFilterBuilder.class);
 
     private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup";
-    private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS must be more than 3 and less then 200";
+    private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS should contain at least 3 characters and be not longer than 200";
     private static final String MSG_ERR_SEARCH_KEYS_ADD = "SEARCH_KEYS can be used only via searchKeysLike method";
 
     public static final String OPER_NOT = "$not";
@@ -26,19 +26,19 @@ public class FindFilterBuilder {
     public static final String OPER_LTE = "$lte";
 
     private FindFilter filter;
-    private static List<StringField> keys = new ArrayList<>();
+    private static List<StringField> searchableKeys = new ArrayList<>();
 
     static {
-        keys.add(StringField.KEY1);
-        keys.add(StringField.KEY2);
-        keys.add(StringField.KEY3);
-        keys.add(StringField.KEY4);
-        keys.add(StringField.KEY5);
-        keys.add(StringField.KEY6);
-        keys.add(StringField.KEY7);
-        keys.add(StringField.KEY8);
-        keys.add(StringField.KEY9);
-        keys.add(StringField.KEY10);
+        searchableKeys.add(StringField.KEY1);
+        searchableKeys.add(StringField.KEY2);
+        searchableKeys.add(StringField.KEY3);
+        searchableKeys.add(StringField.KEY4);
+        searchableKeys.add(StringField.KEY5);
+        searchableKeys.add(StringField.KEY6);
+        searchableKeys.add(StringField.KEY7);
+        searchableKeys.add(StringField.KEY8);
+        searchableKeys.add(StringField.KEY9);
+        searchableKeys.add(StringField.KEY10);
     }
 
     public static FindFilterBuilder create() {
@@ -119,7 +119,7 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder searchKeysLike(String value) throws StorageClientException {
         Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
-        for (StringField key : keys) {
+        for (StringField key : searchableKeys) {
             if (searchKeys.contains(key)) {
                 LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
                 throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
@@ -149,7 +149,8 @@ public class FindFilterBuilder {
             LOG.error(MSG_ERR_SEARCH_KEYS_ADD);
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_ADD);
         }
-        if (keys.contains(field) && filter.getStringFilterMap().keySet().contains(StringField.SEARCH_KEYS)) {
+        if (searchableKeys.contains(field)
+                && filter.getStringFilterMap().keySet().contains(StringField.SEARCH_KEYS)) {
             LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
             throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
         }

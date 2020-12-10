@@ -738,7 +738,7 @@ class StorageTest {
 
         ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
                 .searchKeysLike("se"));
-        assertEquals("SEARCH_KEYS must be more than 3 and less then 200", ex.getMessage());
+        assertEquals("SEARCH_KEYS should contain at least 3 characters and be not longer than 200", ex.getMessage());
 
         String generatedString = new SecureRandom().ints(97, 123) // from 'a' to 'z'
                 .limit(201)
@@ -746,7 +746,7 @@ class StorageTest {
                 .toString();
         ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
                 .searchKeysLike(generatedString));
-        assertEquals("SEARCH_KEYS must be more than 3 and less then 200", ex.getMessage());
+        assertEquals("SEARCH_KEYS should contain at least 3 characters and be not longer than 200", ex.getMessage());
     }
 
     @RepeatedTest(3)
