@@ -17,7 +17,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +33,7 @@ public abstract class AbstractHttpRequestCreator {
     private static final String PATCH = "PATCH";
     private static final String FILE = "file";
 
-    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws UnsupportedEncodingException, StorageServerException {
+    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws StorageServerException {
         if (requestParameters != null && requestParameters.isFileUpload()) {
             return createFileUploadRequest(url, method, body, requestParameters.getFileName(), requestParameters.getContentType());
         } else {
@@ -42,13 +41,13 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private HttpRequestBase createSimpleRequest(String url, String method, String body) throws UnsupportedEncodingException, StorageServerException {
+    private HttpRequestBase createSimpleRequest(String url, String method, String body) throws StorageServerException {
         URI uri = createUri(url);
 
         if (method.equals(POST)) {
             checkBodyForNull(body, method);
             HttpPost request = new HttpPost(uri);
-            StringEntity entity = new StringEntity(body);
+            StringEntity entity = new StringEntity(body, "UTF8");
             request.setEntity(entity);
             return request;
         } else if (method.equals(GET)) {
@@ -56,7 +55,7 @@ public abstract class AbstractHttpRequestCreator {
         } else if (method.equals(PATCH)) {
             checkBodyForNull(body, method);
             HttpPatch request = new HttpPatch(uri);
-            StringEntity entity = new StringEntity(body);
+            StringEntity entity = new StringEntity(body, "UTF8");
             request.setEntity(entity);
             return request;
         } else {
