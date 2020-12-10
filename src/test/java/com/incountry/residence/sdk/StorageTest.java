@@ -722,49 +722,31 @@ class StorageTest {
     }
 
     @Test
-    void searchKeysTest() throws StorageException {
-        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
-        StringField[] keys  = {
-                StringField.KEY1,
-                StringField.KEY2,
-                StringField.KEY3,
-                StringField.KEY4,
-                StringField.KEY5,
-                StringField.KEY6,
-                StringField.KEY7,
-                StringField.KEY8,
-                StringField.KEY9,
-                StringField.KEY10,
-        };
-        for (StringField key : keys) {
-            FindFilterBuilder builder = FindFilterBuilder.create()
-                    .keyEq(key, "key")
-                    .keyEq(StringField.SEARCH_KEYS, "search_keys");
-            StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder));
-            assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
-        }
-        FindFilterBuilder builder1 = FindFilterBuilder.create()
-                .keyNotEq(StringField.SEARCH_KEYS, "search_keys");
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder1));
-        assertEquals("SEARCH_KEYS cannot be used with 'not equals' condition", ex.getMessage());
+    void searchKeysTest() {
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
+                .keyEq(StringField.KEY1, "key")
+                .searchKeysLike("search_keys"));
+        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
 
-        FindFilterBuilder builder2 = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, "search_keys1", "search_keys2");
-        ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder2));
-        assertEquals("SEARCH_KEYS is not supporting multiple value", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
+                .searchKeysLike("search_keys")
+                .keyEq(StringField.KEY1, "key"));
+        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
 
-        FindFilterBuilder builder3 = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, "se");
-        ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder3));
+        ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
+                .keyEq(StringField.SEARCH_KEYS, "search_keys"));
+        assertEquals("SEARCH_KEYS can be used only via searchKeysLike method", ex.getMessage());
+
+        ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
+                .searchKeysLike("se"));
         assertEquals("SEARCH_KEYS must be more than 3 and less then 200", ex.getMessage());
 
         String generatedString = new SecureRandom().ints(97, 123) // from 'a' to 'z'
                 .limit(201)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
-        FindFilterBuilder builder4 = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, generatedString);
-        ex = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, builder4));
+        ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
+                .searchKeysLike(generatedString));
         assertEquals("SEARCH_KEYS must be more than 3 and less then 200", ex.getMessage());
     }
 

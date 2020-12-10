@@ -4,6 +4,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,9 +16,8 @@ public class FindFilterBuilder {
     private static final Logger LOG = LogManager.getLogger(FindFilterBuilder.class);
 
     private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup";
-    private static final String MSG_ERR_SEARCH_KEYS_NOT_CONDITION = "SEARCH_KEYS cannot be used with 'not equals' condition";
-    private static final String MSG_ERR_SEARCH_KEYS_MULTIPLE_VALUES = "SEARCH_KEYS is not supporting multiple value";
     private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS must be more than 3 and less then 200";
+    private static final String MSG_ERR_SEARCH_KEYS_ADD = "SEARCH_KEYS can be used only via searchKeysLike method";
 
     public static final String OPER_NOT = "$not";
     public static final String OPER_GT = "$gt";
@@ -25,6 +26,20 @@ public class FindFilterBuilder {
     public static final String OPER_LTE = "$lte";
 
     private FindFilter filter;
+    private static List<StringField> keys = new ArrayList<StringField>();
+
+    static {
+        keys.add(StringField.KEY1);
+        keys.add(StringField.KEY2);
+        keys.add(StringField.KEY3);
+        keys.add(StringField.KEY4);
+        keys.add(StringField.KEY5);
+        keys.add(StringField.KEY6);
+        keys.add(StringField.KEY7);
+        keys.add(StringField.KEY8);
+        keys.add(StringField.KEY9);
+        keys.add(StringField.KEY10);
+    }
 
     public static FindFilterBuilder create() {
         return new FindFilterBuilder();
@@ -39,7 +54,6 @@ public class FindFilterBuilder {
     }
 
     public FindFilter build() throws StorageClientException {
-        checkSearchKeys();
         return filter.copy();
     }
 
@@ -55,6 +69,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyEq(StringField field, String... keys) throws StorageClientException {
+        validateStringFilters(field);
         filter.setStringFilter(field, new FilterStringParam(keys));
         return this;
     }
@@ -65,6 +80,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyNotEq(StringField field, String... keys) throws StorageClientException {
+        validateStringFilters(field);
         filter.setStringFilter(field, new FilterStringParam(keys, true));
         return this;
     }
@@ -101,6 +117,22 @@ public class FindFilterBuilder {
         return this;
     }
 
+    public FindFilterBuilder searchKeysLike(String value) throws StorageClientException {
+        Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
+        for (StringField key : keys) {
+            if (searchKeys.contains(key)) {
+                LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+                throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+            }
+        }
+        if (value.length() < 3 || value.length() > 200) {
+            LOG.error(MSG_ERR_SEARCH_KEYS_LEN);
+            throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
+        }
+        filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[] {value}));
+        return this;
+    }
+
     @Override
     public String toString() {
         return "FindFilterBuilder{" +
@@ -112,35 +144,14 @@ public class FindFilterBuilder {
         return new FindFilterBuilder(this.filter.copy());
     }
 
-    private void checkSearchKeys() throws StorageClientException {
-        Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
-        if (searchKeys.contains(StringField.SEARCH_KEYS)) {
-            if (searchKeys.contains(StringField.KEY1)
-                    || searchKeys.contains(StringField.KEY2)
-                    || searchKeys.contains(StringField.KEY3)
-                    || searchKeys.contains(StringField.KEY4)
-                    || searchKeys.contains(StringField.KEY5)
-                    || searchKeys.contains(StringField.KEY6)
-                    || searchKeys.contains(StringField.KEY7)
-                    || searchKeys.contains(StringField.KEY8)
-                    || searchKeys.contains(StringField.KEY9)
-                    || searchKeys.contains(StringField.KEY10)) {
-                LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
-                throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
-            }
-            if (filter.getStringFilterMap().get(StringField.SEARCH_KEYS).isNotCondition()) {
-                LOG.error(MSG_ERR_SEARCH_KEYS_NOT_CONDITION);
-                throw new StorageClientException(MSG_ERR_SEARCH_KEYS_NOT_CONDITION);
-            }
-            if (filter.getStringFilterMap().get(StringField.SEARCH_KEYS).getValues().size() > 1) {
-                LOG.error(MSG_ERR_SEARCH_KEYS_MULTIPLE_VALUES);
-                throw new StorageClientException(MSG_ERR_SEARCH_KEYS_MULTIPLE_VALUES);
-            }
-            if (filter.getStringFilterMap().get(StringField.SEARCH_KEYS).getValues().get(0).length() < 3
-                    || filter.getStringFilterMap().get(StringField.SEARCH_KEYS).getValues().get(0).length() > 200) {
-                LOG.error(MSG_ERR_SEARCH_KEYS_LEN);
-                throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
-            }
+    private void validateStringFilters(StringField field) throws StorageClientException {
+        if (field == StringField.SEARCH_KEYS) {
+            LOG.error(MSG_ERR_SEARCH_KEYS_ADD);
+            throw new StorageClientException(MSG_ERR_SEARCH_KEYS_ADD);
+        }
+        if (keys.contains(field) && filter.getStringFilterMap().keySet().contains(StringField.SEARCH_KEYS)) {
+            LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+            throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
         }
     }
 }
