@@ -134,6 +134,7 @@ class AllSdkEncryptionTest {
         String recordJsonString = JsonUtils.toJsonString(record, cryptoManager);
         JsonObject jsonObject = getGson().fromJson(recordJsonString, JsonObject.class);
         JsonObject originalJsonObject = getGson().fromJson(jsonResponse, JsonObject.class);
+        originalJsonObject.remove("attachments");
 
         originalJsonObject.entrySet()
                 .stream()
