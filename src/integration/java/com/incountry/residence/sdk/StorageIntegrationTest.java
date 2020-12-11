@@ -738,7 +738,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(901)
     public void utf8EncodingTest() throws StorageException {
-        String recordKey = RECORD_KEY;
+        String recordKey = "utf8" + RECORD_KEY;
         String key1 = "Louis César de La Baume Le Blanc" + TEMP;
         Record record = new Record(recordKey)
                 .setBody(RECORD_BODY)
