@@ -739,8 +739,7 @@ public class StorageIntegrationTest {
     @Order(901)
     public void utf8EncodingTest() throws StorageException {
         String recordKey = RECORD_KEY;
-        String key1 = "Louis César de La Baume Le Blanc";
-        String searchKey = "César";
+        String key1 = "Louis César de La Baume Le Blanc" + TEMP;
         Record record = new Record(recordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -750,7 +749,7 @@ public class StorageIntegrationTest {
         storageNonHashing.write(MIDIPOP_COUNTRY, record);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .searchKeysLike(searchKey);
+                .keyEq(StringField.KEY1, key1);
         BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
 
         assertEquals(1, batchRecord.getCount());
