@@ -236,6 +236,7 @@ class StorageTest {
         assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
         assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
         assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
+        assertEquals(0, batchRecord.getRecords().get(0).getAttachments().size());
     }
 
     @RepeatedTest(3)
