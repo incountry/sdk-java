@@ -755,6 +755,7 @@ public class StorageIntegrationTest {
         assertEquals(1, batchRecord.getCount());
         assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
+        assertEquals(key1, batchRecord.getRecords().get(0).getKey1());
 
         storageNonHashing.delete(MIDIPOP_COUNTRY, recordKey);
     }
