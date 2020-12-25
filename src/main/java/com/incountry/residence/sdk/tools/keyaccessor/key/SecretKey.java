@@ -15,7 +15,7 @@ public class SecretKey {
     private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
     private static final String MSG_ERR_OPTION = "SecretKey can have either 'isKey' or 'isForCustomEncryption' set to True, not both";
     private static final String MSG_ERR_KEY_LEN = "Wrong key length for secret key with 'isKey==true'. Should be "
-            + KEY_LENGTH + " characters ‘utf8’";
+            + KEY_LENGTH + "-byte array";
 
     private final byte[] secret;
     private final int version;
