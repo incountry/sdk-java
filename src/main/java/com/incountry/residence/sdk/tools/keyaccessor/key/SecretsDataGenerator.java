@@ -21,7 +21,7 @@ public class SecretsDataGenerator {
 
     public static final int DEFAULT_VERSION = 0;
     private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
-    private static final String MSG_ERR_BASE64_SECRET = "Secret must be base64";
+    private static final String MSG_ERR_BASE64_SECRET = "Secret key must be base64-encoded string";
 
     private SecretsDataGenerator() {
     }
