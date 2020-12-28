@@ -25,7 +25,7 @@ public class SecretKey {
     /**
      * Creates a secret key
      *
-     * @param secret  secret/key as byte array from base64 String
+     * @param secret  secret/key as byte array
      * @param version secret version, should be a non-negative integer
      * @param isKey   should be True only for user-defined encryption keys
      * @throws StorageClientException when parameter validation fails
