@@ -504,7 +504,7 @@ class HttpDaoImplTests {
         String country = "US";
         String recordKey = "someRecordKey";
         assertNull(dao.read(country, recordKey, null));
-        dao.delete(country, recordKey, null);
+        dao.delete(country, recordKey);
         dao.createRecord(country, new Record(recordKey, "<body>"), null);
         dao.createRecord(country, new Record(recordKey, "<body>"), null);
         dao.createRecord(country, new Record(recordKey, "<body>"), null);
