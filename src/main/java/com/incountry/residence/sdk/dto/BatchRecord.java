@@ -5,12 +5,12 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import java.util.List;
 
 public class BatchRecord {
-    private int count;
-    private int limit;
-    private int offset;
-    private int total;
-    private List<Record> records;
-    private List<RecordException> errors;
+    private final int count;
+    private final int limit;
+    private final int offset;
+    private final int total;
+    private final List<Record> records;
+    private final List<RecordException> errors;
 
     public BatchRecord(List<Record> records, int count, int limit, int offset, int total, List<RecordException> errors) {
         this.count = count;

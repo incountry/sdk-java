@@ -24,7 +24,7 @@ public class AttachedFile {
     public String toString() {
         return "AttachedFile{" +
                 "fileContent=" + fileContent +
-                ", fileName=" + fileName.hashCode() +
+                ", fileName=" + fileName +
                 '}';
     }
 }
