@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class ApiResponse {
 
-    private String content;
-    private Map<MetaInfoTypes, String> metaInfo;
+    private final String content;
+    private final Map<MetaInfoTypes, String> metaInfo;
 
     public ApiResponse() {
         this(null, null);
