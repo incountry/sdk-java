@@ -17,6 +17,8 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -33,9 +35,9 @@ public abstract class AbstractHttpRequestCreator {
     private static final String PATCH = "PATCH";
     private static final String FILE = "file";
 
-    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws StorageServerException {
-        if (requestParameters != null && requestParameters.isFileUpload()) {
-            return createFileUploadRequest(url, method, body, requestParameters.getFileName(), requestParameters.getContentType());
+    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws StorageServerException, IOException {
+        if (requestParameters != null && requestParameters.getDataStream() != null) {
+            return createFileUploadRequest(url, method, requestParameters.getDataStream(), requestParameters.getFileName(), requestParameters.getContentType());
         } else {
             return createSimpleRequest(url, method, body);
         }
@@ -63,8 +65,8 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private HttpRequestBase createFileUploadRequest(String url, String method, String body, String fileName, String mimeTypeString) throws StorageServerException {
-        checkBody(body, method);
+    private HttpRequestBase createFileUploadRequest(String url, String method, InputStream dataStream, String fileName, String mimeTypeString) throws StorageServerException, IOException {
+        checkBody(dataStream, method);
         URI uri = createUri(url);
         ContentType mimeType;
         if (mimeTypeString == null || mimeTypeString.isEmpty()) {
@@ -76,7 +78,7 @@ public abstract class AbstractHttpRequestCreator {
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         builder.setCharset(StandardCharsets.UTF_8);
-        builder.addBinaryBody(FILE, body.getBytes(StandardCharsets.UTF_8), mimeType, fileName);
+        builder.addBinaryBody(FILE, dataStream, mimeType, fileName);
         HttpEntity entity = builder.build();
 
         if (method.equals(POST)) {
@@ -90,9 +92,8 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private void checkBody(String body, String method) throws StorageServerException {
-        checkBodyForNull(body, method);
-        if (body.isEmpty()) {
+    private void checkBody(InputStream dataStream, String method) throws StorageServerException, IOException {
+        if (dataStream == null || dataStream.available() < 1) {
             LOG.error(MSG_ERR_NULL_BODY);
             throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUEST, method), new StorageClientException(MSG_ERR_NULL_BODY));
         }

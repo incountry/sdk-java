@@ -222,7 +222,7 @@ public class HttpDaoImpl implements Dao {
             LOG.error(MSG_ERR_USER_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_USER_INPUT_STREAM, ex);
         }
-        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(method, ApiResponseCodes.ADD_ATTACHMENT, mimeType, true, fileName));
+        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(method, ApiResponseCodes.ADD_ATTACHMENT, mimeType, inputStream, fileName));
         return JsonUtils.getDataFromAttachmentMetaJson(response.getContent());
     }
 

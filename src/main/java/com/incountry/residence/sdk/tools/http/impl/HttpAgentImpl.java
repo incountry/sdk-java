@@ -82,7 +82,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
-            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
+            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.getDataStream() != null);
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
