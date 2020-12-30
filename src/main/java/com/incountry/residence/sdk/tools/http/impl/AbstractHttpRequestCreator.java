@@ -93,7 +93,7 @@ public abstract class AbstractHttpRequestCreator {
     }
 
     private void checkBody(InputStream dataStream, String method) throws StorageServerException, IOException {
-        if (dataStream == null || dataStream.available() < 1) {
+        if (dataStream == null || dataStream.available() < 0) {
             LOG.error(MSG_ERR_NULL_BODY);
             throw new StorageServerException(String.format(MSG_ERR_SERVER_REQUEST, method), new StorageClientException(MSG_ERR_NULL_BODY));
         }

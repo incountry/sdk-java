@@ -113,18 +113,6 @@ class HttpAgentImplTest {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         RequestParameters params = new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genStream(), "file.txt");
         assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params).getContent());
-        RequestParameters params2 = new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genEmptyStream(), "file.txt");
-        StorageServerException ex = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, null, null, null, 0, params2));
-        assertEquals("Server request error: POST", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
-        RequestParameters params3 = new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genEmptyStream(), "file.txt");
-        ex = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, null, null, null, 0, params3));
-        assertEquals("Server request error: POST", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
 
         String putMethod = "PUT";
         RequestParameters params4 = new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genStream(), "file.txt");
@@ -133,12 +121,6 @@ class HttpAgentImplTest {
         assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params5).getContent());
         RequestParameters params6 = new RequestParameters(putMethod, ApiResponseCodes.DELETE, null, genStream(), "file.txt");
         assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params6).getContent());
-        RequestParameters params7 = new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genEmptyStream(), "file.txt");
-        ex = assertThrows(StorageServerException.class, () ->
-                agent.request(ENDPOINT, null, null, null, 0, params7));
-        assertEquals("Server request error: PUT", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
         server.stop(0);
     }
 
