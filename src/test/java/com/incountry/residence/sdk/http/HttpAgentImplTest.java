@@ -85,9 +85,9 @@ class HttpAgentImplTest {
         RequestParameters params = new RequestParameters("POST", ApiResponseCodes.DELETE);
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, params).getContent());
         assertNotNull(agent.request(ENDPOINT, "", null, null, 0, params).getContent());
-        StorageServerException ex = assertThrows(StorageServerException.class, () ->
+        StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 agent.request(ENDPOINT, null, null, null, 0, params));
-        assertEquals("Server request error: POST", ex.getMessage());
+        assertEquals("Body can't be null", ex.getMessage());
         server.stop(0);
     }
 
@@ -250,7 +250,7 @@ class HttpAgentImplTest {
     void negativeTestWithIllegalUrl() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         String url = " ";
-        StorageServerException ex = assertThrows(StorageServerException.class, ()
+        StorageClientException ex = assertThrows(StorageClientException.class, ()
                 -> agent.request(url, "someBody", null, null, 0, new RequestParameters("GET", new HashMap<>())));
         assertEquals("URL error", ex.getMessage());
         assertEquals(URISyntaxException.class, ex.getCause().getClass());

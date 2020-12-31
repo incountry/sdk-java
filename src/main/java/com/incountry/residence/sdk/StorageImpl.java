@@ -436,7 +436,7 @@ public class StorageImpl implements Storage {
         }
         checkCountryAndRecordKey(country, recordKey);
         try {
-            if (inputStream == null || inputStream.available() == 0) {
+            if (inputStream == null || inputStream.available() < 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
                 throw new StorageClientException(MSG_ERR_NULL_FILE_INPUT_STREAM);
             }

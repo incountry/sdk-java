@@ -60,8 +60,6 @@ public class HttpDaoImpl implements Dao {
     private static final long DEFAULT_UPDATE_INTERVAL = 300_000;
     private static final String MSG_ERR_LOAD_COUNTRIES = "Error during country list loading";
     private static final String MSG_ERR_COUNTRIES_ARE_EMPTY = "Country list is empty";
-    private static final String MSG_ERR_USER_INPUT_STREAM = "User's InputStream reading error";
-
 
     private Map<String, POP> popMap = new HashMap<>();
 

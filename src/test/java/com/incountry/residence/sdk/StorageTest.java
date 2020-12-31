@@ -480,7 +480,7 @@ class StorageTest {
     }
 
     @Test
-    void testErrorReadInsufficientArgs() throws StorageServerException, StorageClientException {
+    void testErrorReadInsufficientArgs() throws StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
         Dao dao = new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent);
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, dao);
@@ -489,7 +489,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    void testErrorDeleteInsufficientArgs(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
+    void testErrorDeleteInsufficientArgs(RepetitionInfo repeatInfo) throws StorageClientException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         FakeHttpAgent agent = new FakeHttpAgent("");
         Dao dao = new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent);
@@ -516,7 +516,7 @@ class StorageTest {
     }
 
     @Test
-    void testPositiveWithConstructor2() throws StorageClientException, StorageServerException {
+    void testPositiveWithConstructor2() throws StorageClientException {
         SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, "apiKey", FAKE_ENDPOINT, secretKeyAccessor);
@@ -524,7 +524,7 @@ class StorageTest {
     }
 
     @Test
-    void testPositiveWithConstructor3() throws StorageClientException, StorageServerException {
+    void testPositiveWithConstructor3() throws StorageClientException {
         SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -555,7 +555,7 @@ class StorageTest {
     }
 
     @Test
-    void positiveTestWithClientId() throws StorageClientException, StorageServerException {
+    void positiveTestWithClientId() throws StorageClientException {
         SecretsData secretData = new SecretsData(Collections.singletonList(new SecretKey("secret".getBytes(StandardCharsets.UTF_8), 1, false)), 1);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -783,7 +783,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    void deleteAttachmentTest(RepetitionInfo repeatInfo) throws StorageException, IOException {
+    void deleteAttachmentTest(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         String recordKey = "key";
         String country = "us";
@@ -905,23 +905,16 @@ class StorageTest {
             assertEquals("Input stream can't be null", ex.getMessage());
             ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
                 @Override
-                public int read() throws IOException {
+                public int read() {
+                    return -1;
+                }
+
+                @Override
+                public int available() {
                     return -1;
                 }
             }, fileName, false));
             assertEquals("Input stream can't be null", ex.getMessage());
-            ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
-                @Override
-                public int read() throws IOException {
-                    throw new IOException();
-                }
-
-                @Override
-                public int available() throws IOException {
-                    return 1;
-                }
-            }, fileName, false));
-            assertEquals("User's InputStream reading error", ex.getMessage());
             ex = assertThrows(StorageClientException.class, () -> storage.addAttachment("us", recordKey, new InputStream() {
                 @Override
                 public int read() throws IOException {
@@ -943,7 +936,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    void updateAttachmentMetaWithIllegalParams(RepetitionInfo repeatInfo) throws StorageClientException, StorageServerException {
+    void updateAttachmentMetaWithIllegalParams(RepetitionInfo repeatInfo) throws StorageClientException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
@@ -960,7 +953,7 @@ class StorageTest {
     }
 
     @Test
-    void deleteAttachmentTestWithIllegalParams() throws StorageClientException, StorageServerException {
+    void deleteAttachmentTestWithIllegalParams() throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
