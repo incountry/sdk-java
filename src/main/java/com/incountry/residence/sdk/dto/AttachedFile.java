@@ -23,8 +23,8 @@ public class AttachedFile {
     @Override
     public String toString() {
         return "AttachedFile{" +
-                "fileContent=" + fileContent +
-                ", fileName=" + fileName +
+                "fileName=" + fileName +
+                ", hash=" + hashCode() +
                 '}';
     }
 }

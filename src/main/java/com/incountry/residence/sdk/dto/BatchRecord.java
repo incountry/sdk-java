@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.dto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BatchRecord {
     private final int count;
@@ -61,15 +62,6 @@ public class BatchRecord {
         if (records == null || records.isEmpty()) {
             return "[]";
         }
-        StringBuilder result = new StringBuilder("[");
-        records.forEach(one -> {
-            if (result.length() > 1) {
-                result.append(", ");
-            }
-            result.append("SECURE[")
-                    .append(one.hashCode())
-                    .append("]");
-        });
-        return result.append("]").toString();
+        return "[" + records.stream().map(Record::toString).collect(Collectors.joining(",")) + "]";
     }
 }
