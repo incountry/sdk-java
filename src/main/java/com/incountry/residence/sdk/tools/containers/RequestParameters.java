@@ -46,15 +46,4 @@ public class RequestParameters {
     public String getFileName() {
         return fileName;
     }
-
-    @Override
-    public String toString() {
-        return "HttpParameters{" +
-                "method=" + method +
-                ", codeMap=" + codeMap +
-                ", contentType=" + contentType +
-                ", dataStream=" + dataStream +
-                ", fileName=" + fileName +
-                '}';
-    }
 }
