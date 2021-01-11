@@ -16,12 +16,12 @@ public class ProxyUtils {
     private ProxyUtils() {
     }
 
-    public static <T, R> R createLoggingProxyForPublicMethods(T object) {
+    public static <T, R> R createLoggingProxyForPublicMethods(T object, boolean logParameters) {
         Logger log = LogManager.getLogger(object.getClass());
         InvocationHandler handler = (proxy, method, args) -> {
             long currentTime = 0;
             if (log.isDebugEnabled()) {
-                currentTime = logBeforeInvoking(log, method, args);
+                currentTime = logBeforeInvoking(log, method, args, logParameters);
             }
             Object result = null;
             try {
@@ -32,7 +32,7 @@ public class ProxyUtils {
                 if (log.isDebugEnabled()) {
                     currentTime = System.currentTimeMillis() - currentTime;
                     log.debug("{} finish, latency in ms={}", method.getName(), currentTime);
-                    if (log.isTraceEnabled()) {
+                    if (logParameters && log.isTraceEnabled()) {
                         log.trace("{} result={}", method.getName(), toString(result));
                     }
                 }
@@ -43,10 +43,10 @@ public class ProxyUtils {
                 object.getClass().getInterfaces(), handler);
     }
 
-    private static long logBeforeInvoking(Logger log, Method method, Object[] args) {
+    private static long logBeforeInvoking(Logger log, Method method, Object[] args, boolean logParameters) {
         long result = System.currentTimeMillis();
         log.debug("{} start", method.getName());
-        if (log.isTraceEnabled()) {
+        if (logParameters && log.isTraceEnabled()) {
             StringBuilder builder = new StringBuilder(method.getName() + " params:");
             if (args == null) {
                 builder.append("null");

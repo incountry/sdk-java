@@ -56,7 +56,7 @@ public class OAuthTest {
         accessor = () -> secretsData;
     }
 
-    private Storage initStorage() throws StorageServerException, StorageClientException {
+    private Storage initStorage() throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
@@ -86,7 +86,8 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
-        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HttpClients.createDefault()));
+        TokenClient client = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HttpClients.createDefault());
+        TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(client, true);
         assertNotNull(tokenClient.getToken(END_POINT, null));
         assertNotNull(tokenClient.getToken(END_POINT, null));
         assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
@@ -94,7 +95,7 @@ public class OAuthTest {
     }
 
     @Test
-    public void authRegionTest() throws StorageServerException, StorageClientException {
+    public void authRegionTest() throws StorageClientException {
         Map<String, String> authEndpoints = new HashMap<>();
         authEndpoints.put("emea", "https://emea.localhost");
         authEndpoints.put("apac", "https://apac.localhost");

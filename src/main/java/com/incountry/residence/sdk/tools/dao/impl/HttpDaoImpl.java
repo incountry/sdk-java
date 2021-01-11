@@ -74,9 +74,9 @@ public class HttpDaoImpl implements Dao {
         this(endPoint, endpointMask, countriesEndpoint,
                 ProxyUtils.createLoggingProxyForPublicMethods(
                         new HttpAgentImpl(
-                                ProxyUtils.createLoggingProxyForPublicMethods(tokenClient),
+                                ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true),
                                 environmentId,
-                                httpClient)));
+                                httpClient), false));
     }
 
     public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) {
@@ -260,13 +260,13 @@ public class HttpDaoImpl implements Dao {
     }
 
     private String getRecordUrl(String endPoint, String country, String keyHash) {
-        return new StringBuilder(endPoint)
-                .append(URI_DELIMITER)
-                .append(STORAGE_URL)
-                .append(URI_DELIMITER)
-                .append(country)
-                .append(URI_DELIMITER)
-                .append(keyHash).toString();
+        return endPoint +
+                URI_DELIMITER +
+                STORAGE_URL +
+                URI_DELIMITER +
+                country +
+                URI_DELIMITER +
+                keyHash;
     }
 
     private String getRecordActionUrl(String endpoint, String country, String... other) {

@@ -164,7 +164,7 @@ public class StorageImpl implements Storage {
         instance.encrypted = config.getSecretKeyAccessor() != null;
         instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys(), config.isHashSearchKeys());
         instance.hashSearchKeys = config.isHashSearchKeys();
-        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
 
     private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
@@ -209,7 +209,7 @@ public class StorageImpl implements Storage {
                         config.getClientSecret(),
                         httpClient
                 );
-                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
+                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
                 tokenClient = new ApiKeyTokenClient(config.getApiKey());
