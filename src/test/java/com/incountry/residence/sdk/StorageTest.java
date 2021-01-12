@@ -966,4 +966,11 @@ class StorageTest {
         ex = assertThrows(StorageClientException.class, () -> storage.deleteAttachment("us", recordKey, ""));
         assertEquals("File ID can't be null", ex.getMessage());
     }
+
+    @Test
+    void nullConfigNegativeTest() {
+        StorageClientException ex = assertThrows(StorageClientException.class, () ->
+                StorageImpl.getInstance((StorageConfig) null));
+        assertEquals("Storage configuration is null", ex.getMessage());
+    }
 }
