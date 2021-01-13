@@ -145,8 +145,19 @@ class FindFilterBuilderIsolatedTest {
                 .keyEq(StringField.KEY8, "13m", "14n")
                 .keyEq(StringField.KEY9, "15o", "16p")
                 .keyEq(StringField.KEY10, "17q", "18r")
-                .keyEq(StringField.SERVICE_KEY1, "19s", "20t")
-                .keyEq(StringField.SERVICE_KEY2, "21u", "22v")
+                .keyEq(StringField.KEY11, "19", "20")
+                .keyEq(StringField.KEY12, "21", "22")
+                .keyEq(StringField.KEY13, "23", "24")
+                .keyEq(StringField.KEY14, "25", "26")
+                .keyEq(StringField.KEY15, "27", "28")
+                .keyEq(StringField.KEY16, "29", "30")
+                .keyEq(StringField.KEY17, "31", "32")
+                .keyEq(StringField.KEY18, "33", "34")
+                .keyEq(StringField.KEY19, "35", "36")
+                .keyEq(StringField.KEY20, "37", "38")
+                .keyEq(StringField.SERVICE_KEY1, "39", "40")
+                .keyEq(StringField.SERVICE_KEY2, "41", "42")
+                .keyEq(StringField.PARENT_KEY, "43", "44")
                 .keyEq(NumberField.RANGE_KEY1, 23L, 24L)
                 .keyEq(NumberField.RANGE_KEY2, 25L, 26L)
                 .keyEq(NumberField.RANGE_KEY3, 27L, 28L)
@@ -175,9 +186,19 @@ class FindFilterBuilderIsolatedTest {
         assertTrue(jsonFilter.contains("\"key8\":["));
         assertTrue(jsonFilter.contains("\"key9\":["));
         assertTrue(jsonFilter.contains("\"key10\":["));
+        assertTrue(jsonFilter.contains("\"key11\":["));
+        assertTrue(jsonFilter.contains("\"key12\":["));
+        assertTrue(jsonFilter.contains("\"key13\":["));
+        assertTrue(jsonFilter.contains("\"key14\":["));
+        assertTrue(jsonFilter.contains("\"key15\":["));
+        assertTrue(jsonFilter.contains("\"key16\":["));
+        assertTrue(jsonFilter.contains("\"key17\":["));
+        assertTrue(jsonFilter.contains("\"key18\":["));
+        assertTrue(jsonFilter.contains("\"key19\":["));
+        assertTrue(jsonFilter.contains("\"key20\":["));
+        assertTrue(jsonFilter.contains("\"parent_key\":["));
         assertTrue(jsonFilter.contains("\"service_key1\":["));
         assertTrue(jsonFilter.contains("\"service_key2\":["));
-
         assertTrue(jsonFilter.contains("range_key1\":[23,24]"));
         assertTrue(jsonFilter.contains("range_key2\":[25,26]"));
         assertTrue(jsonFilter.contains("range_key3\":[27,28]"));
@@ -215,7 +236,20 @@ class FindFilterBuilderIsolatedTest {
         assertEquals("FilterStringParam{value=[13m, 14n], notCondition=false}", filterMap.get(StringField.KEY8).toString());
         assertEquals("FilterStringParam{value=[15o, 16p], notCondition=false}", filterMap.get(StringField.KEY9).toString());
         assertEquals("FilterStringParam{value=[17q, 18r], notCondition=false}", filterMap.get(StringField.KEY10).toString());
-        assertEquals("FilterStringParam{value=[19s, 20t], notCondition=false}", filterMap.get(StringField.SERVICE_KEY1).toString());
-        assertEquals("FilterStringParam{value=[21u, 22v], notCondition=false}", filterMap.get(StringField.SERVICE_KEY2).toString());
+
+        assertEquals("FilterStringParam{value=[19, 20], notCondition=false}", filterMap.get(StringField.KEY11).toString());
+        assertEquals("FilterStringParam{value=[21, 22], notCondition=false}", filterMap.get(StringField.KEY12).toString());
+        assertEquals("FilterStringParam{value=[23, 24], notCondition=false}", filterMap.get(StringField.KEY13).toString());
+        assertEquals("FilterStringParam{value=[25, 26], notCondition=false}", filterMap.get(StringField.KEY14).toString());
+        assertEquals("FilterStringParam{value=[27, 28], notCondition=false}", filterMap.get(StringField.KEY15).toString());
+        assertEquals("FilterStringParam{value=[29, 30], notCondition=false}", filterMap.get(StringField.KEY16).toString());
+        assertEquals("FilterStringParam{value=[31, 32], notCondition=false}", filterMap.get(StringField.KEY17).toString());
+        assertEquals("FilterStringParam{value=[33, 34], notCondition=false}", filterMap.get(StringField.KEY18).toString());
+        assertEquals("FilterStringParam{value=[35, 36], notCondition=false}", filterMap.get(StringField.KEY19).toString());
+        assertEquals("FilterStringParam{value=[37, 38], notCondition=false}", filterMap.get(StringField.KEY20).toString());
+
+        assertEquals("FilterStringParam{value=[39, 40], notCondition=false}", filterMap.get(StringField.SERVICE_KEY1).toString());
+        assertEquals("FilterStringParam{value=[41, 42], notCondition=false}", filterMap.get(StringField.SERVICE_KEY2).toString());
+        assertEquals("FilterStringParam{value=[43, 44], notCondition=false}", filterMap.get(StringField.PARENT_KEY).toString());
     }
 }

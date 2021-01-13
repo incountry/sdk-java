@@ -26,29 +26,29 @@ public class FindFilterBuilder {
     public static final String OPER_LTE = "$lte";
 
     private FindFilter filter;
-    private static final List<StringField> searchableKeys = new ArrayList<>();
+    private static final List<StringField> SEARCHABLE_KEYS = new ArrayList<>();
 
     static {
-        searchableKeys.add(StringField.KEY1);
-        searchableKeys.add(StringField.KEY2);
-        searchableKeys.add(StringField.KEY3);
-        searchableKeys.add(StringField.KEY4);
-        searchableKeys.add(StringField.KEY5);
-        searchableKeys.add(StringField.KEY6);
-        searchableKeys.add(StringField.KEY7);
-        searchableKeys.add(StringField.KEY8);
-        searchableKeys.add(StringField.KEY9);
-        searchableKeys.add(StringField.KEY10);
-        searchableKeys.add(StringField.KEY11);
-        searchableKeys.add(StringField.KEY12);
-        searchableKeys.add(StringField.KEY13);
-        searchableKeys.add(StringField.KEY14);
-        searchableKeys.add(StringField.KEY15);
-        searchableKeys.add(StringField.KEY16);
-        searchableKeys.add(StringField.KEY17);
-        searchableKeys.add(StringField.KEY18);
-        searchableKeys.add(StringField.KEY19);
-        searchableKeys.add(StringField.KEY20);
+        SEARCHABLE_KEYS.add(StringField.KEY1);
+        SEARCHABLE_KEYS.add(StringField.KEY2);
+        SEARCHABLE_KEYS.add(StringField.KEY3);
+        SEARCHABLE_KEYS.add(StringField.KEY4);
+        SEARCHABLE_KEYS.add(StringField.KEY5);
+        SEARCHABLE_KEYS.add(StringField.KEY6);
+        SEARCHABLE_KEYS.add(StringField.KEY7);
+        SEARCHABLE_KEYS.add(StringField.KEY8);
+        SEARCHABLE_KEYS.add(StringField.KEY9);
+        SEARCHABLE_KEYS.add(StringField.KEY10);
+        SEARCHABLE_KEYS.add(StringField.KEY11);
+        SEARCHABLE_KEYS.add(StringField.KEY12);
+        SEARCHABLE_KEYS.add(StringField.KEY13);
+        SEARCHABLE_KEYS.add(StringField.KEY14);
+        SEARCHABLE_KEYS.add(StringField.KEY15);
+        SEARCHABLE_KEYS.add(StringField.KEY16);
+        SEARCHABLE_KEYS.add(StringField.KEY17);
+        SEARCHABLE_KEYS.add(StringField.KEY18);
+        SEARCHABLE_KEYS.add(StringField.KEY19);
+        SEARCHABLE_KEYS.add(StringField.KEY20);
     }
 
     public static FindFilterBuilder create() {
@@ -129,7 +129,7 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder searchKeysLike(String value) throws StorageClientException {
         Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
-        for (StringField key : searchableKeys) {
+        for (StringField key : SEARCHABLE_KEYS) {
             if (searchKeys.contains(key)) {
                 LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
                 throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
@@ -139,7 +139,7 @@ public class FindFilterBuilder {
             LOG.error(MSG_ERR_SEARCH_KEYS_LEN);
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
         }
-        filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[] {value}));
+        filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[]{value}));
         return this;
     }
 
@@ -159,7 +159,7 @@ public class FindFilterBuilder {
             LOG.error(MSG_ERR_SEARCH_KEYS_ADD);
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_ADD);
         }
-        if (searchableKeys.contains(field)
+        if (SEARCHABLE_KEYS.contains(field)
                 && filter.getStringFilterMap().containsKey(StringField.SEARCH_KEYS)) {
             LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
             throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
