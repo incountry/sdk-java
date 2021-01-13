@@ -5,8 +5,8 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import java.util.List;
 
 public class MigrateResult {
-    private int migrated;
-    private int totalLeft;
+    private final int migrated;
+    private final int totalLeft;
     private final List<RecordException> errors;
 
     public MigrateResult(int migrated, int totalLeft, List<RecordException> errors) {

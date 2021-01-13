@@ -75,11 +75,11 @@ public class AttachmentMeta {
         return "AttachmentMeta{" +
                 "createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
-                ", downloadLink=" + downloadLink.hashCode() +
-                ", fileId=" + fileId.hashCode() +
-                ", filename=" + filename.hashCode() +
-                ", hash=" + hash.hashCode() +
-                ", mimeType=" + mimeType.hashCode() +
+                ", downloadLink=" + downloadLink +
+                ", fileId=" + fileId +
+                ", filename=" + filename +
+                ", hash=" + hash +
+                ", mimeType=" + mimeType +
                 ", size=" + size +
                 '}';
     }

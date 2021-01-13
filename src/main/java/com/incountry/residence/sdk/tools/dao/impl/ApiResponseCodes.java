@@ -66,7 +66,6 @@ public class ApiResponseCodes {
         ADD_ATTACHMENT = Collections.unmodifiableMap(map);
 
         map = new HashMap<>();
-        map.put(200, new ApiResponseCodes(false, false));
         map.put(204, new ApiResponseCodes(false, false));
         map.put(400, new ApiResponseCodes(true, false));
         map.put(401, new ApiResponseCodes(true, false, true));
