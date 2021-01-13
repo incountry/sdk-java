@@ -284,6 +284,17 @@ public class StorageImpl implements Storage {
             checkKey(record.getKey8());
             checkKey(record.getKey9());
             checkKey(record.getKey10());
+            checkKey(record.getKey11());
+            checkKey(record.getKey12());
+            checkKey(record.getKey13());
+            checkKey(record.getKey14());
+            checkKey(record.getKey15());
+            checkKey(record.getKey16());
+            checkKey(record.getKey17());
+            checkKey(record.getKey18());
+            checkKey(record.getKey19());
+            checkKey(record.getKey20());
+
         }
     }
 

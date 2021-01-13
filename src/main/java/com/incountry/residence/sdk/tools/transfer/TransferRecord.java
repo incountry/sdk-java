@@ -31,6 +31,7 @@ public class TransferRecord extends Record {
 
     public TransferRecord(Record record, CryptoManager cryptoManager, String bodyJsonString) throws StorageClientException, StorageCryptoException {
         super(cryptoManager.createKeyHash(record.getRecordKey()));
+        setParentKey(cryptoManager.createKeyHash(record.getParentKey()));
         setKey1(cryptoManager.createSearchKeyHash(record.getKey1()));
         setKey2(cryptoManager.createSearchKeyHash(record.getKey2()));
         setKey3(cryptoManager.createSearchKeyHash(record.getKey3()));
@@ -41,6 +42,16 @@ public class TransferRecord extends Record {
         setKey8(cryptoManager.createSearchKeyHash(record.getKey8()));
         setKey9(cryptoManager.createSearchKeyHash(record.getKey9()));
         setKey10(cryptoManager.createSearchKeyHash(record.getKey10()));
+        setKey11(cryptoManager.createSearchKeyHash(record.getKey11()));
+        setKey12(cryptoManager.createSearchKeyHash(record.getKey12()));
+        setKey13(cryptoManager.createSearchKeyHash(record.getKey13()));
+        setKey14(cryptoManager.createSearchKeyHash(record.getKey14()));
+        setKey15(cryptoManager.createSearchKeyHash(record.getKey15()));
+        setKey16(cryptoManager.createSearchKeyHash(record.getKey16()));
+        setKey17(cryptoManager.createSearchKeyHash(record.getKey17()));
+        setKey18(cryptoManager.createSearchKeyHash(record.getKey18()));
+        setKey19(cryptoManager.createSearchKeyHash(record.getKey19()));
+        setKey20(cryptoManager.createSearchKeyHash(record.getKey20()));
         setProfileKey(cryptoManager.createKeyHash(record.getProfileKey()));
         setServiceKey1(cryptoManager.createKeyHash(record.getServiceKey1()));
         setServiceKey2(cryptoManager.createKeyHash(record.getServiceKey2()));
@@ -111,6 +122,7 @@ public class TransferRecord extends Record {
             recordKey = recordFromMeta.key;
         }
         setRecordKey(recordKey);
+        setParentKey(recordFromMeta.getParentKey());
         setKey1(recordFromMeta.getKey1());
         setKey2(recordFromMeta.getKey2());
         setKey3(recordFromMeta.getKey3());
@@ -121,6 +133,16 @@ public class TransferRecord extends Record {
         setKey8(recordFromMeta.getKey8());
         setKey9(recordFromMeta.getKey9());
         setKey10(recordFromMeta.getKey10());
+        setKey11(recordFromMeta.getKey11());
+        setKey12(recordFromMeta.getKey12());
+        setKey13(recordFromMeta.getKey13());
+        setKey14(recordFromMeta.getKey14());
+        setKey15(recordFromMeta.getKey15());
+        setKey16(recordFromMeta.getKey16());
+        setKey17(recordFromMeta.getKey17());
+        setKey18(recordFromMeta.getKey18());
+        setKey19(recordFromMeta.getKey19());
+        setKey20(recordFromMeta.getKey20());
         setProfileKey(recordFromMeta.getProfileKey());
         setServiceKey1(recordFromMeta.getServiceKey1());
         setServiceKey2(recordFromMeta.getServiceKey2());
