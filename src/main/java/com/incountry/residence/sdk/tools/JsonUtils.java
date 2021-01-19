@@ -13,6 +13,7 @@ import com.incountry.residence.sdk.dto.search.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.SortingParam;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
@@ -52,6 +53,9 @@ public class JsonUtils {
     private static final String P_VERSION = "version";
     private static final String P_LIMIT = "limit";
     private static final String P_OFFSET = "offset";
+    private static final String P_SORTING = "sort";
+    private static final String ASC = "asc";
+    private static final String DESC = "desc";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
     private static final String P_FILE_NAME = "filename";
@@ -241,17 +245,26 @@ public class JsonUtils {
         return object;
     }
 
-    private static JsonObject findOptionstoJson(FindFilter filter) {
+    private static JsonObject findOptionsToJson(FindFilter filter) {
         int limit = FindFilter.MAX_LIMIT;
         int offset = FindFilter.DEFAULT_OFFSET;
+        JsonObject optionsObject = new JsonObject();
         if (filter != null) {
             limit = filter.getLimit();
             offset = filter.getOffset();
+            if (!filter.getSortingList().isEmpty()) {
+                JsonArray sortArray = new JsonArray();
+                for (SortingParam param : filter.getSortingList()) {
+                    JsonObject jsonParam = new JsonObject();
+                    jsonParam.addProperty(param.getField().toString().toLowerCase(), param.isDesc() ? DESC : ASC);
+                    sortArray.add(jsonParam);
+                }
+                optionsObject.add(P_SORTING, sortArray);
+            }
         }
-        JsonObject object = new JsonObject();
-        object.addProperty(P_LIMIT, limit);
-        object.addProperty(P_OFFSET, offset);
-        return object;
+        optionsObject.addProperty(P_LIMIT, limit);
+        optionsObject.addProperty(P_OFFSET, offset);
+        return optionsObject;
     }
 
     private static List<String> hashValue(FilterStringParam param, String paramName, CryptoManager cryptoManager) {
@@ -303,7 +316,7 @@ public class JsonUtils {
     public static String toJsonString(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject object = new JsonObject();
         object.add(P_FILTER, JsonUtils.toJson(filter, cryptoManager));
-        object.add(P_OPTIONS, JsonUtils.findOptionstoJson(filter));
+        object.add(P_OPTIONS, JsonUtils.findOptionsToJson(filter));
         return object.toString();
     }
 

@@ -4,7 +4,9 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ public class FindFilter {
 
     private final EnumMap<StringField, FilterStringParam> stringFilterMap = new EnumMap<>(StringField.class);
     private final EnumMap<NumberField, FilterNumberParam> numberFilterMap = new EnumMap<>(NumberField.class);
+    private final List<SortingParam> sortingList = new ArrayList<>();
 
     private int limit = MAX_LIMIT;
     private int offset = DEFAULT_OFFSET;
@@ -58,6 +61,10 @@ public class FindFilter {
         stringFilterMap.put(field, param);
     }
 
+    public void addSorting(SortingParam param) {
+        sortingList.add(param);
+    }
+
     public void setNumberFilter(NumberField field, FilterNumberParam param) {
         numberFilterMap.put(field, param);
     }
@@ -70,12 +77,17 @@ public class FindFilter {
         return numberFilterMap;
     }
 
+    public List<SortingParam> getSortingList() {
+        return sortingList;
+    }
+
     public FindFilter copy() throws StorageClientException {
         FindFilter clone = new FindFilter();
         clone.stringFilterMap.putAll(this.stringFilterMap);
         clone.numberFilterMap.putAll(this.numberFilterMap);
         clone.setOffset(this.getOffset());
         clone.setLimit(this.getLimit());
+        clone.sortingList.addAll(this.sortingList);
         return clone;
     }
 
@@ -86,6 +98,7 @@ public class FindFilter {
                 ", numberFilterMap=" + numberFilterMap +
                 ", limit=" + limit +
                 ", offset=" + offset +
+                ", sorting=" + sortingList +
                 '}';
     }
 }

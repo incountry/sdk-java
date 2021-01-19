@@ -7,6 +7,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.SortingField;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -388,14 +389,18 @@ public class StorageIntegrationTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
-        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
+
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.RANGE_KEY1, false));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
-        List<String> resultIdList = new ArrayList<>();
-        resultIdList.add(batchRecord.getRecords().get(0).getRecordKey());
-        resultIdList.add(batchRecord.getRecords().get(1).getRecordKey());
-        assertTrue(resultIdList.contains(recordKey));
-        assertTrue(resultIdList.contains(batchRecordKey));
+        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
+        assertEquals(batchRecordKey, batchRecord.getRecords().get(1).getRecordKey());
+
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.RANGE_KEY1, true));
+        assertEquals(2, batchRecord.getCount());
+        assertEquals(2, batchRecord.getRecords().size());
+        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
+        assertEquals(recordKey, batchRecord.getRecords().get(1).getRecordKey());
     }
 
     @ParameterizedTest

@@ -18,6 +18,7 @@ public class FindFilterBuilder {
     private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup";
     private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS should contain at least 3 characters and be not longer than 200";
     private static final String MSG_ERR_SEARCH_KEYS_ADD = "SEARCH_KEYS can be used only via searchKeysLike method";
+    private static final String MSG_ERR_NULL_SORT_FIELD = "Sorting field is null";
 
     public static final String OPER_NOT = "$not";
     public static final String OPER_GT = "$gt";
@@ -140,6 +141,15 @@ public class FindFilterBuilder {
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
         }
         filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[]{value}));
+        return this;
+    }
+
+    public FindFilterBuilder addSorting(SortingField field, boolean desc) throws StorageClientException {
+        if (field == null) {
+            LOG.error(MSG_ERR_NULL_SORT_FIELD);
+            throw new StorageClientException(MSG_ERR_NULL_SORT_FIELD);
+        }
+        filter.addSorting(new SortingParam(field, desc));
         return this;
     }
 
