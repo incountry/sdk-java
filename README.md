@@ -61,46 +61,48 @@ StorageConfig provides the following parameters:
  * container with Storage configuration, using pattern 'builder'
  */
 public class StorageConfig {
-    //...
-    /** Required to be passed in, or as environment variable INC_API_KEY */
-    private String envId;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
-    private String clientId;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
-    private String clientSecret;
-    /** Required when using API key authorization, or as environment variable */
-    private String apiKey;
-    /** Optional. Defines custom API URL. Can also be set up using environment variable INC_ENDPOINT */
-    private String endPoint;
-    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
-    private SecretKeyAccessor secretKeyAccessor;
-    /** Optional. List of custom encryption configurations */
-    private List<Crypto> customEncryptionConfigsList;
-    /** Optional. If true - all keys will be stored as lower cased. default is false */
-    private boolean normalizeKeys;
-    /** Optional. Parameter endpointMask is used for switching from `default` InCountry host
-     *  family (-mt-01.api.incountry.io) to a different one.  */
-    private String endpointMask;
-    /** Optional. Set custom endpoint for loading countries list */
-    private String countriesEndpoint;
-    /** Optional. Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
-     * Default value is 30 seconds. */
-    private Integer httpTimeout;
-    /** Set custom endpoints regional map to use for fetching oAuth tokens
-     * Can be used only with {@link #defaultAuthEndpoint}
-     * Format: key = region, value = authorization server URL for region */
-    private Map<String, String> authEndpoints;
-    /** Set custom oAuth authorization server URL, will be used as default one.
-     * Can't be null when {@link #authEndpoints} is used */
-    private String defaultAuthEndpoint;
-    /** Optional. Set HTTP connections pool size. Expected value - null or positive integer. Defaults to 20. */
-    private Integer maxHttpPoolSize;
-    /** Optional. Set maximum count of HTTP connections per route. Expected value - null or positive integer.
-     * Default value == {@link #maxHttpPoolSize}. */
-    private Integer maxHttpConnectionsPerRoute;
-    /** Optional. If false - key1-key10 will be not hashed. Default is true */
-    private boolean hashSearchKeys = true;
-    //...
+   //...
+   /** Required to be passed in, or as environment variable INC_API_KEY */
+   private String envId;
+   /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
+   private String clientId;
+   /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
+   private String clientSecret;
+   /** Required when using API key authorization, or as environment variable */
+   private String apiKey;
+   /** Optional. Defines custom API URL, can also be set via INC_ENDPOINT */
+   private String endPoint;
+   /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
+   private SecretKeyAccessor secretKeyAccessor;
+   /** Optional. List of custom encryption configurations */
+   private List<Crypto> customEncryptionConfigsList;
+   /** Optional. If true - all keys will be stored as lower cased. default is false */
+   private boolean normalizeKeys;
+   /** Optional. Parameter endpointMask is used for switching from `default` InCountry host
+    *  family (-mt-01.api.incountry.io) to a different one.  */
+   private String endpointMask;
+   /** Optional. Set custom endpoint for loading countries list */
+   private String countriesEndpoint;
+   /** Optional. Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+    * Default value is 30 seconds. */
+   private Integer httpTimeout;
+   /** Set custom endpoints regional map to use for fetching oAuth tokens
+    * Can be used only with {@link #defaultAuthEndpoint}
+    * Format: key = region, value = authorization server URL for region */
+   private Map<String, String> authEndpoints;
+   /** Set custom oAuth authorization server URL, will be used as default one.
+    * Can't be null when {@link #authEndpoints} is used */
+   private String defaultAuthEndpoint;
+   /** Optional. Set HTTP connections pool size. Expected value - null or positive integer.
+    * Defaults to 20. */
+   private Integer maxHttpPoolSize;
+   /** Optional. Set maximum count of HTTP connections per route. 
+    * Expected value - null or positive integer.
+    * Default value == {@link #maxHttpPoolSize}. */
+   private Integer maxHttpConnectionsPerRoute;
+   /** Optional. If false - key1-key10 will be not hashed. Default is true */
+   private boolean hashSearchKeys = true;
+   //...
 ```
 
 ---
@@ -165,7 +167,8 @@ Storage storage = StorageImpl.getInstance(config);
 SDK provides `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 ```java
 /**
- * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.
+ * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked 
+ * on each encryption/decryption.
  */
 public interface SecretKeyAccessor {
 
@@ -819,18 +822,18 @@ Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a lis
 
 ```java
 public class StorageConfig {
-    //...
-    /**
-     * for custom encryption
-     *
-     * @param customEncryptionConfigsList List with custom encryption functions
-     * @return StorageConfig
-     */
-    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
-        this.customEncryptionConfigsList = customEncryptionConfigsList;
-        return this;
-    }
-    //...
+  //...
+  /**
+   * for custom encryption
+   *
+   * @param customEncryptionConfigsList List with custom encryption functions
+   * @return StorageConfig
+   */
+  public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
+      this.customEncryptionConfigsList = customEncryptionConfigsList;
+      return this;
+  }
+  //...
 }
 ```
 
@@ -905,9 +908,9 @@ You can set `isForCustomEncryption` using `SecretsData` JSON format as well:
 ```javascript
 secrets_data = {
   "secrets": [{
-       "secret": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwQUI=", //base64-encoded key (32 byte key)
-       "version": 1,
-       "isForCustomEncryption": true,
+     "secret": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwQUI=", //base64-encoded key (32 byte key)
+     "version": 1,
+     "isForCustomEncryption": true,
     }
   }],
   "currentVersion": 1,
