@@ -105,8 +105,8 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             }
             return new ApiResponse(actualResponseContent, metaInfo);
         } catch (IOException ex) {
-            LOG.error(ex);
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
+            LOG.error(errorMessage, ex);
             throw new StorageServerException(errorMessage, ex);
         } finally {
             if (response != null) {
