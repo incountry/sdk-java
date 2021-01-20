@@ -86,7 +86,7 @@ public class StorageIntegrationTest {
             "-" +
             UUID.randomUUID().toString().replace("-", "");
 
-    private static final Random random = new Random(System.currentTimeMillis());
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
     private Storage storageIgnoreCase;
     private Storage storageWithApiKey;
     private Storage storageWithoutEncryption;
@@ -258,7 +258,7 @@ public class StorageIntegrationTest {
                 .setRangeKey1(BATCH_WRITE_RANGE_KEY_1)
                 .setKey2(key2)
                 .setKey3(KEY_3)
-                .setRangeKey10(random.nextLong());
+                .setRangeKey10(RANDOM.nextLong());
 
         records.add(record);
         storage.batchWrite(MIDIPOP_COUNTRY, records);
@@ -272,7 +272,7 @@ public class StorageIntegrationTest {
                 .setBody(RECORD_BODY).setProfileKey(PROFILE_KEY).setRangeKey1(WRITE_RANGE_KEY_1)
                 .setRangeKey2(RANGE_KEY_2).setRangeKey3(RANGE_KEY_3).setRangeKey4(RANGE_KEY_4)
                 .setRangeKey5(RANGE_KEY_5).setRangeKey6(RANGE_KEY_6).setRangeKey7(RANGE_KEY_7)
-                .setRangeKey8(RANGE_KEY_8).setRangeKey9(RANGE_KEY_9).setRangeKey10(random.nextLong())
+                .setRangeKey8(RANGE_KEY_8).setRangeKey9(RANGE_KEY_9).setRangeKey10(RANDOM.nextLong())
                 .setKey1(KEY_1).setKey2(key2).setKey3(KEY_3)
                 .setKey4(KEY_4).setKey5(KEY_5).setKey6(KEY_6)
                 .setKey7(KEY_7).setKey8(KEY_8).setKey9(KEY_9)
@@ -738,7 +738,7 @@ public class StorageIntegrationTest {
                 .setRangeKey7(RANGE_KEY_7)
                 .setRangeKey8(RANGE_KEY_8)
                 .setRangeKey9(RANGE_KEY_9)
-                .setRangeKey10(random.nextLong())
+                .setRangeKey10(RANDOM.nextLong())
                 .setKey1(KEY_1)
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
