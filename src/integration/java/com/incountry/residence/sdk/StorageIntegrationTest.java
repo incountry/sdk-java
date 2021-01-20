@@ -696,7 +696,7 @@ public class StorageIntegrationTest {
     }
 
     @Test
-    @Order(813)
+    @Order(899)
     public void deleteRecordWithAttachment() throws StorageException {
         assertTrue(storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY));
     }
