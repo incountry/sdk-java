@@ -229,7 +229,7 @@ public class StorageIntegrationTest {
         return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "batchWriteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(100)
     public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {

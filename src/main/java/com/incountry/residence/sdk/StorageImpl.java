@@ -191,6 +191,7 @@ public class StorageImpl implements Storage {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(poolSize);
         connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
+        connectionManager.setValidateAfterInactivity(100);
         builder.setConnectionManager(connectionManager);
 
         return builder.build();
