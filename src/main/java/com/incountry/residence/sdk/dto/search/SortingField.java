@@ -30,5 +30,7 @@ public enum SortingField {
     RANGE_KEY7,
     RANGE_KEY8,
     RANGE_KEY9,
-    RANGE_KEY10
+    RANGE_KEY10,
+    CREATED_AT,
+    UPDATED_AT
 }

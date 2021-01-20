@@ -288,6 +288,8 @@ class FindFilterBuilderIsolatedTest {
                 .addSorting(SortingField.RANGE_KEY8, false)
                 .addSorting(SortingField.RANGE_KEY9, false)
                 .addSorting(SortingField.RANGE_KEY10, false)
+                .addSorting(SortingField.CREATED_AT, false)
+                .addSorting(SortingField.UPDATED_AT, false)
                 .build();
         String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
         assertEquals("{\"filter\":{\"key1\":[\"b99fc3a4b5365f543fbb39af2fddead40edcb3e72368df475c8c1385549968b1\"]}," +
@@ -297,8 +299,8 @@ class FindFilterBuilderIsolatedTest {
                         "{\"key11\":\"desc\"},{\"key12\":\"desc\"},{\"key13\":\"desc\"},{\"key14\":\"desc\"},{\"key15\":\"desc\"}," +
                         "{\"key16\":\"desc\"},{\"key17\":\"desc\"},{\"key18\":\"desc\"},{\"key19\":\"desc\"},{\"key20\":\"desc\"}," +
                         "{\"range_key1\":\"asc\"},{\"range_key2\":\"asc\"},{\"range_key3\":\"asc\"},{\"range_key4\":\"asc\"},{\"range_key5\":\"asc\"}," +
-                        "{\"range_key6\":\"asc\"},{\"range_key7\":\"asc\"},{\"range_key8\":\"asc\"},{\"range_key9\":\"asc\"},{\"range_key10\":\"asc\"}]," +
-                        "\"limit\":100,\"offset\":0}}",
+                        "{\"range_key6\":\"asc\"},{\"range_key7\":\"asc\"},{\"range_key8\":\"asc\"},{\"range_key9\":\"asc\"},{\"range_key10\":\"asc\"}," +
+                        "{\"created_at\":\"asc\"},{\"updated_at\":\"asc\"}],\"limit\":100,\"offset\":0}}",
                 jsonFilter);
     }
 

@@ -407,6 +407,20 @@ public class StorageIntegrationTest {
         record1Value = batchRecord.getRecords().get(0).getRangeKey10();
         record2Value = batchRecord.getRecords().get(1).getRangeKey10();
         assertTrue(record1Value >= record2Value);
+
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.CREATED_AT, false));
+        assertEquals(2, batchRecord.getCount());
+        assertEquals(2, batchRecord.getRecords().size());
+        Date record1date = batchRecord.getRecords().get(0).getCreatedAt();
+        Date record2date = batchRecord.getRecords().get(1).getCreatedAt();
+        assertTrue(record1date.before(record2date) || record1date.equals(record2date));
+
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.CREATED_AT, true));
+        assertEquals(2, batchRecord.getCount());
+        assertEquals(2, batchRecord.getRecords().size());
+        record1date = batchRecord.getRecords().get(0).getCreatedAt();
+        record2date = batchRecord.getRecords().get(1).getCreatedAt();
+        assertTrue(record1date.after(record2date) || record1date.equals(record2date));
     }
 
     @ParameterizedTest
