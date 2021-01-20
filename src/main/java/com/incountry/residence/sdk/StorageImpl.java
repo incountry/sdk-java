@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Basic implementation
@@ -181,7 +182,8 @@ public class StorageImpl implements Storage {
                 .setConnectTimeout(httpTimeout)
                 .setSocketTimeout(httpTimeout)
                 .build();
-        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
+        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig)
+                .setConnectionTimeToLive(httpTimeout, TimeUnit.MILLISECONDS);
         if (poolSize == null) {
             poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
         }
