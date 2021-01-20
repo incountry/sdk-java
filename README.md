@@ -70,7 +70,7 @@ public class StorageConfig {
    private String clientSecret;
    /** Required when using API key authorization, or as environment variable */
    private String apiKey;
-   /** Optional. Defines custom API URL. Can also be set up using environment variable INC_ENDPOINT */
+   /** Optional. Defines custom API URL, can also be set via INC_ENDPOINT */
    private String endPoint;
    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
    private SecretKeyAccessor secretKeyAccessor;
