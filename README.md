@@ -27,15 +27,15 @@ For a full list of supported countries and their codes please [follow this link]
 
 
 ## Quickstart guide
-To access your data in InCountry Platform by using Java SDK, you need to create an instance of the Storage class using the getInstance method and pass StorageConfig object to it. You can retrieve the `CLIENT_ID`, `CLIENT_SECRET` and `ENV_ID` variables from your dashboard on InCountry Portal.
+To access your data in InCountry Platform by using Java SDK, you need to create an instance of the `Storage` class using the `getInstance` method and pass `StorageConfig` object to it. You can retrieve the `CLIENT_ID`, `CLIENT_SECRET` and `ENV_ID` variables from your dashboard on InCountry Portal.
 ```java
-
-config = new StorageConfig()
-        .setEnvId(ENV_ID)
-        .setClientId(CLIENT_ID)
-        .setClientSecret(CLIENT_SECRET)
-storageOrdinary = StorageImpl.getInstance(config);
-
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<encryption_secret>");
+StorageConfig config = new StorageConfig()
+        .setEnvId("<environment_id>")
+        .setClientId("client_id")
+        .setClientSecret("<client_secret>")
+        .setSecretKeyAccessor(() -> secretsData);
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 ## Storage Configuration
@@ -64,18 +64,42 @@ public class StorageConfig {
     //...
     /** Required to be passed in, or as environment variable INC_API_KEY */
     private String envId;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
+    private String clientId;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
+    private String clientSecret;
     /** Required when using API key authorization, or as environment variable */
     private String apiKey;
-    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */
+    /** Optional. Defines custom API URL. Can also be set up using environment variable INC_ENDPOINT */
     private String endPoint;
     /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
     private SecretKeyAccessor secretKeyAccessor;
     /** Optional. List of custom encryption configurations */
     private List<Crypto> customEncryptionConfigsList;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
-    private String clientId;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
-    private String clientSecret;
+    /** Optional. If true - all keys will be stored as lower cased. default is false */
+    private boolean normalizeKeys;
+    /** Optional. Parameter endpointMask is used for switching from `default` InCountry host
+     *  family (-mt-01.api.incountry.io) to a different one.  */
+    private String endpointMask;
+    /** Optional. Set custom endpoint for loading countries list */
+    private String countriesEndpoint;
+    /** Optional. Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Default value is 30 seconds. */
+    private Integer httpTimeout;
+    /** Set custom endpoints regional map to use for fetching oAuth tokens
+     * Can be used only with {@link #defaultAuthEndpoint}
+     * Format: key = region, value = authorization server URL for region */
+    private Map<String, String> authEndpoints;
+    /** Set custom oAuth authorization server URL, will be used as default one.
+     * Can't be null when {@link #authEndpoints} is used */
+    private String defaultAuthEndpoint;
+    /** Optional. Set HTTP connections pool size. Expected value - null or positive integer. Defaults to 20. */
+    private Integer maxHttpPoolSize;
+    /** Optional. Set maximum count of HTTP connections per route. Expected value - null or positive integer.
+     * Default value == {@link #maxHttpPoolSize}. */
+    private Integer maxHttpConnectionsPerRoute;
+    /** Optional. If false - key1-key10 will be not hashed. Default is true */
+    private boolean hashSearchKeys = true;
     //...
 ```
 
@@ -85,18 +109,20 @@ public class StorageConfig {
 API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
 
 ---
+**WARNING**
 
-You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
+API Key authorization is being deprecated. The backward compatibility is preserved for the `api_key` parameter but you no longer can access API keys (neither old nor new) from your dashboard.
 
 Below you can find API Key authorization usage example:
 ```java
-SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
     .setEnvId("<env_id>")
     .setApiKey("<api_key>")
-    .setSecretKeyAccessor(accessor);
+    .setSecretKeyAccessor(() -> secretsData);
 Storage storage=StorageImpl.getInstance(config);
 ```
+---
 
 #### oAuth options configuration
 
