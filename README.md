@@ -629,9 +629,9 @@ public interface Storage {
 
 Example of usage:
 ```java
-    File initialFile = new File("/example.txt");
-    InputStream fileInputStream = new FileInputStream(initialFile);
-    storage.addAttachment(COUNTRY, RECORD_KEY, fileInputStream, "example.txt", false, MIME_TYPE);
+File initialFile = new File("/example.txt");
+InputStream fileInputStream = new FileInputStream(initialFile);
+storage.addAttachment(COUNTRY, RECORD_KEY, fileInputStream, "example.txt", false, MIME_TYPE);
 ```
 
 ### Deleting attachments
