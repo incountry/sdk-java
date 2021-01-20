@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Basic implementation
@@ -48,6 +49,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
     private static final String MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR = "Custom encryption can be used only with not null SecretKeyAccessor";
+    private static final String MSG_ERR_CONFIG = "Storage configuration is null";
     private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
     private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
     private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
@@ -60,7 +62,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
-    private static final String MSG_SIMPLE_SECURE = "[SECURE]";
     private static final int DEFAULT_HTTP_TIMEOUT = 30;
     private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
 
@@ -132,6 +133,10 @@ public class StorageImpl implements Storage {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params config={}", config);
         }
+        if (config == null) {
+            LOG.error(MSG_ERR_CONFIG);
+            throw new StorageClientException(MSG_ERR_CONFIG);
+        }
         if (config.getSecretKeyAccessor() == null && !(config.getCustomEncryptionConfigsList() == null || config.getCustomEncryptionConfigsList().isEmpty())) {
             LOG.error(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
             throw new StorageClientException(MSG_ERR_CUSTOM_ENCRYPTION_ACCESSOR);
@@ -165,7 +170,7 @@ public class StorageImpl implements Storage {
         instance.encrypted = config.getSecretKeyAccessor() != null;
         instance.cryptoManager = new CryptoManager(config.getSecretKeyAccessor(), config.getEnvId(), config.getCustomEncryptionConfigsList(), config.isNormalizeKeys(), config.isHashSearchKeys());
         instance.hashSearchKeys = config.isHashSearchKeys();
-        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
 
     private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
@@ -177,7 +182,8 @@ public class StorageImpl implements Storage {
                 .setConnectTimeout(httpTimeout)
                 .setSocketTimeout(httpTimeout)
                 .build();
-        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
+        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig)
+                .setConnectionTimeToLive(httpTimeout, TimeUnit.MILLISECONDS);
         if (poolSize == null) {
             poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
         }
@@ -210,7 +216,7 @@ public class StorageImpl implements Storage {
                         config.getClientSecret(),
                         httpClient
                 );
-                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
+                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
                 tokenClient = new ApiKeyTokenClient(config.getApiKey());
@@ -285,11 +291,6 @@ public class StorageImpl implements Storage {
 
     public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("write params (country={} , record={})",
-                    country,
-                    record != null ? String.format(StorageConfig.MSG_SECURE, record.hashCode()) : null);
-        }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, record.getRecordKey());
         checkRecordSearchKeys(record);
@@ -299,24 +300,12 @@ public class StorageImpl implements Storage {
 
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("read params (country={} , recordKey={})",
-                    country,
-                    recordKey != null ? MSG_SIMPLE_SECURE : null);
-        }
         checkCountryAndRecordKey(country, recordKey);
-        Record record = dao.read(country, recordKey, cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("read results ({})", record != null ? record.hashCode() : null);
-        }
-        return record;
+        return dao.read(country, cryptoManager.createKeyHash(recordKey), cryptoManager);
     }
 
     public MigrateResult migrate(String country, int limit) throws
             StorageClientException, StorageServerException, StorageCryptoException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("migrate params (country={} , limit={})", country, limit);
-        }
         if (!encrypted) {
             LOG.error(MSG_ERR_MIGR_NOT_SUPPORT);
             throw new StorageClientException(MSG_ERR_MIGR_NOT_SUPPORT);
@@ -332,22 +321,13 @@ public class StorageImpl implements Storage {
         if (!batchRecord.getRecords().isEmpty()) {
             batchWrite(country, batchRecord.getRecords());
         }
-        MigrateResult result = new MigrateResult(batchRecord.getRecords().size(),
+        return new MigrateResult(batchRecord.getRecords().size(),
                 batchRecord.getTotal() - batchRecord.getRecords().size(),
                 batchRecord.getErrors());
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("migrate results={}", result);
-        }
-        return result;
     }
 
     public BatchRecord batchWrite(String country, List<Record> records) throws
             StorageClientException, StorageServerException, StorageCryptoException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("batchWrite params (country={} , records={})",
-                    country,
-                    BatchRecord.toString(records));
-        }
         if (records == null || records.isEmpty()) {
             LOG.error(MSG_ERR_NULL_BATCH);
             throw new StorageClientException(MSG_ERR_NULL_BATCH);
@@ -362,28 +342,16 @@ public class StorageImpl implements Storage {
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("delete params (country={} , key={})",
-                    country,
-                    recordKey != null ? MSG_SIMPLE_SECURE : null);
-        }
         checkCountryAndRecordKey(country, recordKey);
-        dao.delete(country, recordKey, cryptoManager);
+        dao.delete(country, cryptoManager.createKeyHash(recordKey));
         return true;
     }
 
     public BatchRecord find(String country, FindFilterBuilder builder) throws
             StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("find params (country={} , builder={})", country, builder);
-        }
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(builder, MSG_ERR_NULL_FILTERS);
-        BatchRecord batchRecord = dao.find(country, builder.copy(), cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("find results ({})", batchRecord);
-        }
-        return batchRecord;
+        return dao.find(country, builder.build(), cryptoManager);
     }
 
     /**
@@ -396,19 +364,11 @@ public class StorageImpl implements Storage {
      */
     public Record findOne(String country, FindFilterBuilder builder) throws
             StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("findOne params (country={} , builder={})",
-                    country,
-                    builder);
-        }
         BatchRecord findResults = find(country, builder != null ? builder.copy().limitAndOffset(1, 0) : null);
         List<Record> records = findResults.getRecords();
         if (records.isEmpty()) {
             LOG.warn(MSG_FOUND_NOTHING);
             return null;
-        }
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("findOne results ({})", records.get(0).hashCode());
         }
         return records.get(0);
     }
@@ -430,13 +390,9 @@ public class StorageImpl implements Storage {
 
     @Override
     public AttachmentMeta addAttachment(String country, String recordKey, InputStream inputStream, String fileName, boolean upsert, String mimeType) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment params (country={} , key={}, inputStream={}, upsert={})",
-                    country, recordKey, inputStream != null ? inputStream.hashCode() : null, upsert);
-        }
         checkCountryAndRecordKey(country, recordKey);
         try {
-            if (inputStream == null || inputStream.available() == 0) {
+            if (inputStream == null || inputStream.available() < 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
                 throw new StorageClientException(MSG_ERR_NULL_FILE_INPUT_STREAM);
             }
@@ -444,67 +400,32 @@ public class StorageImpl implements Storage {
             LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);
         }
-        AttachmentMeta attachmentMeta = dao.addAttachment(country, recordKey, inputStream, fileName, upsert, mimeType, cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment results={}", attachmentMeta);
-        }
-        return attachmentMeta;
+        return dao.addAttachment(country, cryptoManager.createKeyHash(recordKey), inputStream, fileName, upsert, mimeType);
     }
 
     @Override
     public boolean deleteAttachment(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("addAttachment params (country={} , key={}, fileId={})",
-                    country, recordKey, fileId);
-        }
         checkAttachmentParameters(country, recordKey, fileId);
-        dao.deleteAttachment(country, recordKey, fileId, cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("deleteAttachment results=true");
-        }
+        dao.deleteAttachment(country, cryptoManager.createKeyHash(recordKey), fileId);
         return true;
     }
 
     @Override
     public AttachedFile getAttachmentFile(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("getAttachmentFile params (country={} , key={}, fileId={})",
-                    country, recordKey, fileId);
-        }
         checkAttachmentParameters(country, recordKey, fileId);
-        AttachedFile attachedFile = dao.getAttachmentFile(country, recordKey, fileId, cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("getAttachmentFile results={}", attachedFile);
-        }
-        return attachedFile;
+        return dao.getAttachmentFile(country, cryptoManager.createKeyHash(recordKey), fileId);
     }
 
     @Override
     public AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("updateAttachmentMeta params (country={} , key={}, fileId={}, fileName={}, mimeType={})",
-                    country, recordKey, fileId, fileName, mimeType);
-        }
         checkFileNameAndMimeType(fileName, mimeType);
         checkAttachmentParameters(country, recordKey, fileId);
-        AttachmentMeta attachmentMeta = dao.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType, cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("updateAttachmentMeta results={}", attachmentMeta);
-        }
-        return attachmentMeta;
+        return dao.updateAttachmentMeta(country, cryptoManager.createKeyHash(recordKey), fileId, fileName, mimeType);
     }
 
     @Override
     public AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("getAttachmentMeta params (country={} , key={}, fileId={})",
-                    country, recordKey, fileId);
-        }
         checkAttachmentParameters(country, recordKey, fileId);
-        AttachmentMeta attachmentMeta = dao.getAttachmentMeta(country, recordKey, fileId, cryptoManager);
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("getAttachmentMeta results={}", attachmentMeta);
-        }
-        return attachmentMeta;
+        return dao.getAttachmentMeta(country, cryptoManager.createKeyHash(recordKey), fileId);
     }
 }

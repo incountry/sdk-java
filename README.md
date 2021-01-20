@@ -5,8 +5,7 @@ InCountry Storage SDK
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 [![Known Vulnerabilities](https://snyk.io/test/github/incountry/sdk-java/badge.svg?targetFile=build.gradle)](https://snyk.io/test/github/incountry/sdk-java?targetFile=build.gradle)
 
-Installation
------
+## Installation
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
 
 For Maven users please add this section to your dependencies list
@@ -23,13 +22,25 @@ For Gradle users please add this line to your dependencies list
 compile "com.incountry:incountry-java-client:3.0.0"
 ```
 
-Countries List
-----
+## Countries List
 For a full list of supported countries and their codes please [follow this link](countries.md).
 
-Usage
------
-Use `StorageImpl` class to access your data in InCountry using Java SDK.
+
+## Quickstart guide
+To access your data in InCountry Platform by using Java SDK, you need to create an instance of the `Storage` class using the `getInstance` method and pass `StorageConfig` object to it. You can retrieve the `CLIENT_ID`, `CLIENT_SECRET` and `ENV_ID` variables from your dashboard on InCountry Portal.
+```java
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<encryption_secret>");
+StorageConfig config = new StorageConfig()
+        .setEnvId("<environment_id>")
+        .setClientId("client_id")
+        .setClientSecret("<client_secret>")
+        .setSecretKeyAccessor(() -> secretsData);
+Storage storage = StorageImpl.getInstance(config);
+```
+
+## Storage Configuration
+
+Below you can find a full list of possible configuration options for creating a Storage instance.
 ```java
 public class StorageImpl implements Storage {
   /**
@@ -53,18 +64,42 @@ public class StorageConfig {
     //...
     /** Required to be passed in, or as environment variable INC_API_KEY */
     private String envId;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
+    private String clientId;
+    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
+    private String clientSecret;
     /** Required when using API key authorization, or as environment variable */
     private String apiKey;
-    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */
+    /** Optional. Defines custom API URL. Can also be set up using environment variable INC_ENDPOINT */
     private String endPoint;
     /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
     private SecretKeyAccessor secretKeyAccessor;
     /** Optional. List of custom encryption configurations */
     private List<Crypto> customEncryptionConfigsList;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
-    private String clientId;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
-    private String clientSecret;
+    /** Optional. If true - all keys will be stored as lower cased. default is false */
+    private boolean normalizeKeys;
+    /** Optional. Parameter endpointMask is used for switching from `default` InCountry host
+     *  family (-mt-01.api.incountry.io) to a different one.  */
+    private String endpointMask;
+    /** Optional. Set custom endpoint for loading countries list */
+    private String countriesEndpoint;
+    /** Optional. Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Default value is 30 seconds. */
+    private Integer httpTimeout;
+    /** Set custom endpoints regional map to use for fetching oAuth tokens
+     * Can be used only with {@link #defaultAuthEndpoint}
+     * Format: key = region, value = authorization server URL for region */
+    private Map<String, String> authEndpoints;
+    /** Set custom oAuth authorization server URL, will be used as default one.
+     * Can't be null when {@link #authEndpoints} is used */
+    private String defaultAuthEndpoint;
+    /** Optional. Set HTTP connections pool size. Expected value - null or positive integer. Defaults to 20. */
+    private Integer maxHttpPoolSize;
+    /** Optional. Set maximum count of HTTP connections per route. Expected value - null or positive integer.
+     * Default value == {@link #maxHttpPoolSize}. */
+    private Integer maxHttpConnectionsPerRoute;
+    /** Optional. If false - key1-key10 will be not hashed. Default is true */
+    private boolean hashSearchKeys = true;
     //...
 ```
 
@@ -74,26 +109,26 @@ public class StorageConfig {
 API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
 
 ---
+**WARNING**
 
-Parameters `environmentID`, `clientId` and `clientSecret` can be fetched from your dashboard on `Incountry` site.
+API Key authorization is being deprecated. The backward compatibility is preserved for the `api_key` parameter but you no longer can access API keys (neither old nor new) from your dashboard.
 
-You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
-
-Below is an example how to create a storage instance:
+Below you can find API Key authorization usage example:
 ```java
-SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
     .setEnvId("<env_id>")
     .setApiKey("<api_key>")
-    .setSecretKeyAccessor(accessor);
+    .setSecretKeyAccessor(() -> secretsData);
 Storage storage=StorageImpl.getInstance(config);
 ```
+---
 
-#### oAuth Authentication
+#### oAuth options configuration
 
-SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
+The SDK allows to precisely configure oAuth authorization endpoints (if needed). Use this option only if your plan configuration requires so.
 
-Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+Below you can find the example of how to create a storage instance with custom oAuth endpoints:
 ```java
 Map<String, String> authEndpointsMap = new HashMap<>();
 authEndpointsMap.put("emea", "https://auth-server-emea.com");
@@ -163,7 +198,7 @@ public class SecretKey {
     /**
     * Creates a secret key
     *
-    * @param secret  secret/key as byte array from UTF8 String
+    * @param secret  secret/key as byte array
     * @param version secret version, should be a non-negative integer
     * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
@@ -230,7 +265,7 @@ Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` p
 SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see [migrate](#Data-Migration-and-Key-Rotation-support) method.
 
-SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
+SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-bytes-long key as it's required by AES-256 cryptographic algorithm (base64 encoded when secrets data is loaded from JSON).
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
@@ -748,8 +783,7 @@ public class MigrateResult {
 
 For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
 
-Error Handling
------
+## Error Handling
 
 InCountry Java SDK throws following Exceptions:
 - **StorageClientException** - used for various input validation errors
@@ -777,8 +811,8 @@ public void test() {
 }
 ```
 
-Custom Encryption Support
------
+## Custom Encryption Support
+
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
 
 Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
@@ -852,7 +886,7 @@ You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKey
 ```java
 public class SecretKey {
     /**
-     * @param secret secret/key as byte array from UTF8 String
+     * @param secret secret/key as byte array
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption
@@ -871,7 +905,7 @@ You can set `isForCustomEncryption` using `SecretsData` JSON format as well:
 ```javascript
 secrets_data = {
   "secrets": [{
-       "secret": "<secret for custom encryption>",
+       "secret": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwQUI=", //base64-encoded key (32 byte key)
        "version": 1,
        "isForCustomEncryption": true,
     }
@@ -941,8 +975,7 @@ public class FernetCrypto implements Crypto {
 }
 ```
 
-Project dependencies
------
+## Project dependencies
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 

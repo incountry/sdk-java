@@ -94,6 +94,9 @@ class FindFilterBuilderIsolatedTest {
     void positiveStringKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         for (StringField field : StringField.values()) {
+            if (field.equals(StringField.SEARCH_KEYS)) {
+                continue;
+            }
             assertEquals("1", builder.keyEq(field, "1").build().getStringFilterMap().get(field).getValues().get(0));
             assertEquals("2", builder.keyEq(field, "1", "2").build().getStringFilterMap().get(field).getValues().get(1));
             assertFalse(builder.keyEq(field, "4").build().getStringFilterMap().get(field).isNotCondition());

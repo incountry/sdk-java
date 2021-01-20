@@ -10,9 +10,11 @@ import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import org.junit.jupiter.api.Test;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,24 +29,33 @@ class SecretsTest {
 
     @Test
     void testConvertStringToSecretsDataWhenSecretKeyStringIsJson() throws Exception {
-        String secretKeyString = "{\n" +
+        String key = Base64.getEncoder().encodeToString("123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        String secretKeyStringIsKey = "{\n" +
                 "  \"secrets\": [\n" +
                 "    {\n" +
-                "      \"secret\": \"password__password__password__32\",\n" +
+                "      \"secret\": \"" + key + "\",\n" +
                 "      \"version\": 1,\n" +
-                "      \"isKey\": true,\n" +
-                "      \"isForCustomEncryption\": false\n" +
+                "      \"isKey\": %s,\n" +
+                "      \"isForCustomEncryption\": %s\n" +
                 "    }\n" +
                 "  ],\n" +
                 "  \"currentVersion\": 1\n" +
                 "}";
-        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(secretKeyString);
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(String.format(secretKeyStringIsKey, true, false));
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(1, resultSecretsData.getCurrentVersion());
-        assertTrue(Arrays.equals(PASSWORD_32, resultSecretsData.getSecrets().get(0).getSecret()));
+        assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecret()));
         assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
         assertTrue(resultSecretsData.getSecrets().get(0).isKey());
         assertFalse(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
+
+        accessor = () -> SecretsDataGenerator.fromJson(String.format(secretKeyStringIsKey, false, true));
+        resultSecretsData = accessor.getSecretsData();
+        assertEquals(1, resultSecretsData.getCurrentVersion());
+        assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecret()));
+        assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
+        assertFalse(resultSecretsData.getSecrets().get(0).isKey());
+        assertTrue(resultSecretsData.getSecrets().get(0).isForCustomEncryption());
     }
 
     @Test
@@ -172,5 +183,22 @@ class SecretsTest {
         assertEquals("Secret can't be null", ex5.getMessage());
         StorageClientException ex6 = assertThrows(StorageClientException.class, () -> SecretKey.validateSecretKey(null, 0, false, true));
         assertEquals("Secret can't be null", ex6.getMessage());
+    }
+
+    @Test
+    void testWithSecretNotBase64() {
+        String secretKeyString = "{\n" +
+                "  \"secrets\": [\n" +
+                "    {\n" +
+                "      \"secret\": \"passwordpasswordpasswordpasswor*\",\n" +
+                "      \"version\": 1,\n" +
+                "      \"isKey\": true,\n" +
+                "      \"isForCustomEncryption\": false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"currentVersion\": 1\n" +
+                "}";
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretKeyString));
+        assertEquals("Secret key must be base64-encoded string", ex.getMessage());
     }
 }

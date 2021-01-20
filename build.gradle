@@ -247,3 +247,7 @@ task generateVersionClass(type: Copy) {
     filter { line -> line.replaceAll('DEV-SNAPSHOT', "${project.version}") }
 }
 compileJava.dependsOn generateVersionClass
+
+compileJava {
+    options.compilerArgs << '-parameters'
+}

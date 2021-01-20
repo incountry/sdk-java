@@ -6,6 +6,7 @@ import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ public class FakeHttpAgent implements HttpAgent {
     private Map<Integer, ApiResponseCodes> codeMap;
     private int retryCount;
     private String audienceUrl;
+    private InputStream dataStream;
     private Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
 
     public FakeHttpAgent(String response) {
@@ -45,7 +47,12 @@ public class FakeHttpAgent implements HttpAgent {
         this.retryCount = retryCount;
         this.audienceUrl = audience;
         this.callRegion = region;
+        this.dataStream = requestParameters.getDataStream();
         return new ApiResponse(getResponse(), metaInfo);
+    }
+
+    public InputStream getDataStream() {
+        return dataStream;
     }
 
     public String getCallUrl() {
