@@ -68,21 +68,13 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
     @Override
     public ApiResponse request(String url, String body,
                                String audience, String region, int retryCount, RequestParameters requestParameters) throws StorageServerException, StorageClientException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (url={}, audience={}, region={}, retryCount={}, httpParameters={})",
-                    url,
-                    audience,
-                    region,
-                    retryCount,
-                    requestParameters);
-        }
         NullChecker.checkNull(LOG, url, new StorageClientException(MSG_URL_NULL_ERR), MSG_URL_NULL_ERR);
         NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
-            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
+            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.getDataStream() != null);
             CloseableHttpResponse response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
@@ -111,12 +103,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
-            ApiResponse apiResponse = new ApiResponse(actualResponseContent, metaInfo);
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("HTTP response={}",
-                        apiResponse);
-            }
-            return apiResponse;
+            return new ApiResponse(actualResponseContent, metaInfo);
         } catch (IOException ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
             throw new StorageServerException(errorMessage, ex);

@@ -105,7 +105,9 @@ public class JsonUtils {
         }
         bodyJsonObj.add(P_META, recordJsonObj);
         TransferRecord encRec = new TransferRecord(record, cryptoManager, bodyJsonObj.toString());
-        return (JsonObject) gson.toJsonTree(encRec);
+        JsonObject resultJson = (JsonObject) gson.toJsonTree(encRec);
+        resultJson.remove(P_ATTACHED_FILES);
+        return resultJson;
     }
 
     /**
@@ -257,7 +259,6 @@ public class JsonUtils {
     private static Gson getGson4Records() {
         return new GsonBuilder()
                 .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                .disableHtmlEscaping()
                 .create();
     }
 

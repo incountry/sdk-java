@@ -70,7 +70,7 @@ class JsonUtilsTest {
         assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, "search_keys");
+                .searchKeysLike("search_keys");
         jsonString = JsonUtils.toJsonString(builder.build(), new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"search_keys\":\"search_keys\"},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }

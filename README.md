@@ -172,7 +172,7 @@ public class SecretKey {
     /**
     * Creates a secret key
     *
-    * @param secret  secret/key as byte array from UTF8 String
+    * @param secret  secret/key as byte array
     * @param version secret version, should be a non-negative integer
     * @param isKey   should be True only for user-defined encryption keys
     * @throws StorageClientException when parameter validation fails
@@ -239,7 +239,7 @@ Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` p
 SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see [migrate](#Data-Migration-and-Key-Rotation-support) method.
 
-SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-characters 'utf8' encoded string as required by AES-256 cryptographic algorithm.
+SDK allows you to use custom encryption keys, instead of secrets. Please note that user-defined encryption key should be a 32-bytes-long key as it's required by AES-256 cryptographic algorithm (base64 encoded when secrets data is loaded from JSON).
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
@@ -698,7 +698,7 @@ You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKey
 ```java
 public class SecretKey {
     /**
-     * @param secret secret/key as byte array from UTF8 String
+     * @param secret secret/key as byte array
      * @param version secret version, should be a non-negative integer
      * @param isKey should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption
@@ -717,7 +717,7 @@ You can set `isForCustomEncryption` using `SecretsData` JSON format as well:
 ```javascript
 secrets_data = {
   "secrets": [{
-       "secret": "<secret for custom encryption>",
+       "secret": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwQUI=", //base64-encoded key (32 byte key)
        "version": 1,
        "isForCustomEncryption": true,
     }

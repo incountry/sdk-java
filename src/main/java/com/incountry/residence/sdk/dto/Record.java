@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Record {
     private String recordKey;
@@ -303,11 +302,6 @@ public class Record {
         return attachments;
     }
 
-    protected Record setAttachments(List<AttachmentMeta> attachedFiles) {
-        this.attachments = attachedFiles;
-        return this;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -390,7 +384,14 @@ public class Record {
         newRecord.serviceKey2 = serviceKey2;
         newRecord.createdAt = getCreatedAt();
         newRecord.updatedAt = getUpdatedAt();
-        newRecord.attachments = attachments == null ? new ArrayList<>() : attachments.stream().collect(Collectors.toList());
+        newRecord.attachments = attachments == null ? new ArrayList<>() : new ArrayList<>(attachments);
         return newRecord;
+    }
+
+    @Override
+    public String toString() {
+        return "Record{" +
+                "recordKey='" + recordKey + "', hash=" + hashCode() +
+                '}';
     }
 }

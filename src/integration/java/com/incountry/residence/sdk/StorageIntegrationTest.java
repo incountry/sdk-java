@@ -725,12 +725,37 @@ public class StorageIntegrationTest {
         storageNonHashing.write(MIDIPOP_COUNTRY, record);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .keyEq(StringField.SEARCH_KEYS, KEY_1.split("-")[2]);
+                .searchKeysLike(KEY_1.split("-")[2]);
         BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
+
+        storageNonHashing.delete(MIDIPOP_COUNTRY, recordKey);
+    }
+
+    @Test
+    @Order(901)
+    public void utf8EncodingTest() throws StorageException {
+        String recordKey = "utf8" + RECORD_KEY;
+        String key1 = "Louis César de La Baume Le Blanc" + TEMP;
+        Record record = new Record(recordKey)
+                .setBody(RECORD_BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(WRITE_RANGE_KEY_1)
+                .setKey1(key1)
+                .setPrecommitBody(PRECOMMIT_BODY);
+        storageNonHashing.write(MIDIPOP_COUNTRY, record);
+
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .keyEq(StringField.KEY1, key1);
+        BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
+
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
+        assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
+        assertEquals(key1, batchRecord.getRecords().get(0).getKey1());
 
         storageNonHashing.delete(MIDIPOP_COUNTRY, recordKey);
     }
