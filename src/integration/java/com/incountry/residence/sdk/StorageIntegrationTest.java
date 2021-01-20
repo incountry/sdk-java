@@ -17,7 +17,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -212,11 +211,6 @@ public class StorageIntegrationTest {
                 .setSecretKeyAccessor(anotherAccessor)
                 .setCustomEncryptionConfigsList(cryptoList);
         storageWithCustomCipher = StorageImpl.getInstance(config);
-    }
-
-    @AfterAll
-    public void deleteRecordWithAttachment() throws StorageException {
-        storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY);
     }
 
     private Stream<Arguments> storageProvider() {
@@ -699,6 +693,12 @@ public class StorageIntegrationTest {
         fileId = attachmentMeta.getFileId();
         assertEquals(fileName, attachmentMeta.getFilename());
         Files.delete(tempFile);
+    }
+
+    @Test
+    @Order(813)
+    public void deleteRecordWithAttachment() throws StorageException {
+        assertTrue(storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY));
     }
 
     @Test
