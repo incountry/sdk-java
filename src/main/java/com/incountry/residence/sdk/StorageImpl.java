@@ -181,6 +181,7 @@ public class StorageImpl implements Storage {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(httpTimeout)
                 .setSocketTimeout(httpTimeout)
+                .setConnectionRequestTimeout(httpTimeout)
                 .build();
         HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig)
                 .setConnectionTimeToLive(httpTimeout, TimeUnit.MILLISECONDS);
