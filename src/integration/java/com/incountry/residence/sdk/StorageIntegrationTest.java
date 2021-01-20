@@ -215,10 +215,10 @@ public class StorageIntegrationTest {
 
     private Stream<Arguments> storageProvider() {
         return Stream.of(
+                generateArguments(storageNonHashing),
                 generateArguments(storageWithApiKey),
                 generateArguments(storageOrdinary),
                 generateArguments(storageWithoutEncryption),
-                generateArguments(storageNonHashing),
                 generateArguments(storageIgnoreCase),
                 generateArguments(storageWithCustomCipher)
         );
