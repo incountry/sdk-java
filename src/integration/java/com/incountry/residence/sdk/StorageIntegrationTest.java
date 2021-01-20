@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -85,6 +86,7 @@ public class StorageIntegrationTest {
             "-" +
             UUID.randomUUID().toString().replace("-", "");
 
+    private static final Random random = new Random(System.currentTimeMillis());
     private Storage storageIgnoreCase;
     private Storage storageWithApiKey;
     private Storage storageWithoutEncryption;
@@ -134,7 +136,6 @@ public class StorageIntegrationTest {
     private static final Long RANGE_KEY_7 = 7L;
     private static final Long RANGE_KEY_8 = 8L;
     private static final Long RANGE_KEY_9 = 9L;
-    private static final Long RANGE_KEY_10 = 10L;
     private static final String RECORD_BODY = "test";
     private static final Integer HTTP_POOL_SIZE = Integer.valueOf(loadFromEnv(INT_INC_HTTP_POOL_SIZE, "4"));
 
@@ -256,7 +257,9 @@ public class StorageIntegrationTest {
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(BATCH_WRITE_RANGE_KEY_1)
                 .setKey2(key2)
-                .setKey3(KEY_3);
+                .setKey3(KEY_3)
+                .setRangeKey10(random.nextLong());
+
         records.add(record);
         storage.batchWrite(MIDIPOP_COUNTRY, records);
     }
@@ -269,7 +272,7 @@ public class StorageIntegrationTest {
                 .setBody(RECORD_BODY).setProfileKey(PROFILE_KEY).setRangeKey1(WRITE_RANGE_KEY_1)
                 .setRangeKey2(RANGE_KEY_2).setRangeKey3(RANGE_KEY_3).setRangeKey4(RANGE_KEY_4)
                 .setRangeKey5(RANGE_KEY_5).setRangeKey6(RANGE_KEY_6).setRangeKey7(RANGE_KEY_7)
-                .setRangeKey8(RANGE_KEY_8).setRangeKey9(RANGE_KEY_9).setRangeKey10(RANGE_KEY_10)
+                .setRangeKey8(RANGE_KEY_8).setRangeKey9(RANGE_KEY_9).setRangeKey10(random.nextLong())
                 .setKey1(KEY_1).setKey2(key2).setKey3(KEY_3)
                 .setKey4(KEY_4).setKey5(KEY_5).setKey6(KEY_6)
                 .setKey7(KEY_7).setKey8(KEY_8).setKey9(KEY_9)
@@ -324,7 +327,7 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_7, incomingRecord.getRangeKey7());
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
-        assertEquals(RANGE_KEY_10, incomingRecord.getRangeKey10());
+        assertNotNull(incomingRecord.getRangeKey10());
         assertNotNull(incomingRecord.getCreatedAt());
         assertNotNull(incomingRecord.getUpdatedAt());
     }
@@ -390,17 +393,20 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
 
-        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.RANGE_KEY1, false));
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.RANGE_KEY10, false));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(1).getRecordKey());
+        Long record1Value = batchRecord.getRecords().get(0).getRangeKey10();
+        Long record2Value = batchRecord.getRecords().get(1).getRangeKey10();
+        assertTrue(record1Value <= record2Value);
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.RANGE_KEY1, true));
+
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().addSorting(SortingField.RANGE_KEY10, true));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(recordKey, batchRecord.getRecords().get(1).getRecordKey());
+        record1Value = batchRecord.getRecords().get(0).getRangeKey10();
+        record2Value = batchRecord.getRecords().get(1).getRangeKey10();
+        assertTrue(record1Value >= record2Value);
     }
 
     @ParameterizedTest
@@ -455,7 +461,6 @@ public class StorageIntegrationTest {
                 .keyEq(NumberField.RANGE_KEY7, RANGE_KEY_7)
                 .keyEq(NumberField.RANGE_KEY8, RANGE_KEY_8)
                 .keyEq(NumberField.RANGE_KEY9, RANGE_KEY_9)
-                .keyEq(NumberField.RANGE_KEY10, RANGE_KEY_10)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(SERVICE_KEY1, SERVICE_KEY_1)
                 .keyEq(SERVICE_KEY2, SERVICE_KEY_2);
@@ -484,7 +489,6 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_7, record.getRangeKey7());
         assertEquals(RANGE_KEY_8, record.getRangeKey8());
         assertEquals(RANGE_KEY_9, record.getRangeKey9());
-        assertEquals(RANGE_KEY_10, record.getRangeKey10());
         assertEquals(PROFILE_KEY, record.getProfileKey());
         assertEquals(SERVICE_KEY_1, record.getServiceKey1());
         assertEquals(SERVICE_KEY_2, record.getServiceKey2());
@@ -734,7 +738,7 @@ public class StorageIntegrationTest {
                 .setRangeKey7(RANGE_KEY_7)
                 .setRangeKey8(RANGE_KEY_8)
                 .setRangeKey9(RANGE_KEY_9)
-                .setRangeKey10(RANGE_KEY_10)
+                .setRangeKey10(random.nextLong())
                 .setKey1(KEY_1)
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
