@@ -19,6 +19,7 @@ public class FindFilterBuilder {
     private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS should contain at least 3 characters and be not longer than 200";
     private static final String MSG_ERR_SEARCH_KEYS_ADD = "SEARCH_KEYS can be used only via searchKeysLike method";
     private static final String MSG_ERR_NULL_SORT_FIELD = "Sorting field is null";
+    private static final String MSG_ERR_DUPL_SORT_FIELD = "Field %s is already in sorting list";
 
     public static final String OPER_NOT = "$not";
     public static final String OPER_GT = "$gt";
@@ -148,6 +149,13 @@ public class FindFilterBuilder {
         if (field == null) {
             LOG.error(MSG_ERR_NULL_SORT_FIELD);
             throw new StorageClientException(MSG_ERR_NULL_SORT_FIELD);
+        }
+        for (SortingParam param : filter.getSortingList()) {
+            if (param.getField().equals(field)) {
+                String message = String.format(MSG_ERR_DUPL_SORT_FIELD, field);
+                LOG.error(message);
+                throw new StorageClientException(message);
+            }
         }
         filter.addSorting(new SortingParam(field, desc));
         return this;

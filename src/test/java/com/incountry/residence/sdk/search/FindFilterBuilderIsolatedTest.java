@@ -5,6 +5,7 @@ import com.incountry.residence.sdk.dto.search.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.SortingField;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -251,5 +252,66 @@ class FindFilterBuilderIsolatedTest {
         assertEquals("FilterStringParam{value=[39, 40], notCondition=false}", filterMap.get(StringField.SERVICE_KEY1).toString());
         assertEquals("FilterStringParam{value=[41, 42], notCondition=false}", filterMap.get(StringField.SERVICE_KEY2).toString());
         assertEquals("FilterStringParam{value=[43, 44], notCondition=false}", filterMap.get(StringField.PARENT_KEY).toString());
+    }
+
+    @Test
+    void sortingTest() throws StorageClientException {
+        FindFilter filter = FindFilterBuilder.create()
+                .keyEq(StringField.KEY1, "<RecordKey>")
+                .addSorting(SortingField.KEY1, true)
+                .addSorting(SortingField.KEY2, true)
+                .addSorting(SortingField.KEY3, true)
+                .addSorting(SortingField.KEY4, true)
+                .addSorting(SortingField.KEY5, true)
+                .addSorting(SortingField.KEY6, true)
+                .addSorting(SortingField.KEY7, true)
+                .addSorting(SortingField.KEY8, true)
+                .addSorting(SortingField.KEY9, true)
+                .addSorting(SortingField.KEY10, true)
+                .addSorting(SortingField.KEY11, true)
+                .addSorting(SortingField.KEY12, true)
+                .addSorting(SortingField.KEY13, true)
+                .addSorting(SortingField.KEY14, true)
+                .addSorting(SortingField.KEY15, true)
+                .addSorting(SortingField.KEY16, true)
+                .addSorting(SortingField.KEY17, true)
+                .addSorting(SortingField.KEY18, true)
+                .addSorting(SortingField.KEY19, true)
+                .addSorting(SortingField.KEY20, true)
+                .addSorting(SortingField.RANGE_KEY1, false)
+                .addSorting(SortingField.RANGE_KEY2, false)
+                .addSorting(SortingField.RANGE_KEY3, false)
+                .addSorting(SortingField.RANGE_KEY4, false)
+                .addSorting(SortingField.RANGE_KEY5, false)
+                .addSorting(SortingField.RANGE_KEY6, false)
+                .addSorting(SortingField.RANGE_KEY7, false)
+                .addSorting(SortingField.RANGE_KEY8, false)
+                .addSorting(SortingField.RANGE_KEY9, false)
+                .addSorting(SortingField.RANGE_KEY10, false)
+                .build();
+        String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
+        assertEquals("{\"filter\":{\"key1\":[\"b99fc3a4b5365f543fbb39af2fddead40edcb3e72368df475c8c1385549968b1\"]}," +
+                        "\"options\":{\"sort\":[" +
+                        "{\"key1\":\"desc\"},{\"key2\":\"desc\"},{\"key3\":\"desc\"},{\"key4\":\"desc\"},{\"key5\":\"desc\"}," +
+                        "{\"key6\":\"desc\"},{\"key7\":\"desc\"},{\"key8\":\"desc\"},{\"key9\":\"desc\"},{\"key10\":\"desc\"}," +
+                        "{\"key11\":\"desc\"},{\"key12\":\"desc\"},{\"key13\":\"desc\"},{\"key14\":\"desc\"},{\"key15\":\"desc\"}," +
+                        "{\"key16\":\"desc\"},{\"key17\":\"desc\"},{\"key18\":\"desc\"},{\"key19\":\"desc\"},{\"key20\":\"desc\"}," +
+                        "{\"range_key1\":\"asc\"},{\"range_key2\":\"asc\"},{\"range_key3\":\"asc\"},{\"range_key4\":\"asc\"},{\"range_key5\":\"asc\"}," +
+                        "{\"range_key6\":\"asc\"},{\"range_key7\":\"asc\"},{\"range_key8\":\"asc\"},{\"range_key9\":\"asc\"},{\"range_key10\":\"asc\"}]," +
+                        "\"limit\":100,\"offset\":0}}",
+                jsonFilter);
+    }
+
+    @Test
+    void sortingNegativeTest() throws StorageClientException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .addSorting(SortingField.KEY1, false);
+        StorageClientException ex = assertThrows(StorageClientException.class, () ->
+                builder.addSorting(SortingField.KEY1, false));
+        assertEquals("Field KEY1 is already in sorting list", ex.getMessage());
+
+        ex = assertThrows(StorageClientException.class, () ->
+                builder.addSorting(null, false));
+        assertEquals("Sorting field is null", ex.getMessage());
     }
 }
