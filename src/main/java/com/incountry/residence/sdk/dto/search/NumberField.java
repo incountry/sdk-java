@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk.dto.search;
 
-public enum NumberField {
+public enum NumberField implements RecordField {
     RANGE_KEY1,
     RANGE_KEY2,
     RANGE_KEY3,

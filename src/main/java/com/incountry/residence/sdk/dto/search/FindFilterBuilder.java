@@ -91,6 +91,24 @@ public class FindFilterBuilder {
         return this;
     }
 
+    public FindFilterBuilder keyIsNull(RecordField field) {
+        fillNullFilter(field, true);
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNotNull(RecordField field) {
+        fillNullFilter(field, false);
+        return this;
+    }
+
+    private void fillNullFilter(RecordField field, boolean isNull) {
+        if (field instanceof NumberField){
+            filter.setNumberFilter((NumberField)field,new NullFilter(isNull));
+        } else if (field instanceof StringField){
+            filter.setStringFilter((StringField)field,new NullFilter(isNull));
+        }
+    }
+
     public FindFilterBuilder keyNotEq(StringField field, String... keys) throws StorageClientException {
         validateStringFilters(field);
         filter.setStringFilter(field, new FilterStringParam(keys, true));
