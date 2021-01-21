@@ -187,8 +187,8 @@ public interface Storage {
      * @param country   country identifier
      * @param recordKey the record's recordKey
      * @param fileId    file identifier
-     * @param fileName  file name which is not mandatory (can be null) if mimeType passed
-     * @param mimeType  file MIME type which is not mandatory (can be null) if fileName passed
+     * @param fileName  file name (optional if mimeType provided)
+     * @param mimeType  file MIME type (optional if fileName provided)
      * @return AttachmentMeta object which contains updated fields
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error

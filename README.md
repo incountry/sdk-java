@@ -584,10 +584,16 @@ String recordKey = "user_1";
 storage.delete("us", recordKey);
  ```
 
-Attaching files to a record
------
+## Attaching files to a record
 
-InCountry Storage allows you to attach files to the previously created records. Attachments meta information is available through the attachments field of Record object.
+---
+**NOTE**
+
+Attachments are currently available for InCountry dedicated instances only. Please check your subscription plan for details. This may require specifying your dedicated instance endpoint when configuring InCountry Java SDK Storage.
+
+---
+
+InCountry Storage allows you to attach files to the previously created records. Attachments' meta information is available through the `attachments` field of `Record` object.
 ```java
 public class Record {
     /** ... other fields ...  */
@@ -603,12 +609,13 @@ public class AttachmentMeta {
     private String hash;
     private String mimeType;
     private int size;
+    //...
 }
 ```
 
 ### Adding attachments
 
-The addAttachment method allows you to add or replace attachments. File data can be provided as InputStream.
+The `addAttachment` method of `Storage` instance allows you to add or replace attachments. File data can be provided as `InputStream`.
 ```java
 public interface Storage {
     /**
@@ -632,14 +639,14 @@ public interface Storage {
 
 Example of usage:
 ```java
-File initialFile = new File("/example.txt");
+File initialFile = new File("example.txt");
 InputStream fileInputStream = new FileInputStream(initialFile);
-storage.addAttachment(COUNTRY, RECORD_KEY, fileInputStream, "example.txt", false, MIME_TYPE);
+storage.addAttachment(COUNTRY_CODE, RECORD_KEY, fileInputStream, "example.txt", false, MIME_TYPE);
 ```
 
 ### Deleting attachments
 
-The deleteAttachment method allows you to delete attachment using its fileId.
+The `deleteAttachment` method of `Storage` instance allows you to delete attachment using its `fileId`.
 ```java
 public interface Storage {
     /**
@@ -660,12 +667,12 @@ public interface Storage {
 
 Example of usage:
 ```java
-storage.deleteAttachment(COUNTRY, RECORD_KEY, fileId);
+storage.deleteAttachment(COUNTRY_CODE, RECORD_KEY, fileId);
 ```
 
 ### Downloading attachments
 
-The getAttachmentFile method allows you to download attachment contents. It returns object with InputStream and filename.
+The `getAttachmentFile` method of `Storage` instance allows you to download attachment contents. It returns an `AttachedFile` class instance with a readable stream and filename.
 ```java
 public interface Storage {
     /**
@@ -682,21 +689,25 @@ public interface Storage {
             throws StorageClientException, StorageServerException;
     //...
 }
+
+public class AttachedFile {
+   private final InputStream fileContent;
+   private final String fileName;
+   //...
+}
 ```
 
 Example of usage:
 ```java
-AttachedFile file = storageForAttachment.getAttachmentFile(COUNTRY, RECORD_KEY, fileId);
+AttachedFile attachement = storageForAttachment.getAttachmentFile(COUNTRY_CODE, RECORD_KEY, fileId);
+FileUtils.copyInputStreamToFile(attachement.getFileContent(), new File(attachement.getFileName()));
 
-public class AttachedFile {
-    private final InputStream fileContent;
-    private final String fileName;
-}
+
 ```
 
 ### Working with attachment meta info
 
-The getAttachmentMeta method allows you to retrieve attachment's metadata using its fileId.
+The `getAttachmentMeta` method of `Storage` instance allows you to retrieve attachment's metadata using its `fileId`.
 ```java
 public interface Storage {
     /**
@@ -717,10 +728,10 @@ public interface Storage {
 
 Example of usage:
 ```java
-AttachmentMeta meta = storageForAttachment.getAttachmentMeta(COUNTRY, RECORD_KEY, fileId);
+AttachmentMeta meta = storageForAttachment.getAttachmentMeta(COUNTRY_CODE, RECORD_KEY, fileId);
 ```
 
-The updateAttachmentMeta method allows you to update attachment's metadata (MIME type and file name).
+The `updateAttachmentMeta` method of `Storage` allows you to update attachment's metadata (MIME type and file name).
 ```java
 public interface Storage {
     /**
@@ -729,8 +740,8 @@ public interface Storage {
      * @param country   country identifier
      * @param recordKey the record's recordKey
      * @param fileId    file identifier
-     * @param fileName  file name which is not mandatory (can be null) if mimeType passed
-     * @param mimeType  file MIME type which is not mandatory (can be null) if fileName passed
+     * @param fileName  file name (optional if mimeType provided)
+     * @param mimeType  file MIME type (optional if fileName provided)
      * @return AttachmentMeta object which contains updated fields
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
@@ -743,7 +754,7 @@ public interface Storage {
 
 Example of usage:
 ```java
-AttachmentMeta meta = storage.updateAttachmentMeta(COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
+AttachmentMeta meta = storage.updateAttachmentMeta(COUNTRY_CODE, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
 ```
 
 Data Migration and Key Rotation support
