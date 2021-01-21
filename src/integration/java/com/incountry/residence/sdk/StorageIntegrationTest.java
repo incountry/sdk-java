@@ -215,10 +215,10 @@ public class StorageIntegrationTest {
 
     private Stream<Arguments> storageProvider() {
         return Stream.of(
+                generateArguments(storageNonHashing),
                 generateArguments(storageWithApiKey),
                 generateArguments(storageOrdinary),
                 generateArguments(storageWithoutEncryption),
-                generateArguments(storageNonHashing),
                 generateArguments(storageIgnoreCase),
                 generateArguments(storageWithCustomCipher)
         );
@@ -229,7 +229,7 @@ public class StorageIntegrationTest {
         return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "batchWriteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(100)
     public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -696,7 +696,7 @@ public class StorageIntegrationTest {
     }
 
     @Test
-    @Order(813)
+    @Order(899)
     public void deleteRecordWithAttachment() throws StorageException {
         assertTrue(storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY));
     }
