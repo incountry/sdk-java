@@ -108,12 +108,7 @@ public class StorageConfig {
 ---
 **WARNING**
 
-API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
-
----
-**WARNING**
-
-API Key authorization is being deprecated. The backward compatibility is preserved for the `api_key` parameter but you no longer can access API keys (neither old nor new) from your dashboard.
+API Key authorization is being deprecated. The backward compatibility is preserved for the API keys, but you no longer can access API keys (neither old nor new) from your dashboard.
 
 Below you can find API Key authorization usage example:
 ```java
@@ -138,18 +133,12 @@ authEndpointsMap.put("apac", "https://auth-server-apac.com");
 authEndpointsMap.put("amer", "https://auth-server-amer.com");
 
 StorageConfig config = new StorageConfig()
-   //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
    .setClientId(CLIENT_ID)
-   //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
    .setClientSecret(SECRET)
    .setAuthEndpoints(authEndpointsMap)
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID)
-   //HTTP connections pool size, optional, defaults to 20
-   .setMaxHttpPoolSize(32)
-   //max HTTP connections per route, optional, defaults to MaxHttpPoolSize
-   .setMaxHttpConnectionsPerRoute(8);
 Storage storage = StorageImpl.getInstance(config);
 ```
 
