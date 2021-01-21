@@ -294,6 +294,11 @@ v3.0.0 release introduced a series of new fields available for storage. Below is
 public class Record {
     //String fields, hashed
     private String recordKey;
+    private String parentKey;
+    private String profileKey;
+    private String serviceKey1;
+    private String serviceKey2;
+   //String fields, hashed or original
     private String key1;
     private String key2;
     private String key3;
@@ -304,9 +309,16 @@ public class Record {
     private String key8;
     private String key9;
     private String key10;
-    private String profileKey;
-    private String serviceKey1;
-    private String serviceKey2;
+    private String key11;
+    private String key12;
+    private String key13;
+    private String key14;
+    private String key15;
+    private String key16;
+    private String key17;
+    private String key18;
+    private String key19;
+    private String key20;
     //String fields, encrypted
     private String body;
     private String precommitBody;
@@ -321,7 +333,7 @@ public class Record {
     private Long rangeKey8;
     private Long rangeKey9;
     private Long rangeKey10;
-    //Readonly service fields, date in ISO format
+    //Readonly service fields, date
     protected Date createdAt;
     protected Date updatedAt;
 ```
