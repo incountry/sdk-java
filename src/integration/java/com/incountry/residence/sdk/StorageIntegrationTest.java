@@ -17,7 +17,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -214,17 +213,12 @@ public class StorageIntegrationTest {
         storageWithCustomCipher = StorageImpl.getInstance(config);
     }
 
-    @AfterAll
-    public void deleteRecordWithAttachment() throws StorageException {
-        storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY);
-    }
-
     private Stream<Arguments> storageProvider() {
         return Stream.of(
+                generateArguments(storageNonHashing),
                 generateArguments(storageWithApiKey),
                 generateArguments(storageOrdinary),
                 generateArguments(storageWithoutEncryption),
-                generateArguments(storageNonHashing),
                 generateArguments(storageIgnoreCase),
                 generateArguments(storageWithCustomCipher)
         );
@@ -235,7 +229,7 @@ public class StorageIntegrationTest {
         return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "batchWriteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(100)
     public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -699,6 +693,12 @@ public class StorageIntegrationTest {
         fileId = attachmentMeta.getFileId();
         assertEquals(fileName, attachmentMeta.getFilename());
         Files.delete(tempFile);
+    }
+
+    @Test
+    @Order(899)
+    public void deleteRecordWithAttachment() throws StorageException {
+        assertTrue(storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY));
     }
 
     @Test

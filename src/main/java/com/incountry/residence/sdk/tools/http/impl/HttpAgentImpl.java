@@ -72,10 +72,11 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
+        CloseableHttpResponse response = null;
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
             addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.getDataStream() != null);
-            CloseableHttpResponse response = httpClient.execute(request);
+            response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
             HttpEntity responseEntity = response.getEntity();
@@ -87,7 +88,6 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             if (response.getEntity() != null) {
                 actualResponseContent = EntityUtils.toString(response.getEntity());
             }
-            response.close();
             ApiResponseCodes expectedResponse = codeMap.get(status);
             boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
             boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse.isCanRetry(), retryCount);
@@ -106,7 +106,16 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             return new ApiResponse(actualResponseContent, metaInfo);
         } catch (IOException ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
+            LOG.error(errorMessage, ex);
             throw new StorageServerException(errorMessage, ex);
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    LOG.warn(e);
+                }
+            }
         }
     }
 
