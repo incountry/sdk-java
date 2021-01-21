@@ -1,5 +1,10 @@
 package com.incountry.residence.sdk.dto.search;
 
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.NullFilter;
+import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -82,56 +87,48 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder keyEq(StringField field, String... keys) throws StorageClientException {
         validateStringFilters(field);
-        filter.setStringFilter(field, new FilterStringParam(keys));
+        filter.setFilter(field, new FilterStringParam(keys));
         return this;
     }
 
     public FindFilterBuilder keyEq(NumberField field, Long... keys) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(keys));
+        filter.setFilter(field, new FilterNumberParam(keys));
         return this;
     }
 
     public FindFilterBuilder keyIsNull(RecordField field) {
-        fillNullFilter(field, true);
+        filter.setFilter(field, new NullFilter(true));
         return this;
     }
 
     public FindFilterBuilder keyIsNotNull(RecordField field) {
-        fillNullFilter(field, false);
+        filter.setFilter(field, new NullFilter(false));
         return this;
-    }
-
-    private void fillNullFilter(RecordField field, boolean isNull) {
-        if (field instanceof NumberField){
-            filter.setNumberFilter((NumberField)field,new NullFilter(isNull));
-        } else if (field instanceof StringField){
-            filter.setStringFilter((StringField)field,new NullFilter(isNull));
-        }
     }
 
     public FindFilterBuilder keyNotEq(StringField field, String... keys) throws StorageClientException {
         validateStringFilters(field);
-        filter.setStringFilter(field, new FilterStringParam(keys, true));
+        filter.setFilter(field, new FilterStringParam(keys, true));
         return this;
     }
 
     public FindFilterBuilder keyGT(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_GT, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_GT, key));
         return this;
     }
 
     public FindFilterBuilder keyGTE(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_GTE, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_GTE, key));
         return this;
     }
 
     public FindFilterBuilder keyLT(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_LT, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_LT, key));
         return this;
     }
 
     public FindFilterBuilder keyLTE(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_LTE, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_LTE, key));
         return this;
     }
 
@@ -140,7 +137,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyBetween(NumberField field, long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
+        filter.setFilter(field, new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
                 fromValue,
                 includeTo ? OPER_LTE : OPER_LT,
                 toValue));
@@ -148,7 +145,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder searchKeysLike(String value) throws StorageClientException {
-        Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
+        Set<RecordField> searchKeys = filter.getFilterMap().keySet();
         for (StringField key : SEARCHABLE_KEYS) {
             if (searchKeys.contains(key)) {
                 LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
@@ -159,7 +156,7 @@ public class FindFilterBuilder {
             LOG.error(MSG_ERR_SEARCH_KEYS_LEN);
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
         }
-        filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[]{value}));
+        filter.setFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[]{value}));
         return this;
     }
 
@@ -196,7 +193,7 @@ public class FindFilterBuilder {
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_ADD);
         }
         if (SEARCHABLE_KEYS.contains(field)
-                && filter.getStringFilterMap().containsKey(StringField.SEARCH_KEYS)) {
+                && filter.getFilterMap().containsKey(StringField.SEARCH_KEYS)) {
             LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
             throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
         }

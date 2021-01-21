@@ -1,8 +1,9 @@
 package com.incountry.residence.sdk.search;
 
-import com.incountry.residence.sdk.dto.search.FilterNumberParam;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.RecordField;
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.SortingField;
@@ -98,12 +99,18 @@ class FindFilterBuilderIsolatedTest {
             if (field.equals(StringField.SEARCH_KEYS)) {
                 continue;
             }
-            assertEquals("1", builder.keyEq(field, "1").build().getStringFilterMap().get(field).getValues().get(0));
-            assertEquals("2", builder.keyEq(field, "1", "2").build().getStringFilterMap().get(field).getValues().get(1));
-            assertFalse(builder.keyEq(field, "4").build().getStringFilterMap().get(field).isNotCondition());
-            assertEquals("6", builder.keyNotEq(field, "5", "6").build().getStringFilterMap().get(field).getValues().get(1));
-            assertTrue(builder.keyNotEq(field, "7", "8").build().getStringFilterMap().get(field).isNotCondition());
-            assertFalse(builder.keyEq(field, "9", "10").build().getStringFilterMap().get(field).isNotCondition());
+            FilterStringParam param = (FilterStringParam) builder.keyEq(field, "1").build().getFilterMap().get(field);
+            assertEquals("1", param.getValues().get(0));
+            param = (FilterStringParam) builder.keyEq(field, "1", "2").build().getFilterMap().get(field);
+            assertEquals("2", param.getValues().get(1));
+            param = (FilterStringParam) builder.keyEq(field, "4").build().getFilterMap().get(field);
+            assertFalse(param.isNotCondition());
+            param = (FilterStringParam) builder.keyNotEq(field, "5", "6").build().getFilterMap().get(field);
+            assertEquals("6", param.getValues().get(1));
+            param = (FilterStringParam) builder.keyNotEq(field, "7", "8").build().getFilterMap().get(field);
+            assertTrue(param.isNotCondition());
+            param = (FilterStringParam) builder.keyEq(field, "9", "10").build().getFilterMap().get(field);
+            assertFalse(param.isNotCondition());
         }
     }
 
@@ -111,26 +118,44 @@ class FindFilterBuilderIsolatedTest {
     void positiveRangeKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         for (NumberField field : NumberField.values()) {
-            assertEquals(1L, builder.keyEq(field, 1L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(2L, builder.keyEq(field, 1L, 2L).build().getNumberFilterMap().get(field).getValues()[1]);
-            assertEquals(9L, builder.keyGT(field, 9L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_GT, builder.keyGT(field, 10L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(11L, builder.keyGTE(field, 11L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.keyGTE(field, 12L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(13L, builder.keyLT(field, 13L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_LT, builder.keyLT(field, 14L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(15L, builder.keyLTE(field, 15L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_LTE, builder.keyLTE(field, 16L).build().getNumberFilterMap().get(field).getOperator1());
+            FilterNumberParam param = (FilterNumberParam) builder.keyEq(field, 1L).build().getFilterMap().get(field);
+            assertEquals(1L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyEq(field, 1L, 2L).build().getFilterMap().get(field);
+            assertEquals(2L, param.getValues()[1]);
+            param = (FilterNumberParam) builder.keyGT(field, 9L).build().getFilterMap().get(field);
+            assertEquals(9L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyGT(field, 10L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GT, param.getOperator1());
+            param = (FilterNumberParam) builder.keyGTE(field, 11L).build().getFilterMap().get(field);
+            assertEquals(11L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyGTE(field, 12L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GTE, param.getOperator1());
+            param = (FilterNumberParam) builder.keyLT(field, 13L).build().getFilterMap().get(field);
+            assertEquals(13L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyLT(field, 14L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LT, param.getOperator1());
+            param = (FilterNumberParam) builder.keyLTE(field, 15L).build().getFilterMap().get(field);
+            assertEquals(15L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyLTE(field, 16L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LTE, param.getOperator1());
             builder.keyBetween(field, 17L, 18L);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(FindFilterBuilder.OPER_LTE, builder.build().getNumberFilterMap().get(field).getOperator2());
-            assertEquals(17L, builder.build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(18L, builder.build().getNumberFilterMap().get(field).getValues()[1]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GTE, param.getOperator1());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LTE, param.getOperator2());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(17L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(18L, param.getValues()[1]);
             builder.keyBetween(field, 19L, true, 20L, false);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(FindFilterBuilder.OPER_LT, builder.build().getNumberFilterMap().get(field).getOperator2());
-            assertEquals(19L, builder.build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(20L, builder.build().getNumberFilterMap().get(field).getValues()[1]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GTE, param.getOperator1());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LT, param.getOperator2());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(19L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(20L, param.getValues()[1]);
         }
     }
 
@@ -213,7 +238,7 @@ class FindFilterBuilderIsolatedTest {
     }
 
     private void checkNumberFilters(FindFilter filter) {
-        Map<NumberField, FilterNumberParam> filterMap = filter.getNumberFilterMap();
+        Map<RecordField, Object> filterMap = filter.getFilterMap();
         assertEquals("FilterRangeParam{values=[23, 24], operator1='null', operator2='null'}", filterMap.get(NumberField.RANGE_KEY1).toString());
         assertEquals("FilterRangeParam{values=[25, 26], operator1='null', operator2='null'}", filterMap.get(NumberField.RANGE_KEY2).toString());
         assertEquals("FilterRangeParam{values=[27, 28], operator1='null', operator2='null'}", filterMap.get(NumberField.RANGE_KEY3).toString());
@@ -227,7 +252,7 @@ class FindFilterBuilderIsolatedTest {
     }
 
     private void checkStringFilters(FindFilter filter) {
-        Map<StringField, FilterStringParam> filterMap = filter.getStringFilterMap();
+        Map<RecordField, Object> filterMap = filter.getFilterMap();
         assertEquals("FilterStringParam{value=[1a, 2b], notCondition=false}", filterMap.get(StringField.RECORD_KEY).toString());
         assertEquals("FilterStringParam{value=[3c, 4d], notCondition=false}", filterMap.get(StringField.KEY1).toString());
         assertEquals("FilterStringParam{value=[5e, 6f], notCondition=false}", filterMap.get(StringField.KEY4).toString());

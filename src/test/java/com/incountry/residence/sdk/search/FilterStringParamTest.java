@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.search;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;

@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.internal;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;

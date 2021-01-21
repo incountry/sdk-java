@@ -1,11 +1,12 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.internal;
 
+import com.incountry.residence.sdk.dto.search.RecordField;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +22,7 @@ public class FindFilter {
     private static final String MSG_NEG_LIMIT = "Limit must be more than 1";
     private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
 
-    private final EnumMap<StringField, FilterStringParam> stringFilterMap = new EnumMap<>(StringField.class);
-    private final EnumMap<NumberField, FilterNumberParam> numberFilterMap = new EnumMap<>(NumberField.class);
+    private final Map<RecordField, Object> filterMap = new HashMap<>();
     private final List<SortingParam> sortingList = new ArrayList<>();
 
     private int limit = MAX_LIMIT;
@@ -57,24 +57,16 @@ public class FindFilter {
         return offset;
     }
 
-    public void setStringFilter(StringField field, FilterStringParam param) {
-        stringFilterMap.put(field, param);
+    public void setFilter(RecordField field, Object param) {
+        filterMap.put(field, param);
     }
 
     public void addSorting(SortingParam param) {
         sortingList.add(param);
     }
 
-    public void setNumberFilter(NumberField field, FilterNumberParam param) {
-        numberFilterMap.put(field, param);
-    }
-
-    public Map<StringField, FilterStringParam> getStringFilterMap() {
-        return stringFilterMap;
-    }
-
-    public Map<NumberField, FilterNumberParam> getNumberFilterMap() {
-        return numberFilterMap;
+    public Map<RecordField, Object> getFilterMap() {
+        return filterMap;
     }
 
     public List<SortingParam> getSortingList() {
@@ -83,8 +75,7 @@ public class FindFilter {
 
     public FindFilter copy() throws StorageClientException {
         FindFilter clone = new FindFilter();
-        clone.stringFilterMap.putAll(this.stringFilterMap);
-        clone.numberFilterMap.putAll(this.numberFilterMap);
+        clone.filterMap.putAll(this.filterMap);
         clone.setOffset(this.getOffset());
         clone.setLimit(this.getLimit());
         clone.sortingList.addAll(this.sortingList);
@@ -94,8 +85,7 @@ public class FindFilter {
     @Override
     public String toString() {
         return "FindFilter{" +
-                "stringFilterMap=" + stringFilterMap +
-                ", numberFilterMap=" + numberFilterMap +
+                "filterMap=" + filterMap +
                 ", limit=" + limit +
                 ", offset=" + offset +
                 ", sorting=" + sortingList +

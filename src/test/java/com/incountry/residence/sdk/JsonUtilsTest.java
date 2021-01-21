@@ -3,9 +3,9 @@ package com.incountry.residence.sdk;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FilterNumberParam;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.StringField;
@@ -46,7 +46,7 @@ class JsonUtilsTest {
     void testWithOneFilter() throws StorageClientException {
         String expected = "{\"filter\":{\"range_key1\":{\"$gt\":1}},\"options\":{\"limit\":100,\"offset\":0}}";
         FindFilter findFilter = new FindFilter();
-        findFilter.setNumberFilter(NumberField.RANGE_KEY1, new FilterNumberParam(OPER_GT, 1L));
+        findFilter.setFilter(NumberField.RANGE_KEY1, new FilterNumberParam(OPER_GT, 1L));
         String fact = JsonUtils.toJsonString(findFilter, null);
         assertEquals(expected, fact);
     }
@@ -60,12 +60,12 @@ class JsonUtilsTest {
     @Test
     void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
-        filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, true));
+        filter.setFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, true));
         String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":{\"$not\":[1]}},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         filter = new FindFilter();
-        filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
+        filter.setFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
         jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 

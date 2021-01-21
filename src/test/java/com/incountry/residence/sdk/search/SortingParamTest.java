@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.search;
 
 import com.incountry.residence.sdk.dto.search.SortingField;
-import com.incountry.residence.sdk.dto.search.SortingParam;
+import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

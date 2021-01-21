@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.search;
 
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -31,9 +31,9 @@ class FindFilterTest {
         FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey}, true);
 
         FindFilter findFilter = new FindFilter();
-        findFilter.setStringFilter(StringField.VERSION, versionFilterParam);
-        findFilter.setStringFilter(StringField.RECORD_KEY, recordKeyFilterParam);
-        findFilter.setStringFilter(StringField.PROFILE_KEY, profileKeyFilterParam);
+        findFilter.setFilter(StringField.VERSION, versionFilterParam);
+        findFilter.setFilter(StringField.RECORD_KEY, recordKeyFilterParam);
+        findFilter.setFilter(StringField.PROFILE_KEY, profileKeyFilterParam);
 
         String envId = null;
         byte[] secret = "password".getBytes(StandardCharsets.UTF_8);

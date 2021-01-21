@@ -4,7 +4,7 @@ import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_GT;
 import static com.incountry.residence.sdk.dto.search.FindFilterBuilder.OPER_LT;
 
 import com.google.gson.Gson;
-import com.incountry.residence.sdk.dto.search.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 

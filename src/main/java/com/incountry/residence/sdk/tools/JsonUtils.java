@@ -9,11 +9,13 @@ import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FilterNumberParam;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.RecordField;
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.dto.search.SortingParam;
+import com.incountry.residence.sdk.dto.search.internal.NullFilter;
+import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
@@ -138,16 +140,43 @@ public class JsonUtils {
     private static JsonObject toJson(FindFilter filter, CryptoManager cryptoManager) {
         JsonObject json = new JsonObject();
         if (filter != null) {
-            filter.getStringFilterMap().forEach((stringField, filterStringParam) ->
-                    addToJson(json, stringField.toString().toLowerCase(), filterStringParam, cryptoManager));
-            filter.getNumberFilterMap().forEach((numberField, filterNumberParam) ->
-                    addRangeToJson(json, numberField.toString().toLowerCase(), filterNumberParam));
+            for (Map.Entry<RecordField, Object> entry : filter.getFilterMap().entrySet()) {
+                String paramName = entry.getKey().toString().toLowerCase();
+                Object param = entry.getValue();
+                if (param instanceof FilterStringParam) {
+                    addStringFilterParam(paramName, (FilterStringParam) param, json, cryptoManager);
+                } else if (param instanceof FilterNumberParam) {
+                    addNumberFilterParam(paramName, (FilterNumberParam) param, json);
+                } else if (param instanceof NullFilter) {
+                    addNullFilterParam(paramName, ((NullFilter) param).isNullable(), json);
+                }
+            }
         }
         return json;
     }
 
-    private static void addRangeToJson(JsonObject json, String jsonKey, FilterNumberParam rangeFilter) {
-        json.add(jsonKey, rangeFilter.isConditional() ? conditionJSON(rangeFilter) : valueJSON(rangeFilter));
+    private static void addNullFilterParam(String paramName, boolean nullable, JsonObject json) {
+        if (nullable) {
+            json.addProperty(paramName, (String) null);
+        } else {
+            JsonObject object = new JsonObject();
+            object.add(FindFilterBuilder.OPER_NOT, null);
+            json.add(paramName, object);
+        }
+    }
+
+    private static void addNumberFilterParam(String paramName, FilterNumberParam rangeFilter, JsonObject json) {
+        json.add(paramName, rangeFilter.isConditional() ? conditionJSON(rangeFilter) : valueJSON(rangeFilter));
+    }
+
+    private static void addStringFilterParam(String paramName, FilterStringParam stringParam, JsonObject json, CryptoManager cryptoManager) {
+        if (paramName.equals(P_VERSION)) {
+            json.add(paramName, stringParam.isNotCondition() ? addNotCondition(stringParam, paramName, null, false) : toJsonInt(stringParam));
+        } else if (paramName.equals(P_SEARCH_KEYS)) {
+            json.addProperty(P_SEARCH_KEYS, stringParam.getValues().get(0));
+        } else {
+            json.add(paramName, stringParam.isNotCondition() ? addNotCondition(stringParam, paramName, cryptoManager, true) : toJsonArray(stringParam, paramName, cryptoManager));
+        }
     }
 
     /**
@@ -173,16 +202,6 @@ public class JsonUtils {
             tempRecord.setVersion(0);
         }
         return tempRecord.decrypt(cryptoManager, getGson4Records());
-    }
-
-    private static void addToJson(JsonObject json, String paramName, FilterStringParam param, CryptoManager cryptoManager) {
-        if (paramName.equals(P_VERSION)) {
-            json.add(paramName, param.isNotCondition() ? addNotCondition(param, paramName, null, false) : toJsonInt(param));
-        } else if (paramName.equals(P_SEARCH_KEYS)) {
-            json.addProperty(P_SEARCH_KEYS, param.getValues().get(0));
-        } else {
-            json.add(paramName, param.isNotCondition() ? addNotCondition(param, paramName, cryptoManager, true) : toJsonArray(param, paramName, cryptoManager));
-        }
     }
 
     /**

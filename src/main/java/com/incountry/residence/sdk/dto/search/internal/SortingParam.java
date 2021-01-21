@@ -1,4 +1,6 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.internal;
+
+import com.incountry.residence.sdk.dto.search.SortingField;
 
 public class SortingParam {
     private final SortingField field;
