@@ -702,9 +702,8 @@ public class AttachedFile {
 Example of usage:
 ```java
 AttachedFile attachement = storageForAttachment.getAttachmentFile(COUNTRY, RECORD_KEY, fileId);
-FileUtils.copyInputStreamToFile(attachement.getFileContent(), new File(attachement.getFileName()));
-
-
+File file = new File(attachement.getFileName());
+FileUtils.copyInputStreamToFile(attachement.getFileContent(), file);
 ```
 
 ### Working with attachment meta info
