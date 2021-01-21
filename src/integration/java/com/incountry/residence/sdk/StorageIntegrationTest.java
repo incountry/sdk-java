@@ -17,7 +17,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -224,17 +223,12 @@ public class StorageIntegrationTest {
         storageWithCustomCipher = StorageImpl.getInstance(config);
     }
 
-    @AfterAll
-    public void deleteRecordWithAttachment() throws StorageException {
-        storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY);
-    }
-
     private Stream<Arguments> storageProvider() {
         return Stream.of(
+                generateArguments(storageNonHashing),
                 generateArguments(storageWithApiKey),
                 generateArguments(storageOrdinary),
                 generateArguments(storageWithoutEncryption),
-                generateArguments(storageNonHashing),
                 generateArguments(storageIgnoreCase),
                 generateArguments(storageWithCustomCipher)
         );
@@ -245,7 +239,7 @@ public class StorageIntegrationTest {
         return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "batchWriteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(100)
     public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -260,7 +254,7 @@ public class StorageIntegrationTest {
         storage.batchWrite(MIDIPOP_COUNTRY, records);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "writeTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(200)
     public void writeTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -282,7 +276,7 @@ public class StorageIntegrationTest {
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "readTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(300)
     public void readTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -328,7 +322,7 @@ public class StorageIntegrationTest {
         assertNotNull(incomingRecord.getUpdatedAt());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "findTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(400)
     public void findTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -381,7 +375,7 @@ public class StorageIntegrationTest {
         assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "findAdvancedTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(401)
     public void findAdvancedTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -398,7 +392,7 @@ public class StorageIntegrationTest {
         assertTrue(resultIdList.contains(batchRecordKey));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "findByVersionTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(402)
     public void findByVersionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -425,7 +419,7 @@ public class StorageIntegrationTest {
         assertEquals(2, batchRecord4.getRecords().size());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "findByAllFieldsTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(403)
     public void findByAllFieldsTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -485,7 +479,7 @@ public class StorageIntegrationTest {
         assertEquals(SERVICE_KEY_2, record.getServiceKey2());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "findOneTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(404)
     public void findOneTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -497,7 +491,7 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_BODY, record.getBody());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "deleteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(600)
     public void deleteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
@@ -711,6 +705,12 @@ public class StorageIntegrationTest {
         fileId = attachmentMeta.getFileId();
         assertEquals(fileName, attachmentMeta.getFilename());
         Files.delete(tempFile);
+    }
+
+    @Test
+    @Order(899)
+    public void deleteRecordWithAttachment() throws StorageException {
+        assertTrue(storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY));
     }
 
     @Test

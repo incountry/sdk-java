@@ -189,7 +189,6 @@ public class StorageImpl implements Storage {
         connectionManager.setMaxTotal(poolSize);
         connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
         builder.setConnectionManager(connectionManager);
-
         return builder.build();
     }
 
