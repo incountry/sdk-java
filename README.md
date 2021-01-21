@@ -108,12 +108,7 @@ public class StorageConfig {
 ---
 **WARNING**
 
-API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
-
----
-**WARNING**
-
-API Key authorization is being deprecated. The backward compatibility is preserved for the `api_key` parameter but you no longer can access API keys (neither old nor new) from your dashboard.
+API Key authorization is being deprecated. The backward compatibility is preserved for the API keys, but you no longer can access API keys (neither old nor new) from your dashboard.
 
 Below you can find API Key authorization usage example:
 ```java
