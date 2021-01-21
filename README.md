@@ -625,13 +625,15 @@ public interface Storage {
      * @param recordKey       the record's recordKey
      * @param fileInputStream input data stream
      * @param fileName        file name
-     * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
+     * @param upsert          if true will overwrite existing file with the same name.
+     *                        Otherwise will throw exception
      * @param mimeType        mime type for attached file
      * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
-    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, String mimeType)
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, 
+                                 String fileName, boolean upsert, String mimeType)
              throws StorageClientException, StorageServerException;
     //...
 }
@@ -640,8 +642,8 @@ public interface Storage {
 Example of usage:
 ```java
 File initialFile = new File("example.txt");
-InputStream fileInputStream = new FileInputStream(initialFile);
-storage.addAttachment(COUNTRY_CODE, RECORD_KEY, fileInputStream, "example.txt", false, MIME_TYPE);
+InputStream stream = new FileInputStream(initialFile);
+storage.addAttachment(COUNTRY, RECORD_KEY, stream, "example.txt", false, MIME_TYPE);
 ```
 
 ### Deleting attachments
@@ -667,7 +669,7 @@ public interface Storage {
 
 Example of usage:
 ```java
-storage.deleteAttachment(COUNTRY_CODE, RECORD_KEY, fileId);
+storage.deleteAttachment(COUNTRY, RECORD_KEY, fileId);
 ```
 
 ### Downloading attachments
@@ -699,7 +701,7 @@ public class AttachedFile {
 
 Example of usage:
 ```java
-AttachedFile attachement = storageForAttachment.getAttachmentFile(COUNTRY_CODE, RECORD_KEY, fileId);
+AttachedFile attachement = storageForAttachment.getAttachmentFile(COUNTRY, RECORD_KEY, fileId);
 FileUtils.copyInputStreamToFile(attachement.getFileContent(), new File(attachement.getFileName()));
 
 
@@ -716,7 +718,8 @@ public interface Storage {
      * @param country   country identifier
      * @param recordKey the record's recordKey
      * @param fileId    file identifier
-     * @return AttachmentMeta object which contains required meta information fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
+     * @return AttachmentMeta object which contains required meta information fileId,
+     * mimeType, size, filename, downloadLink, updatedAt and createdAt
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
@@ -728,7 +731,7 @@ public interface Storage {
 
 Example of usage:
 ```java
-AttachmentMeta meta = storageForAttachment.getAttachmentMeta(COUNTRY_CODE, RECORD_KEY, fileId);
+AttachmentMeta meta = storageForAttachment.getAttachmentMeta(COUNTRY, RECORD_KEY, fileId);
 ```
 
 The `updateAttachmentMeta` method of `Storage` allows you to update attachment's metadata (MIME type and file name).
@@ -746,7 +749,8 @@ public interface Storage {
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      */
-    AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) 
+    AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, 
+                                        String fileName, String mimeType) 
             throws StorageClientException, StorageServerException;
     //...
 }
@@ -754,7 +758,8 @@ public interface Storage {
 
 Example of usage:
 ```java
-AttachmentMeta meta = storage.updateAttachmentMeta(COUNTRY_CODE, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
+AttachmentMeta meta = storage
+        .updateAttachmentMeta(COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
 ```
 
 Data Migration and Key Rotation support
