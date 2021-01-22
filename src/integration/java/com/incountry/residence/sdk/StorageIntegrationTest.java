@@ -415,6 +415,15 @@ public class StorageIntegrationTest {
         record1date = batchRecord.getRecords().get(0).getCreatedAt();
         record2date = batchRecord.getRecords().get(1).getCreatedAt();
         assertTrue(record1date.after(record2date) || record1date.equals(record2date));
+
+        builder = FindFilterBuilder.create().keyEq(StringField.KEY2, key2);
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNotNull(StringField.KEY20));
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
+
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNull(StringField.KEY20));
+        assertEquals(1, batchRecord.getCount());
+        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
     }
 
     @ParameterizedTest(name = "findByVersionTest [{index}] {arguments}")
