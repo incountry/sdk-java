@@ -14,7 +14,7 @@ import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
-import com.incountry.residence.sdk.dto.search.internal.NullFilter;
+import com.incountry.residence.sdk.dto.search.internal.FilterNullParam;
 import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.POP;
@@ -147,8 +147,8 @@ public class JsonUtils {
                     addStringFilterParam(paramName, (FilterStringParam) param, json, cryptoManager);
                 } else if (param instanceof FilterNumberParam) {
                     addNumberFilterParam(paramName, (FilterNumberParam) param, json);
-                } else if (param instanceof NullFilter) {
-                    addNullFilterParam(paramName, ((NullFilter) param).isNullable(), json);
+                } else if (param instanceof FilterNullParam) {
+                    addNullFilterParam(paramName, ((FilterNullParam) param).isNullable(), json);
                 }
             }
         }

@@ -341,4 +341,19 @@ class FindFilterBuilderIsolatedTest {
                 builder.addSorting(null, false));
         assertEquals("Sorting field is null", ex.getMessage());
     }
+
+    @Test
+    void nullFilterTest() throws StorageClientException {
+        FindFilter filter = FindFilterBuilder.create()
+                .keyIsNotNull(NumberField.RANGE_KEY1)
+                .keyIsNotNull(StringField.KEY1)
+                .keyIsNull(NumberField.RANGE_KEY2)
+                .keyIsNull(StringField.KEY2)
+                .build();
+        String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
+        assertTrue(jsonFilter.contains("\"range_key1\":{\"$not\":null}"));
+        assertTrue(jsonFilter.contains("\"key1\":{\"$not\":null}"));
+        assertTrue(jsonFilter.contains("\"range_key2\":null"));
+        assertTrue(jsonFilter.contains("\"key2\":null"));
+    }
 }

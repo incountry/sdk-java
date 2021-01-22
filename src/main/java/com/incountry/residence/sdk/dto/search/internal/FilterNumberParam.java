@@ -29,12 +29,6 @@ public class FilterNumberParam {
     private final String operator1;
     private final String operator2;
 
-    private FilterNumberParam(Long[] values, String operator1, String operator2) {
-        this.values = Arrays.copyOf(values, values.length);
-        this.operator1 = operator1;
-        this.operator2 = operator2;
-    }
-
     public FilterNumberParam(Long[] values) throws StorageClientException {
         if (values == null || values.length == 0 || (Stream.of(values).anyMatch(Objects::isNull))) {
             LOG.error(ERR_NULL_VALUE);
@@ -112,10 +106,6 @@ public class FilterNumberParam {
 
     public String getOperator2() {
         return operator2;
-    }
-
-    public FilterNumberParam copy() {
-        return new FilterNumberParam(getValues(), getOperator1(), getOperator2());
     }
 
     @Override

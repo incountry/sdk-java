@@ -3,7 +3,7 @@ package com.incountry.residence.sdk.dto.search;
 import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
-import com.incountry.residence.sdk.dto.search.internal.NullFilter;
+import com.incountry.residence.sdk.dto.search.internal.FilterNullParam;
 import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.LogManager;
@@ -97,12 +97,12 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyIsNull(RecordField field) {
-        filter.setFilter(field, new NullFilter(true));
+        filter.setFilter(field, new FilterNullParam(true));
         return this;
     }
 
     public FindFilterBuilder keyIsNotNull(RecordField field) {
-        filter.setFilter(field, new NullFilter(false));
+        filter.setFilter(field, new FilterNullParam(false));
         return this;
     }
 

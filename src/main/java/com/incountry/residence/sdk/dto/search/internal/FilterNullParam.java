@@ -1,10 +1,10 @@
 package com.incountry.residence.sdk.dto.search.internal;
 
-public class NullFilter {
+public class FilterNullParam {
 
     private final boolean nullable;
 
-    public NullFilter(boolean isNull) {
+    public FilterNullParam(boolean isNull) {
         nullable = isNull;
     }
 
