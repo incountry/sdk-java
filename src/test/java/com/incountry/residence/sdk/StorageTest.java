@@ -715,7 +715,7 @@ class StorageTest {
         Record record = new Record(RECORD_KEY, BODY)
                 .setKey10(generatedString);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, record));
-        assertEquals("key1-key10 length can't be more than 256 chars", ex.getMessage());
+        assertEquals("key1-key20 length can't be more than 256 chars", ex.getMessage());
         Record record1 = new Record(RECORD_KEY, BODY)
                 .setKey10("generatedString");
         StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record1));
