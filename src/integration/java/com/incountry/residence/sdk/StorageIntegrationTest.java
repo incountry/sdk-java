@@ -770,17 +770,17 @@ public class StorageIntegrationTest {
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
-        storageNonHashing.write(MIDIPOP_COUNTRY, record);
+        storageNonHashing.write(MIDIPOP_COUNTRY_2, record);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
+        BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY_2, builder);
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
 
-        storageNonHashing.delete(MIDIPOP_COUNTRY, recordKey);
+        storageNonHashing.delete(MIDIPOP_COUNTRY_2, recordKey);
     }
 
     @Test
