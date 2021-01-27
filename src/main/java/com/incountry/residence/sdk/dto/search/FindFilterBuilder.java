@@ -4,7 +4,6 @@ import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.internal.FilterNullParam;
-import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -165,14 +164,12 @@ public class FindFilterBuilder {
             LOG.error(MSG_ERR_NULL_SORT_FIELD);
             throw new StorageClientException(MSG_ERR_NULL_SORT_FIELD);
         }
-        for (SortingParam param : filter.getSortingList()) {
-            if (param.getField().equals(field)) {
-                String message = String.format(MSG_ERR_DUPL_SORT_FIELD, field);
-                LOG.error(message);
-                throw new StorageClientException(message);
-            }
+        if (filter.getSortingMap().containsKey(field)) {
+            String message = String.format(MSG_ERR_DUPL_SORT_FIELD, field);
+            LOG.error(message);
+            throw new StorageClientException(message);
         }
-        filter.addSorting(new SortingParam(field, desc));
+        filter.addSorting(field, desc);
         return this;
     }
 
