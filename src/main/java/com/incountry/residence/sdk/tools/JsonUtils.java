@@ -10,12 +10,12 @@ import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.RecordField;
-import com.incountry.residence.sdk.dto.search.SortingField;
 import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.internal.FilterNullParam;
+import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.dao.POP;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
@@ -271,11 +271,11 @@ public class JsonUtils {
         if (filter != null) {
             limit = filter.getLimit();
             offset = filter.getOffset();
-            if (!filter.getSortingMap().isEmpty()) {
+            if (!filter.getSortingList().isEmpty()) {
                 JsonArray sortArray = new JsonArray();
-                for (Map.Entry<SortingField, Boolean> sortElement : filter.getSortingMap().entrySet()) {
+                for (SortingParam param : filter.getSortingList()) {
                     JsonObject jsonParam = new JsonObject();
-                    jsonParam.addProperty(sortElement.getKey().toString().toLowerCase(), Boolean.TRUE.equals(sortElement.getValue()) ? DESC : ASC);
+                    jsonParam.addProperty(param.getField().toString().toLowerCase(), param.isDesc() ? DESC : ASC);
                     sortArray.add(jsonParam);
                 }
                 optionsObject.add(P_SORTING, sortArray);

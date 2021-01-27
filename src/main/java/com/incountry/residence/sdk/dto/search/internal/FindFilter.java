@@ -1,13 +1,13 @@
 package com.incountry.residence.sdk.dto.search.internal;
 
 import com.incountry.residence.sdk.dto.search.RecordField;
-import com.incountry.residence.sdk.dto.search.SortingField;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.EnumMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,7 +23,7 @@ public class FindFilter {
     private static final String MSG_NEG_OFFSET = "Offset must be more than 0";
 
     private final Map<RecordField, Object> filterMap = new HashMap<>();
-    private final Map<SortingField, Boolean> sortingMap = new EnumMap<>(SortingField.class);
+    private final List<SortingParam> sortingList = new ArrayList<>();
 
     private int limit = MAX_LIMIT;
     private int offset = DEFAULT_OFFSET;
@@ -61,16 +61,16 @@ public class FindFilter {
         filterMap.put(field, param);
     }
 
-    public void addSorting(SortingField field, boolean desc) {
-        sortingMap.put(field, desc);
+    public void addSorting(SortingParam param) {
+        sortingList.add(param);
     }
 
     public Map<RecordField, Object> getFilterMap() {
         return filterMap;
     }
 
-    public Map<SortingField, Boolean> getSortingMap() {
-        return sortingMap;
+    public List<SortingParam> getSortingList() {
+        return sortingList;
     }
 
     public FindFilter copy() throws StorageClientException {
@@ -78,7 +78,7 @@ public class FindFilter {
         clone.filterMap.putAll(this.filterMap);
         clone.setOffset(this.getOffset());
         clone.setLimit(this.getLimit());
-        clone.sortingMap.putAll(this.sortingMap);
+        clone.sortingList.addAll(this.sortingList);
         return clone;
     }
 
@@ -88,7 +88,7 @@ public class FindFilter {
                 "filterMap=" + filterMap +
                 ", limit=" + limit +
                 ", offset=" + offset +
-                ", sorting=" + sortingMap +
+                ", sorting=" + sortingList +
                 '}';
     }
 }
