@@ -417,11 +417,11 @@ public class StorageIntegrationTest {
         assertTrue(record1date.after(record2date) || record1date.equals(record2date));
 
         builder = FindFilterBuilder.create().keyEq(StringField.KEY2, key2);
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNotNull(StringField.KEY20));
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().nullable(StringField.KEY20, false));
         assertEquals(1, batchRecord.getCount());
         assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNull(StringField.KEY20));
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().nullable(StringField.KEY20, true));
         assertEquals(1, batchRecord.getCount());
         assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
     }
