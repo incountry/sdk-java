@@ -96,12 +96,12 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder keyIsNull(RecordField field) {
+    public <T extends Enum<T> & RecordField> FindFilterBuilder keyIsNull(T field) {
         filter.setFilter(field, new FilterNullParam(true));
         return this;
     }
 
-    public FindFilterBuilder keyIsNotNull(RecordField field) {
+    public <T extends Enum<T> & RecordField> FindFilterBuilder keyIsNotNull(T field) {
         filter.setFilter(field, new FilterNullParam(false));
         return this;
     }

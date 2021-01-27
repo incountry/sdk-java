@@ -57,7 +57,7 @@ public class FindFilter {
         return offset;
     }
 
-    public void setFilter(RecordField field, Object param) {
+    public <T extends Enum<T> & RecordField> void setFilter(T field, Object param) {
         filterMap.put(field, param);
     }
 
