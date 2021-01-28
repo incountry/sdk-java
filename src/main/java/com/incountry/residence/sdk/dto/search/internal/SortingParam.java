@@ -1,26 +1,27 @@
 package com.incountry.residence.sdk.dto.search.internal;
 
-import com.incountry.residence.sdk.dto.search.SortingField;
+import com.incountry.residence.sdk.dto.search.SortFields;
+import com.incountry.residence.sdk.dto.search.SortOrder;
 
 public class SortingParam {
-    private final SortingField field;
-    private final boolean desc;
+    private final SortFields field;
+    private final SortOrder order;
 
-    public SortingParam(SortingField field, boolean desc) {
+    public SortingParam(SortFields field, SortOrder order) {
         this.field = field;
-        this.desc = desc;
+        this.order = order;
     }
 
-    public SortingField getField() {
+    public SortFields getField() {
         return field;
     }
 
-    public boolean isDesc() {
-        return desc;
+    public SortOrder getOrder() {
+        return order;
     }
 
     @Override
     public String toString() {
-        return "SortingParam{" + field + ", " + (desc ? "DESC" : "ASC") + '}';
+        return "SortingParam{" + field + ", " + order + '}';
     }
 }

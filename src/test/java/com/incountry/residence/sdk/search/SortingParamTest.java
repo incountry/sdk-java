@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk.search;
 
-import com.incountry.residence.sdk.dto.search.SortingField;
+import com.incountry.residence.sdk.dto.search.SortFields;
+import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import org.junit.jupiter.api.Test;
 
@@ -10,9 +11,9 @@ class SortingParamTest {
 
     @Test
     void toStringTest() {
-        SortingParam param = new SortingParam(SortingField.RANGE_KEY1, true);
+        SortingParam param = new SortingParam(SortFields.RANGE_KEY1, SortOrder.DESC);
         assertEquals("SortingParam{RANGE_KEY1, DESC}", param.toString());
-        param = new SortingParam(SortingField.KEY1, false);
+        param = new SortingParam(SortFields.KEY1, SortOrder.ASC);
         assertEquals("SortingParam{KEY1, ASC}", param.toString());
     }
 }

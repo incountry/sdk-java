@@ -494,12 +494,12 @@ Sorting find results is currently available for InCountry dedicated instances on
 
 ---
 
-By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `addSorting` of `FindFilterBuilder` .
+By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilterBuilder` .
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                   //...
-                  .addSorting(SortingField.CREATED_AT, false)
-                  .addSorting(SortingField.RANGE_KEY1, true)
+                  .sortBy(SortFields.CREATED_AT, SortOrder.ASC)
+                  .sortBy(SortFields.RANGE_KEY1, SortOrder.DESC)
 BatchRecord records = storage.find("us", builder);
 ```
 The request will return records, sorted according to the following pseudo-sql
@@ -509,7 +509,7 @@ SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
 
 ##### Fields that records can be sorted by:
 ```java
-public enum SortingField {
+public enum SortFields {
    KEY1,
    KEY2,
    KEY3,

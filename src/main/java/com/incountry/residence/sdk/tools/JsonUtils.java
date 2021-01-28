@@ -56,8 +56,6 @@ public class JsonUtils {
     private static final String P_LIMIT = "limit";
     private static final String P_OFFSET = "offset";
     private static final String P_SORTING = "sort";
-    private static final String ASC = "asc";
-    private static final String DESC = "desc";
     private static final String P_OPTIONS = "options";
     private static final String P_FILTER = "filter";
     private static final String P_FILE_NAME = "filename";
@@ -275,7 +273,7 @@ public class JsonUtils {
                 JsonArray sortArray = new JsonArray();
                 for (SortingParam param : filter.getSortingList()) {
                     JsonObject jsonParam = new JsonObject();
-                    jsonParam.addProperty(param.getField().toString().toLowerCase(), param.isDesc() ? DESC : ASC);
+                    jsonParam.addProperty(param.getField().toString().toLowerCase(), param.getOrder().toString().toLowerCase());
                     sortArray.add(jsonParam);
                 }
                 optionsObject.add(P_SORTING, sortArray);

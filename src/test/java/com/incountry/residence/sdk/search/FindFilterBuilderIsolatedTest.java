@@ -1,12 +1,13 @@
 package com.incountry.residence.sdk.search;
 
 import com.incountry.residence.sdk.dto.search.RecordField;
+import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
 import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
-import com.incountry.residence.sdk.dto.search.SortingField;
+import com.incountry.residence.sdk.dto.search.SortFields;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -283,38 +284,38 @@ class FindFilterBuilderIsolatedTest {
     void sortingTest() throws StorageClientException {
         FindFilter filter = FindFilterBuilder.create()
                 .keyEq(StringField.KEY1, "<RecordKey>")
-                .addSorting(SortingField.KEY1, true)
-                .addSorting(SortingField.KEY2, true)
-                .addSorting(SortingField.KEY3, true)
-                .addSorting(SortingField.KEY4, true)
-                .addSorting(SortingField.KEY5, true)
-                .addSorting(SortingField.KEY6, true)
-                .addSorting(SortingField.KEY7, true)
-                .addSorting(SortingField.KEY8, true)
-                .addSorting(SortingField.KEY9, true)
-                .addSorting(SortingField.KEY10, true)
-                .addSorting(SortingField.KEY11, true)
-                .addSorting(SortingField.KEY12, true)
-                .addSorting(SortingField.KEY13, true)
-                .addSorting(SortingField.KEY14, true)
-                .addSorting(SortingField.KEY15, true)
-                .addSorting(SortingField.KEY16, true)
-                .addSorting(SortingField.KEY17, true)
-                .addSorting(SortingField.KEY18, true)
-                .addSorting(SortingField.KEY19, true)
-                .addSorting(SortingField.KEY20, true)
-                .addSorting(SortingField.RANGE_KEY1, false)
-                .addSorting(SortingField.RANGE_KEY2, false)
-                .addSorting(SortingField.RANGE_KEY3, false)
-                .addSorting(SortingField.RANGE_KEY4, false)
-                .addSorting(SortingField.RANGE_KEY5, false)
-                .addSorting(SortingField.RANGE_KEY6, false)
-                .addSorting(SortingField.RANGE_KEY7, false)
-                .addSorting(SortingField.RANGE_KEY8, false)
-                .addSorting(SortingField.RANGE_KEY9, false)
-                .addSorting(SortingField.RANGE_KEY10, false)
-                .addSorting(SortingField.CREATED_AT, false)
-                .addSorting(SortingField.UPDATED_AT, false)
+                .sortBy(SortFields.KEY1, SortOrder.DESC)
+                .sortBy(SortFields.KEY2, SortOrder.DESC)
+                .sortBy(SortFields.KEY3, SortOrder.DESC)
+                .sortBy(SortFields.KEY4, SortOrder.DESC)
+                .sortBy(SortFields.KEY5, SortOrder.DESC)
+                .sortBy(SortFields.KEY6, SortOrder.DESC)
+                .sortBy(SortFields.KEY7, SortOrder.DESC)
+                .sortBy(SortFields.KEY8, SortOrder.DESC)
+                .sortBy(SortFields.KEY9, SortOrder.DESC)
+                .sortBy(SortFields.KEY10, SortOrder.DESC)
+                .sortBy(SortFields.KEY11, SortOrder.DESC)
+                .sortBy(SortFields.KEY12, SortOrder.DESC)
+                .sortBy(SortFields.KEY13, SortOrder.DESC)
+                .sortBy(SortFields.KEY14, SortOrder.DESC)
+                .sortBy(SortFields.KEY15, SortOrder.DESC)
+                .sortBy(SortFields.KEY16, SortOrder.DESC)
+                .sortBy(SortFields.KEY17, SortOrder.DESC)
+                .sortBy(SortFields.KEY18, SortOrder.DESC)
+                .sortBy(SortFields.KEY19, SortOrder.DESC)
+                .sortBy(SortFields.KEY20, SortOrder.DESC)
+                .sortBy(SortFields.RANGE_KEY1, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY2, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY3, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY4, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY5, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY6, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY7, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY8, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY9, SortOrder.ASC)
+                .sortBy(SortFields.RANGE_KEY10, SortOrder.ASC)
+                .sortBy(SortFields.CREATED_AT, SortOrder.ASC)
+                .sortBy(SortFields.UPDATED_AT, SortOrder.ASC)
                 .build();
         String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
         assertEquals("{\"filter\":{\"key1\":[\"b99fc3a4b5365f543fbb39af2fddead40edcb3e72368df475c8c1385549968b1\"]}," +
@@ -332,13 +333,13 @@ class FindFilterBuilderIsolatedTest {
     @Test
     void sortingNegativeTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .addSorting(SortingField.KEY1, false);
+                .sortBy(SortFields.KEY1, SortOrder.ASC);
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
-                builder.addSorting(SortingField.KEY1, false));
+                builder.sortBy(SortFields.KEY1, SortOrder.ASC));
         assertEquals("Field KEY1 is already in sorting list", ex.getMessage());
 
         ex = assertThrows(StorageClientException.class, () ->
-                builder.addSorting(null, false));
+                builder.sortBy(null, SortOrder.ASC));
         assertEquals("Sorting field is null", ex.getMessage());
     }
 
