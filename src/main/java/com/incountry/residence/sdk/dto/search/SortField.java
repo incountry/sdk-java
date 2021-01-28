@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk.dto.search;
 
-public enum SortFields {
+public enum SortField {
     KEY1,
     KEY2,
     KEY3,

@@ -498,8 +498,8 @@ By default, data at a find result is not sorted. To sort the returned records by
 ```java
 FindFilterBuilder builder = FindFilterBuilder.create()
                   //...
-                  .sortBy(SortFields.CREATED_AT, SortOrder.ASC)
-                  .sortBy(SortFields.RANGE_KEY1, SortOrder.DESC)
+                  .sortBy(SortField.CREATED_AT, SortOrder.ASC)
+                  .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
 BatchRecord records = storage.find("us", builder);
 ```
 The request will return records, sorted according to the following pseudo-sql

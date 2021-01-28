@@ -160,7 +160,7 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder sortBy(SortFields field, SortOrder order) throws StorageClientException {
+    public FindFilterBuilder sortBy(SortField field, SortOrder order) throws StorageClientException {
         if (field == null) {
             LOG.error(MSG_ERR_NULL_SORT_FIELD);
             throw new StorageClientException(MSG_ERR_NULL_SORT_FIELD);

@@ -7,7 +7,7 @@ import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
-import com.incountry.residence.sdk.dto.search.SortFields;
+import com.incountry.residence.sdk.dto.search.SortField;
 import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.Crypto;
@@ -392,7 +392,7 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
 
-        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortFields.RANGE_KEY10, SortOrder.ASC));
+        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.RANGE_KEY10, SortOrder.ASC));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         Long record1Value = batchRecord.getRecords().get(0).getRangeKey10();
@@ -400,21 +400,21 @@ public class StorageIntegrationTest {
         assertTrue(record1Value <= record2Value);
 
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortFields.RANGE_KEY10, SortOrder.DESC));
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.RANGE_KEY10, SortOrder.DESC));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         record1Value = batchRecord.getRecords().get(0).getRangeKey10();
         record2Value = batchRecord.getRecords().get(1).getRangeKey10();
         assertTrue(record1Value >= record2Value);
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortFields.CREATED_AT, SortOrder.ASC));
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.CREATED_AT, SortOrder.ASC));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         Date record1date = batchRecord.getRecords().get(0).getCreatedAt();
         Date record2date = batchRecord.getRecords().get(1).getCreatedAt();
         assertTrue(record1date.before(record2date) || record1date.equals(record2date));
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortFields.CREATED_AT, SortOrder.DESC));
+        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.CREATED_AT, SortOrder.DESC));
         assertEquals(2, batchRecord.getCount());
         assertEquals(2, batchRecord.getRecords().size());
         record1date = batchRecord.getRecords().get(0).getCreatedAt();

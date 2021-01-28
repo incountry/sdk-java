@@ -1,18 +1,18 @@
 package com.incountry.residence.sdk.dto.search.internal;
 
-import com.incountry.residence.sdk.dto.search.SortFields;
+import com.incountry.residence.sdk.dto.search.SortField;
 import com.incountry.residence.sdk.dto.search.SortOrder;
 
 public class SortingParam {
-    private final SortFields field;
+    private final SortField field;
     private final SortOrder order;
 
-    public SortingParam(SortFields field, SortOrder order) {
+    public SortingParam(SortField field, SortOrder order) {
         this.field = field;
         this.order = order;
     }
 
-    public SortFields getField() {
+    public SortField getField() {
         return field;
     }
 

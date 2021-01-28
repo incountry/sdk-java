@@ -7,7 +7,7 @@ import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
-import com.incountry.residence.sdk.dto.search.SortFields;
+import com.incountry.residence.sdk.dto.search.SortField;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -284,38 +284,38 @@ class FindFilterBuilderIsolatedTest {
     void sortingTest() throws StorageClientException {
         FindFilter filter = FindFilterBuilder.create()
                 .keyEq(StringField.KEY1, "<RecordKey>")
-                .sortBy(SortFields.KEY1, SortOrder.DESC)
-                .sortBy(SortFields.KEY2, SortOrder.DESC)
-                .sortBy(SortFields.KEY3, SortOrder.DESC)
-                .sortBy(SortFields.KEY4, SortOrder.DESC)
-                .sortBy(SortFields.KEY5, SortOrder.DESC)
-                .sortBy(SortFields.KEY6, SortOrder.DESC)
-                .sortBy(SortFields.KEY7, SortOrder.DESC)
-                .sortBy(SortFields.KEY8, SortOrder.DESC)
-                .sortBy(SortFields.KEY9, SortOrder.DESC)
-                .sortBy(SortFields.KEY10, SortOrder.DESC)
-                .sortBy(SortFields.KEY11, SortOrder.DESC)
-                .sortBy(SortFields.KEY12, SortOrder.DESC)
-                .sortBy(SortFields.KEY13, SortOrder.DESC)
-                .sortBy(SortFields.KEY14, SortOrder.DESC)
-                .sortBy(SortFields.KEY15, SortOrder.DESC)
-                .sortBy(SortFields.KEY16, SortOrder.DESC)
-                .sortBy(SortFields.KEY17, SortOrder.DESC)
-                .sortBy(SortFields.KEY18, SortOrder.DESC)
-                .sortBy(SortFields.KEY19, SortOrder.DESC)
-                .sortBy(SortFields.KEY20, SortOrder.DESC)
-                .sortBy(SortFields.RANGE_KEY1, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY2, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY3, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY4, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY5, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY6, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY7, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY8, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY9, SortOrder.ASC)
-                .sortBy(SortFields.RANGE_KEY10, SortOrder.ASC)
-                .sortBy(SortFields.CREATED_AT, SortOrder.ASC)
-                .sortBy(SortFields.UPDATED_AT, SortOrder.ASC)
+                .sortBy(SortField.KEY1, SortOrder.DESC)
+                .sortBy(SortField.KEY2, SortOrder.DESC)
+                .sortBy(SortField.KEY3, SortOrder.DESC)
+                .sortBy(SortField.KEY4, SortOrder.DESC)
+                .sortBy(SortField.KEY5, SortOrder.DESC)
+                .sortBy(SortField.KEY6, SortOrder.DESC)
+                .sortBy(SortField.KEY7, SortOrder.DESC)
+                .sortBy(SortField.KEY8, SortOrder.DESC)
+                .sortBy(SortField.KEY9, SortOrder.DESC)
+                .sortBy(SortField.KEY10, SortOrder.DESC)
+                .sortBy(SortField.KEY11, SortOrder.DESC)
+                .sortBy(SortField.KEY12, SortOrder.DESC)
+                .sortBy(SortField.KEY13, SortOrder.DESC)
+                .sortBy(SortField.KEY14, SortOrder.DESC)
+                .sortBy(SortField.KEY15, SortOrder.DESC)
+                .sortBy(SortField.KEY16, SortOrder.DESC)
+                .sortBy(SortField.KEY17, SortOrder.DESC)
+                .sortBy(SortField.KEY18, SortOrder.DESC)
+                .sortBy(SortField.KEY19, SortOrder.DESC)
+                .sortBy(SortField.KEY20, SortOrder.DESC)
+                .sortBy(SortField.RANGE_KEY1, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY2, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY3, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY4, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY5, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY6, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY7, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY8, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY9, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY10, SortOrder.ASC)
+                .sortBy(SortField.CREATED_AT, SortOrder.ASC)
+                .sortBy(SortField.UPDATED_AT, SortOrder.ASC)
                 .build();
         String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
         assertEquals("{\"filter\":{\"key1\":[\"b99fc3a4b5365f543fbb39af2fddead40edcb3e72368df475c8c1385549968b1\"]}," +
@@ -333,9 +333,9 @@ class FindFilterBuilderIsolatedTest {
     @Test
     void sortingNegativeTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create()
-                .sortBy(SortFields.KEY1, SortOrder.ASC);
+                .sortBy(SortField.KEY1, SortOrder.ASC);
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
-                builder.sortBy(SortFields.KEY1, SortOrder.ASC));
+                builder.sortBy(SortField.KEY1, SortOrder.ASC));
         assertEquals("Field KEY1 is already in sorting list", ex.getMessage());
 
         ex = assertThrows(StorageClientException.class, () ->
