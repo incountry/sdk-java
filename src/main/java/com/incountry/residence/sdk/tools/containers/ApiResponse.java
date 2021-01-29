@@ -23,12 +23,4 @@ public class ApiResponse {
     public Map<MetaInfoTypes, String> getMetaInfo() {
         return metaInfo;
     }
-
-    @Override
-    public String toString() {
-            return "ApiResponse{" +
-                    "content=" + content +
-                    ", metaInfo=" + metaInfo +
-                    '}';
-    }
 }
