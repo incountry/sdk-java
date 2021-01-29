@@ -96,13 +96,23 @@ public class FindFilterBuilder {
         return this;
     }
 
-    public FindFilterBuilder nullable(StringField field, boolean isNull) {
-        filter.setFilter(field, new FilterNullParam(isNull));
+    public FindFilterBuilder keyIsNull(StringField field) {
+        filter.setFilter(field, new FilterNullParam(true));
         return this;
     }
 
-    public FindFilterBuilder nullable(NumberField field, boolean isNull) {
-        filter.setFilter(field, new FilterNullParam(isNull));
+    public FindFilterBuilder keyIsNull(NumberField field) {
+        filter.setFilter(field, new FilterNullParam(true));
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNotNull(StringField field) {
+        filter.setFilter(field, new FilterNullParam(false));
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNotNull(NumberField field) {
+        filter.setFilter(field, new FilterNullParam(false));
         return this;
     }
 

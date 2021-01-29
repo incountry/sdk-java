@@ -549,14 +549,16 @@ Next predicate types are available for each string key field of class `Record` v
 ```java
 EQUALS              (FindFilterBuilder::keyEq)
 NOT_EQUALS          (FindFilterBuilder::keyNotEq)
-IS_NULL/IS_NOT_NULL (FindFilterBuilder::nullable)
+IS_NULL             (FindFilterBuilder::keyIsNull)
+IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
 
 ```
 
 You can use the following builder methods for filtering by numerical fields:
 ```java
 EQUALS              (FindFilterBuilder::keyEq)
-IS_NULL/IS_NOT_NULL (FindFilterBuilder::nullable)
+IS_NULL             (FindFilterBuilder::keyIsNull)
+IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
 IN                  (FindFilterBuilder::keyIn)
 GREATER             (FindFilterBuilder::keyGT)
 GREATER OR EQUALS   (FindFilterBuilder::keyGTE)

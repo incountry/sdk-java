@@ -346,10 +346,10 @@ class FindFilterBuilderIsolatedTest {
     @Test
     void nullFilterTest() throws StorageClientException {
         FindFilter filter = FindFilterBuilder.create()
-                .nullable(NumberField.RANGE_KEY1, false)
-                .nullable(StringField.KEY1, false)
-                .nullable(NumberField.RANGE_KEY2, true)
-                .nullable(StringField.KEY2, true)
+                .keyIsNotNull(NumberField.RANGE_KEY1)
+                .keyIsNotNull(StringField.KEY1)
+                .keyIsNull(NumberField.RANGE_KEY2)
+                .keyIsNull(StringField.KEY2)
                 .build();
         String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
         assertTrue(jsonFilter.contains("\"range_key1\":{\"$not\":null}"));
