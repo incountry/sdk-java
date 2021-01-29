@@ -29,6 +29,8 @@ class RecordTest {
     @Expose
     @SerializedName("record_key")
     public String recordKey;
+    @SerializedName("parent_key")
+    public String parentKey;
     @Expose
     public String body;
     @Expose
@@ -58,6 +60,16 @@ class RecordTest {
     public String key8;
     public String key9;
     public String key10;
+    public String key11;
+    public String key12;
+    public String key13;
+    public String key14;
+    public String key15;
+    public String key16;
+    public String key17;
+    public String key18;
+    public String key19;
+    public String key20;
     public String errorCorrectionKey1;
     public String errorCorrectionKey2;
     public String precommit;
@@ -66,6 +78,7 @@ class RecordTest {
     public void init() {
         body = "body";
         recordKey = "recordKey1";
+        parentKey = "parentKey";
         key1 = "key1";
         key2 = "key2";
         key3 = "key3";
@@ -76,6 +89,16 @@ class RecordTest {
         key8 = "key8";
         key9 = "key9";
         key10 = "key10";
+        key11 = "key11";
+        key12 = "key12";
+        key13 = "key13";
+        key14 = "key14";
+        key15 = "key15";
+        key16 = "key16";
+        key17 = "key17";
+        key18 = "key18";
+        key19 = "key19";
+        key20 = "key20";
         profileKey = "profileKey";
         rangeKey1 = 1;
         rangeKey2 = 2;
@@ -217,6 +240,7 @@ class RecordTest {
         assertNotEquals(record1, UUID.randomUUID());
 
         Record record3 = new Record(recordKey)
+                .setParentKey(parentKey)
                 .setKey1(key1)
                 .setKey2(key2)
                 .setKey3(key3)
@@ -227,6 +251,16 @@ class RecordTest {
                 .setKey8(key8)
                 .setKey9(key9)
                 .setKey10(key10)
+                .setKey11(key11)
+                .setKey12(key12)
+                .setKey13(key13)
+                .setKey14(key14)
+                .setKey15(key15)
+                .setKey16(key16)
+                .setKey17(key17)
+                .setKey18(key18)
+                .setKey19(key19)
+                .setKey20(key20)
                 .setProfileKey(profileKey)
                 .setRangeKey1(rangeKey1)
                 .setRangeKey2(rangeKey2)
@@ -267,7 +301,7 @@ class RecordTest {
                 .setProfileKey(record4.getProfileKey() + UUID.randomUUID());
         assertNotEquals(record3, record4);
 
-        checkKeys(record3, recordString, cryptoManager);
+        checkStringKeys(record3, recordString, cryptoManager);
         checkRangeKeys(record3, recordString, cryptoManager);
 
         String attachmentMetaJson = "{\n" +
@@ -341,9 +375,13 @@ class RecordTest {
         assertNotEquals(expectedRecord, newRecord);
     }
 
-    private void checkKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
+    private void checkStringKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {
         Record newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
         newRecord.setRecordKey(newRecord.getRecordKey() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager);
+        newRecord.setParentKey(newRecord.getParentKey() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
 
         newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
@@ -384,6 +422,46 @@ class RecordTest {
 
         newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
                 .setKey10(newRecord.getKey10() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey11(newRecord.getKey11() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey12(newRecord.getKey12() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey13(newRecord.getKey13() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey14(newRecord.getKey14() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey15(newRecord.getKey15() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey16(newRecord.getKey16() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey17(newRecord.getKey17() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey18(newRecord.getKey18() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey19(newRecord.getKey19() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = JsonUtils.recordFromString(recordString, cryptoManager)
+                .setKey20(newRecord.getKey20() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
     }
 }

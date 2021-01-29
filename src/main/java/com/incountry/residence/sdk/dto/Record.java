@@ -7,6 +7,7 @@ import java.util.Objects;
 
 public class Record {
     private String recordKey;
+    private String parentKey;
     private String key1;
     private String key2;
     private String key3;
@@ -17,6 +18,16 @@ public class Record {
     private String key8;
     private String key9;
     private String key10;
+    private String key11;
+    private String key12;
+    private String key13;
+    private String key14;
+    private String key15;
+    private String key16;
+    private String key17;
+    private String key18;
+    private String key19;
+    private String key20;
     private String profileKey;
     private Long rangeKey1;
     private Long rangeKey2;
@@ -62,6 +73,15 @@ public class Record {
 
     public Record setRecordKey(String recordKey) {
         this.recordKey = recordKey;
+        return this;
+    }
+
+    public String getParentKey() {
+        return parentKey;
+    }
+
+    public Record setParentKey(String parentKey) {
+        this.parentKey = parentKey;
         return this;
     }
 
@@ -152,6 +172,96 @@ public class Record {
 
     public Record setKey10(String key10) {
         this.key10 = key10;
+        return this;
+    }
+
+    public String getKey11() {
+        return key11;
+    }
+
+    public Record setKey11(String key11) {
+        this.key11 = key11;
+        return this;
+    }
+
+    public String getKey12() {
+        return key12;
+    }
+
+    public Record setKey12(String key12) {
+        this.key12 = key12;
+        return this;
+    }
+
+    public String getKey13() {
+        return key13;
+    }
+
+    public Record setKey13(String key13) {
+        this.key13 = key13;
+        return this;
+    }
+
+    public String getKey14() {
+        return key14;
+    }
+
+    public Record setKey14(String key14) {
+        this.key14 = key14;
+        return this;
+    }
+
+    public String getKey15() {
+        return key15;
+    }
+
+    public Record setKey15(String key15) {
+        this.key15 = key15;
+        return this;
+    }
+
+    public String getKey16() {
+        return key16;
+    }
+
+    public Record setKey16(String key16) {
+        this.key16 = key16;
+        return this;
+    }
+
+    public String getKey17() {
+        return key17;
+    }
+
+    public Record setKey17(String key17) {
+        this.key17 = key17;
+        return this;
+    }
+
+    public String getKey18() {
+        return key18;
+    }
+
+    public Record setKey18(String key18) {
+        this.key18 = key18;
+        return this;
+    }
+
+    public String getKey19() {
+        return key19;
+    }
+
+    public Record setKey19(String key19) {
+        this.key19 = key19;
+        return this;
+    }
+
+    public String getKey20() {
+        return key20;
+    }
+
+    public Record setKey20(String key20) {
+        this.key20 = key20;
         return this;
     }
 
@@ -312,6 +422,7 @@ public class Record {
         }
         Record record = (Record) obj;
         return Objects.equals(recordKey, record.recordKey) &&
+                Objects.equals(parentKey, record.parentKey) &&
                 Objects.equals(key1, record.key1) &&
                 Objects.equals(key2, record.key2) &&
                 Objects.equals(key3, record.key3) &&
@@ -322,6 +433,16 @@ public class Record {
                 Objects.equals(key8, record.key8) &&
                 Objects.equals(key9, record.key9) &&
                 Objects.equals(key10, record.key10) &&
+                Objects.equals(key11, record.key11) &&
+                Objects.equals(key12, record.key12) &&
+                Objects.equals(key13, record.key13) &&
+                Objects.equals(key14, record.key14) &&
+                Objects.equals(key15, record.key15) &&
+                Objects.equals(key16, record.key16) &&
+                Objects.equals(key17, record.key17) &&
+                Objects.equals(key18, record.key18) &&
+                Objects.equals(key19, record.key19) &&
+                Objects.equals(key20, record.key20) &&
                 Objects.equals(profileKey, record.profileKey) &&
                 Objects.equals(rangeKey1, record.rangeKey1) &&
                 Objects.equals(rangeKey2, record.rangeKey2) &&
@@ -344,7 +465,8 @@ public class Record {
 
     @Override
     public int hashCode() {
-        return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+        return Objects.hash(recordKey, parentKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+                key11, key12, key13, key14, key15, key16, key17, key18, key19, key20,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
                 body, profileKey, precommitBody, serviceKey1, serviceKey2,
                 createdAt, updatedAt, attachments);
@@ -357,6 +479,7 @@ public class Record {
      */
     protected Record copy() {
         Record newRecord = new Record(recordKey);
+        newRecord.parentKey = parentKey;
         newRecord.key1 = key1;
         newRecord.key2 = key2;
         newRecord.key3 = key3;
@@ -367,6 +490,16 @@ public class Record {
         newRecord.key8 = key8;
         newRecord.key9 = key9;
         newRecord.key10 = key10;
+        newRecord.key11 = key11;
+        newRecord.key12 = key12;
+        newRecord.key13 = key13;
+        newRecord.key14 = key14;
+        newRecord.key15 = key15;
+        newRecord.key16 = key16;
+        newRecord.key17 = key17;
+        newRecord.key18 = key18;
+        newRecord.key19 = key19;
+        newRecord.key20 = key20;
         newRecord.rangeKey1 = rangeKey1;
         newRecord.rangeKey2 = rangeKey2;
         newRecord.rangeKey3 = rangeKey3;

@@ -93,25 +93,35 @@ public class StorageIntegrationTest {
     private static final String EMEA = "emea";
     private static final String APAC = "apac";
 
-    private static final String RECORD_KEY = "Record Key" + TEMP;
-    private static final String BATCH_RECORD_KEY = "Batch " + RECORD_KEY;
-    private static final String ATTACHMENT_RECORD_KEY = "Attachment Record Key" + TEMP;
+    private static final String RECORD_KEY = "RecordKey_" + TEMP;
+    private static final String PARENT_KEY = "ParentKey_" + TEMP;
+    private static final String BATCH_RECORD_KEY = "Batch" + RECORD_KEY;
+    private static final String ATTACHMENT_RECORD_KEY = "AttachmentRecordKey_" + TEMP;
     private static final String RECORD_KEY_IGNORE_CASE = "_IgnorE_CasE_" + RECORD_KEY;
-    private static final String PROFILE_KEY = "ProfileKey" + TEMP;
-    private static final String KEY_1 = "Key1" + TEMP;
-    private static final String KEY_2 = "Key2" + TEMP;
-
-    private static final String KEY_3 = "Key3" + TEMP;
-    private static final String KEY_4 = "Key4" + TEMP;
-    private static final String KEY_5 = "Key5" + TEMP;
-    private static final String KEY_6 = "Key6" + TEMP;
-    private static final String KEY_7 = "Key7" + TEMP;
-    private static final String KEY_8 = "Key8" + TEMP;
-    private static final String KEY_9 = "Key9" + TEMP;
-    private static final String KEY_10 = "Key10" + TEMP;
-    private static final String SERVICE_KEY_1 = "ServiceKey1" + TEMP;
-    private static final String SERVICE_KEY_2 = "ServiceKey2" + TEMP;
-    private static final String PRECOMMIT_BODY = "PreсommitBody" + TEMP;
+    private static final String PROFILE_KEY = "ProfileKey_" + TEMP;
+    private static final String KEY_1 = "Key1_" + TEMP;
+    private static final String KEY_2 = "Key2_" + TEMP;
+    private static final String KEY_3 = "Key3_" + TEMP;
+    private static final String KEY_4 = "Key4_" + TEMP;
+    private static final String KEY_5 = "Key5_" + TEMP;
+    private static final String KEY_6 = "Key6_" + TEMP;
+    private static final String KEY_7 = "Key7_" + TEMP;
+    private static final String KEY_8 = "Key8_" + TEMP;
+    private static final String KEY_9 = "Key9_" + TEMP;
+    private static final String KEY_10 = "Key10_" + TEMP;
+    private static final String KEY_11 = "Key11_" + TEMP;
+    private static final String KEY_12 = "Key12_" + TEMP;
+    private static final String KEY_13 = "Key13_" + TEMP;
+    private static final String KEY_14 = "Key14_" + TEMP;
+    private static final String KEY_15 = "Key15_" + TEMP;
+    private static final String KEY_16 = "Key16_" + TEMP;
+    private static final String KEY_17 = "Key17_" + TEMP;
+    private static final String KEY_18 = "Key18_" + TEMP;
+    private static final String KEY_19 = "Key19_" + TEMP;
+    private static final String KEY_20 = "Key20_" + TEMP;
+    private static final String SERVICE_KEY_1 = "ServiceKey1_" + TEMP;
+    private static final String SERVICE_KEY_2 = "ServiceKey2_" + TEMP;
+    private static final String PRECOMMIT_BODY = "PreсommitBody_" + TEMP;
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
     private static final Long RANGE_KEY_2 = 2L;
@@ -249,28 +259,17 @@ public class StorageIntegrationTest {
     @Order(200)
     public void writeTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         Record record = new Record(recordKey)
-                .setBody(RECORD_BODY)
-                .setProfileKey(PROFILE_KEY)
-                .setRangeKey1(WRITE_RANGE_KEY_1)
-                .setRangeKey2(RANGE_KEY_2)
-                .setRangeKey3(RANGE_KEY_3)
-                .setRangeKey4(RANGE_KEY_4)
-                .setRangeKey5(RANGE_KEY_5)
-                .setRangeKey6(RANGE_KEY_6)
-                .setRangeKey7(RANGE_KEY_7)
-                .setRangeKey8(RANGE_KEY_8)
-                .setRangeKey9(RANGE_KEY_9)
-                .setRangeKey10(RANGE_KEY_10)
-                .setKey1(KEY_1)
-                .setKey2(key2)
-                .setKey3(KEY_3)
-                .setKey4(KEY_4)
-                .setKey5(KEY_5)
-                .setKey6(KEY_6)
-                .setKey7(KEY_7)
-                .setKey8(KEY_8)
-                .setKey9(KEY_9)
-                .setKey10(KEY_10)
+                .setBody(RECORD_BODY).setProfileKey(PROFILE_KEY).setRangeKey1(WRITE_RANGE_KEY_1)
+                .setRangeKey2(RANGE_KEY_2).setRangeKey3(RANGE_KEY_3).setRangeKey4(RANGE_KEY_4)
+                .setRangeKey5(RANGE_KEY_5).setRangeKey6(RANGE_KEY_6).setRangeKey7(RANGE_KEY_7)
+                .setRangeKey8(RANGE_KEY_8).setRangeKey9(RANGE_KEY_9).setRangeKey10(RANGE_KEY_10)
+                .setKey1(KEY_1).setKey2(key2).setKey3(KEY_3)
+                .setKey4(KEY_4).setKey5(KEY_5).setKey6(KEY_6)
+                .setKey7(KEY_7).setKey8(KEY_8).setKey9(KEY_9)
+                .setKey10(KEY_10).setKey11(KEY_11).setKey12(KEY_12)
+                .setKey13(KEY_13).setKey14(KEY_14).setKey15(KEY_15)
+                .setKey16(KEY_16).setKey17(KEY_17).setKey18(KEY_18)
+                .setKey19(KEY_19).setKey20(KEY_20).setParentKey(PARENT_KEY)
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
@@ -295,6 +294,17 @@ public class StorageIntegrationTest {
         assertEquals(KEY_8, incomingRecord.getKey8());
         assertEquals(KEY_9, incomingRecord.getKey9());
         assertEquals(KEY_10, incomingRecord.getKey10());
+        assertEquals(KEY_11, incomingRecord.getKey11());
+        assertEquals(KEY_12, incomingRecord.getKey12());
+        assertEquals(KEY_13, incomingRecord.getKey13());
+        assertEquals(KEY_14, incomingRecord.getKey14());
+        assertEquals(KEY_15, incomingRecord.getKey15());
+        assertEquals(KEY_16, incomingRecord.getKey16());
+        assertEquals(KEY_17, incomingRecord.getKey17());
+        assertEquals(KEY_18, incomingRecord.getKey18());
+        assertEquals(KEY_19, incomingRecord.getKey19());
+        assertEquals(KEY_20, incomingRecord.getKey20());
+        assertEquals(PARENT_KEY, incomingRecord.getParentKey());
         assertEquals(PRECOMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
         assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
@@ -320,6 +330,8 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
+                .keyEq(StringField.KEY20, KEY_20)
+                .keyEq(StringField.PARENT_KEY, PARENT_KEY)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
         BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);

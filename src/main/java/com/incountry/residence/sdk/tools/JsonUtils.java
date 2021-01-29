@@ -67,6 +67,18 @@ public class JsonUtils {
     private static final String P_KEY_8 = "key8";
     private static final String P_KEY_9 = "key9";
     private static final String P_KEY_10 = "key10";
+    private static final String P_KEY_11 = "key11";
+    private static final String P_KEY_12 = "key12";
+    private static final String P_KEY_13 = "key13";
+    private static final String P_KEY_14 = "key14";
+    private static final String P_KEY_15 = "key15";
+    private static final String P_KEY_16 = "key16";
+    private static final String P_KEY_17 = "key17";
+    private static final String P_KEY_18 = "key18";
+    private static final String P_KEY_19 = "key19";
+    private static final String P_KEY_20 = "key20";
+
+
     private static final String P_SEARCH_KEYS = "search_keys";
 
     /*error messages */
@@ -75,10 +87,12 @@ public class JsonUtils {
 
     private static final List<String> REMOVE_KEYS = Arrays.asList(P_BODY, P_PRECOMMIT_BODY, P_CREATED_AT, P_UPDATED_AT,
             P_RANGE_KEY_1, P_RANGE_KEY_2, P_RANGE_KEY_3, P_RANGE_KEY_4, P_RANGE_KEY_5,
-            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10, P_ATTACHED_FILES);
+            P_RANGE_KEY_6, P_RANGE_KEY_7, P_RANGE_KEY_8, P_RANGE_KEY_9, P_RANGE_KEY_10,
+            P_ATTACHED_FILES);
 
-    private static final List<String> SEARCH_KEYS = Arrays.asList(P_KEY_1, P_KEY_2, P_KEY_3, P_KEY_4, P_KEY_5, P_KEY_6,
-            P_KEY_7, P_KEY_8, P_KEY_9, P_KEY_10);
+    private static final List<String> SEARCH_KEYS = Arrays.asList(P_KEY_1, P_KEY_2, P_KEY_3, P_KEY_4, P_KEY_5,
+            P_KEY_6, P_KEY_7, P_KEY_8, P_KEY_9, P_KEY_10, P_KEY_11, P_KEY_12, P_KEY_13, P_KEY_14, P_KEY_15,
+            P_KEY_16, P_KEY_17, P_KEY_18, P_KEY_19, P_KEY_20);
 
     private JsonUtils() {
     }

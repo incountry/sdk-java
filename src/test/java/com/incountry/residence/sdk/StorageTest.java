@@ -715,7 +715,7 @@ class StorageTest {
         Record record = new Record(RECORD_KEY, BODY)
                 .setKey10(generatedString);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, record));
-        assertEquals("key1-key10 length can't be more than 256 chars", ex.getMessage());
+        assertEquals("key1-key20 length can't be more than 256 chars", ex.getMessage());
         Record record1 = new Record(RECORD_KEY, BODY)
                 .setKey10("generatedString");
         StorageServerException ex1 = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record1));
@@ -726,12 +726,12 @@ class StorageTest {
     void searchKeysTest() throws StorageClientException {
         FindFilterBuilder filterBuilder1 = FindFilterBuilder.create().keyEq(StringField.KEY1, "key");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> filterBuilder1.searchKeysLike("search_keys"));
-        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
+        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup", ex.getMessage());
 
         FindFilterBuilder filterBuilder2 = FindFilterBuilder.create().searchKeysLike("search_keys");
         ex = assertThrows(StorageClientException.class, () -> filterBuilder2
                 .keyEq(StringField.KEY1, "key"));
-        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup", ex.getMessage());
+        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup", ex.getMessage());
 
         ex = assertThrows(StorageClientException.class, () -> FindFilterBuilder.create()
                 .keyEq(StringField.SEARCH_KEYS, "search_keys"));

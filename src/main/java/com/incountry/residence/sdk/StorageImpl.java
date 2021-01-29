@@ -58,7 +58,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE = "File name and MIME type can't be null";
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
-    private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
+    private static final String MSG_ERR_KEY_LENGTH = "key1-key20 length can't be more than 256 chars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final int DEFAULT_HTTP_TIMEOUT = 30;
@@ -283,6 +283,17 @@ public class StorageImpl implements Storage {
             checkKey(record.getKey8());
             checkKey(record.getKey9());
             checkKey(record.getKey10());
+            checkKey(record.getKey11());
+            checkKey(record.getKey12());
+            checkKey(record.getKey13());
+            checkKey(record.getKey14());
+            checkKey(record.getKey15());
+            checkKey(record.getKey16());
+            checkKey(record.getKey17());
+            checkKey(record.getKey18());
+            checkKey(record.getKey19());
+            checkKey(record.getKey20());
+
         }
     }
 
