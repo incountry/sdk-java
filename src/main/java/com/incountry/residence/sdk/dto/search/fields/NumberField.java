@@ -1,6 +1,7 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.fields;
 
 public enum NumberField {
+    VERSION,
     RANGE_KEY1,
     RANGE_KEY2,
     RANGE_KEY3,

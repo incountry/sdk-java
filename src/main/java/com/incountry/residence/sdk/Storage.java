@@ -5,7 +5,8 @@ import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.filters.FindFilter;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -75,7 +76,7 @@ public interface Storage {
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    FindResult find(String country, FindFilter filter) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Find only one first record in remote storage according to filters
@@ -87,7 +88,7 @@ public interface Storage {
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    Record findOne(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilter builder) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Make batched key-rotation-migration of records

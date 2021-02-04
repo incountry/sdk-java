@@ -1,6 +1,7 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.crypto.Ciphers.Cipher;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class StorageConfig {
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customEncryptionConfigsList;
+    private List<Cipher> customEncryptionConfigsList;
     private String clientId;
     private String clientSecret;
     private boolean normalizeKeys;
@@ -37,6 +38,7 @@ public class StorageConfig {
     private Integer maxHttpPoolSize;
     private Integer maxHttpConnectionsPerRoute;
     private boolean hashSearchKeys = true;
+    private CryptoProvider cryptoProvider;
 
     public String getEnvId() {
         return envId;
@@ -129,7 +131,7 @@ public class StorageConfig {
         return this;
     }
 
-    public List<Crypto> getCustomEncryptionConfigsList() {
+    public List<Cipher> getCustomEncryptionConfigsList() {
         return customEncryptionConfigsList == null ? null : new ArrayList<>(customEncryptionConfigsList);
     }
 
@@ -139,7 +141,7 @@ public class StorageConfig {
      * @param customEncryptionConfigsList List with custom encryption functions
      * @return StorageConfig
      */
-    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
+    public StorageConfig setCustomEncryptionConfigsList(List<Cipher> customEncryptionConfigsList) {
         this.customEncryptionConfigsList = customEncryptionConfigsList;
         return this;
     }
@@ -336,6 +338,15 @@ public class StorageConfig {
         return this;
     }
 
+    public CryptoProvider getCryptoProvider() {
+        return cryptoProvider;
+    }
+
+    public StorageConfig setCryptoProvider(CryptoProvider cryptoProvider) {
+        this.cryptoProvider = cryptoProvider;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvId(getEnvId());
@@ -353,6 +364,7 @@ public class StorageConfig {
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
         newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
         newInstance.setHashSearchKeys(isHashSearchKeys());
+        newInstance.setCryptoProvider(getCryptoProvider());
         return newInstance;
     }
 

@@ -1,7 +1,6 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.fields;
 
 public enum StringField {
-    VERSION,
     RECORD_KEY,
     KEY1,
     KEY2,
