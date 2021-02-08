@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.internal;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
@@ -31,11 +31,6 @@ public class FilterStringParam {
         this.notCondition = notConditionValue;
     }
 
-    private FilterStringParam(List<String> values, boolean notConditionValue) {
-        this.values = values;
-        this.notCondition = notConditionValue;
-    }
-
     public List<String> getValues() {
         if (values != null) {
             return new ArrayList<>(values);
@@ -45,10 +40,6 @@ public class FilterStringParam {
 
     public boolean isNotCondition() {
         return notCondition;
-    }
-
-    public FilterStringParam copy() {
-        return new FilterStringParam(getValues(), notCondition);
     }
 
     @Override

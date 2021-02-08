@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.search;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
@@ -38,14 +38,5 @@ class FilterStringParamTest {
         FilterStringParam stringParam = new Gson().fromJson(stringFilterJson, FilterStringParam.class);
         List<String> values = stringParam.getValues();
         assertTrue(values.isEmpty());
-    }
-
-    @Test
-    void filterStringParamCopyTest() throws StorageClientException {
-        String filterValue = "filterValue";
-        FilterStringParam stringParam = new FilterStringParam(new String[]{filterValue}, true);
-        FilterStringParam stringParamCopy = stringParam.copy();
-        assertEquals(stringParam.getValues(), stringParamCopy.getValues());
-        assertEquals(stringParam.isNotCondition(), stringParamCopy.isNotCondition());
     }
 }

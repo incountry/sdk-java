@@ -1,5 +1,10 @@
 package com.incountry.residence.sdk.dto.search;
 
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.FilterNullParam;
+import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +23,8 @@ public class FindFilterBuilder {
     private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup";
     private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS should contain at least 3 characters and be not longer than 200";
     private static final String MSG_ERR_SEARCH_KEYS_ADD = "SEARCH_KEYS can be used only via searchKeysLike method";
+    private static final String MSG_ERR_NULL_SORT_FIELD = "Sorting field is null";
+    private static final String MSG_ERR_DUPL_SORT_FIELD = "Field %s is already in sorting list";
 
     public static final String OPER_NOT = "$not";
     public static final String OPER_GT = "$gt";
@@ -80,38 +87,58 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder keyEq(StringField field, String... keys) throws StorageClientException {
         validateStringFilters(field);
-        filter.setStringFilter(field, new FilterStringParam(keys));
+        filter.setFilter(field, new FilterStringParam(keys));
         return this;
     }
 
     public FindFilterBuilder keyEq(NumberField field, Long... keys) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(keys));
+        filter.setFilter(field, new FilterNumberParam(keys));
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNull(StringField field) {
+        filter.setFilter(field, new FilterNullParam(true));
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNull(NumberField field) {
+        filter.setFilter(field, new FilterNullParam(true));
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNotNull(StringField field) {
+        filter.setFilter(field, new FilterNullParam(false));
+        return this;
+    }
+
+    public FindFilterBuilder keyIsNotNull(NumberField field) {
+        filter.setFilter(field, new FilterNullParam(false));
         return this;
     }
 
     public FindFilterBuilder keyNotEq(StringField field, String... keys) throws StorageClientException {
         validateStringFilters(field);
-        filter.setStringFilter(field, new FilterStringParam(keys, true));
+        filter.setFilter(field, new FilterStringParam(keys, true));
         return this;
     }
 
     public FindFilterBuilder keyGT(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_GT, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_GT, key));
         return this;
     }
 
     public FindFilterBuilder keyGTE(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_GTE, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_GTE, key));
         return this;
     }
 
     public FindFilterBuilder keyLT(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_LT, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_LT, key));
         return this;
     }
 
     public FindFilterBuilder keyLTE(NumberField field, long key) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(OPER_LTE, key));
+        filter.setFilter(field, new FilterNumberParam(OPER_LTE, key));
         return this;
     }
 
@@ -120,7 +147,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyBetween(NumberField field, long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
-        filter.setNumberFilter(field, new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
+        filter.setFilter(field, new FilterNumberParam(includeFrom ? OPER_GTE : OPER_GT,
                 fromValue,
                 includeTo ? OPER_LTE : OPER_LT,
                 toValue));
@@ -128,7 +155,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder searchKeysLike(String value) throws StorageClientException {
-        Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
+        Set<RecordField> searchKeys = filter.getFilterMap().keySet();
         for (StringField key : SEARCHABLE_KEYS) {
             if (searchKeys.contains(key)) {
                 LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
@@ -139,7 +166,23 @@ public class FindFilterBuilder {
             LOG.error(MSG_ERR_SEARCH_KEYS_LEN);
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
         }
-        filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[]{value}));
+        filter.setFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[]{value}));
+        return this;
+    }
+
+    public FindFilterBuilder sortBy(SortField field, SortOrder order) throws StorageClientException {
+        if (field == null) {
+            LOG.error(MSG_ERR_NULL_SORT_FIELD);
+            throw new StorageClientException(MSG_ERR_NULL_SORT_FIELD);
+        }
+        for (SortingParam param : filter.getSortingList()) {
+            if (param.getField().equals(field)) {
+                String message = String.format(MSG_ERR_DUPL_SORT_FIELD, field);
+                LOG.error(message);
+                throw new StorageClientException(message);
+            }
+        }
+        filter.addSorting(new SortingParam(field, order));
         return this;
     }
 
@@ -160,7 +203,7 @@ public class FindFilterBuilder {
             throw new StorageClientException(MSG_ERR_SEARCH_KEYS_ADD);
         }
         if (SEARCHABLE_KEYS.contains(field)
-                && filter.getStringFilterMap().containsKey(StringField.SEARCH_KEYS)) {
+                && filter.getFilterMap().containsKey(StringField.SEARCH_KEYS)) {
             LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
             throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
         }

@@ -1,10 +1,13 @@
 package com.incountry.residence.sdk.search;
 
-import com.incountry.residence.sdk.dto.search.FilterNumberParam;
-import com.incountry.residence.sdk.dto.search.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.RecordField;
+import com.incountry.residence.sdk.dto.search.SortOrder;
+import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
+import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.SortField;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -97,12 +100,18 @@ class FindFilterBuilderIsolatedTest {
             if (field.equals(StringField.SEARCH_KEYS)) {
                 continue;
             }
-            assertEquals("1", builder.keyEq(field, "1").build().getStringFilterMap().get(field).getValues().get(0));
-            assertEquals("2", builder.keyEq(field, "1", "2").build().getStringFilterMap().get(field).getValues().get(1));
-            assertFalse(builder.keyEq(field, "4").build().getStringFilterMap().get(field).isNotCondition());
-            assertEquals("6", builder.keyNotEq(field, "5", "6").build().getStringFilterMap().get(field).getValues().get(1));
-            assertTrue(builder.keyNotEq(field, "7", "8").build().getStringFilterMap().get(field).isNotCondition());
-            assertFalse(builder.keyEq(field, "9", "10").build().getStringFilterMap().get(field).isNotCondition());
+            FilterStringParam param = (FilterStringParam) builder.keyEq(field, "1").build().getFilterMap().get(field);
+            assertEquals("1", param.getValues().get(0));
+            param = (FilterStringParam) builder.keyEq(field, "1", "2").build().getFilterMap().get(field);
+            assertEquals("2", param.getValues().get(1));
+            param = (FilterStringParam) builder.keyEq(field, "4").build().getFilterMap().get(field);
+            assertFalse(param.isNotCondition());
+            param = (FilterStringParam) builder.keyNotEq(field, "5", "6").build().getFilterMap().get(field);
+            assertEquals("6", param.getValues().get(1));
+            param = (FilterStringParam) builder.keyNotEq(field, "7", "8").build().getFilterMap().get(field);
+            assertTrue(param.isNotCondition());
+            param = (FilterStringParam) builder.keyEq(field, "9", "10").build().getFilterMap().get(field);
+            assertFalse(param.isNotCondition());
         }
     }
 
@@ -110,26 +119,44 @@ class FindFilterBuilderIsolatedTest {
     void positiveRangeKeyTest() throws StorageClientException {
         FindFilterBuilder builder = FindFilterBuilder.create();
         for (NumberField field : NumberField.values()) {
-            assertEquals(1L, builder.keyEq(field, 1L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(2L, builder.keyEq(field, 1L, 2L).build().getNumberFilterMap().get(field).getValues()[1]);
-            assertEquals(9L, builder.keyGT(field, 9L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_GT, builder.keyGT(field, 10L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(11L, builder.keyGTE(field, 11L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.keyGTE(field, 12L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(13L, builder.keyLT(field, 13L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_LT, builder.keyLT(field, 14L).build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(15L, builder.keyLTE(field, 15L).build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(FindFilterBuilder.OPER_LTE, builder.keyLTE(field, 16L).build().getNumberFilterMap().get(field).getOperator1());
+            FilterNumberParam param = (FilterNumberParam) builder.keyEq(field, 1L).build().getFilterMap().get(field);
+            assertEquals(1L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyEq(field, 1L, 2L).build().getFilterMap().get(field);
+            assertEquals(2L, param.getValues()[1]);
+            param = (FilterNumberParam) builder.keyGT(field, 9L).build().getFilterMap().get(field);
+            assertEquals(9L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyGT(field, 10L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GT, param.getOperator1());
+            param = (FilterNumberParam) builder.keyGTE(field, 11L).build().getFilterMap().get(field);
+            assertEquals(11L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyGTE(field, 12L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GTE, param.getOperator1());
+            param = (FilterNumberParam) builder.keyLT(field, 13L).build().getFilterMap().get(field);
+            assertEquals(13L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyLT(field, 14L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LT, param.getOperator1());
+            param = (FilterNumberParam) builder.keyLTE(field, 15L).build().getFilterMap().get(field);
+            assertEquals(15L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.keyLTE(field, 16L).build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LTE, param.getOperator1());
             builder.keyBetween(field, 17L, 18L);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(FindFilterBuilder.OPER_LTE, builder.build().getNumberFilterMap().get(field).getOperator2());
-            assertEquals(17L, builder.build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(18L, builder.build().getNumberFilterMap().get(field).getValues()[1]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GTE, param.getOperator1());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LTE, param.getOperator2());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(17L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(18L, param.getValues()[1]);
             builder.keyBetween(field, 19L, true, 20L, false);
-            assertEquals(FindFilterBuilder.OPER_GTE, builder.build().getNumberFilterMap().get(field).getOperator1());
-            assertEquals(FindFilterBuilder.OPER_LT, builder.build().getNumberFilterMap().get(field).getOperator2());
-            assertEquals(19L, builder.build().getNumberFilterMap().get(field).getValues()[0]);
-            assertEquals(20L, builder.build().getNumberFilterMap().get(field).getValues()[1]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_GTE, param.getOperator1());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(FindFilterBuilder.OPER_LT, param.getOperator2());
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(19L, param.getValues()[0]);
+            param = (FilterNumberParam) builder.build().getFilterMap().get(field);
+            assertEquals(20L, param.getValues()[1]);
         }
     }
 
@@ -212,7 +239,7 @@ class FindFilterBuilderIsolatedTest {
     }
 
     private void checkNumberFilters(FindFilter filter) {
-        Map<NumberField, FilterNumberParam> filterMap = filter.getNumberFilterMap();
+        Map<RecordField, Object> filterMap = filter.getFilterMap();
         assertEquals("FilterRangeParam{values=[23, 24], operator1='null', operator2='null'}", filterMap.get(NumberField.RANGE_KEY1).toString());
         assertEquals("FilterRangeParam{values=[25, 26], operator1='null', operator2='null'}", filterMap.get(NumberField.RANGE_KEY2).toString());
         assertEquals("FilterRangeParam{values=[27, 28], operator1='null', operator2='null'}", filterMap.get(NumberField.RANGE_KEY3).toString());
@@ -226,7 +253,7 @@ class FindFilterBuilderIsolatedTest {
     }
 
     private void checkStringFilters(FindFilter filter) {
-        Map<StringField, FilterStringParam> filterMap = filter.getStringFilterMap();
+        Map<RecordField, Object> filterMap = filter.getFilterMap();
         assertEquals("FilterStringParam{value=[1a, 2b], notCondition=false}", filterMap.get(StringField.RECORD_KEY).toString());
         assertEquals("FilterStringParam{value=[3c, 4d], notCondition=false}", filterMap.get(StringField.KEY1).toString());
         assertEquals("FilterStringParam{value=[5e, 6f], notCondition=false}", filterMap.get(StringField.KEY4).toString());
@@ -251,5 +278,83 @@ class FindFilterBuilderIsolatedTest {
         assertEquals("FilterStringParam{value=[39, 40], notCondition=false}", filterMap.get(StringField.SERVICE_KEY1).toString());
         assertEquals("FilterStringParam{value=[41, 42], notCondition=false}", filterMap.get(StringField.SERVICE_KEY2).toString());
         assertEquals("FilterStringParam{value=[43, 44], notCondition=false}", filterMap.get(StringField.PARENT_KEY).toString());
+    }
+
+    @Test
+    void sortingTest() throws StorageClientException {
+        FindFilter filter = FindFilterBuilder.create()
+                .keyEq(StringField.KEY1, "<RecordKey>")
+                .sortBy(SortField.KEY1, SortOrder.DESC)
+                .sortBy(SortField.KEY2, SortOrder.DESC)
+                .sortBy(SortField.KEY3, SortOrder.DESC)
+                .sortBy(SortField.KEY4, SortOrder.DESC)
+                .sortBy(SortField.KEY5, SortOrder.DESC)
+                .sortBy(SortField.KEY6, SortOrder.DESC)
+                .sortBy(SortField.KEY7, SortOrder.DESC)
+                .sortBy(SortField.KEY8, SortOrder.DESC)
+                .sortBy(SortField.KEY9, SortOrder.DESC)
+                .sortBy(SortField.KEY10, SortOrder.DESC)
+                .sortBy(SortField.KEY11, SortOrder.DESC)
+                .sortBy(SortField.KEY12, SortOrder.DESC)
+                .sortBy(SortField.KEY13, SortOrder.DESC)
+                .sortBy(SortField.KEY14, SortOrder.DESC)
+                .sortBy(SortField.KEY15, SortOrder.DESC)
+                .sortBy(SortField.KEY16, SortOrder.DESC)
+                .sortBy(SortField.KEY17, SortOrder.DESC)
+                .sortBy(SortField.KEY18, SortOrder.DESC)
+                .sortBy(SortField.KEY19, SortOrder.DESC)
+                .sortBy(SortField.KEY20, SortOrder.DESC)
+                .sortBy(SortField.RANGE_KEY1, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY2, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY3, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY4, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY5, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY6, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY7, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY8, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY9, SortOrder.ASC)
+                .sortBy(SortField.RANGE_KEY10, SortOrder.ASC)
+                .sortBy(SortField.CREATED_AT, SortOrder.ASC)
+                .sortBy(SortField.UPDATED_AT, SortOrder.ASC)
+                .build();
+        String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
+        assertEquals("{\"filter\":{\"key1\":[\"b99fc3a4b5365f543fbb39af2fddead40edcb3e72368df475c8c1385549968b1\"]}," +
+                        "\"options\":{\"sort\":[" +
+                        "{\"key1\":\"desc\"},{\"key2\":\"desc\"},{\"key3\":\"desc\"},{\"key4\":\"desc\"},{\"key5\":\"desc\"}," +
+                        "{\"key6\":\"desc\"},{\"key7\":\"desc\"},{\"key8\":\"desc\"},{\"key9\":\"desc\"},{\"key10\":\"desc\"}," +
+                        "{\"key11\":\"desc\"},{\"key12\":\"desc\"},{\"key13\":\"desc\"},{\"key14\":\"desc\"},{\"key15\":\"desc\"}," +
+                        "{\"key16\":\"desc\"},{\"key17\":\"desc\"},{\"key18\":\"desc\"},{\"key19\":\"desc\"},{\"key20\":\"desc\"}," +
+                        "{\"range_key1\":\"asc\"},{\"range_key2\":\"asc\"},{\"range_key3\":\"asc\"},{\"range_key4\":\"asc\"},{\"range_key5\":\"asc\"}," +
+                        "{\"range_key6\":\"asc\"},{\"range_key7\":\"asc\"},{\"range_key8\":\"asc\"},{\"range_key9\":\"asc\"},{\"range_key10\":\"asc\"}," +
+                        "{\"created_at\":\"asc\"},{\"updated_at\":\"asc\"}],\"limit\":100,\"offset\":0}}",
+                jsonFilter);
+    }
+
+    @Test
+    void sortingNegativeTest() throws StorageClientException {
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .sortBy(SortField.KEY1, SortOrder.ASC);
+        StorageClientException ex = assertThrows(StorageClientException.class, () ->
+                builder.sortBy(SortField.KEY1, SortOrder.ASC));
+        assertEquals("Field KEY1 is already in sorting list", ex.getMessage());
+
+        ex = assertThrows(StorageClientException.class, () ->
+                builder.sortBy(null, SortOrder.ASC));
+        assertEquals("Sorting field is null", ex.getMessage());
+    }
+
+    @Test
+    void nullFilterTest() throws StorageClientException {
+        FindFilter filter = FindFilterBuilder.create()
+                .keyIsNotNull(NumberField.RANGE_KEY1)
+                .keyIsNotNull(StringField.KEY1)
+                .keyIsNull(NumberField.RANGE_KEY2)
+                .keyIsNull(StringField.KEY2)
+                .build();
+        String jsonFilter = JsonUtils.toJsonString(filter, new CryptoManager(null, "<envId>", null, false, true));
+        assertTrue(jsonFilter.contains("\"range_key1\":{\"$not\":null}"));
+        assertTrue(jsonFilter.contains("\"key1\":{\"$not\":null}"));
+        assertTrue(jsonFilter.contains("\"range_key2\":null"));
+        assertTrue(jsonFilter.contains("\"key2\":null"));
     }
 }

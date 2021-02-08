@@ -487,15 +487,78 @@ FindFilterBuilder builder = FindFilterBuilder.create()
 BatchRecord records = storage.find("us", builder);
 ```
 
+---
+**NOTE**
+
+Sorting find results is currently available for InCountry dedicated instances only. Please check your subscription plan for details. This may require specifying your dedicated instance endpoint when configuring Java SDK Storage.
+
+---
+
+By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilterBuilder` .
+```java
+FindFilterBuilder builder = FindFilterBuilder.create()
+                  //...
+                  .sortBy(SortField.CREATED_AT, SortOrder.ASC)
+                  .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
+BatchRecord records = storage.find("us", builder);
+```
+The request will return records, sorted according to the following pseudo-sql
+```sql
+SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
+```
+
+##### Fields that records can be sorted by:
+```java
+public enum SortFields {
+   KEY1,
+   KEY2,
+   KEY3,
+   KEY4,
+   KEY5,
+   KEY6,
+   KEY7,
+   KEY8,
+   KEY9,
+   KEY10,
+   KEY11,
+   KEY12,
+   KEY13,
+   KEY14,
+   KEY15,
+   KEY16,
+   KEY17,
+   KEY18,
+   KEY19,
+   KEY20,
+   RANGE_KEY1,
+   RANGE_KEY2,
+   RANGE_KEY3,
+   RANGE_KEY4,
+   RANGE_KEY5,
+   RANGE_KEY6,
+   RANGE_KEY7,
+   RANGE_KEY8,
+   RANGE_KEY9,
+   RANGE_KEY10,
+   CREATED_AT,
+   UPDATED_AT
+}
+```
+
 Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
-EQUALS         (FindFilterBuilder::keyEq)
-NOT_EQUALS     (FindFilterBuilder::keyNotEq)
+EQUALS              (FindFilterBuilder::keyEq)
+NOT_EQUALS          (FindFilterBuilder::keyNotEq)
+IS_NULL             (FindFilterBuilder::keyIsNull)
+IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
+
 ```
 
 You can use the following builder methods for filtering by numerical fields:
 ```java
 EQUALS              (FindFilterBuilder::keyEq)
+IS_NULL             (FindFilterBuilder::keyIsNull)
+IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
 IN                  (FindFilterBuilder::keyIn)
 GREATER             (FindFilterBuilder::keyGT)
 GREATER OR EQUALS   (FindFilterBuilder::keyGTE)

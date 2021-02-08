@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.dto.search;
+package com.incountry.residence.sdk.dto.search.internal;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
@@ -28,12 +28,6 @@ public class FilterNumberParam {
     private final Long[] values;
     private final String operator1;
     private final String operator2;
-
-    private FilterNumberParam(Long[] values, String operator1, String operator2) {
-        this.values = Arrays.copyOf(values, values.length);
-        this.operator1 = operator1;
-        this.operator2 = operator2;
-    }
 
     public FilterNumberParam(Long[] values) throws StorageClientException {
         if (values == null || values.length == 0 || (Stream.of(values).anyMatch(Objects::isNull))) {
@@ -112,10 +106,6 @@ public class FilterNumberParam {
 
     public String getOperator2() {
         return operator2;
-    }
-
-    public FilterNumberParam copy() {
-        return new FilterNumberParam(getValues(), getOperator1(), getOperator2());
     }
 
     @Override

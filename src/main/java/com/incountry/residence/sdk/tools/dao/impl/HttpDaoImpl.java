@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk.tools.dao.impl;
 
-import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
