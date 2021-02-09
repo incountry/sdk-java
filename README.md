@@ -871,7 +871,7 @@ InCountry Java SDK supports usage of any 32-byte (256-bit) AES key, including on
 
 The suggested use case assumes that AWS user already got his KMS encrypted data key (AES_256) generated. Afterwards the key gets decrypted using AWS Java client library (`boto3`) and then provided to InCountry Java SDK's `SecretKeyAccessor`.
 
-For a detailed example of AWS KMS keys usage please see [examples/aws-kms.py](/src/integration/java/com/incountry/residence/sdk/AwsKmsExample.java)
+For a detailed example of AWS KMS keys usage please see [AwsKmsExample.java](/src/integration/java/com/incountry/residence/sdk/AwsKmsExample.java)
 
 ## Error Handling
 
