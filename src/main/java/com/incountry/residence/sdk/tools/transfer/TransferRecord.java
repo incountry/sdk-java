@@ -2,6 +2,7 @@ package com.incountry.residence.sdk.tools.transfer;
 
 import com.incountry.residence.sdk.dto.Record;
 
+@SuppressWarnings("java:S2160")
 public class TransferRecord extends Record {
 
     private String key;

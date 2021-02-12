@@ -6,6 +6,7 @@
             <Class name="com.incountry.residence.sdk.StorageImpl"/>
             <Class name="com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator"/>
             <Class name="com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator$SecretKeyContainer"/>
+            <Class name="com.incountry.residence.sdk.tools.crypto.SecretsDataGenerator"/>
         </Or>
         <Bug code="NP,SIC,SS,ST,UrF,UuF,UwF"/>
     </Match>
@@ -30,7 +31,11 @@
         </Or>
         <Bug code="JLM"/>
     </Match>
-
+    <Match>
+        <Class name="com.incountry.residence.sdk.tools.transfer.TransferRecord"/>
+        <Method name="equals" />
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
+    </Match>
     <Match>
         <Or>
             <Class name="com.incountry.residence.sdk.StorageIntegrationTest"/>
