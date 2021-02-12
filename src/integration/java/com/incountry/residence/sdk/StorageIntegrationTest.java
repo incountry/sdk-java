@@ -14,8 +14,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -84,7 +84,6 @@ public class StorageIntegrationTest {
     private Storage storageWithoutEncryption;
     private Storage storageOrdinary;
     private Storage storageNonHashing;
-    private Storage storageWithCustomCipher;
 
     private static final String EMEA = "emea";
     private static final String APAC = "apac";
@@ -124,8 +123,6 @@ public class StorageIntegrationTest {
 
     private static final String MIDIPOP_COUNTRY = loadFromEnv(INT_INC_COUNTRY);
     private static final String MIDIPOP_COUNTRY_2 = loadFromEnv(INT_INC_COUNTRY_2);
-//    private static final byte[] ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab".getBytes(StandardCharsets.UTF_8);
-    private static final String ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab";
     private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
@@ -161,20 +158,6 @@ public class StorageIntegrationTest {
                 .setApiKey(loadFromEnv(INT_INC_API_KEY))
                 .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor);
-//        StorageConfig config = null;
-//        Storage storage = StorageImpl.getInstance(config);
-
-
-//        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
-//        List<SecretKey> secretKeyList = new ArrayList<>();
-//        secretKeyList.add(secretKey);
-//        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
-//        SecretKeyAccessor secretKeyAccessor = () -> secretsData;
-//        StorageConfig config = new StorageConfig()
-//                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
-//                .setApiKey(loadFromEnv(INT_INC_API_KEY))
-//                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
-//                .setSecretKeyAccessor(secretKeyAccessor);
         storageWithApiKey = StorageImpl.getInstance(config);
 
         config = new StorageConfig()
@@ -203,28 +186,14 @@ public class StorageIntegrationTest {
                 .setHashSearchKeys(true)
                 .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
-
-//        SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false, true);
-//        List<SecretKey> secretKeyList2 = new ArrayList<>();
-//        secretKeyList2.add(customSecretKey);
-//        SecretsData anotherSecretsData = new SecretsData(secretKeyList2, customSecretKey.getVersion());
-//        SecretKeyAccessor anotherAccessor = () -> anotherSecretsData;
-//        List<Crypto> cryptoList = new ArrayList<>();
-//        cryptoList.add(new FernetCrypto(true));
-//
-//        config = config
-//                .copy()
-//                .setNormalizeKeys(false)
-//                .setSecretKeyAccessor(anotherAccessor)
-//                .setCustomEncryptionConfigsList(cryptoList);
-//        storageWithCustomCipher = StorageImpl.getInstance(config);
     }
 
-//    @AfterAll
-//    public void deleteRecordWithAttachment() throws StorageException {
-//        storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY);
-//    }
+    @AfterAll
+    public void deleteRecordWithAttachment() throws StorageException {
+        storageOrdinary.delete(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY);
+    }
 
+    @SuppressWarnings("java:S1144")
     private Stream<Arguments> storageProvider() {
         return Stream.of(
                 generateArguments(storageWithApiKey),
@@ -232,8 +201,6 @@ public class StorageIntegrationTest {
                 generateArguments(storageWithoutEncryption),
                 generateArguments(storageNonHashing),
                 generateArguments(storageIgnoreCase)
-
-//                generateArguments(storageWithCustomCipher)
         );
     }
 
@@ -242,12 +209,10 @@ public class StorageIntegrationTest {
         return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(100)
     public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        List<Record> records = new ArrayList<>();
         Record record = new Record();
         record.setRecordKey(batchRecordKey);
         record.setBody(RECORD_BODY);
@@ -255,46 +220,16 @@ public class StorageIntegrationTest {
         record.setRangeKey1(BATCH_WRITE_RANGE_KEY_1);
         record.setKey2(key2);
         record.setKey3(KEY_3);
+        List<Record> records = new ArrayList<>();
         records.add(record);
         storage.batchWrite(MIDIPOP_COUNTRY, records);
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(200)
     public void writeTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-//        Record record = new Record(recordKey)
-//                .setBody(RECORD_BODY)
-//                .setProfileKey(PROFILE_KEY)
-//                .setRangeKey1(WRITE_RANGE_KEY_1)
-//                .setRangeKey2(RANGE_KEY_2)
-//                .setRangeKey3(RANGE_KEY_3)
-//                .setRangeKey4(RANGE_KEY_4)
-//                .setRangeKey5(RANGE_KEY_5)
-//                .setRangeKey6(RANGE_KEY_6)
-//                .setRangeKey7(RANGE_KEY_7)
-//                .setRangeKey8(RANGE_KEY_8)
-//                .setRangeKey9(RANGE_KEY_9)
-//                .setRangeKey10(RANGE_KEY_10)
-//                .setKey1(KEY_1)
-//                .setKey2(key2)
-//                .setKey3(KEY_3)
-//                .setKey4(KEY_4)
-//                .setKey5(KEY_5)
-//                .setKey6(KEY_6)
-//                .setKey7(KEY_7)
-//                .setKey8(KEY_8)
-//                .setKey9(KEY_9)
-//                .setKey10(KEY_10)
-//                .setPrecommitBody(PRECOMMIT_BODY)
-//                .setServiceKey1(SERVICE_KEY_1)
-//                .setServiceKey2(SERVICE_KEY_2);
-
-
-
         Record record = new Record();
-
         record.setRecordKey(recordKey);
         record.setBody(RECORD_BODY);
         record.setProfileKey(PROFILE_KEY);
@@ -324,10 +259,10 @@ public class StorageIntegrationTest {
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(300)
+    @SuppressWarnings("java:S5960")
     public void readTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         Record incomingRecord = storage.read(MIDIPOP_COUNTRY, recordKey);
         assertEquals(recordKey, incomingRecord.getRecordKey());
@@ -360,20 +295,10 @@ public class StorageIntegrationTest {
         assertNotNull(incomingRecord.getUpdatedAt());
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(400)
     public void findTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-//        FindFilterBuilder builder = FindFilterBuilder.create()
-//                .keyEq(StringField.RECORD_KEY, recordKey)
-//                .keyEq(StringField.KEY2, key2)
-//                .keyEq(StringField.KEY3, KEY_3)
-//                .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
-//                .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-
-//        FindFilter filter = FindFilter.create();
-//        FindResult findResult;
         FindFilter filter = FindFilter.create()
                 .keyEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY2, key2)
@@ -422,16 +347,13 @@ public class StorageIntegrationTest {
         assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(401)
     public void findAdvancedTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-//        FindFilterBuilder builder = FindFilterBuilder.create()
         FindFilter filter = FindFilter.create()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
-//        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
         FindResult findResult = storage.find(MIDIPOP_COUNTRY, filter);
         assertEquals(2, findResult.getCount());
         assertEquals(2, findResult.getRecords().size());
@@ -442,12 +364,10 @@ public class StorageIntegrationTest {
         assertTrue(resultIdList.contains(batchRecordKey));
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(402)
     public void findByVersionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-//        FindFilterBuilder builder = FindFilterBuilder.create()
         FindFilter filter = FindFilter.create()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.VERSION, VERSION);
@@ -471,12 +391,10 @@ public class StorageIntegrationTest {
         assertEquals(2, findResult4.getRecords().size());
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(403)
     public void findByAllFieldsTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-//        FindFilterBuilder builder = FindFilterBuilder.create()
         FindFilter filter = FindFilter.create()
                 .keyEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY1, KEY_1)
@@ -533,7 +451,6 @@ public class StorageIntegrationTest {
         assertEquals(SERVICE_KEY_2, record.getServiceKey2());
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(404)
@@ -546,7 +463,6 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_BODY, record.getBody());
     }
 
-//    @Disabled
     @ParameterizedTest
     @MethodSource("storageProvider")
     @Order(600)
@@ -560,7 +476,6 @@ public class StorageIntegrationTest {
         assertNull(batchWriteMethodRecord);
     }
 
-//    @Disabled
     @Test
     @Order(700)
     public void readIgnoreCaseTest() throws StorageException {
@@ -588,7 +503,6 @@ public class StorageIntegrationTest {
         assertEquals(KEY_3, incomingRecord.getKey3());
     }
 
-//    @Disabled
     @Test
     @Order(702)
     public void findIgnoreCaseTest() throws StorageException {
@@ -626,7 +540,6 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
     }
 
-//    @Disabled
     @Test
     @Order(703)
     public void deleteIgnoreCaseTest() throws StorageException {
@@ -640,14 +553,9 @@ public class StorageIntegrationTest {
         assertNull(record);
     }
 
-//    @Disabled
     @Test
     @Order(800)
     public void addAttachmentTest() throws StorageException, IOException {
-//        Record record = new Record(ATTACHMENT_RECORD_KEY)
-//                .setBody(RECORD_BODY)
-//                .setProfileKey(PROFILE_KEY)
-//                .setRangeKey1(WRITE_RANGE_KEY_1);
         Record record = new Record();
         record.setRecordKey(ATTACHMENT_RECORD_KEY);
         record.setBody(RECORD_BODY);
@@ -663,7 +571,6 @@ public class StorageIntegrationTest {
         Files.delete(tempFile);
     }
 
-//    @Disabled
     @Test
     @Order(801)
     void getAttachmentFileTest() throws StorageException, IOException {
@@ -673,7 +580,6 @@ public class StorageIntegrationTest {
         assertEquals(FILE_NAME, file.getFileName());
     }
 
-//    @Disabled
     @Test
     @Order(802)
     void getAttachmentMetaTest() throws StorageException {
@@ -683,7 +589,6 @@ public class StorageIntegrationTest {
         assertTrue(meta.getMimeType().contains(DEFAULT_MIME_TYPE));
     }
 
-//    @Disabled
     @Test
     @Order(803)
     void updateAttachmentMetaTest() throws StorageException {
@@ -693,7 +598,6 @@ public class StorageIntegrationTest {
         assertEquals(MIME_TYPE, meta.getMimeType());
     }
 
-//    @Disabled
     @Test
     @Order(804)
     void deleteAttachmentTest() throws StorageException {
@@ -702,7 +606,6 @@ public class StorageIntegrationTest {
         assertNull(file.getFileContent());
     }
 
-//    @Disabled
     @Test
     @Order(805)
     void addAttachmentMultipleFilesTest() throws StorageException {
@@ -727,7 +630,6 @@ public class StorageIntegrationTest {
         });
     }
 
-//    @Disabled
     @Test
     @Order(806)
     public void deleteOneOfAttachmentMultipleFilesTest() throws StorageException {
@@ -736,7 +638,6 @@ public class StorageIntegrationTest {
         assertEquals(2, incomingRecord.getAttachments().size());
     }
 
-//    @Disabled
     @Test
     @Order(807)
     public void getAttachmentFileFromNonExistentRecordTest() throws StorageException {
@@ -744,7 +645,6 @@ public class StorageIntegrationTest {
         assertNull(file.getFileContent());
     }
 
-//    @Disabled
     @Test
     @Order(808)
     public void getNonExistentAttachmentFileTest() throws StorageException {
@@ -752,7 +652,6 @@ public class StorageIntegrationTest {
         assertNull(file.getFileContent());
     }
 
-//    @Disabled
     @Test
     @Order(810)
     public void getAttachmentMetaFromNonExistentFileTest() throws StorageException {
@@ -760,7 +659,6 @@ public class StorageIntegrationTest {
         assertNull(meta);
     }
 
-//    @Disabled
     @Test
     @Order(811)
     public void updateAttachmentMetaForNonExistentFileTest() {
@@ -770,7 +668,6 @@ public class StorageIntegrationTest {
         assertTrue(ex.getMessage().contains(nonExistentFileId));
     }
 
-//    @Disabled
     @Test
     @Order(812)
     public void addAttachmentWithUnusualFileNameTest() throws StorageException, IOException {
@@ -784,28 +681,10 @@ public class StorageIntegrationTest {
         Files.delete(tempFile);
     }
 
-//    @Disabled
     @Test
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
         String recordKey = "Non hashing " + RECORD_KEY;
-//        Record record = new Record(recordKey)
-//                .setBody(RECORD_BODY)
-//                .setProfileKey(PROFILE_KEY)
-//                .setRangeKey1(WRITE_RANGE_KEY_1)
-//                .setRangeKey2(RANGE_KEY_2)
-//                .setRangeKey3(RANGE_KEY_3)
-//                .setRangeKey4(RANGE_KEY_4)
-//                .setRangeKey5(RANGE_KEY_5)
-//                .setRangeKey6(RANGE_KEY_6)
-//                .setRangeKey7(RANGE_KEY_7)
-//                .setRangeKey8(RANGE_KEY_8)
-//                .setRangeKey9(RANGE_KEY_9)
-//                .setRangeKey10(RANGE_KEY_10)
-//                .setKey1(KEY_1)
-//                .setPrecommitBody(PRECOMMIT_BODY)
-//                .setServiceKey1(SERVICE_KEY_1)
-//                .setServiceKey2(SERVICE_KEY_2);
         Record record = new Record();
         record.setRecordKey(recordKey);
         record.setBody(RECORD_BODY);
@@ -866,12 +745,6 @@ public class StorageIntegrationTest {
     @Test
     @Order(1000)
     public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
-//        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
-//        List<SecretKey> secretKeyList = new ArrayList<>();
-//        secretKeyList.add(secretKey);
-//        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
-//        SecretKeyAccessor mySecretKeyAccessor = () -> secretsData;
-
         SecretKeyAccessor mySecretKeyAccessor = () -> SecretsDataGenerator.fromPassword("<Str0ng_p@ssworD!");
         Map<String, String> authMap = new HashMap<>();
         if (EMEA_AUTH_ENDPOINT != null && !EMEA_AUTH_ENDPOINT.isEmpty()) {
@@ -922,12 +795,6 @@ public class StorageIntegrationTest {
                 String randomKey = "RecordKey" + TEMP + UUID.randomUUID().toString();
                 Thread currentThread = Thread.currentThread();
                 currentThread.setName("connectionPoolTest #" + numb);
-//                Record record = new Record(randomKey)
-//                        .setBody(RECORD_BODY)
-//                        .setProfileKey(PROFILE_KEY)
-//                        .setRangeKey1(WRITE_RANGE_KEY_1)
-//                        .setKey2(KEY_2)
-//                        .setKey3(KEY_3);
                 Record record = new Record();
                 record.setRecordKey(randomKey);
                 record.setBody(RECORD_BODY);

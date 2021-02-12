@@ -61,6 +61,8 @@ dependencies {
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: "${apacheHttpClientVersion}"
     compile group: 'commons-io', name: 'commons-io', version: "${commonsIoVersion}"
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version: "${apacheHttpMimeVersion}"
+    compile 'com.google.code.findbugs:annotations:3.0.1'
+    compile 'com.google.code.findbugs:jsr305:3.0.1'
 }
 
 apply plugin: 'com.github.spotbugs'

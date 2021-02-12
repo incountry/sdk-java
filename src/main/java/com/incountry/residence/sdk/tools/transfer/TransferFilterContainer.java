@@ -1,5 +1,7 @@
 package com.incountry.residence.sdk.tools.transfer;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.List;
 import java.util.Map;
 
@@ -13,16 +15,17 @@ public class TransferFilterContainer {
         this.options = new TransferFindOptions(limit, offset, sort);
     }
 
+    @SuppressFBWarnings(value = "SIC_INNER_SHOULD_BE_STATIC")
     public class TransferFindOptions {
         private long limit;
         private long offset;
 
-        public List<Map<String, String>> sort;
+        private List<Map<String, String>> sort;
 
         public TransferFindOptions(long limit, long offset, List<Map<String, String>> sort) {
             this.limit = limit;
             this.offset = offset;
-            if (sort != null && sort.size() > 0) {
+            if (sort != null && !sort.isEmpty()) {
                 this.sort = sort;
             }
         }

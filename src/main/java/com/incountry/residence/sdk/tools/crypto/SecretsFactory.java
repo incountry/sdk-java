@@ -11,7 +11,6 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 public class SecretsFactory {
 
@@ -25,8 +24,9 @@ public class SecretsFactory {
 
     private static final String SECRET_KEY_FACTORY_ALGORITHM = "PBKDF2WithHmacSHA512";
     private static final int KEY_LENGTH = 32;
-    private static final int PBKDF2_ITERATIONS_COUNT = 10000;
 
+    private SecretsFactory() {
+    }
 
     public static byte[] getKey(byte[] salt, Secret secret, int pbkdf2Iterations) throws StorageCryptoException {
         if (secret == null) {
@@ -40,17 +40,17 @@ public class SecretsFactory {
     }
 
     private static byte[] getPbkdf2WithHmacSha512(byte[] password, byte[] salt, int iterations, int length) throws StorageCryptoException {
-        CharBuffer charBuffer = CHARSET.decode(ByteBuffer.wrap(password));
-        char[] chars = charBuffer.array();
-        PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
         byte[] strongPasswordHash;
         try {
+            CharBuffer charBuffer = CHARSET.decode(ByteBuffer.wrap(password));
+            char[] chars = charBuffer.array();
+            PBEKeySpec spec = new PBEKeySpec(chars, salt, iterations, length * 8);
             SecretKeyFactory skf = SecretKeyFactory.getInstance(SECRET_KEY_FACTORY_ALGORITHM);
             strongPasswordHash = skf.generateSecret(spec).getEncoded();
-        } catch (NoSuchAlgorithmException e) {
-            throw new StorageCryptoException(MSG_ERR_NO_ALGORITHM, e);
-        } catch (InvalidKeySpecException e) {
-            throw new StorageCryptoException(MSG_ERR_GEN_SECRET, e);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new StorageCryptoException(MSG_ERR_NO_ALGORITHM, ex);
+        } catch (Exception ex) {
+            throw new StorageCryptoException(MSG_ERR_GEN_SECRET, ex);
         }
         return strongPasswordHash;
     }

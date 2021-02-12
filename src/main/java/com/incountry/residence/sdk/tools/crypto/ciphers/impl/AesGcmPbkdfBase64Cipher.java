@@ -1,11 +1,11 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers.impl;
+package com.incountry.residence.sdk.tools.crypto.ciphers.impl;
 
-import com.incountry.residence.sdk.tools.crypto.Ciphers.AesGcmCipher;
-import com.incountry.residence.sdk.tools.crypto.Ciphers.CipherText;
-import com.incountry.residence.sdk.tools.crypto.Ciphers.DefaultCipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.AesGcmCipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.CipherText;
 import com.incountry.residence.sdk.tools.crypto.Secret;
 import com.incountry.residence.sdk.tools.crypto.SecretsFactory;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,9 +19,10 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-public class AesGcmPbkdfBase64Cipher extends AesGcmCipher implements DefaultCipher {
+@SuppressFBWarnings("UWF_UNWRITTEN_FIELD")
+public class AesGcmPbkdfBase64Cipher extends AesGcmCipher implements com.incountry.residence.sdk.tools.crypto.ciphers.Cipher {
 
-    private static final Logger LOG = LogManager.getLogger(AesGcmCipher.class);
+    private static final Logger LOG = LogManager.getLogger(AesGcmPbkdfBase64Cipher.class);
 
     private static final String MSG_ERR_ALG_EXCEPTION = "AES/GCM/NoPadding algorithm exception";
     private static final String MSG_ERR_ENCRYPTION = "Data encryption error";
@@ -34,14 +35,12 @@ public class AesGcmPbkdfBase64Cipher extends AesGcmCipher implements DefaultCiph
     private String cipherVersion;
     private int pbkdf2Iterations;
     private Charset charset;
-    private SecureRandom randomSecureRandom;
     private String code;
 
     public AesGcmPbkdfBase64Cipher(String cipherVersion, int pbkdf2Iterations, Charset charset) {
         this.cipherVersion = cipherVersion;
         this.pbkdf2Iterations = pbkdf2Iterations;
         this.charset = charset;
-        this.randomSecureRandom = new SecureRandom();
     }
 
     @Override

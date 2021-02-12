@@ -5,7 +5,7 @@ import com.incountry.residence.sdk.dto.Record;
 public class TransferRecord extends Record {
 
     private String key;
-    private boolean is_encrypted;
+    private boolean encrypted;
 
     public String getKey() {
         return key;
@@ -13,21 +13,22 @@ public class TransferRecord extends Record {
 
     public void setKey(String key) {
         this.key = key;
-//        return this;
     }
 
     public boolean isEncrypted() {
-        return is_encrypted;
+        return encrypted;
     }
 
     public void setEncrypted(boolean encrypted) {
-        this.is_encrypted = encrypted;
+        this.encrypted = encrypted;
     }
 
+    @Override
     public Integer getVersion() {
         return super.version;
     }
 
+    @Override
     public void setVersion(Integer version) {
         super.version = version;
     }

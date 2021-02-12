@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers;
+package com.incountry.residence.sdk.tools.crypto.ciphers;
 
 import com.incountry.residence.sdk.tools.crypto.Secret;
 import com.incountry.residence.sdk.tools.crypto.SecretsFactory;
@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
+@SuppressWarnings("java:S1118")
 public abstract class AesGcmCipher {
 
     private static final Logger LOG = LogManager.getLogger(AesGcmCipher.class);
@@ -20,7 +21,7 @@ public abstract class AesGcmCipher {
     private static final String MSG_ERR_ENCRYPTED_TEXT = "Encrypted text is incorrect";
     private static final String MSG_ERR_NO_SECRET = "No secret provided";
     private static final String MSG_ERR_NO_CHARSET = "Charset is null";
-    private static final String MSG_ERR_DECRYPTION = "Data decryption error";
+    private static final String MSG_ERR_DECRYPTION = "Invalid cipher for decryption";
 
     private static final String SECRET_KEY_ALGORITHM = "AES";
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";

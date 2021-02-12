@@ -9,7 +9,6 @@ import com.incountry.residence.sdk.dto.search.filters.FindFilter;
 import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.search.fields.NumberField;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
-//import com.incountry.residence.sdk.tools.crypto.Deprecated.CryptoManager;
 import com.incountry.residence.sdk.tools.crypto.HashUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -43,7 +42,7 @@ public class StorageImpl implements Storage {
     private static final Logger LOG = LogManager.getLogger(StorageImpl.class);
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_ERR_NULL_CONFIG= "Storage configuration is null";
+    private static final String MSG_ERR_NULL_CONFIG = "Storage configuration is null";
     private static final String MSG_ERR_AUTH_DUPL = "Either apiKey or clientId/clientSecret can be used at the same moment, not both";
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
@@ -64,7 +63,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE = "File name and MIME type can't be null";
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
-//    private static final String MSG_ERR_KEY_LENGTH = "key1-key10 length can't be more than 256 chars";
 
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_SIMPLE_SECURE = "[SECURE]";
@@ -74,7 +72,6 @@ public class StorageImpl implements Storage {
     private CryptoProvider cryptoProvider;
     private Dao dao;
     private boolean encrypted;
-    private boolean hashSearchKeys;
     private HashUtils hashUtils;
     private DtoTransformer transformer;
 
@@ -87,6 +84,13 @@ public class StorageImpl implements Storage {
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
      */
+    /**
+     *
+     * creating Storage instance with ENV variables without encryption
+     *
+     * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageCryptoException if encryption failed
+     */
     public static Storage getInstance() throws StorageClientException {
         return getInstance((SecretKeyAccessor) null);
     }
@@ -97,6 +101,7 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException {
         StorageConfig config = new StorageConfig()
@@ -118,6 +123,7 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException {
@@ -135,6 +141,7 @@ public class StorageImpl implements Storage {
      * @param config A container with configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance(StorageConfig config)
             throws StorageClientException {
@@ -282,28 +289,6 @@ public class StorageImpl implements Storage {
         checkCountryAndRecordKey(country, key);
     }
 
-//    private void checkKey(String key) throws StorageClientException {
-//        if (key != null && key.length() > 256) {
-//            LOG.error(MSG_ERR_KEY_LENGTH);
-//            throw new StorageClientException(MSG_ERR_KEY_LENGTH);
-//        }
-//    }
-
-//    private void checkRecordSearchKeys(Record record) throws StorageClientException {
-//        if (!hashSearchKeys) {
-//            checkKey(record.getKey1());
-//            checkKey(record.getKey2());
-//            checkKey(record.getKey3());
-//            checkKey(record.getKey4());
-//            checkKey(record.getKey5());
-//            checkKey(record.getKey6());
-//            checkKey(record.getKey7());
-//            checkKey(record.getKey8());
-//            checkKey(record.getKey9());
-//            checkKey(record.getKey10());
-//        }
-//    }
-
     public Record write(String country, Record record) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (LOG.isTraceEnabled()) {
@@ -313,7 +298,6 @@ public class StorageImpl implements Storage {
         }
         checkNotNull(record, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, record.getRecordKey());
-//        checkRecordSearchKeys(record);
         dao.createRecord(country.toLowerCase(), transformer.getTransferRecord(record));
         return record;
     }
@@ -327,8 +311,6 @@ public class StorageImpl implements Storage {
         }
         checkCountryAndRecordKey(country, recordKey);
         TransferRecord transferRecord = dao.read(country.toLowerCase(), hashUtils.getSha256Hash(recordKey));
-//        Record record = new Record();
-
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("read results ({})", transferRecord != null ? transferRecord.hashCode() : null);
@@ -353,7 +335,7 @@ public class StorageImpl implements Storage {
                     ? transformer.getSecretKeyAccessor().getSecretsData().getCurrentSecret().getVersion()
                     : null;
         FindFilter filter = FindFilter.create().limitAndOffset(limit, 0)
-                .keyNotEq(NumberField.VERSION, currentVersion.longValue());
+                .keyNotEq(NumberField.VERSION, currentVersion != null ? currentVersion.longValue() : null);
         FindResult findResult = find(country, filter);
         if (!findResult.getRecords().isEmpty()) {
             batchWrite(country, findResult.getRecords());
@@ -380,7 +362,6 @@ public class StorageImpl implements Storage {
         } else {
             for (Record record : records) {
                 checkCountryAndRecordKey(country, record.getRecordKey());
-//                checkRecordSearchKeys(record);
             }
             dao.createBatch(country.toLowerCase(), transformer.getTransferRecordList(records));
         }
@@ -421,7 +402,7 @@ public class StorageImpl implements Storage {
      * Find one record in remote storage
      *
      * @param country country identifier
-     * @param builder object representing find filters
+     * @param filter object representing find filters
      * @return Record object which contains required data
      * @throws StorageServerException if server connection failed or server response error
      */
@@ -467,7 +448,7 @@ public class StorageImpl implements Storage {
         }
         checkCountryAndRecordKey(country, recordKey);
         try {
-            if (inputStream == null || inputStream.available() == 0) {
+            if (inputStream == null || inputStream.available() < 0) {
                 LOG.error(MSG_ERR_NULL_FILE_INPUT_STREAM);
                 throw new StorageClientException(MSG_ERR_NULL_FILE_INPUT_STREAM);
             }

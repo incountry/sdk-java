@@ -1,17 +1,17 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers.impl;
+package com.incountry.residence.sdk.tools.crypto.ciphers.impl;
 
-import com.incountry.residence.sdk.tools.crypto.Ciphers.CipherText;
-import com.incountry.residence.sdk.tools.crypto.Ciphers.DefaultCipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.Cipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.CipherText;
 import com.incountry.residence.sdk.tools.crypto.Secret;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-public class PlainTextBase64Cipher implements DefaultCipher {
+public class PlainTextBase64Cipher implements Cipher {
 
     private static final Charset CHARSET = StandardCharsets.UTF_8;
-    public static final String PREFIX_PLAIN_TEXT_VERSION = "pt";
+    public static final String CIPHER_CODE = "pt";
 
     private Charset encoding;
 
@@ -22,7 +22,7 @@ public class PlainTextBase64Cipher implements DefaultCipher {
     @Override
     public CipherText encrypt(String text, Secret secretKey) {
         String ptEncoded = new String(Base64.getEncoder().encode(text.getBytes(CHARSET)), CHARSET);
-        return new CipherText(PREFIX_PLAIN_TEXT_VERSION + ":" + ptEncoded);
+        return new CipherText(CIPHER_CODE + ":" + ptEncoded);
     }
 
     @Override
@@ -33,6 +33,6 @@ public class PlainTextBase64Cipher implements DefaultCipher {
 
     @Override
     public String getCode() {
-        return PREFIX_PLAIN_TEXT_VERSION;
+        return CIPHER_CODE;
     }
 }

@@ -1,11 +1,13 @@
 package com.incountry.residence.sdk.tools.transfer;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.List;
 
 public class TransferFindResult {
 
-    public List<TransferRecord> data;
-    public FindMeta meta;
+    private List<TransferRecord> data;
+    private FindMeta meta;
 
     public TransferFindResult(List<TransferRecord> data, FindMeta meta) {
         this.data = data;
@@ -20,6 +22,7 @@ public class TransferFindResult {
         return meta;
     }
 
+    @SuppressFBWarnings(value = "SIC_INNER_SHOULD_BE_STATIC")
     public class FindMeta {
         private int limit;
         private int offset;
@@ -49,5 +52,6 @@ public class TransferFindResult {
             return count;
         }
     }
+
 
 }

@@ -1,11 +1,12 @@
 package com.incountry.residence.sdk.dto;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
+@SuppressFBWarnings({"EI_EXPOSE_REP2", "EI_EXPOSE_REP", "EI_EXPOSE_REP"})
 public class Record {
     private String recordKey;
     private String key1;

@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RangeFilter extends Filter {
 
@@ -24,14 +25,12 @@ public class RangeFilter extends Filter {
     private long value2;
     private String operator2;
 
-    static {
+    public RangeFilter(long value1, String operator1, long value2, String operator2) throws StorageClientException {
         sOperator1Values.add(OPERATOR_GREATER);
         sOperator1Values.add(OPERATOR_GREATER_OR_EQUALS);
         sOperator2Values.add(OPERATOR_LESS);
         sOperator2Values.add(OPERATOR_LESS_OR_EQUALS);
-    }
 
-    public RangeFilter(long value1, String operator1, long value2, String operator2) throws StorageClientException {
         validate(value1, operator1, value2, operator2);
         this.value1 = value1;
         this.operator1 = operator1;
@@ -56,9 +55,9 @@ public class RangeFilter extends Filter {
 
     @Override
     public Object toTransferObject() {
-        return new HashMap<String, Long>() {{
-            put(operator1, value1);
-            put(operator2, value2);
-        }};
+        Map<String, Long> obj =  new HashMap<>();
+        obj.put(operator1, value1);
+        obj.put(operator2, value2);
+        return obj;
     }
 }

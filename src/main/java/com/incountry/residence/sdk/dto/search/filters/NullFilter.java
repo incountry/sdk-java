@@ -1,8 +1,7 @@
 package com.incountry.residence.sdk.dto.search.filters;
 
-import com.incountry.residence.sdk.dto.search.filters.Filter;
-
 import java.util.HashMap;
+import java.util.Map;
 
 public class NullFilter extends Filter {
 
@@ -14,6 +13,11 @@ public class NullFilter extends Filter {
 
     @Override
     public Object toTransferObject() {
-        return nullable ? null : new HashMap<Object, Object>() {{put(OPERATOR_NOT, null);}};
+        if (!nullable) {
+            Map<Object, Object> obj = new HashMap<>();
+            obj.put(OPERATOR_NOT, null);
+            return obj;
+        }
+        return null;
     }
 }

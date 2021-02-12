@@ -4,7 +4,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class EncryptionKey extends Secret{
+public class EncryptionKey extends Secret {
 
     private static final Logger LOG = LogManager.getLogger(EncryptionKey.class);
 

@@ -70,8 +70,8 @@ public interface Storage {
      * Find records in remote storage according to filters
      *
      * @param country country identifier
-     * @param builder object representing find filters and search options
-     * @return BatchRecord object which contains required records
+     * @param filter object representing find filters and search options
+     * @return FindResult object which contains required records
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed

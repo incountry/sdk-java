@@ -1,12 +1,13 @@
 package com.incountry.residence.sdk.tools.crypto;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
 
+@SuppressFBWarnings({"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public abstract class Secret {
 
     private static final Logger LOG = LogManager.getLogger(Secret.class);

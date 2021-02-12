@@ -1,7 +1,6 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -48,7 +47,7 @@ class ParamsFromEnvTest {
     }
 
     @Test
-    void getStorageWithParamsFromEnv() throws StorageClientException, StorageServerException {
+    void getStorageWithParamsFromEnv() throws StorageException {
         String envId = "<env>";
         setEnv(PARAM_ENV_ID, envId);
         String apiKey = "<apikey>";

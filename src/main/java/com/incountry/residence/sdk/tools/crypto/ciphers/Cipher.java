@@ -1,7 +1,6 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers;
+package com.incountry.residence.sdk.tools.crypto.ciphers;
 
-import com.incountry.residence.sdk.tools.crypto.Ciphers.CipherText;
-import com.incountry.residence.sdk.tools.crypto.CustomEncryptionKey;
+import com.incountry.residence.sdk.tools.crypto.Secret;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 
@@ -10,30 +9,30 @@ public interface Cipher {
     /**
      * encrypts data with secret
      *
-     * @param textBytes data for encryption
-     * @param secretKey secret
+     * @param text data for encryption
+     * @param secret secret
      * @return encrypted data as String
      * @throws StorageClientException when parameters validation fails
      * @throws StorageCryptoException when decryption fails
      */
-    String encrypt(byte[] textBytes, CustomEncryptionKey secretKey) throws StorageClientException, StorageCryptoException;
+    CipherText encrypt(String text, Secret secret) throws StorageClientException, StorageCryptoException;
 
     /**
      * decrypts data with Secret
      *
-     * @param cipherTextBytes encrypted data
-     * @param secretKey  secret
+     * @param cipherText encrypted data
+     * @param secret  secret
      * @return decrypted data as String
      * @throws StorageClientException when parameters validation fails
      * @throws StorageCryptoException when decryption fails
      */
-    String decrypt(byte[] cipherTextBytes, CustomEncryptionKey secretKey) throws StorageClientException, StorageCryptoException;
+    String decrypt(String cipherText, Secret secret) throws StorageClientException, StorageCryptoException;
 
     /**
      * get cipher name
      *
      * @return cipher name
      */
-    String getName();
+    String getCode();
 
 }

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public class FindFilter {
 
@@ -31,11 +32,8 @@ public class FindFilter {
 
     private final EnumMap<StringField, Filter> stringFilters = new EnumMap<>(StringField.class);
     private final EnumMap<NumberField, Filter> numberFilters = new EnumMap<>(NumberField.class);
-//    private Map<StringField, Filter> stringFilters = new EnumMap<>(StringField.class);
-//    private Map<NumberField, Filter> numberFilters = new EnumMap<>(NumberField.class);
     private static List<StringField> nonHashedKeyList = new ArrayList<>();
     private List<SortingParam> sortingList = new ArrayList<>();
-//    private static List<StringField> nonHashedKeyList = new ArrayList<>();
 
     private int limit = MAX_LIMIT;
     private int offset = DEFAULT_OFFSET;
@@ -61,14 +59,6 @@ public class FindFilter {
     public static FindFilter create() {
         return new FindFilter();
     }
-
-//    private static Map<?, ? extends Filter> cloneFilters(Map<?, ? extends Filter> sourceDictionary) {
-//        return sourceDictionary.entrySet().stream().map(entry -> {
-//            return new AbstractMap.SimpleImmutableEntry<>(
-//                    entry.getKey(),
-//                    entry.getValue().copy());
-//        }).collect(Collectors.toMap(AbstractMap.SimpleImmutableEntry::getKey, AbstractMap.SimpleImmutableEntry::getValue));
-//    }
 
     public FindFilter clear() {
         stringFilters.clear();
@@ -122,8 +112,9 @@ public class FindFilter {
     }
 
     public FindFilter keyGreater(NumberField field, Long value, Boolean includingValue) throws StorageClientException {
-        numberFilters.put(field, new NumberFilter(new ArrayList<Long>() {{add(value);}},
-                includingValue ? Filter.OPERATOR_GREATER_OR_EQUALS : Filter.OPERATOR_GREATER));
+        List<Long> list = new ArrayList<>();
+        list.add(value);
+        numberFilters.put(field, new NumberFilter(list, Boolean.TRUE.equals(includingValue) ? Filter.OPERATOR_GREATER_OR_EQUALS : Filter.OPERATOR_GREATER));
         return this;
     }
 
@@ -132,8 +123,9 @@ public class FindFilter {
     }
 
     public FindFilter keyLess(NumberField field, long value, Boolean includingValue) throws StorageClientException {
-        numberFilters.put(field, new NumberFilter(new ArrayList<Long>() {{add(value);}},
-                includingValue ? Filter.OPERATOR_LESS_OR_EQUALS : Filter.OPERATOR_LESS));
+        List<Long> list = new ArrayList<>();
+        list.add(value);
+        numberFilters.put(field, new NumberFilter(list, Boolean.TRUE.equals(includingValue) ? Filter.OPERATOR_LESS_OR_EQUALS : Filter.OPERATOR_LESS));
         return this;
     }
 
@@ -141,12 +133,17 @@ public class FindFilter {
         return keyBetween(field, fromValue, toValue, true, true);
     }
 
+    public FindFilter keyBetween(NumberField field, long fromValue, long toValue, Boolean includeFrom) throws StorageClientException {
+        return keyBetween(field, fromValue, toValue, includeFrom, true);
+    }
+
     public FindFilter keyBetween(NumberField field, long fromValue, long toValue, Boolean includeFrom, Boolean includeTo) throws StorageClientException {
-        numberFilters.put(field, new RangeFilter(fromValue,
-                includeFrom ? Filter.OPERATOR_GREATER_OR_EQUALS : Filter.OPERATOR_GREATER,
+        RangeFilter rangeFilter = new RangeFilter(fromValue,
+                Boolean.TRUE.equals(includeFrom) ? Filter.OPERATOR_GREATER_OR_EQUALS : Filter.OPERATOR_GREATER,
                 toValue,
-                includeTo ? Filter.OPERATOR_LESS_OR_EQUALS : Filter.OPERATOR_LESS
-        ));
+                Boolean.TRUE.equals(includeTo) ? Filter.OPERATOR_LESS_OR_EQUALS : Filter.OPERATOR_LESS
+        );
+        numberFilters.put(field, rangeFilter);
         return this;
     }
 
@@ -233,11 +230,11 @@ public class FindFilter {
         return searchKeys;
     }
 
-    public EnumMap<StringField, Filter> getStringFilters() {
+    public Map<StringField, Filter> getStringFilters() {
         return stringFilters;
     }
 
-    public EnumMap<NumberField, Filter> getNumberFilters() {
+    public Map<NumberField, Filter> getNumberFilters() {
         return numberFilters;
     }
 
@@ -249,16 +246,6 @@ public class FindFilter {
         return sortingList;
     }
 
-
-
-    //    public Map<NumberField, NumberFilter> getNumberFilters() {
-//        return (Map<NumberField, NumberFilter>)cloneFilters(numberFilters);
-//    }
-
-//    public void setNumberFilters(Map<NumberField, NumberFilter> numberFilters) {
-//        this.numberFilters = numberFilters;
-//    }
-//
     public FindFilter copy() {
         FindFilter clone = new FindFilter();
         clone.stringFilters.putAll(this.stringFilters);
@@ -268,14 +255,6 @@ public class FindFilter {
         clone.sortingList.addAll(sortingList);
         clone.searchKeys = searchKeys;
         return clone;
-//        FindFilter findFilter = new FindFilter();
-//        findFilter.setLimit(limit);
-//        findFilter.setOffset(offset);
-//        findFilter.setNumberFilters(getNumberFilters());
-//        findFilter.setStringFilters(getStringFilters());
-//        findFilter.setSearchKeys(getSearchKeys());
-//        findFilter.setS
-//        return findFilter;
     }
 
     @Override

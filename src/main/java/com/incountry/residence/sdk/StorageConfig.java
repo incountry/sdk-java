@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.tools.crypto.Ciphers.Cipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.Cipher;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 

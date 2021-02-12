@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers;
+package com.incountry.residence.sdk.tools.crypto.ciphers;
 
 import com.incountry.residence.sdk.tools.crypto.Secret;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;

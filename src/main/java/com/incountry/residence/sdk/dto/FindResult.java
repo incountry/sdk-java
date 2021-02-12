@@ -1,6 +1,5 @@
 package com.incountry.residence.sdk.dto;
 
-import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 
 import java.util.List;

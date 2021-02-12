@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers;
+package com.incountry.residence.sdk.tools.crypto.ciphers;
 
 public class CipherText {
 

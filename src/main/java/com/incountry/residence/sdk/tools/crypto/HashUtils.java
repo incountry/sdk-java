@@ -2,8 +2,6 @@ package com.incountry.residence.sdk.tools.crypto;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import javax.crypto.Cipher;
-
 public class HashUtils {
 
     private String environmentId;

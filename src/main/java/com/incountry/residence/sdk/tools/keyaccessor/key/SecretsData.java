@@ -5,7 +5,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +13,6 @@ public class SecretsData {
 
     private static final Logger LOG = LogManager.getLogger(SecretsData.class);
 
-//    private static final String MSG_ERR_VERSION = "Current version must be >= 0";
     private static final String MSG_ERR_EMPTY_SECRETS = "Secrets in SecretData are null";
     private static final String MSG_ERR_UNIQUE_VERSIONS = "SecretKey versions must be unique. Got duplicates for: %s";
     private static final String MSG_ERR_CURRENT_SECRET = "There is no SecretKey version that matches current version %s";
@@ -38,17 +36,20 @@ public class SecretsData {
             throw new StorageClientException(MSG_ERR_EMPTY_SECRETS);
         }
 
-        Set versionSet = new HashSet<Integer>();
+        Set<Integer> versionSet = new HashSet<>();
         for (Secret secret : secrets) {
             if (versionSet.contains(secret.getVersion())) {
-                LOG.error(String.format(MSG_ERR_UNIQUE_VERSIONS, secret.getVersion()));
-                throw new StorageClientException(String.format(MSG_ERR_UNIQUE_VERSIONS, secret.getVersion()));
+                String message = String.format(MSG_ERR_UNIQUE_VERSIONS, secret.getVersion());
+                LOG.error(message);
+                throw new StorageClientException(message);
             }
             versionSet.add(secret.getVersion());
         }
         if (!secrets.contains(currentSecret)) {
-            LOG.error(String.format(MSG_ERR_CURRENT_SECRET, currentSecret.getVersion()));
-            throw new StorageClientException(String.format(MSG_ERR_CURRENT_SECRET, currentSecret.getVersion()));
+            String version = currentSecret != null ? String.valueOf(currentSecret.getVersion()) : "";
+            String message = String.format(MSG_ERR_CURRENT_SECRET, version);
+            LOG.error(message);
+            throw new StorageClientException(message);
         }
     }
 
@@ -61,8 +62,9 @@ public class SecretsData {
                 .findAny()
                 .orElse(null);
         if (secret == null) {
-            LOG.error(String.format(MSG_ERR_VERSION, version));
-            throw new StorageClientException(String.format(MSG_ERR_VERSION, version));
+            String message = String.format(MSG_ERR_VERSION, version);
+            LOG.error(message);
+            throw new StorageClientException(message);
         }
         return secret;
     }
@@ -75,7 +77,6 @@ public class SecretsData {
         return currentSecret;
     }
 
-    // TODO check how will it look like in tests
     @Override
     public String toString() {
         return "SecretsData{" +

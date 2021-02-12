@@ -12,7 +12,7 @@ import com.incountry.residence.sdk.dto.search.fields.SortField;
 import com.incountry.residence.sdk.dto.search.SortingParam;
 import com.incountry.residence.sdk.dto.search.fields.StringField;
 import com.incountry.residence.sdk.dto.search.filters.StringFilter;
-import com.incountry.residence.sdk.tools.crypto.Ciphers.CipherText;
+import com.incountry.residence.sdk.tools.crypto.ciphers.CipherText;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.crypto.HashUtils;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
@@ -43,7 +43,7 @@ public class DtoTransformer {
     private static final String MSG_ERR_COUNT_DIFFERS_FROM_DATA_SIZE = "Response error: count in find results metadata differs from data size";
     private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in find results metadata, less then received";
     private static final String MSG_RECORD_PARSE_EXCEPTION = "Record Parse Exception";
-    private static final String MSG_ERR_KEY_LENGTH = "Key1-Key20 length can't be more than 256 chars with option 'hashSearchKeys' = false";
+    private static final String MSG_ERR_KEY_LENGTH = "Key1-Key10 length can't be more than 256 chars with option 'hashSearchKeys' = false";
     private static final String MSG_ERR_NULL_RECORD_KEY = "Null required record fields: recordKey";
     private static final String MSG_ERR_NULL_BODY = "Null required record fields: body";
 
@@ -55,7 +55,16 @@ public class DtoTransformer {
     private boolean hashSearchKeys;
     private SecretKeyAccessor secretKeyAccessor;
 
+    @SuppressWarnings("java:S3740")
     private Map<Enum, String> enumMapping = new HashMap<>();
+
+    public DtoTransformer(CryptoProvider cryptoProvider, HashUtils hashUtils) {
+        this(cryptoProvider, hashUtils, true, null);
+    }
+
+    public DtoTransformer(CryptoProvider cryptoProvider, HashUtils hashUtils, boolean hashSearchKeys) {
+        this(cryptoProvider, hashUtils, hashSearchKeys, null);
+    }
 
     public DtoTransformer(CryptoProvider cryptoProvider, HashUtils hashUtils, boolean hashSearchKeys, SecretKeyAccessor secretKeyAccessor) {
         this.cryptoProvider = cryptoProvider;
@@ -127,21 +136,18 @@ public class DtoTransformer {
         return resultRecord;
     }
 
-//    private String transformSearchKey(String value, boolean hashSearchKeys, boolean validateLength = true) {
     private String transformSearchKey(String value, boolean hashSearchKeys, boolean validateLength) throws StorageClientException {
         if (hashSearchKeys) {
             return hashUtils.getSha256Hash(value);
         }
-        if (value != null) {
-            if (validateLength && value.length() > MAX_STRING_KEY_LENGTH) {
-                LOG.error(MSG_ERR_KEY_LENGTH);
-                throw new StorageClientException(MSG_ERR_KEY_LENGTH);
-            }
+        if (value != null && validateLength && value.length() > MAX_STRING_KEY_LENGTH) {
+            LOG.error(MSG_ERR_KEY_LENGTH);
+            throw new StorageClientException(MSG_ERR_KEY_LENGTH);
         }
         return value;
     }
 
-    public Record getRecord(TransferRecord transferRecord) throws StorageServerException, StorageClientException, StorageCryptoException {
+    public Record getRecord(TransferRecord transferRecord) throws StorageClientException, StorageCryptoException {
         if (transferRecord == null) {
             return null;
         }
@@ -185,7 +191,7 @@ public class DtoTransformer {
         resultRecord.setCreatedAt(transferRecord.getCreatedAt());
         resultRecord.setUpdatedAt(transferRecord.getUpdatedAt());
         resultRecord.setVersion(recordVersion);
-        resultRecord.setAttachments(transferRecord.getAttachments() == null || transferRecord.getAttachments().size() == 0
+        resultRecord.setAttachments(transferRecord.getAttachments() == null || transferRecord.getAttachments().isEmpty()
                 ? null : transferRecord.getAttachments());
         return resultRecord;
     }
@@ -222,42 +228,23 @@ public class DtoTransformer {
         return outputRecord;
     }
 
-    public static void validateTransferRecord(TransferRecord record) throws StorageServerException {
-            if (record.getRecordKey() == null || record.getRecordKey().isEmpty()) {
-                LOG.error(MSG_ERR_NULL_RECORD_KEY);
-                throw new StorageServerException(MSG_ERR_NULL_RECORD_KEY);
-            }
-            if (record.getBody() == null || record.getBody().isEmpty()) {
-                LOG.error(MSG_ERR_NULL_BODY);
-                throw new StorageServerException(MSG_ERR_NULL_BODY);
-            }
-
-//        StringBuilder builder = null;
-//        if (record == null) {
-//            builder = new StringBuilder("Received record is null");
-//        } else {
-//            if (record.getRecordKey() == null || record.getRecordKey().isEmpty()) {
-//                builder = new StringBuilder("Null required record fields: recordKey");
-//            }
-//            if (record.getBody() == null || record.getBody().isEmpty()) {
-//                builder = (builder == null ? new StringBuilder("Null required record fields: body") : builder.append(", body"));
-//            }
-//        }
-//        if (builder != null) {
-//            String message = builder.toString();
-//            LOG.error(message);
-//            throw new StorageServerException(message);
-//        }
+    public static void validateTransferRecord(TransferRecord record) throws StorageClientException {
+        if (record.getRecordKey() == null || record.getRecordKey().isEmpty()) {
+            LOG.error(MSG_ERR_NULL_RECORD_KEY);
+            throw new StorageClientException(MSG_ERR_NULL_RECORD_KEY);
+        }
+        if (record.getBody() == null || record.getBody().isEmpty()) {
+            LOG.error(MSG_ERR_NULL_BODY);
+            throw new StorageClientException(MSG_ERR_NULL_BODY);
+        }
     }
 
     private class ComplexBody {
 
-        public TransferRecord meta;
-        public String payload;
+        private TransferRecord meta;
+        private String payload;
 
-        public ComplexBody() {}
-
-        public ComplexBody(TransferRecord meta, String payload) {
+        ComplexBody(TransferRecord meta, String payload) {
             this.meta = meta;
             this.payload = payload;
         }
@@ -272,8 +259,7 @@ public class DtoTransformer {
     }
 
     public TransferFilterContainer transformFilter(FindFilter filter) throws StorageClientException {
-
-        Map transformedFilters = new HashMap<String, Object>();
+        Map<String, Object> transformedFilters = new HashMap<>();
 
         for (Map.Entry<NumberField, Filter> entry :  filter.getNumberFilters().entrySet()) {
             transformedFilters.put(enumMapping.get(entry.getKey()).toLowerCase(), entry.getValue().toTransferObject());
@@ -291,28 +277,30 @@ public class DtoTransformer {
                 transformedFilters.put(enumMapping.get(entry.getKey()).toLowerCase(),
                         new StringFilter(hashedValues, stringFilter.isNotCondition()).toTransferObject());
             } else {
-                transformedFilters.put(enumMapping.get(entry.getKey()), oneFilter.toTransferObject());
+                transformedFilters.put(enumMapping.get(entry.getKey()).toLowerCase(), oneFilter.toTransferObject());
             }
         }
 
-        // TODO: 04.02.2021 ask Roma is it accessible to use searchKeysLike without any other searchKey
+        if (filter.getSearchKeys() != null) {
+            transformedFilters.put(SEARCH_KEYS, filter.getSearchKeys());
+        }
+
         if (transformedFilters.size() == 0) {
             LOG.error(MSG_ERR_NULL_FILTERS);
             throw new StorageClientException(MSG_ERR_NULL_FILTERS);
         }
         List<SortingParam> sorting = filter.getSortingList();
         List<Map<String, String>> transferSorting = sorting.stream()
-                .map(param -> new HashMap<String, String>() {{
-                    put(enumMapping.get(param.getField()).toLowerCase(), param.getOrder().toString().toLowerCase());
-                }}).collect(Collectors.toList());
-        if (filter.getSearchKeys() != null) {
-            transformedFilters.put(SEARCH_KEYS, filter.getSearchKeys());
-        }
+                .map(param -> {
+                    Map<String, String> params = new HashMap<>();
+                    params.put(enumMapping.get(param.getField()).toLowerCase(), param.getOrder().toString().toLowerCase());
+                    return params;
+                }).collect(Collectors.toList());
 
         return new TransferFilterContainer(transformedFilters, filter.getLimit(), filter.getOffset(), transferSorting);
     }
 
-    public FindResult getFindResult(TransferFindResult findResult) throws StorageClientException {
+    public FindResult getFindResult(TransferFindResult findResult) throws StorageServerException {
         validateTransferFindResult(findResult);
 
         List<RecordException> recordExceptions = new ArrayList<>();
@@ -327,11 +315,11 @@ public class DtoTransformer {
                     Record record = getRecord(transferRecord);
                     records.add(record);
                 } catch (Exception e) {
-                    recordExceptions.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, new Gson().toJson(transferRecord), e));
+                    recordExceptions.add(new RecordException(MSG_RECORD_PARSE_EXCEPTION, getGson4Records().toJson(transferRecord), e));
                 }
             }
         }
-        FindResult findResults = new FindResult(
+        return new FindResult(
                 records,
                 recordExceptions,
                 findResult.getMeta().getLimit(),
@@ -339,32 +327,31 @@ public class DtoTransformer {
                 findResult.getMeta().getTotal(),
                 findResult.getMeta().getCount()
         );
-        return findResults;
     }
 
-    private static void validateTransferFindResult(TransferFindResult findResult) throws StorageClientException {
+    private static void validateTransferFindResult(TransferFindResult findResult) throws StorageServerException {
         if (findResult == null) {
             LOG.error(MSG_ERR_NULL_FIND_RESPONSE);
-            throw new StorageClientException(MSG_ERR_NULL_FIND_RESPONSE);
+            throw new StorageServerException(MSG_ERR_NULL_FIND_RESPONSE);
         }
         TransferFindResult.FindMeta meta = findResult.getMeta();
         List<TransferRecord> data = findResult.getData();
         if (meta == null) {
             LOG.error(MSG_ERR_NULL_METADATA);
-            throw new StorageClientException(MSG_ERR_NULL_METADATA);
+            throw new StorageServerException(MSG_ERR_NULL_METADATA);
         }
         if (meta.getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0) {
             LOG.error(MSG_ERR_VALUES_IN_FIND_RESULT_METADATA);
-            throw new StorageClientException(MSG_ERR_VALUES_IN_FIND_RESULT_METADATA);
+            throw new StorageServerException(MSG_ERR_VALUES_IN_FIND_RESULT_METADATA);
         }
-        if ((meta.getCount() > 0 && (data == null || data.size() == 0 || data.size() != meta.getCount()))
-                || (meta.getCount() == 0 && data != null && data.size() != 0)) {
+        if ((meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount()))
+                || (meta.getCount() == 0 && data != null && !data.isEmpty())) {
             LOG.error(MSG_ERR_COUNT_DIFFERS_FROM_DATA_SIZE);
-            throw new StorageClientException(MSG_ERR_COUNT_DIFFERS_FROM_DATA_SIZE);
+            throw new StorageServerException(MSG_ERR_COUNT_DIFFERS_FROM_DATA_SIZE);
         }
         if (meta.getCount() > meta.getTotal()) {
             LOG.error(MSG_ERR_INCORRECT_TOTAL);
-            throw new StorageClientException(MSG_ERR_INCORRECT_TOTAL);
+            throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);
         }
     }
 

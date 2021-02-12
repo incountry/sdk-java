@@ -1,19 +1,20 @@
-package com.incountry.residence.sdk.tools.crypto.Ciphers.impl;
+package com.incountry.residence.sdk.tools.crypto.ciphers.impl;
 
-import com.incountry.residence.sdk.tools.crypto.Ciphers.AesGcmCipher;
-import com.incountry.residence.sdk.tools.crypto.Ciphers.CipherText;
-import com.incountry.residence.sdk.tools.crypto.Ciphers.DefaultCipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.AesGcmCipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.Cipher;
+import com.incountry.residence.sdk.tools.crypto.ciphers.CipherText;
 import com.incountry.residence.sdk.tools.crypto.Secret;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.Charset;
 
-public class AesGcmPbkdf10kHexCipher extends AesGcmCipher implements DefaultCipher {
+@SuppressFBWarnings({"UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD"})
+public class AesGcmPbkdf10kHexCipher extends AesGcmCipher implements Cipher {
 
     protected static final int PBKDF2_ITERATIONS = 10_000;
     private Charset charset;
-    public String code;
 
     public AesGcmPbkdf10kHexCipher(Charset charset) {
         this.charset = charset;
