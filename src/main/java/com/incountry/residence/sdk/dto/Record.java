@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressFBWarnings({"EI_EXPOSE_REP2", "EI_EXPOSE_REP", "EI_EXPOSE_REP"})
 public class Record {
@@ -277,6 +278,61 @@ public class Record {
 
     public void setAttachments(List<AttachmentMeta> attachments) {
         this.attachments = attachments;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Record record = (Record) obj;
+        return Objects.equals(recordKey, record.recordKey) &&
+                Objects.equals(key1, record.key1) &&
+                Objects.equals(key2, record.key2) &&
+                Objects.equals(key3, record.key3) &&
+                Objects.equals(key4, record.key4) &&
+                Objects.equals(key5, record.key5) &&
+                Objects.equals(key6, record.key6) &&
+                Objects.equals(key7, record.key7) &&
+                Objects.equals(key8, record.key8) &&
+                Objects.equals(key9, record.key9) &&
+                Objects.equals(key10, record.key10) &&
+                Objects.equals(profileKey, record.profileKey) &&
+                Objects.equals(rangeKey1, record.rangeKey1) &&
+                Objects.equals(rangeKey2, record.rangeKey2) &&
+                Objects.equals(rangeKey3, record.rangeKey3) &&
+                Objects.equals(rangeKey4, record.rangeKey4) &&
+                Objects.equals(rangeKey5, record.rangeKey5) &&
+                Objects.equals(rangeKey6, record.rangeKey6) &&
+                Objects.equals(rangeKey7, record.rangeKey7) &&
+                Objects.equals(rangeKey8, record.rangeKey8) &&
+                Objects.equals(rangeKey9, record.rangeKey9) &&
+                Objects.equals(rangeKey10, record.rangeKey10) &&
+                Objects.equals(body, record.body) &&
+                Objects.equals(precommitBody, record.precommitBody) &&
+                Objects.equals(serviceKey1, record.serviceKey1) &&
+                Objects.equals(serviceKey2, record.serviceKey2) &&
+                Objects.equals(createdAt, record.createdAt) &&
+                Objects.equals(updatedAt, record.updatedAt) &&
+                Objects.equals(attachments, record.attachments);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+                rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
+                body, profileKey, precommitBody, serviceKey1, serviceKey2,
+                createdAt, updatedAt, attachments);
+    }
+
+    @Override
+    public String toString() {
+        return "Record{" +
+                "recordKey='" + recordKey + "', hash=" + hashCode() +
+                '}';
     }
 }
 

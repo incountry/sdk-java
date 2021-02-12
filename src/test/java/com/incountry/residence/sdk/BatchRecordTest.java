@@ -18,8 +18,10 @@ class BatchRecordTest {
         BatchRecord batch2 = new BatchRecord(new ArrayList<>(), 6, 7, 8, 9, null);
         assertEquals("BatchRecord{count=6, limit=7, offset=8, total=9, records=[], errors=null}",
                 batch2.toString());
-        BatchRecord batch3 = new BatchRecord(Collections.singletonList(new Record("recKey")), 10, 11, 12, 13, null);
-        assertEquals("BatchRecord{count=10, limit=11, offset=12, total=13, records=[Record{recordKey='recKey', hash=-892825485}], errors=null}",
+        Record record = new Record();
+        record.setRecordKey("recKey");
+        BatchRecord batch3 = new BatchRecord(Collections.singletonList(record), 10, 11, 12, 13, null);
+        assertEquals("BatchRecord{count=10, limit=11, offset=12, total=13, records=[Record{recordKey='recKey', hash=1957511887}], errors=null}",
                 batch3.toString());
     }
 }

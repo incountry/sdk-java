@@ -21,8 +21,11 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +56,7 @@ class HttpAgentImplTest {
     @Test
     void testWithIllegalUrl() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "someBody", null, null, 0, new RequestParameters("GET", new HashMap<>(), APPLICATION_JSON, false, null)));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> agent.request(null, "someBody", null, null, 0, new RequestParameters("GET", new HashMap<>(), APPLICATION_JSON, null, null)));
         assertEquals("URL can't be null", ex.getMessage());
     }
 
@@ -81,7 +84,7 @@ class HttpAgentImplTest {
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE)).getContent());
         assertNotNull(agent.request(ENDPOINT, "", null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE)).getContent());
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, null, null, null, 0, new RequestParameters("POST", ApiResponseCodes.DELETE)));
-        assertEquals("Server request error: POST", ex.getMessage());
+        assertEquals("Body can't be null", ex.getMessage());
         server.stop(0);
     }
 
@@ -96,6 +99,10 @@ class HttpAgentImplTest {
         server.stop(0);
     }
 
+    private InputStream genStream() {
+        return new ByteArrayInputStream("<body>".getBytes(StandardCharsets.UTF_8));
+    }
+
     @Test
     void testWithFakeHttpServerFileUpload() throws IOException, StorageException {
         int respCode = 200;
@@ -104,28 +111,16 @@ class HttpAgentImplTest {
 
         String postMethod = "POST";
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")).getContent());
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "", null, null, 0, new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
-        assertEquals("Server request error: POST", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, null, null, null, 0, new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
-        assertEquals("Server request error: POST", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
+        RequestParameters params = new RequestParameters(postMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genStream(), "file.txt");
+        assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params).getContent());
 
         String putMethod = "PUT";
-        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")).getContent());
-        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, "", true, "file.txt")).getContent());
-        assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, null, true, "file.txt")).getContent());
-        ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, "", null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
-        assertEquals("Server request error: PUT", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
-        ex = assertThrows(StorageServerException.class, () -> agent.request(ENDPOINT, null, null, null, 0, new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, true, "file.txt")));
-        assertEquals("Server request error: PUT", ex.getMessage());
-        assertEquals(StorageClientException.class, ex.getCause().getClass());
-        assertEquals("Body can't be null", ex.getCause().getMessage());
+        RequestParameters params4 = new RequestParameters(putMethod, ApiResponseCodes.DELETE, APPLICATION_JSON, genStream(), "file.txt");
+        assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params4).getContent());
+        RequestParameters params5 = new RequestParameters(putMethod, ApiResponseCodes.DELETE, "", genStream(), "file.txt");
+        assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params5).getContent());
+        RequestParameters params6 = new RequestParameters(putMethod, ApiResponseCodes.DELETE, null, genStream(), "file.txt");
+        assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params6).getContent());
         server.stop(0);
     }
 
@@ -239,7 +234,7 @@ class HttpAgentImplTest {
     }
 
     @Test
-    void negativeTestWithIllegalUrl() {
+    void negativeTestWithIllegalUrl() throws StorageClientException, StorageServerException {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         String url = " ";
         StorageServerException ex = assertThrows(StorageServerException.class, ()
@@ -250,7 +245,7 @@ class HttpAgentImplTest {
     }
 
     @Test
-    void positiveHttpPoolTest() throws IOException, StorageClientException, StorageServerException, InterruptedException, ExecutionException, StorageCryptoException {
+    void positiveHttpPoolTest() throws IOException, StorageClientException, InterruptedException, ExecutionException {
         String envId = "envId";
         List<String> responseList = Arrays.asList(
                 "{'access_token'='1234567889' , 'expires_in'='300' , 'token_type'='bearer', 'scope'='" + envId + "'}",

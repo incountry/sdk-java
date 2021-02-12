@@ -89,7 +89,6 @@ public class StorageImpl implements Storage {
      * creating Storage instance with ENV variables without encryption
      *
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance() throws StorageClientException {
         return getInstance((SecretKeyAccessor) null);
@@ -101,7 +100,6 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance(SecretKeyAccessor secretKeyAccessor) throws StorageClientException {
         StorageConfig config = new StorageConfig()
@@ -123,7 +121,6 @@ public class StorageImpl implements Storage {
      * @param secretKeyAccessor Instance of SecretKeyAccessor class. Used to fetch encryption secret
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance(String environmentID, String apiKey, String endpoint, SecretKeyAccessor secretKeyAccessor)
             throws StorageClientException {
@@ -141,7 +138,6 @@ public class StorageImpl implements Storage {
      * @param config A container with configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
-     * @throws StorageCryptoException if encryption failed
      */
     public static Storage getInstance(StorageConfig config)
             throws StorageClientException {
@@ -193,7 +189,7 @@ public class StorageImpl implements Storage {
         }
         instance.hashUtils = new HashUtils(config.getEnvId(), config.isNormalizeKeys());
         instance.transformer = new DtoTransformer(instance.cryptoProvider, instance.hashUtils, config.isHashSearchKeys(), config.getSecretKeyAccessor());
-        return ProxyUtils.createLoggingProxyForPublicMethods(instance);
+        return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
 
     private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
@@ -238,7 +234,7 @@ public class StorageImpl implements Storage {
                         config.getClientSecret(),
                         httpClient
                 );
-                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient);
+                tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
             } else if (config.getApiKey() != null) {
                 checkNotNull(config.getApiKey(), MSG_ERR_PASS_API_KEY);
                 tokenClient = new ApiKeyTokenClient(config.getApiKey());

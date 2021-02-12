@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
-import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -32,7 +32,7 @@ public abstract class AbstractHttpRequestCreator {
     private static final String PATCH = "PATCH";
     private static final String FILE = "file";
 
-    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws StorageClientException {
+    protected HttpRequestBase createRequest(String url, String method, String body, RequestParameters requestParameters) throws StorageServerException {
         if (requestParameters != null && requestParameters.getDataStream() != null) {
             return createFileUploadRequest(url, method, requestParameters.getDataStream(), requestParameters.getFileName(), requestParameters.getContentType());
         } else {
@@ -40,7 +40,7 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private HttpRequestBase createSimpleRequest(String url, String method, String body) throws StorageClientException {
+    private HttpRequestBase createSimpleRequest(String url, String method, String body) throws StorageServerException {
         URI uri = createUri(url);
 
         if (method.equals(POST)) {
@@ -62,7 +62,7 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private HttpRequestBase createFileUploadRequest(String url, String method, InputStream dataStream, String fileName, String mimeTypeString) throws StorageClientException {
+    private HttpRequestBase createFileUploadRequest(String url, String method, InputStream dataStream, String fileName, String mimeTypeString) throws StorageServerException {
         URI uri = createUri(url);
         ContentType mimeType;
         if (mimeTypeString == null || mimeTypeString.isEmpty()) {
@@ -88,19 +88,19 @@ public abstract class AbstractHttpRequestCreator {
         }
     }
 
-    private void checkBodyForNull(String body) throws StorageClientException {
+    private void checkBodyForNull(String body) throws StorageServerException {
         if (body == null) {
             LOG.error(MSG_ERR_NULL_BODY);
-            throw new StorageClientException(MSG_ERR_NULL_BODY);
+            throw new StorageServerException(MSG_ERR_NULL_BODY);
         }
     }
 
-    private URI createUri(String url) throws StorageClientException {
+    private URI createUri(String url) throws StorageServerException {
         URI uri;
         try {
             uri = new URI(url);
         } catch (URISyntaxException ex) {
-            throw new StorageClientException(MSG_ERR_URL, ex);
+            throw new StorageServerException(MSG_ERR_URL, ex);
         }
         return uri;
     }
