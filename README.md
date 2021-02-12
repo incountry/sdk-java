@@ -5,8 +5,7 @@ InCountry Storage SDK
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 [![Known Vulnerabilities](https://snyk.io/test/github/incountry/sdk-java/badge.svg?targetFile=build.gradle)](https://snyk.io/test/github/incountry/sdk-java?targetFile=build.gradle)
 
-Installation
------
+## Installation
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
 
 For Maven users please add this section to your dependencies list
@@ -23,13 +22,25 @@ For Gradle users please add this line to your dependencies list
 compile "com.incountry:incountry-java-client:3.0.0"
 ```
 
-Countries List
-----
+## Countries List
 For a full list of supported countries and their codes please [follow this link](countries.md).
 
-Usage
------
-Use `StorageImpl` class to access your data in InCountry using Java SDK.
+
+## Quickstart guide
+To access your data in InCountry Platform by using Java SDK, you need to create an instance of the `Storage` class using the `getInstance` method and pass `StorageConfig` object to it. You can retrieve the `CLIENT_ID`, `CLIENT_SECRET` and `ENV_ID` variables from your dashboard on InCountry Portal.
+```java
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<encryption_secret>");
+StorageConfig config = new StorageConfig()
+        .setEnvId("<environment_id>")
+        .setClientId("client_id")
+        .setClientSecret("<client_secret>")
+        .setSecretKeyAccessor(() -> secretsData);
+Storage storage = StorageImpl.getInstance(config);
+```
+
+## Storage Configuration
+
+Below you can find a full list of possible configuration options for creating a Storage instance.
 ```java
 public class StorageImpl implements Storage {
   /**
@@ -50,50 +61,71 @@ StorageConfig provides the following parameters:
  * container with Storage configuration, using pattern 'builder'
  */
 public class StorageConfig {
-    //...
-    /** Required to be passed in, or as environment variable INC_API_KEY */
-    private String envId;
-    /** Required when using API key authorization, or as environment variable */
-    private String apiKey;
-    /** Optional. Defines API URL. Can also be set up using environment variable INC_ENDPOINT */
-    private String endPoint;
-    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
-    private SecretKeyAccessor secretKeyAccessor;
-    /** Optional. List of custom encryption configurations */
-    private List<Crypto> customEncryptionConfigsList;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
-    private String clientId;
-    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
-    private String clientSecret;
-    //...
+   //...
+   /** Required to be passed in, or as environment variable INC_API_KEY */
+   private String envId;
+   /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
+   private String clientId;
+   /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
+   private String clientSecret;
+   /** Required when using API key authorization, or as environment variable */
+   private String apiKey;
+   /** Optional. Defines custom API URL, can also be set via INC_ENDPOINT */
+   private String endPoint;
+   /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
+   private SecretKeyAccessor secretKeyAccessor;
+   /** Optional. List of custom encryption configurations */
+   private List<Crypto> customEncryptionConfigsList;
+   /** Optional. If true - all keys will be stored as lower cased. default is false */
+   private boolean normalizeKeys;
+   /** Optional. Parameter endpointMask is used for switching from `default` InCountry host
+    *  family (-mt-01.api.incountry.io) to a different one.  */
+   private String endpointMask;
+   /** Optional. Set custom endpoint for loading countries list */
+   private String countriesEndpoint;
+   /** Optional. Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+    * Default value is 30 seconds. */
+   private Integer httpTimeout;
+   /** Set custom endpoints regional map to use for fetching oAuth tokens
+    * Can be used only with {@link #defaultAuthEndpoint}
+    * Format: key = region, value = authorization server URL for region */
+   private Map<String, String> authEndpoints;
+   /** Set custom oAuth authorization server URL, will be used as default one.
+    * Can't be null when {@link #authEndpoints} is used */
+   private String defaultAuthEndpoint;
+   /** Optional. Set HTTP connections pool size. Expected value - null or positive integer.
+    * Defaults to 20. */
+   private Integer maxHttpPoolSize;
+   /** Optional. Set maximum count of HTTP connections per route. 
+    * Expected value - null or positive integer.
+    * Default value == {@link #maxHttpPoolSize}. */
+   private Integer maxHttpConnectionsPerRoute;
+   /** Optional. If false - key1-key10 will be not hashed. Default is true */
+   private boolean hashSearchKeys = true;
+   //...
 ```
 
 ---
 **WARNING**
 
-API Key authorization is being deprecated. We keep backwards compatibility for `apiKey` param but you no longer can get API keys (neither old nor new) from your dashboard.
+API Key authorization is being deprecated. The backward compatibility is preserved for the API keys, but you no longer can access API keys (neither old nor new) from your dashboard.
 
----
-
-Parameters `environmentID`, `clientId` and `clientSecret` can be fetched from your dashboard on `Incountry` site.
-
-You can turn off encryption (not recommended) by providing `null` value for parameter `secretKeyAccessor`.
-
-Below is an example how to create a storage instance:
+Below you can find API Key authorization usage example:
 ```java
-SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("<password>");
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
     .setEnvId("<env_id>")
     .setApiKey("<api_key>")
-    .setSecretKeyAccessor(accessor);
+    .setSecretKeyAccessor(() -> secretsData);
 Storage storage=StorageImpl.getInstance(config);
 ```
+---
 
-#### oAuth Authentication
+#### oAuth options configuration
 
-SDK also supports oAuth authentication credentials instead of plain API key authorization. oAuth authentication flow is mutually exclusive with API key authentication - you will need to provide either API key or oAuth credentials.
+The SDK allows to precisely configure oAuth authorization endpoints (if needed). Use this option only if your plan configuration requires so.
 
-Below is the example how to create storage instance with oAuth credentials (and also provide custom oAuth endpoint):
+Below you can find the example of how to create a storage instance with custom oAuth endpoints:
 ```java
 Map<String, String> authEndpointsMap = new HashMap<>();
 authEndpointsMap.put("emea", "https://auth-server-emea.com");
@@ -101,18 +133,12 @@ authEndpointsMap.put("apac", "https://auth-server-apac.com");
 authEndpointsMap.put("amer", "https://auth-server-amer.com");
 
 StorageConfig config = new StorageConfig()
-   //can be also set via environment variable INC_CLIENT_ID with {@link #getInstance()}
    .setClientId(CLIENT_ID)
-   //can be also set via environment variable INC_CLIENT_SECRET with {@link #getInstance()}
    .setClientSecret(SECRET)
    .setAuthEndpoints(authEndpointsMap)
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvId(ENV_ID)
-   //HTTP connections pool size, optional, defaults to 20
-   .setMaxHttpPoolSize(32)
-   //max HTTP connections per route, optional, defaults to MaxHttpPoolSize
-   .setMaxHttpConnectionsPerRoute(8);
 Storage storage = StorageImpl.getInstance(config);
 ```
 
@@ -130,7 +156,8 @@ Storage storage = StorageImpl.getInstance(config);
 SDK provides `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
 ```java
 /**
- * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.
+ * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked 
+ * on each encryption/decryption.
  */
 public interface SecretKeyAccessor {
 
@@ -294,6 +321,11 @@ v3.0.0 release introduced a series of new fields available for storage. Below is
 public class Record {
     //String fields, hashed
     private String recordKey;
+    private String parentKey;
+    private String profileKey;
+    private String serviceKey1;
+    private String serviceKey2;
+   //String fields, hashed or original
     private String key1;
     private String key2;
     private String key3;
@@ -304,9 +336,16 @@ public class Record {
     private String key8;
     private String key9;
     private String key10;
-    private String profileKey;
-    private String serviceKey1;
-    private String serviceKey2;
+    private String key11;
+    private String key12;
+    private String key13;
+    private String key14;
+    private String key15;
+    private String key16;
+    private String key17;
+    private String key18;
+    private String key19;
+    private String key20;
     //String fields, encrypted
     private String body;
     private String precommitBody;
@@ -321,7 +360,7 @@ public class Record {
     private Long rangeKey8;
     private Long rangeKey9;
     private Long rangeKey10;
-    //Readonly service fields, date in ISO format
+    //Readonly service fields, date
     protected Date createdAt;
     protected Date updatedAt;
 ```
@@ -448,15 +487,78 @@ FindFilterBuilder builder = FindFilterBuilder.create()
 BatchRecord records = storage.find("us", builder);
 ```
 
+---
+**NOTE**
+
+Sorting find results is currently available for InCountry dedicated instances only. Please check your subscription plan for details. This may require specifying your dedicated instance endpoint when configuring Java SDK Storage.
+
+---
+
+By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilterBuilder` .
+```java
+FindFilterBuilder builder = FindFilterBuilder.create()
+                  //...
+                  .sortBy(SortField.CREATED_AT, SortOrder.ASC)
+                  .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
+BatchRecord records = storage.find("us", builder);
+```
+The request will return records, sorted according to the following pseudo-sql
+```sql
+SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
+```
+
+##### Fields that records can be sorted by:
+```java
+public enum SortFields {
+   KEY1,
+   KEY2,
+   KEY3,
+   KEY4,
+   KEY5,
+   KEY6,
+   KEY7,
+   KEY8,
+   KEY9,
+   KEY10,
+   KEY11,
+   KEY12,
+   KEY13,
+   KEY14,
+   KEY15,
+   KEY16,
+   KEY17,
+   KEY18,
+   KEY19,
+   KEY20,
+   RANGE_KEY1,
+   RANGE_KEY2,
+   RANGE_KEY3,
+   RANGE_KEY4,
+   RANGE_KEY5,
+   RANGE_KEY6,
+   RANGE_KEY7,
+   RANGE_KEY8,
+   RANGE_KEY9,
+   RANGE_KEY10,
+   CREATED_AT,
+   UPDATED_AT
+}
+```
+
 Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
-EQUALS         (FindFilterBuilder::keyEq)
-NOT_EQUALS     (FindFilterBuilder::keyNotEq)
+EQUALS              (FindFilterBuilder::keyEq)
+NOT_EQUALS          (FindFilterBuilder::keyNotEq)
+IS_NULL             (FindFilterBuilder::keyIsNull)
+IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
+
 ```
 
 You can use the following builder methods for filtering by numerical fields:
 ```java
 EQUALS              (FindFilterBuilder::keyEq)
+IS_NULL             (FindFilterBuilder::keyIsNull)
+IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
 IN                  (FindFilterBuilder::keyIn)
 GREATER             (FindFilterBuilder::keyGT)
 GREATER OR EQUALS   (FindFilterBuilder::keyGTE)
@@ -546,6 +648,183 @@ String recordKey = "user_1";
 storage.delete("us", recordKey);
  ```
 
+## Attaching files to a record
+
+---
+**NOTE**
+
+Attachments are currently available for InCountry dedicated instances only. Please check your subscription plan for details. This may require specifying your dedicated instance endpoint when configuring InCountry Java SDK Storage.
+
+---
+
+InCountry Storage allows you to attach files to the previously created records. Attachments' meta information is available through the `attachments` field of `Record` object.
+```java
+public class Record {
+    /** ... other fields ...  */
+    private List<AttachmentMeta> attachments;
+}
+
+public class AttachmentMeta {
+    private Date createdAt;
+    private Date updatedAt;
+    private String downloadLink;
+    private String fileId;
+    private String filename;
+    private String hash;
+    private String mimeType;
+    private int size;
+    //...
+}
+```
+
+### Adding attachments
+
+The `addAttachment` method of `Storage` instance allows you to add or replace attachments. File data can be provided as `InputStream`.
+```java
+public interface Storage {
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @param upsert          if true will overwrite existing file with the same name.
+     *                        Otherwise will throw exception
+     * @param mimeType        mime type for attached file
+     * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, 
+                                 String fileName, boolean upsert, String mimeType)
+             throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+File initialFile = new File("example.txt");
+InputStream stream = new FileInputStream(initialFile);
+storage.addAttachment(COUNTRY, RECORD_KEY, stream, "example.txt", false, MIME_TYPE);
+```
+
+### Deleting attachments
+
+The `deleteAttachment` method of `Storage` instance allows you to delete attachment using its `fileId`.
+```java
+public interface Storage {
+    /**
+     * Delete attached file of existing record
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return true when file was deleted
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    boolean deleteAttachment(String country, String recordKey, String fileId) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+storage.deleteAttachment(COUNTRY, RECORD_KEY, fileId);
+```
+
+### Downloading attachments
+
+The `getAttachmentFile` method of `Storage` instance allows you to download attachment contents. It returns an `AttachedFile` class instance with a readable stream and filename.
+```java
+public interface Storage {
+    /**
+     * Get attached file of existing record
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return AttachedFile object which contains required file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachedFile getAttachmentFile(String country, String recordKey, String fileId) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+
+public class AttachedFile {
+   private final InputStream fileContent;
+   private final String fileName;
+   //...
+}
+```
+
+Example of usage:
+```java
+AttachedFile attachement = storageForAttachment.getAttachmentFile(COUNTRY, RECORD_KEY, fileId);
+File file = new File(attachement.getFileName());
+FileUtils.copyInputStreamToFile(attachement.getFileContent(), file);
+```
+
+### Working with attachment meta info
+
+The `getAttachmentMeta` method of `Storage` instance allows you to retrieve attachment's metadata using its `fileId`.
+```java
+public interface Storage {
+    /**
+     * Get attached file meta information
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return AttachmentMeta object which contains required meta information fileId,
+     * mimeType, size, filename, downloadLink, updatedAt and createdAt
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+AttachmentMeta meta = storageForAttachment.getAttachmentMeta(COUNTRY, RECORD_KEY, fileId);
+```
+
+The `updateAttachmentMeta` method of `Storage` allows you to update attachment's metadata (MIME type and file name).
+```java
+public interface Storage {
+    /**
+     * Update attached file meta information
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @param fileName  file name (optional if mimeType provided)
+     * @param mimeType  file MIME type (optional if fileName provided)
+     * @return AttachmentMeta object which contains updated fields
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, 
+                                        String fileName, String mimeType) 
+            throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+AttachmentMeta meta = storage
+        .updateAttachmentMeta(COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
+```
+
 Data Migration and Key Rotation support
 -----
 
@@ -586,8 +865,7 @@ public class MigrateResult {
 
 For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
 
-Error Handling
------
+## Error Handling
 
 InCountry Java SDK throws following Exceptions:
 - **StorageClientException** - used for various input validation errors
@@ -615,26 +893,26 @@ public void test() {
 }
 ```
 
-Custom Encryption Support
------
+## Custom Encryption Support
+
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
 
 Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
 
 ```java
 public class StorageConfig {
-    //...
-    /**
-     * for custom encryption
-     *
-     * @param customEncryptionConfigsList List with custom encryption functions
-     * @return StorageConfig
-     */
-    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
-        this.customEncryptionConfigsList = customEncryptionConfigsList;
-        return this;
-    }
-    //...
+  //...
+  /**
+   * for custom encryption
+   *
+   * @param customEncryptionConfigsList List with custom encryption functions
+   * @return StorageConfig
+   */
+  public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
+      this.customEncryptionConfigsList = customEncryptionConfigsList;
+      return this;
+  }
+  //...
 }
 ```
 
@@ -709,9 +987,9 @@ You can set `isForCustomEncryption` using `SecretsData` JSON format as well:
 ```javascript
 secrets_data = {
   "secrets": [{
-       "secret": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwQUI=", //base64-encoded key (32 byte key)
-       "version": 1,
-       "isForCustomEncryption": true,
+     "secret": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwQUI=", //base64-encoded key (32 byte key)
+     "version": 1,
+     "isForCustomEncryption": true,
     }
   }],
   "currentVersion": 1,
@@ -779,8 +1057,7 @@ public class FernetCrypto implements Crypto {
 }
 ```
 
-Project dependencies
------
+## Project dependencies
 
 The following is a list of compile dependencies for this project. These dependencies are required to compile and run the application:
 

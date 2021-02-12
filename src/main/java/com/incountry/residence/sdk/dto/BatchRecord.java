@@ -3,14 +3,15 @@ package com.incountry.residence.sdk.dto;
 import com.incountry.residence.sdk.tools.exceptions.RecordException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class BatchRecord {
-    private int count;
-    private int limit;
-    private int offset;
-    private int total;
-    private List<Record> records;
-    private List<RecordException> errors;
+    private final int count;
+    private final int limit;
+    private final int offset;
+    private final int total;
+    private final List<Record> records;
+    private final List<RecordException> errors;
 
     public BatchRecord(List<Record> records, int count, int limit, int offset, int total, List<RecordException> errors) {
         this.count = count;
@@ -61,15 +62,6 @@ public class BatchRecord {
         if (records == null || records.isEmpty()) {
             return "[]";
         }
-        StringBuilder result = new StringBuilder("[");
-        records.forEach(one -> {
-            if (result.length() > 1) {
-                result.append(", ");
-            }
-            result.append("SECURE[")
-                    .append(one.hashCode())
-                    .append("]");
-        });
-        return result.append("]").toString();
+        return "[" + records.stream().map(Record::toString).collect(Collectors.joining(",")) + "]";
     }
 }

@@ -68,22 +68,15 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
     @Override
     public ApiResponse request(String url, String body,
                                String audience, String region, int retryCount, RequestParameters requestParameters) throws StorageServerException, StorageClientException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("HTTP request params (url={}, audience={}, region={}, retryCount={}, httpParameters={})",
-                    url,
-                    audience,
-                    region,
-                    retryCount,
-                    requestParameters);
-        }
         NullChecker.checkNull(LOG, url, new StorageClientException(MSG_URL_NULL_ERR), MSG_URL_NULL_ERR);
         NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
+        CloseableHttpResponse response = null;
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
-            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.isFileUpload());
-            CloseableHttpResponse response = httpClient.execute(request);
+            addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.getDataStream() != null);
+            response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
             HttpEntity responseEntity = response.getEntity();
@@ -95,7 +88,6 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             if (response.getEntity() != null) {
                 actualResponseContent = EntityUtils.toString(response.getEntity());
             }
-            response.close();
             ApiResponseCodes expectedResponse = codeMap.get(status);
             boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
             boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse.isCanRetry(), retryCount);
@@ -111,15 +103,19 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 LOG.error(errorMessage);
                 throw new StorageServerException(errorMessage);
             }
-            ApiResponse apiResponse = new ApiResponse(actualResponseContent, metaInfo);
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("HTTP response={}",
-                        apiResponse);
-            }
-            return apiResponse;
+            return new ApiResponse(actualResponseContent, metaInfo);
         } catch (IOException ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
+            LOG.error(errorMessage, ex);
             throw new StorageServerException(errorMessage, ex);
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    LOG.warn(e);
+                }
+            }
         }
     }
 

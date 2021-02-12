@@ -2,27 +2,28 @@ package com.incountry.residence.sdk.tools.containers;
 
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 
+import java.io.InputStream;
 import java.util.Map;
 
 public class RequestParameters {
 
     private static final String APPLICATION_JSON = "application/json";
 
-    private String method;
-    private Map<Integer, ApiResponseCodes> codeMap;
-    private String contentType;
-    private boolean fileUpload;
-    private String fileName;
+    private final String method;
+    private final Map<Integer, ApiResponseCodes> codeMap;
+    private final String contentType;
+    private final InputStream dataStream;
+    private final String fileName;
 
     public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap) {
-        this(method, codeMap, APPLICATION_JSON, false, null);
+        this(method, codeMap, APPLICATION_JSON, null, null);
     }
 
-    public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType, boolean fileUpload, String fileName) {
+    public RequestParameters(String method, Map<Integer, ApiResponseCodes> codeMap, String contentType, InputStream dataStream, String fileName) {
         this.method = method;
         this.codeMap = codeMap;
         this.contentType = contentType;
-        this.fileUpload = fileUpload;
+        this.dataStream = dataStream;
         this.fileName = fileName;
     }
 
@@ -38,22 +39,11 @@ public class RequestParameters {
         return contentType;
     }
 
-    public boolean isFileUpload() {
-        return fileUpload;
+    public InputStream getDataStream() {
+        return dataStream;
     }
 
     public String getFileName() {
         return fileName;
-    }
-
-    @Override
-    public String toString() {
-        return "HttpParameters{" +
-                "method=" + method +
-                ", codeMap=" + codeMap +
-                ", contentType=" + contentType +
-                ", fileUpload=" + fileUpload +
-                ", fileName=" + fileName +
-                '}';
     }
 }

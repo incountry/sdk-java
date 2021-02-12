@@ -96,7 +96,7 @@ public class StorageConfig {
     }
 
     /**
-     * Defines PoP API URL
+     * Optional. Defines custom API URL
      *
      * @param endPoint API URL. Default endpoint will be used if this param is null
      * @return StorageConfig
@@ -107,7 +107,7 @@ public class StorageConfig {
     }
 
     /**
-     * load endPoint from env variable 'INC_ENDPOINT'
+     * Load endPoint from env variable 'INC_ENDPOINT'
      *
      * @return StorageConfig
      */
@@ -136,7 +136,7 @@ public class StorageConfig {
     }
 
     /**
-     * for custom encryption
+     * Optional. For custom encryption
      *
      * @param customEncryptionConfigsList List with custom encryption functions
      * @return StorageConfig
@@ -151,7 +151,7 @@ public class StorageConfig {
     }
 
     /**
-     * if true - all keys will be stored as lower cased. default is false
+     * Optional. If true - all keys will be stored as lower cased. Default is false
      *
      * @param normalizeKeys value
      * @return StorageConfig
@@ -218,7 +218,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set custom endpoints regional map to use for fetching oAuth tokens
+     * Optional. Set custom endpoints regional map to use for fetching oAuth tokens
      * Can be used only with {@link #setDefaultAuthEndpoint(String)}
      * Format: key = region, value = authorization server URL for region
      *
@@ -235,7 +235,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set custom oAuth authorization server URL, will be used as default one.
+     * Optional. Set custom oAuth authorization server URL, will be used as default one.
      * Can't be null when {@link #setAuthEndpoints(Map)} is used
      *
      * @param defaultAuthEndpoint custom authorisation endpoint
@@ -251,7 +251,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set HTTP requests timeout. Parameter is optional. Should be greater than 0.
+     * Optional. Set HTTP requests timeout. Should be greater than 0.
      * Default value is 30 seconds.
      *
      * @param httpTimeout timeout in seconds
@@ -267,7 +267,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set HTTP connections pool size. Optional. Expected value - null or positive integer. Defaults to 20.
+     * Optional. Set HTTP connections pool size. Expected value - null or positive integer. Defaults to 20.
      *
      * @param maxHttpPoolSize pool size
      * @return StorageConfig
@@ -286,7 +286,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set maximum count of HTTP connections per route, optional. Expected value - null or positive integer.
+     * Optional. Set maximum count of HTTP connections per route. Expected value - null or positive integer.
      * Default value == {@link #maxHttpPoolSize}.
      *
      * @param maxHttpConnectionsPerRoute pool size
@@ -298,7 +298,7 @@ public class StorageConfig {
     }
 
     /**
-     * Parameter endpointMask is used for switching from `default` InCountry host family (-mt-01.api.incountry.io) to a different one.
+     * Optional. Parameter endpointMask is used for switching from `default` InCountry host family (-mt-01.api.incountry.io) to a different one.
      *
      * @param endpointMask template
      * @return StorageConfig
@@ -313,7 +313,7 @@ public class StorageConfig {
     }
 
     /**
-     * Set custom endpoint for loading countries list. Parameter is optional.
+     * Optional. Set custom endpoint for loading countries list.
      *
      * @param countriesEndpoint custom endpoint for countries loading
      * @return StorageConfig
@@ -328,7 +328,7 @@ public class StorageConfig {
     }
 
     /**
-     * if false - key1-key10 will be not hashed. default is false
+     * Optional. If false - key1-key10 will be not hashed. Default is true
      *
      * @param hashSearchKeys value
      * @return StorageConfig

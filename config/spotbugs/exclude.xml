@@ -31,4 +31,11 @@
         <Bug code="JLM"/>
     </Match>
 
+    <Match>
+        <Or>
+            <Class name="com.incountry.residence.sdk.StorageIntegrationTest"/>
+        </Or>
+        <Bug code="SECPR"/>
+    </Match>
+
 </FindBugsFilter>
