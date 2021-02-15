@@ -607,12 +607,10 @@ class HttpDaoImplTests {
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
 
         AttachmentMeta attachmentMeta = storage.addAttachment(country, recordKey, fileInputStream, fileName, false);
-        String received = agent.getCallBody();
         String callPath = new URL(agent.getCallUrl()).getPath();
 
         assertEquals(fileId, attachmentMeta.getFileId());
         assertEquals(expectedPath, callPath);
-        assertEquals(received, fileContent);
 
         fileInputStream.close();
         Files.delete(tempFile);
