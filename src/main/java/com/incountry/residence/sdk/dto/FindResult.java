@@ -5,7 +5,7 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BatchRecord {
+public class FindResult {
     private final int count;
     private final int limit;
     private final int offset;
@@ -13,7 +13,7 @@ public class BatchRecord {
     private final List<Record> records;
     private final List<RecordException> errors;
 
-    public BatchRecord(List<Record> records, int count, int limit, int offset, int total, List<RecordException> errors) {
+    public FindResult(List<Record> records, int count, int limit, int offset, int total, List<RecordException> errors) {
         this.count = count;
         this.limit = limit;
         this.offset = offset;
@@ -48,7 +48,7 @@ public class BatchRecord {
 
     @Override
     public String toString() {
-        return "BatchRecord{" +
+        return "FindResult{" +
                 "count=" + count +
                 ", limit=" + limit +
                 ", offset=" + offset +

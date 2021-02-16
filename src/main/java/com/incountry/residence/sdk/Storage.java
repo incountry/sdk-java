@@ -2,7 +2,7 @@ package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -35,12 +35,12 @@ public interface Storage {
      *
      * @param country country identifier
      * @param records record list
-     * @return BatchRecord object which contains list of recorded records
+     * @return list of recorded records
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if record encryption failed
      */
-    BatchRecord batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException;
+    List<Record> batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Read data from remote storage
@@ -75,7 +75,7 @@ public interface Storage {
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    FindResult find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Find only one first record in remote storage according to filters

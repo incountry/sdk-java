@@ -7,7 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.RecordField;
 import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
@@ -217,7 +217,7 @@ public class JsonUtils {
         return object;
     }
 
-    public static BatchRecord batchRecordFromString(String responseString, CryptoManager cryptoManager) throws StorageServerException {
+    public static FindResult batchRecordFromString(String responseString, CryptoManager cryptoManager) throws StorageServerException {
         List<RecordException> errors = new ArrayList<>();
         Gson gson = getGson4Records();
         TransferBatch transferBatch;
@@ -241,7 +241,7 @@ public class JsonUtils {
                 }
             }
         }
-        return new BatchRecord(records, transferBatch.getMeta().getCount(), transferBatch.getMeta().getLimit(),
+        return new FindResult(records, transferBatch.getMeta().getCount(), transferBatch.getMeta().getLimit(),
                 transferBatch.getMeta().getOffset(), transferBatch.getMeta().getTotal(), errors);
     }
 

@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
@@ -34,23 +34,23 @@ class TransferBatchTest {
     void negativeValidateTestWithMetaCountNegativeNumber() {
         TransferBatch transferBatch = new TransferBatch();
 
-        BatchRecord batchRecord = new BatchRecord(null, -1, 2, 3, 4, new ArrayList<>());
-        transferBatch.setMeta(batchRecord);
+        FindResult findResult = new FindResult(null, -1, 2, 3, 4, new ArrayList<>());
+        transferBatch.setMeta(findResult);
         StorageServerException ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: negative values in batch metadata", ex.getMessage());
 
-        batchRecord = new BatchRecord(null, 1, -2, 3, 4, new ArrayList<>());
-        transferBatch.setMeta(batchRecord);
+        findResult = new FindResult(null, 1, -2, 3, 4, new ArrayList<>());
+        transferBatch.setMeta(findResult);
         ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: negative values in batch metadata", ex.getMessage());
 
-        batchRecord = new BatchRecord(null, 1, 2, -3, 4, new ArrayList<>());
-        transferBatch.setMeta(batchRecord);
+        findResult = new FindResult(null, 1, 2, -3, 4, new ArrayList<>());
+        transferBatch.setMeta(findResult);
         ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: negative values in batch metadata", ex.getMessage());
 
-        batchRecord = new BatchRecord(null, 1, 2, 3, -4, new ArrayList<>());
-        transferBatch.setMeta(batchRecord);
+        findResult = new FindResult(null, 1, 2, 3, -4, new ArrayList<>());
+        transferBatch.setMeta(findResult);
         ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: negative values in batch metadata", ex.getMessage());
     }
@@ -58,8 +58,8 @@ class TransferBatchTest {
     @Test
     void negativeValidateTestWithMetaCountMoreThanZeroAndDataNull() {
         TransferBatch transferBatch = new TransferBatch();
-        BatchRecord batchRecord = new BatchRecord(null, 2, 2, 0, 2, new ArrayList<>());
-        transferBatch.setMeta(batchRecord);
+        FindResult findResult = new FindResult(null, 2, 2, 0, 2, new ArrayList<>());
+        transferBatch.setMeta(findResult);
         StorageServerException ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: count in batch metadata differs from data size", ex.getMessage());
     }
@@ -75,8 +75,8 @@ class TransferBatchTest {
         CryptoManager cryptoManager = new CryptoManager(secretKeyAccessor, "envId", null, false, true);
 
         TransferBatch transferBatch = new TransferBatch();
-        BatchRecord batchRecord = new BatchRecord(null, 2, 2, 0, 1, new ArrayList<>());
-        transferBatch.setMeta(batchRecord);
+        FindResult findResult = new FindResult(null, 2, 2, 0, 1, new ArrayList<>());
+        transferBatch.setMeta(findResult);
         List<TransferRecord> data = new ArrayList<>();
         Record record = new Record(null);
         TransferRecord transferRecord = new TransferRecord(record, cryptoManager, "");
@@ -88,7 +88,7 @@ class TransferBatchTest {
         StorageServerException ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: incorrect total in batch metadata, less then received", ex.getMessage());
 
-        transferBatch.setMeta(new BatchRecord(null, 0, 2, 0, 0, new ArrayList<>()));
+        transferBatch.setMeta(new FindResult(null, 0, 2, 0, 0, new ArrayList<>()));
         ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: count in batch metadata differs from data size", ex.getMessage());
 
@@ -98,7 +98,7 @@ class TransferBatchTest {
         transferBatch.setData(null);
         transferBatch.validate();
 
-        transferBatch.setMeta(new BatchRecord(null, 3, 3, 0, 3, new ArrayList<>()));
+        transferBatch.setMeta(new FindResult(null, 3, 3, 0, 3, new ArrayList<>()));
         ex = assertThrows(StorageServerException.class, transferBatch::validate);
         assertEquals("Response error: count in batch metadata differs from data size", ex.getMessage());
 

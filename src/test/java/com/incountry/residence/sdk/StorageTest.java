@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -108,14 +108,14 @@ class StorageTest {
     }
 
     private void runMigrationChecks(String response1, String expected1, Storage storage) throws StorageServerException, StorageClientException, StorageCryptoException {
-        BatchRecord batchRecord = JsonUtils.batchRecordFromString(response1, cryptoManager);
-        int migratedRecords = batchRecord.getRecords().size();
-        int totalLeft = batchRecord.getTotal() - batchRecord.getRecords().size();
+        FindResult findResult = JsonUtils.batchRecordFromString(response1, cryptoManager);
+        int migratedRecords = findResult.getRecords().size();
+        int totalLeft = findResult.getTotal() - findResult.getRecords().size();
         MigrateResult migrateResult = storage.migrate("us", 2);
         assertEquals(migratedRecords, migrateResult.getMigrated());
         assertEquals(totalLeft, migrateResult.getTotalLeft());
-        if (batchRecord.getErrors() != null && !batchRecord.getErrors().isEmpty()) {
-            assertEquals(batchRecord.getErrors().get(0).getRawData(), migrateResult.getErrors().get(0).getRawData());
+        if (findResult.getErrors() != null && !findResult.getErrors().isEmpty()) {
+            assertEquals(findResult.getErrors().get(0).getRawData(), migrateResult.getErrors().get(0).getRawData());
         }
         assertEquals(expected1, migrateResult.toString());
     }
@@ -144,12 +144,12 @@ class StorageTest {
         String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
+        FindResult findResult = storage.find(COUNTRY, builder);
 
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(BODY, findResult.getRecords().get(0).getBody());
     }
 
     @RepeatedTest(3)
@@ -223,20 +223,20 @@ class StorageTest {
         String encrypted = JsonUtils.toJsonString(record, cryptoManager);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
+        FindResult findResult = storage.find(COUNTRY, builder);
         String callBody = agent.getCallBody();
         String expected = "{\"filter\":{\"profile_key\":[\"" + cryptoManager.createKeyHash(PROFILE_KEY) + "\"]},\"options\":{\"limit\":1,\"offset\":0}}";
         assertEquals(expected, callBody);
 
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
-        assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
-        assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
-        assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
-        assertEquals(0, batchRecord.getRecords().get(0).getAttachments().size());
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(BODY, findResult.getRecords().get(0).getBody());
+        assertEquals(KEY_2, findResult.getRecords().get(0).getKey2());
+        assertEquals(KEY_3, findResult.getRecords().get(0).getKey3());
+        assertEquals(PROFILE_KEY, findResult.getRecords().get(0).getProfileKey());
+        assertEquals(RANGE_KEY_1, findResult.getRecords().get(0).getRangeKey1());
+        assertEquals(0, findResult.getRecords().get(0).getAttachments().size());
     }
 
     @RepeatedTest(3)
@@ -300,18 +300,18 @@ class StorageTest {
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedRecOther + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getErrors().size());
-        assertEquals(encryptedRecOther, batchRecord.getErrors().get(0).getRawData());
-        assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
+        FindResult findResult = storage.find(COUNTRY, builder);
+        assertEquals(1, findResult.getErrors().size());
+        assertEquals(encryptedRecOther, findResult.getErrors().get(0).getRawData());
+        assertEquals("Record Parse Exception", findResult.getErrors().get(0).getMessage());
 
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
-        assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
-        assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
-        assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(BODY, findResult.getRecords().get(0).getBody());
+        assertEquals(KEY_2, findResult.getRecords().get(0).getKey2());
+        assertEquals(KEY_3, findResult.getRecords().get(0).getKey3());
+        assertEquals(PROFILE_KEY, findResult.getRecords().get(0).getProfileKey());
+        assertEquals(RANGE_KEY_1, findResult.getRecords().get(0).getRangeKey1());
     }
 
     @Test
@@ -388,9 +388,9 @@ class StorageTest {
         String encryptedPTRec = JsonUtils.toJsonString(recWithPTEnc, cryptoWithPT);
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        BatchRecord batchRecord = storage.find(COUNTRY, FindFilterBuilder.create());
-        assertEquals(0, batchRecord.getErrors().size());
-        assertEquals(2, batchRecord.getRecords().size());
+        FindResult findResult = storage.find(COUNTRY, FindFilterBuilder.create());
+        assertEquals(0, findResult.getErrors().size());
+        assertEquals(2, findResult.getRecords().size());
     }
 
     @Test
@@ -412,18 +412,18 @@ class StorageTest {
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}");
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, null, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
-        BatchRecord batchRecord = storage.find(COUNTRY, FindFilterBuilder.create());
-        assertEquals(1, batchRecord.getErrors().size());
-        assertEquals(encryptedRec, batchRecord.getErrors().get(0).getRawData());
-        assertEquals("Record Parse Exception", batchRecord.getErrors().get(0).getMessage());
+        FindResult findResult = storage.find(COUNTRY, FindFilterBuilder.create());
+        assertEquals(1, findResult.getErrors().size());
+        assertEquals(encryptedRec, findResult.getErrors().get(0).getRawData());
+        assertEquals("Record Parse Exception", findResult.getErrors().get(0).getMessage());
 
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY + 1, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(BODY, batchRecord.getRecords().get(0).getBody());
-        assertEquals(KEY_2, batchRecord.getRecords().get(0).getKey2());
-        assertEquals(KEY_3, batchRecord.getRecords().get(0).getKey3());
-        assertEquals(PROFILE_KEY, batchRecord.getRecords().get(0).getProfileKey());
-        assertEquals(RANGE_KEY_1, batchRecord.getRecords().get(0).getRangeKey1());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY + 1, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(BODY, findResult.getRecords().get(0).getBody());
+        assertEquals(KEY_2, findResult.getRecords().get(0).getKey2());
+        assertEquals(KEY_3, findResult.getRecords().get(0).getKey3());
+        assertEquals(PROFILE_KEY, findResult.getRecords().get(0).getProfileKey());
+        assertEquals(RANGE_KEY_1, findResult.getRecords().get(0).getRangeKey1());
     }
 
     @Test
@@ -434,7 +434,7 @@ class StorageTest {
         String string = null;
         FakeHttpAgent agent = new FakeHttpAgent(string);
         Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        BatchRecord findResult = storage.find(COUNTRY, builder);
+        FindResult findResult = storage.find(COUNTRY, builder);
         assertEquals(0, findResult.getRecords().size());
     }
 

@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk.tools.transfer;
 
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 
 import java.util.List;
@@ -12,7 +12,7 @@ public class TransferBatch {
     private static final String MSG_ERR_INCORRECT_COUNT = "Response error: count in batch metadata differs from data size";
     private static final String MSG_ERR_INCORRECT_TOTAL = "Response error: incorrect total in batch metadata, less then received";
 
-    BatchRecord meta;
+    FindResult meta;
     List<TransferRecord> data;
 
     public void validate() throws StorageServerException {
@@ -31,11 +31,11 @@ public class TransferBatch {
         }
     }
 
-    public BatchRecord getMeta() {
+    public FindResult getMeta() {
         return meta;
     }
 
-    public void setMeta(BatchRecord meta) {
+    public void setMeta(FindResult meta) {
         this.meta = meta;
     }
 

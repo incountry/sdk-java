@@ -7,7 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -213,8 +213,8 @@ class RecordTest {
                 .setRangeKey1(rangeKey1 + 2)
                 .setKey2(key2 + 2)
                 .setKey3(key3 + 2);
-        BatchRecord batchRecord = new BatchRecord(Arrays.asList(record1, record2), 2, 2, 0, 2, new ArrayList<>());
-        String str = batchRecord.toString();
+        FindResult findResult = new FindResult(Arrays.asList(record1, record2), 2, 2, 0, 2, new ArrayList<>());
+        String str = findResult.toString();
         assertTrue(str.contains(String.valueOf(record1.hashCode())));
         assertTrue(str.contains(String.valueOf(record2.hashCode())));
     }

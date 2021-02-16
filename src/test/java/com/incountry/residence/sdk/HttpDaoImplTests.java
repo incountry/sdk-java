@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.StringField;
@@ -288,16 +288,16 @@ class HttpDaoImplTests {
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String country = "US";
         List<Record> list = Collections.singletonList(new Record("key", "body"));
-        BatchRecord batchRecord = storage.batchWrite(country, list); //ok
-        assertNotNull(batchRecord);
-        batchRecord = storage.batchWrite(country, list); //Ok
-        assertNotNull(batchRecord);
-        batchRecord = storage.batchWrite(country, list); //OK
-        assertNotNull(batchRecord);
-        batchRecord = storage.batchWrite(country, list); //OKokok
-        assertNotNull(batchRecord);
-        batchRecord = storage.batchWrite(country, list); //null
-        assertNotNull(batchRecord);
+        List<Record> recordList = storage.batchWrite(country, list); //ok
+        assertNotNull(recordList);
+        recordList = storage.batchWrite(country, list); //Ok
+        assertNotNull(recordList);
+        recordList = storage.batchWrite(country, list); //OK
+        assertNotNull(recordList);
+        recordList = storage.batchWrite(country, list); //OKokok
+        assertNotNull(recordList);
+        recordList = storage.batchWrite(country, list); //null
+        assertNotNull(recordList);
     }
 
     @Test
@@ -351,9 +351,9 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodResponse, "StringNotJson"));
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String country = "US";
-        BatchRecord batchRecord = storage.find(country, builder);
-        assertNotNull(batchRecord);
-        assertTrue(batchRecord.getRecords().size() > 0);
+        FindResult findResult = storage.find(country, builder);
+        assertNotNull(findResult);
+        assertTrue(findResult.getRecords().size() > 0);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.find(country, builder));
         assertEquals("Response parse error", ex.getMessage());
     }

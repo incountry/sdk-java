@@ -3,7 +3,7 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.crypto.testimpl.FernetCrypto;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
@@ -343,12 +343,12 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.PARENT_KEY, PARENT_KEY)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertNotNull(batchRecord.getRecords().get(0).getCreatedAt());
-        assertNotNull(batchRecord.getRecords().get(0).getUpdatedAt());
+        FindResult findResult = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNotNull(findResult.getRecords().get(0).getCreatedAt());
+        assertNotNull(findResult.getRecords().get(0).getUpdatedAt());
 
         builder.clear()
                 .keyEq(StringField.RECORD_KEY, batchRecordKey)
@@ -356,21 +356,21 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, BATCH_WRITE_RANGE_KEY_1);
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
 
         builder.clear()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        assertTrue(batchRecord.getRecords().stream().anyMatch(record
+        findResult = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        assertTrue(findResult.getRecords().stream().anyMatch(record
                 -> record.getRecordKey().equals(batchRecordKey)));
-        assertTrue(batchRecord.getRecords().stream().anyMatch(record
+        assertTrue(findResult.getRecords().stream().anyMatch(record
                 -> record.getRecordKey().equals(recordKey)));
 
         builder.clear()
@@ -378,10 +378,10 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
     }
 
     @ParameterizedTest(name = "findAdvancedTest [{index}] {arguments}")
@@ -392,43 +392,43 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
 
-        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.RANGE_KEY10, SortOrder.ASC));
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        Long record1Value = batchRecord.getRecords().get(0).getRangeKey10();
-        Long record2Value = batchRecord.getRecords().get(1).getRangeKey10();
+        FindResult findResult = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.RANGE_KEY10, SortOrder.ASC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        Long record1Value = findResult.getRecords().get(0).getRangeKey10();
+        Long record2Value = findResult.getRecords().get(1).getRangeKey10();
         assertTrue(record1Value <= record2Value);
 
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.RANGE_KEY10, SortOrder.DESC));
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        record1Value = batchRecord.getRecords().get(0).getRangeKey10();
-        record2Value = batchRecord.getRecords().get(1).getRangeKey10();
+        findResult = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.RANGE_KEY10, SortOrder.DESC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        record1Value = findResult.getRecords().get(0).getRangeKey10();
+        record2Value = findResult.getRecords().get(1).getRangeKey10();
         assertTrue(record1Value >= record2Value);
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.CREATED_AT, SortOrder.ASC));
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        Date record1date = batchRecord.getRecords().get(0).getCreatedAt();
-        Date record2date = batchRecord.getRecords().get(1).getCreatedAt();
+        findResult = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.CREATED_AT, SortOrder.ASC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        Date record1date = findResult.getRecords().get(0).getCreatedAt();
+        Date record2date = findResult.getRecords().get(1).getCreatedAt();
         assertTrue(record1date.before(record2date) || record1date.equals(record2date));
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.CREATED_AT, SortOrder.DESC));
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        record1date = batchRecord.getRecords().get(0).getCreatedAt();
-        record2date = batchRecord.getRecords().get(1).getCreatedAt();
+        findResult = storage.find(MIDIPOP_COUNTRY, builder.copy().sortBy(SortField.CREATED_AT, SortOrder.DESC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        record1date = findResult.getRecords().get(0).getCreatedAt();
+        record2date = findResult.getRecords().get(1).getCreatedAt();
         assertTrue(record1date.after(record2date) || record1date.equals(record2date));
 
         builder = FindFilterBuilder.create().keyEq(StringField.KEY2, key2);
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNotNull(StringField.KEY20));
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNotNull(StringField.KEY20));
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
 
-        batchRecord = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNull(StringField.KEY20));
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storage.find(MIDIPOP_COUNTRY, builder.copy().keyIsNull(StringField.KEY20));
+        assertEquals(1, findResult.getCount());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
     }
 
     @ParameterizedTest(name = "findByVersionTest [{index}] {arguments}")
@@ -438,24 +438,24 @@ public class StorageIntegrationTest {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.VERSION, String.valueOf(VERSION));
-        BatchRecord batchRecord1 = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(2, batchRecord1.getCount());
-        assertEquals(2, batchRecord1.getRecords().size());
+        FindResult findResult1 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, findResult1.getCount());
+        assertEquals(2, findResult1.getRecords().size());
 
         builder.keyEq(StringField.VERSION, String.valueOf(VERSION + 10));
-        BatchRecord batchRecord2 = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(0, batchRecord2.getCount());
-        assertEquals(0, batchRecord2.getRecords().size());
+        FindResult findResult2 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(0, findResult2.getCount());
+        assertEquals(0, findResult2.getRecords().size());
 
         builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION));
-        BatchRecord batchRecord3 = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(0, batchRecord3.getCount());
-        assertEquals(0, batchRecord3.getRecords().size());
+        FindResult findResult3 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(0, findResult3.getCount());
+        assertEquals(0, findResult3.getRecords().size());
 
         builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION + 10));
-        BatchRecord batchRecord4 = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(2, batchRecord4.getCount());
-        assertEquals(2, batchRecord4.getRecords().size());
+        FindResult findResult4 = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(2, findResult4.getCount());
+        assertEquals(2, findResult4.getRecords().size());
     }
 
     @ParameterizedTest(name = "findByAllFieldsTest [{index}] {arguments}")
@@ -487,10 +487,10 @@ public class StorageIntegrationTest {
                 .keyEq(SERVICE_KEY1, SERVICE_KEY_1)
                 .keyEq(SERVICE_KEY2, SERVICE_KEY_2);
 
-        BatchRecord batchRecord = storage.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        Record record = batchRecord.getRecords().get(0);
+        FindResult findResult = storage.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        Record record = findResult.getRecords().get(0);
         assertEquals(recordKey, record.getRecordKey());
         assertEquals(KEY_1, record.getKey1());
         assertEquals(key2, record.getKey2());
@@ -576,10 +576,10 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        BatchRecord batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+        FindResult findResult = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
 
         builder = builder.clear()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toLowerCase())
@@ -587,10 +587,10 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toLowerCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
 
         builder = builder.clear()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toUpperCase())
@@ -598,10 +598,10 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toUpperCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        batchRecord = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storageIgnoreCase.find(MIDIPOP_COUNTRY, builder);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
     }
 
     @Test
@@ -775,11 +775,11 @@ public class StorageIntegrationTest {
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY_2, builder);
+        FindResult findResult = storageNonHashing.find(MIDIPOP_COUNTRY_2, builder);
 
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
 
         storageNonHashing.delete(MIDIPOP_COUNTRY_2, recordKey);
     }
@@ -799,12 +799,12 @@ public class StorageIntegrationTest {
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .keyEq(StringField.KEY1, key1);
-        BatchRecord batchRecord = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
+        FindResult findResult = storageNonHashing.find(MIDIPOP_COUNTRY, builder);
 
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
-        assertEquals(key1, batchRecord.getRecords().get(0).getKey1());
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
+        assertEquals(key1, findResult.getRecords().get(0).getKey1());
 
         storageNonHashing.delete(MIDIPOP_COUNTRY, recordKey);
     }

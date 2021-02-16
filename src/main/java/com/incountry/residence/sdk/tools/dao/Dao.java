@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.tools.dao;
 
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.internal.FindFilter;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
@@ -22,7 +22,7 @@ public interface Dao {
 
     void delete(String country, String recordKey) throws StorageServerException, StorageClientException;
 
-    BatchRecord find(String country, FindFilter findFilter, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
+    FindResult find(String country, FindFilter findFilter, CryptoManager cryptoManager) throws StorageClientException, StorageServerException;
 
     AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, String mimeType) throws StorageClientException, StorageServerException;
 

@@ -2,7 +2,7 @@ package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -325,16 +325,16 @@ public class StorageImpl implements Storage {
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .limitAndOffset(limit, 0)
                 .keyNotEq(StringField.VERSION, String.valueOf(cryptoManager.getCurrentSecretVersion()));
-        BatchRecord batchRecord = find(country, builder);
-        if (!batchRecord.getRecords().isEmpty()) {
-            batchWrite(country, batchRecord.getRecords());
+        FindResult findResult = find(country, builder);
+        if (!findResult.getRecords().isEmpty()) {
+            batchWrite(country, findResult.getRecords());
         }
-        return new MigrateResult(batchRecord.getRecords().size(),
-                batchRecord.getTotal() - batchRecord.getRecords().size(),
-                batchRecord.getErrors());
+        return new MigrateResult(findResult.getRecords().size(),
+                findResult.getTotal() - findResult.getRecords().size(),
+                findResult.getErrors());
     }
 
-    public BatchRecord batchWrite(String country, List<Record> records) throws
+    public List<Record> batchWrite(String country, List<Record> records) throws
             StorageClientException, StorageServerException, StorageCryptoException {
         if (records == null || records.isEmpty()) {
             LOG.error(MSG_ERR_NULL_BATCH);
@@ -346,7 +346,7 @@ public class StorageImpl implements Storage {
             }
             dao.createBatch(records, country, cryptoManager);
         }
-        return new BatchRecord(records, 0, 0, 0, 0, null);
+        return records;
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
@@ -355,7 +355,7 @@ public class StorageImpl implements Storage {
         return true;
     }
 
-    public BatchRecord find(String country, FindFilterBuilder builder) throws
+    public FindResult find(String country, FindFilterBuilder builder) throws
             StorageClientException, StorageServerException {
         checkNotNull(country, MSG_ERR_NULL_COUNTRY);
         checkNotNull(builder, MSG_ERR_NULL_FILTERS);
@@ -372,7 +372,7 @@ public class StorageImpl implements Storage {
      */
     public Record findOne(String country, FindFilterBuilder builder) throws
             StorageClientException, StorageServerException {
-        BatchRecord findResults = find(country, builder != null ? builder.copy().limitAndOffset(1, 0) : null);
+        FindResult findResults = find(country, builder != null ? builder.copy().limitAndOffset(1, 0) : null);
         List<Record> records = findResults.getRecords();
         if (records.isEmpty()) {
             LOG.warn(MSG_FOUND_NOTHING);
