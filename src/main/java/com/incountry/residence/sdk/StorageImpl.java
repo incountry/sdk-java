@@ -79,15 +79,9 @@ public class StorageImpl implements Storage {
     }
 
     /**
-     * creating Storage instance with ENV variables without encryption
      *
+     * creating Storage instance with ENV variables without encryption
      * @return instance of Storage
-     * @throws StorageClientException if configuration validation finished with errors
-     */
-    /**
-     *
-     * creating Storage instance with ENV variables without encryption
-     *
      * @throws StorageClientException if configuration validation finished with errors
      */
     public static Storage getInstance() throws StorageClientException {
