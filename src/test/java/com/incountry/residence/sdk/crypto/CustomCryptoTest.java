@@ -15,7 +15,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -48,16 +47,16 @@ class CustomCryptoTest {
         SecretsData data = new SecretsData(Arrays.asList(key1, key2), 2);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        Storage storage = StorageImpl.getInstance(config);
+        Storage storage = StorageImpl.newStorage(config);
         assertNotNull(storage);
-        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomEncryptionConfigsList(null));
+        storage = StorageImpl.newStorage(config.copy().setSecretKeyAccessor(null).setCustomEncryptionConfigsList(null));
         assertNotNull(storage);
-        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCustomEncryptionConfigsList(new ArrayList<>()));
+        storage = StorageImpl.newStorage(config.copy().setSecretKeyAccessor(null).setCustomEncryptionConfigsList(new ArrayList<>()));
         assertNotNull(storage);
     }
 
@@ -90,15 +89,15 @@ class CustomCryptoTest {
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList1);
-        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals("Custom encryption has null version", ex1.getMessage());
         List<Crypto> cryptoList2 = Collections.singletonList(new DefaultCryptoWithCustomVersion(""));
-        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config.copy().setCustomEncryptionConfigsList(cryptoList2)));
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config.copy().setCustomEncryptionConfigsList(cryptoList2)));
         assertEquals("Custom encryption has null version", ex2.getMessage());
     }
 
@@ -109,12 +108,12 @@ class CustomCryptoTest {
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals("Custom encryption list contains null", ex.getMessage());
     }
 
@@ -122,12 +121,12 @@ class CustomCryptoTest {
     void negativeTestWithoutEncWithCustomCrypto() {
         List<Crypto> cryptoList = Collections.singletonList(new PseudoCustomCrypto(true));
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(null)
                 .setCustomEncryptionConfigsList(cryptoList);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals("Custom encryption can be used only with not null SecretKeyAccessor", ex.getMessage());
     }
 
@@ -141,12 +140,12 @@ class CustomCryptoTest {
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals(String.format("Custom encryption versions are not unique: %s", cryptoVersion), ex.getMessage());
     }
 
@@ -159,12 +158,12 @@ class CustomCryptoTest {
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals("There are more than one custom encryption with flag 'current == true': [CryptoStub , first]", ex.getMessage());
     }
 
@@ -176,12 +175,12 @@ class CustomCryptoTest {
         SecretsData data = new SecretsData(Collections.singletonList(secretKey1), 1);
         SecretKeyAccessor accessor = () -> data;
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(accessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals("There is no any SecretKey for custom encryption", ex.getMessage());
     }
 
@@ -318,11 +317,11 @@ class CustomCryptoTest {
     void negativeTestPteAndCustomEnc() {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setApiKey(API_KEY)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setCustomEncryptionConfigsList(cryptoList);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
         assertEquals("Custom encryption can be used only with not null SecretKeyAccessor", ex.getMessage());
     }
 }

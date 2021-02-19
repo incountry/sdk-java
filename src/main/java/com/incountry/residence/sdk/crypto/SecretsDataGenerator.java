@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk.tools.keyaccessor.key;
+package com.incountry.residence.sdk.crypto;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generator for {@link com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData}
+ * Generator for {@link SecretsData}
  */
 public class SecretsDataGenerator {
 
@@ -34,10 +34,10 @@ public class SecretsDataGenerator {
      * @throws StorageClientException when parameter validation fails
      */
     public static SecretsData fromPassword(String password) throws StorageClientException {
-        SecretKey secretKey = new SecretKey(password.getBytes(StandardCharsets.UTF_8), DEFAULT_VERSION, false);
-        List<SecretKey> secretKeys = new ArrayList<>();
-        secretKeys.add(secretKey);
-        return new SecretsData(secretKeys, DEFAULT_VERSION);
+        Secret secret = new EncryptionSecret(DEFAULT_VERSION, password.getBytes(StandardCharsets.UTF_8));
+        List<Secret> secretKeys = new ArrayList<>();
+        secretKeys.add(secret);
+        return new SecretsData(secretKeys, secret);
     }
 
     /**
@@ -51,20 +51,29 @@ public class SecretsDataGenerator {
         SecretsData result;
         try {
             SecretsDataContainer container = new Gson().fromJson(secretsDataJson, SecretsDataContainer.class);
-            List<SecretKey> secrets = new ArrayList<>();
+            List<Secret> secrets = new ArrayList<>();
+            Secret currentSecret = null;
             if (container.secrets != null) {
                 for (SecretKeyContainer key : container.secrets) {
+                    Secret secret = null;
                     if (key.isForCustomEncryption || key.isKey) {
                         base64Validation(key.secret);
                         byte[] byteKey = DatatypeConverter.parseBase64Binary(key.secret);
-                        secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                        secret = key.isForCustomEncryption ?
+                                new CustomEncryptionKey(key.version, byteKey) :
+                                new EncryptionKey(key.version, byteKey);
+
                     } else {
                         byte[] byteKey = key.secret.getBytes(StandardCharsets.UTF_8);
-                        secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                        secret = new EncryptionSecret(key.version, byteKey);
                     }
+                    if (container.currentVersion.equals(key.version)) {
+                        currentSecret = secret;
+                    }
+                    secrets.add(secret);
                 }
             }
-            result = new SecretsData(secrets, container.currentVersion);
+            result = new SecretsData(secrets, currentSecret);
         } catch (JsonSyntaxException | NullPointerException e) {
             throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }

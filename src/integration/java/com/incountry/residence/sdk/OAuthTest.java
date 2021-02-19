@@ -7,8 +7,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
+import com.incountry.residence.sdk.crypto.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClients;
@@ -62,10 +62,10 @@ public class OAuthTest {
                 .setClientSecret(SECRET)
                 .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
                 .setEndpointMask(ENDPOINT_MASK)
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setSecretKeyAccessor(accessor)
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT);
-        return StorageImpl.getInstance(config);
+        return StorageImpl.newStorage(config);
     }
 
     @Test
@@ -100,14 +100,14 @@ public class OAuthTest {
         authEndpoints.put("emea", "https://emea.localhost");
         authEndpoints.put("apac", "https://apac.localhost");
         StorageConfig config = new StorageConfig()
-                .setEnvId("envId")
+                .setEnvironmentId("envId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setEndpointMask("-localhost.localhost:8765")
                 .setAuthEndpoints(authEndpoints)
                 .setDefaultAuthEndpoint("https://emea.localhost");
 
-        Storage prodStorage = StorageImpl.getInstance(config);
+        Storage prodStorage = StorageImpl.newStorage(config);
         String errorMessage = "Unexpected exception during authorization, params [OAuth URL=";
         Record record = new Record("someKey", "someBody");
 

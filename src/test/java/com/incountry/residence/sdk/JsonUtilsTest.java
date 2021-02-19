@@ -4,8 +4,8 @@ import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
-import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.internal.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.StringFilter;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.StringField;
@@ -60,12 +60,12 @@ class JsonUtilsTest {
     @Test
     void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
-        filter.setFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, true));
+        filter.setFilter(StringField.VERSION, new StringFilter(new String[]{"1"}, true));
         String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":{\"$not\":[1]}},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         filter = new FindFilter();
-        filter.setFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
+        filter.setFilter(StringField.VERSION, new StringFilter(new String[]{"1"}, false));
         jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 

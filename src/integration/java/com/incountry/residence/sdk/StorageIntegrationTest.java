@@ -14,7 +14,7 @@ import com.incountry.residence.sdk.tools.crypto.Crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -177,16 +177,16 @@ public class StorageIntegrationTest {
         SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
         StorageConfig config = new StorageConfig()
-                .setEnvId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
+                .setEnvironmentId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
                 .setApiKey(loadFromEnv(INT_INC_API_KEY))
                 .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE)
                 .setMaxHttpConnectionsPerRoute(HTTP_POOL_SIZE / 2);
-        storageWithApiKey = StorageImpl.getInstance(config);
+        storageWithApiKey = StorageImpl.newStorage(config);
 
         config = new StorageConfig()
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
                 .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
@@ -195,24 +195,24 @@ public class StorageIntegrationTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE)
                 .setMaxHttpConnectionsPerRoute(HTTP_POOL_SIZE / 2);
-        storageOrdinary = StorageImpl.getInstance(config);
+        storageOrdinary = StorageImpl.newStorage(config);
 
         config = config
                 .copy()
                 .setSecretKeyAccessor(null);
-        storageWithoutEncryption = StorageImpl.getInstance(config);
+        storageWithoutEncryption = StorageImpl.newStorage(config);
 
         config = config
                 .copy()
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setHashSearchKeys(false);
-        storageNonHashing = StorageImpl.getInstance(config);
+        storageNonHashing = StorageImpl.newStorage(config);
 
         config = config
                 .copy()
                 .setHashSearchKeys(true)
                 .setNormalizeKeys(true);
-        storageIgnoreCase = StorageImpl.getInstance(config);
+        storageIgnoreCase = StorageImpl.newStorage(config);
 
         SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false, true);
         List<SecretKey> secretKeyList2 = new ArrayList<>();
@@ -227,7 +227,7 @@ public class StorageIntegrationTest {
                 .setNormalizeKeys(false)
                 .setSecretKeyAccessor(anotherAccessor)
                 .setCustomEncryptionConfigsList(cryptoList);
-        storageWithCustomCipher = StorageImpl.getInstance(config);
+        storageWithCustomCipher = StorageImpl.newStorage(config);
     }
 
     private Stream<Arguments> storageProvider() {
@@ -830,7 +830,7 @@ public class StorageIntegrationTest {
                 .setClientSecret(SECRET)
                 .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
                 .setEndpointMask(ENDPOINT_MASK)
-                .setEnvId(ENV_ID)
+                .setEnvironmentId(ENV_ID)
                 .setSecretKeyAccessor(mySecretKeyAccessor)
                 .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE)
@@ -838,7 +838,7 @@ public class StorageIntegrationTest {
         if (!authMap.isEmpty()) {
             config.setAuthEndpoints(authMap);
         }
-        Storage customStorage = StorageImpl.getInstance(config);
+        Storage customStorage = StorageImpl.newStorage(config);
         //http pool size < concurrent threads < count of threads
         ExecutorService executorService = Executors.newFixedThreadPool(HTTP_POOL_SIZE / 2);
         List<Future<StorageException>> futureList = new ArrayList<>();

@@ -1,0 +1,44 @@
+package com.incountry.residence.sdk.crypto;
+
+import com.incountry.residence.sdk.tools.ValidationHelper;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.logging.log4j.LogManager;
+
+import java.util.Arrays;
+
+public abstract class Secret {
+    private static final ValidationHelper helper = new ValidationHelper(LogManager.getLogger(Secret.class));
+    private static final String MSG_ERR_VERSION = "Version must be >= 0";
+    private static final String MSG_ERR_NULL_SECRET = "Secret can't be null or empty";
+    private final int version;
+    private final byte[] secretBytes;
+
+    public int getVersion() {
+        return version;
+    }
+
+    public byte[] getSecretBytes() {
+        return secretBytes;
+    }
+
+    protected Secret(int version, byte[] secretBytes) throws StorageClientException {
+        validateAbstractSecret(version, secretBytes);
+        this.version = version;
+        this.secretBytes = secretBytes;
+    }
+
+    private static void validateAbstractSecret(int version, byte[] secretBytes) throws StorageClientException {
+        boolean invalidVersion = version < 0;
+        helper.check(StorageClientException.class, invalidVersion, MSG_ERR_VERSION);
+        boolean invalidSecret = secretBytes == null || secretBytes.length == 0;
+        helper.check(StorageClientException.class, invalidSecret, MSG_ERR_NULL_SECRET);
+    }
+
+
+    protected String toString(String typeName) {
+        return typeName + "{" +
+                "version=" + version +
+                ", secretBytes=HASH[" + Arrays.hashCode(secretBytes) + ']' +
+                '}';
+    }
+}

@@ -22,7 +22,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import org.apache.commons.io.IOUtils;
@@ -65,7 +65,7 @@ class HttpDaoImplTests {
 
     private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        return StorageImpl.getInstance("envId", encrypt ? secretKeyAccessor : null, dao);
+        return StorageImpl.newStorage("envId", encrypt ? secretKeyAccessor : null, dao);
     }
 
     private CryptoManager initCryptoManager(boolean isKey, boolean encrypt) throws StorageClientException {

@@ -1,13 +1,13 @@
 package com.incountry.residence.sdk.search;
 
-import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.internal.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.StringFilter;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.JsonUtils;
 import com.incountry.residence.sdk.tools.crypto.CryptoManager;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsData;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +26,9 @@ class FindFilterTest {
 
     @Test
     void testToJsonObject() throws StorageClientException {
-        FilterStringParam versionFilterParam = new FilterStringParam(new String[]{version}, true);
-        FilterStringParam recordKeyFilterParam = new FilterStringParam(new String[]{recordKey}, true);
-        FilterStringParam profileKeyFilterParam = new FilterStringParam(new String[]{profileKey}, true);
+        StringFilter versionFilterParam = new StringFilter(new String[]{version}, true);
+        StringFilter recordKeyFilterParam = new StringFilter(new String[]{recordKey}, true);
+        StringFilter profileKeyFilterParam = new StringFilter(new String[]{profileKey}, true);
 
         FindFilter findFilter = new FindFilter();
         findFilter.setFilter(StringField.VERSION, versionFilterParam);

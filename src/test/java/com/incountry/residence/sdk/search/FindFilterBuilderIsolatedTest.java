@@ -3,8 +3,8 @@ package com.incountry.residence.sdk.search;
 import com.incountry.residence.sdk.dto.search.RecordField;
 import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.internal.FilterNumberParam;
-import com.incountry.residence.sdk.dto.search.internal.FilterStringParam;
-import com.incountry.residence.sdk.dto.search.internal.FindFilter;
+import com.incountry.residence.sdk.dto.search.internal.StringFilter;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.SortField;
@@ -100,17 +100,17 @@ class FindFilterBuilderIsolatedTest {
             if (field.equals(StringField.SEARCH_KEYS)) {
                 continue;
             }
-            FilterStringParam param = (FilterStringParam) builder.keyEq(field, "1").build().getFilterMap().get(field);
+            StringFilter param = (StringFilter) builder.keyEq(field, "1").build().getFilterMap().get(field);
             assertEquals("1", param.getValues().get(0));
-            param = (FilterStringParam) builder.keyEq(field, "1", "2").build().getFilterMap().get(field);
+            param = (StringFilter) builder.keyEq(field, "1", "2").build().getFilterMap().get(field);
             assertEquals("2", param.getValues().get(1));
-            param = (FilterStringParam) builder.keyEq(field, "4").build().getFilterMap().get(field);
+            param = (StringFilter) builder.keyEq(field, "4").build().getFilterMap().get(field);
             assertFalse(param.isNotCondition());
-            param = (FilterStringParam) builder.keyNotEq(field, "5", "6").build().getFilterMap().get(field);
+            param = (StringFilter) builder.keyNotEq(field, "5", "6").build().getFilterMap().get(field);
             assertEquals("6", param.getValues().get(1));
-            param = (FilterStringParam) builder.keyNotEq(field, "7", "8").build().getFilterMap().get(field);
+            param = (StringFilter) builder.keyNotEq(field, "7", "8").build().getFilterMap().get(field);
             assertTrue(param.isNotCondition());
-            param = (FilterStringParam) builder.keyEq(field, "9", "10").build().getFilterMap().get(field);
+            param = (StringFilter) builder.keyEq(field, "9", "10").build().getFilterMap().get(field);
             assertFalse(param.isNotCondition());
         }
     }

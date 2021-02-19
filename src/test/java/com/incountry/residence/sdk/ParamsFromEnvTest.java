@@ -35,7 +35,7 @@ class ParamsFromEnvTest {
                 .useEndPointFromEnv()
                 .useClientIdFromEnv()
                 .useClientSecretFromEnv();
-        assertEquals(envId, config.getEnvId());
+        assertEquals(envId, config.getEnvironmentId());
         assertEquals(apiKey, config.getApiKey());
         assertEquals(endPoint, config.getEndPoint());
         assertEquals(clientId, config.getClientId());

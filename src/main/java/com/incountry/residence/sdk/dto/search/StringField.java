@@ -1,7 +1,6 @@
 package com.incountry.residence.sdk.dto.search;
 
-public enum StringField implements RecordField {
-    VERSION,
+public enum StringField {
     RECORD_KEY,
     PARENT_KEY,
     KEY1,
@@ -26,6 +25,5 @@ public enum StringField implements RecordField {
     KEY20,
     PROFILE_KEY,
     SERVICE_KEY1,
-    SERVICE_KEY2,
-    SEARCH_KEYS
+    SERVICE_KEY2
 }

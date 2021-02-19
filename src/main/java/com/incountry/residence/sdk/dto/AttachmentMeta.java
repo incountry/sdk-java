@@ -34,12 +34,20 @@ public class AttachmentMeta {
         return filename;
     }
 
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
     public String getHash() {
         return hash;
     }
 
     public String getMimeType() {
         return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
     public int getSize() {

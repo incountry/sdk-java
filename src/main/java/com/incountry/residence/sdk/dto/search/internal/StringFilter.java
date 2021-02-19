@@ -6,23 +6,25 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class FilterStringParam {
+public class StringFilter extends Filter {
 
-    private static final Logger LOG = LogManager.getLogger(FilterStringParam.class);
-    private static final String MSG_NULL_FILTERS = "FilterStringParam values can't be null";
+    private static final Logger LOG = LogManager.getLogger(StringFilter.class);
+    private static final String MSG_NULL_FILTERS = "StringFilter values can't be null";
 
     private final List<String> values;
     private final boolean notCondition;
 
-    public FilterStringParam(String[] values) throws StorageClientException {
+    public StringFilter(String[] values) throws StorageClientException {
         this(values, false);
     }
 
-    public FilterStringParam(String[] values, boolean notConditionValue) throws StorageClientException {
+    public StringFilter(String[] values, boolean notConditionValue) throws StorageClientException {
         if (values == null || values.length == 0 || Stream.of(values).anyMatch(Objects::isNull)) {
             LOG.error(MSG_NULL_FILTERS);
             throw new StorageClientException(MSG_NULL_FILTERS);
@@ -32,10 +34,7 @@ public class FilterStringParam {
     }
 
     public List<String> getValues() {
-        if (values != null) {
-            return new ArrayList<>(values);
-        }
-        return new ArrayList<>();
+        return values;
     }
 
     public boolean isNotCondition() {
@@ -44,9 +43,19 @@ public class FilterStringParam {
 
     @Override
     public String toString() {
-        return "FilterStringParam{" +
+        return "StringFilter{" +
                 "value=" + values +
                 ", notCondition=" + notCondition +
                 '}';
+    }
+
+    @Override
+    public Object toTransferObject() {
+        if (notCondition){
+            Map<String, Object[]> result = new HashMap<>();
+            result.put(OPERATOR_NOT, values.toArray());
+            return result;
+        }
+        return values.toArray();
     }
 }

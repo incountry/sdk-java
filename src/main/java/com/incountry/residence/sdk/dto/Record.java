@@ -45,6 +45,7 @@ public class Record {
     private String serviceKey2;
     protected Date createdAt;
     protected Date updatedAt;
+    protected Integer version;
     private List<AttachmentMeta> attachments = new ArrayList<>();
 
     /**
@@ -400,6 +401,10 @@ public class Record {
         return this;
     }
 
+    public Integer getVersion() {
+        return version;
+    }
+
     public Date getCreatedAt() {
         return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
@@ -460,7 +465,8 @@ public class Record {
                 Objects.equals(serviceKey2, record.serviceKey2) &&
                 Objects.equals(createdAt, record.createdAt) &&
                 Objects.equals(updatedAt, record.updatedAt) &&
-                Objects.equals(attachments, record.attachments);
+                Objects.equals(attachments, record.attachments) &&
+                Objects.equals(version, record.version);
     }
 
     @Override
@@ -469,7 +475,7 @@ public class Record {
                 key11, key12, key13, key14, key15, key16, key17, key18, key19, key20,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
                 body, profileKey, precommitBody, serviceKey1, serviceKey2,
-                createdAt, updatedAt, attachments);
+                createdAt, updatedAt, attachments, version);
     }
 
     /**
@@ -477,7 +483,7 @@ public class Record {
      *
      * @return return copy
      */
-    protected Record copy() {
+    public Record copy() {
         Record newRecord = new Record(recordKey);
         newRecord.parentKey = parentKey;
         newRecord.key1 = key1;
@@ -517,6 +523,7 @@ public class Record {
         newRecord.serviceKey2 = serviceKey2;
         newRecord.createdAt = getCreatedAt();
         newRecord.updatedAt = getUpdatedAt();
+        newRecord.version = version;
         newRecord.attachments = attachments == null ? new ArrayList<>() : new ArrayList<>(attachments);
         return newRecord;
     }

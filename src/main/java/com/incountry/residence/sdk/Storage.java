@@ -5,7 +5,7 @@ import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -69,25 +69,25 @@ public interface Storage {
      * Find records in remote storage according to filters
      *
      * @param country country identifier
-     * @param builder object representing find filters and search options
+     * @param filter object representing find filters and search options
      * @return BatchRecord object which contains required records
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    FindResult find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    FindResult find(String country, FindFilter filter) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Find only one first record in remote storage according to filters
      *
      * @param country country identifier
-     * @param builder object representing find filters
+     * @param filter object representing find filters
      * @return founded record or null
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    Record findOne(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilter filter) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Make batched key-rotation-migration of records

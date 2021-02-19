@@ -273,12 +273,12 @@ class HttpAgentImplTest {
         StorageConfig config = new StorageConfig()
                 .setDefaultAuthEndpoint("http://localhost:" + PORT)
                 .setEndPoint("http://localhost:" + PORT)
-                .setEnvId(envId)
+                .setEnvironmentId(envId)
                 .setClientId("<clientId>")
                 .setClientSecret("<clientSecret>")
                 .setMaxHttpPoolSize(poolSize)
                 .setMaxHttpConnectionsPerRoute(poolSize / 3);
-        final Storage multipleConnectionStorage = StorageImpl.getInstance(config);
+        final Storage multipleConnectionStorage = StorageImpl.newStorage(config);
 
         ExecutorService executorService = Executors.newFixedThreadPool(poolSize / 2);
         List<Future<StorageException>> futureList = new ArrayList<>();
