@@ -19,8 +19,11 @@ apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'signing'
 
+def clientProperties = new Properties()
+clientProperties.load(new FileInputStream(new File("src/main/resources/client.properties")))
+
 group group
-version version
+version clientProperties.clientVersion
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -240,13 +243,7 @@ tasks.withType(Test) {
     }
 }
 
-
-task generateVersionClass(type: Copy) {
-    from "${projectDir}/config/template"
-    into "${projectDir}/src/main/java/com/incountry/residence/sdk/version/"
-    filter { line -> line.replaceAll('DEV-SNAPSHOT', "${project.version}") }
-}
-compileJava.dependsOn generateVersionClass
+compileJava.dependsOn
 
 compileJava {
     options.compilerArgs << '-parameters'

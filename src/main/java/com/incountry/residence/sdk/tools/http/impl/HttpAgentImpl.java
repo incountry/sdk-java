@@ -9,7 +9,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.version.Version;
+import com.incountry.residence.sdk.ClientInfo;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -61,7 +61,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         }
         this.tokenClient = tokenClient;
         this.environmentId = environmentId;
-        this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
+        this.userAgent = "SDK-Java/" + ClientInfo.getInstance().version();
         this.httpClient = httpClient;
     }
 

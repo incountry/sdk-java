@@ -9,4 +9,3 @@ gradlew.bat
 gradlew
 *.iml
 /out/
-/src/main/java/com/incountry/residence/sdk/version/Version.java
