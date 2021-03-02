@@ -24,6 +24,7 @@ public class FakeHttpAgent implements HttpAgent {
     private String audienceUrl;
     private InputStream dataStream;
     private Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
+    private InputStream inputStream;
 
     public FakeHttpAgent(String response) {
         this.response = response;
@@ -33,9 +34,10 @@ public class FakeHttpAgent implements HttpAgent {
         this.responseList = responseList;
     }
 
-    public FakeHttpAgent(String response, Map<MetaInfoTypes, String> metaInfo) {
+    public FakeHttpAgent(String response, Map<MetaInfoTypes, String> metaInfo, InputStream inputStream) {
         this.response = response;
         this.metaInfo = metaInfo;
+        this.inputStream = inputStream;
     }
 
     @Override
@@ -48,7 +50,7 @@ public class FakeHttpAgent implements HttpAgent {
         this.audienceUrl = audience;
         this.callRegion = region;
         this.dataStream = requestParameters.getDataStream();
-        return new ApiResponse(getResponse(), metaInfo);
+        return new ApiResponse(getResponse(), metaInfo, inputStream);
     }
 
     public InputStream getDataStream() {
