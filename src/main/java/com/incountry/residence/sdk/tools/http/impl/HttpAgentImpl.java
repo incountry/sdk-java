@@ -20,7 +20,9 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -72,50 +74,45 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
-        CloseableHttpResponse response = null;
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
             addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.getDataStream() != null);
-            response = httpClient.execute(request);
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                int status = response.getStatusLine().getStatusCode();
+                HttpEntity responseEntity = response.getEntity();
+                Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
+                ApiResponseCodes expectedResponse = codeMap.get(status);
+                boolean isSuccess = expectedResponse != null && !expectedResponse.isError();
+                boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse.isCanRetry(), retryCount);
+                InputStream inputStream = null;
+                String stringContent = null;
+                boolean isFileDownload = isFileDownloadRequest(url, requestParameters.getMethod());
+                if (ContentType.get(responseEntity) != null && isFileDownload && isSuccess) {
+                    metaInfo = getResponseMetaInfo(response);
+                    inputStream = new ByteArrayInputStream(EntityUtils.toByteArray(responseEntity));
+                } else if (responseEntity != null) {
+                    stringContent = EntityUtils.toString(responseEntity);
+                }
 
-            int status = response.getStatusLine().getStatusCode();
-            HttpEntity responseEntity = response.getEntity();
-            Map<MetaInfoTypes, String> metaInfo = new EnumMap<>(MetaInfoTypes.class);
-            if (ContentType.get(responseEntity) != null && isFileDownloadRequest(url, requestParameters.getMethod())) {
-                metaInfo = getResponseMetaInfo(response);
+                if (!isFinish) {
+                    tokenClient.refreshToken(true, audience, region);
+                    return request(url, body, audience, region, retryCount - 1, requestParameters);
+                }
+                if (expectedResponse != null && expectedResponse.isIgnored()) {
+                    return new ApiResponse();
+                }
+                if (expectedResponse == null || expectedResponse.isError()) {
+                    String errorMessage = String.format(MSG_ERR_CONTENT, status, url, stringContent)
+                            .replaceAll("[\r\n]", "");
+                    LOG.error(errorMessage);
+                    throw new StorageServerException(errorMessage);
+                }
+                return new ApiResponse(stringContent, metaInfo, inputStream);
             }
-            String actualResponseContent = "";
-            if (response.getEntity() != null) {
-                actualResponseContent = EntityUtils.toString(response.getEntity());
-            }
-            ApiResponseCodes expectedResponse = codeMap.get(status);
-            boolean isSuccess = expectedResponse != null && !expectedResponse.isError() && !actualResponseContent.isEmpty();
-            boolean isFinish = isSuccess || expectedResponse == null || !canRetry(expectedResponse.isCanRetry(), retryCount);
-            if (!isFinish) {
-                tokenClient.refreshToken(true, audience, region);
-                return request(url, body, audience, region, retryCount - 1, requestParameters);
-            }
-            if (expectedResponse != null && expectedResponse.isIgnored()) {
-                return new ApiResponse();
-            }
-            if (expectedResponse == null || expectedResponse.isError()) {
-                String errorMessage = String.format(MSG_ERR_CONTENT, status, url, actualResponseContent).replaceAll("[\r\n]", "");
-                LOG.error(errorMessage);
-                throw new StorageServerException(errorMessage);
-            }
-            return new ApiResponse(actualResponseContent, metaInfo);
         } catch (IOException ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
             LOG.error(errorMessage, ex);
             throw new StorageServerException(errorMessage, ex);
-        } finally {
-            if (response != null) {
-                try {
-                    response.close();
-                } catch (IOException e) {
-                    LOG.warn(e);
-                }
-            }
         }
     }
 

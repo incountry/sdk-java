@@ -24,9 +24,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -229,7 +227,7 @@ public class HttpDaoImpl implements Dao {
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId);
         ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.GET_ATTACHMENT_FILE));
-        InputStream content = response.getContent() == null ? null : new ByteArrayInputStream(response.getContent().getBytes(StandardCharsets.UTF_8));
+        InputStream content = response.getInputStream() == null ? null : response.getInputStream();
         String fileName = null;
         if (response.getMetaInfo() != null) {
             fileName = response.getMetaInfo().get(MetaInfoTypes.NAME);

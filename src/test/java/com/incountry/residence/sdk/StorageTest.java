@@ -809,7 +809,7 @@ class StorageTest {
         Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
         metaInfo.put(MetaInfoTypes.NAME, fileName);
         String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
-        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo)));
+        Storage storage = StorageImpl.getInstance(ENVIRONMENT_ID, secretKeyAccessor, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo, Files.newInputStream(tempFile))));
 
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
 
