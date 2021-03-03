@@ -63,6 +63,8 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_FILE_INPUT_STREAM = "Input stream can't be null";
     private static final String MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM = "Input stream is not available";
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
+    private static final String MSG_ERR_UNEXPECTED = "Unexpected error";
+    private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
 
     private static final int DEFAULT_HTTP_TIMEOUT = 30;
     private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
@@ -83,6 +85,16 @@ public class StorageImpl implements Storage {
         this.dao = initDao(config, dao);
         this.hashUtils = new HashUtils(config.getEnvironmentId(), config.isNormalizeKeys());
         CryptoProvider cryptoProvider = config.getCryptoProvider() == null ? new CryptoProvider(null) : config.getCryptoProvider();
+        if (config.getSecretKeyAccessor() != null) {
+            boolean invalidAccessor;
+            try {
+                invalidAccessor = config.getSecretKeyAccessor().getSecretsData() == null;
+            } catch (Exception ex) {
+                LOG.error(MSG_ERR_UNEXPECTED, ex);
+                throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
+            }
+            HELPER.check(StorageClientException.class, invalidAccessor, MSG_ERR_NULL_SECRETS);
+        }
         cryptoProvider.validateCustomCiphers(config.getSecretKeyAccessor() == null ? null : config.getSecretKeyAccessor().getSecretsData());
         this.transformer = new DtoTransformer(cryptoProvider, hashUtils, config.isHashSearchKeys(), config.getSecretKeyAccessor());
     }

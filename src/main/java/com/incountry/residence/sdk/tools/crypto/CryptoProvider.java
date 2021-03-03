@@ -89,7 +89,7 @@ public class CryptoProvider {
         }
     }
 
-    public String decrypt(String cipherText, SecretsData secretsData, int decryptKeyVersion) throws StorageCryptoException, StorageClientException {
+    public String decrypt(String cipherText, SecretsData secretsData, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
         if (cipherText == null || cipherText.isEmpty()) {
             return null;
         }
