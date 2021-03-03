@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import java.util.Arrays;
 
 public abstract class Secret {
-    private static final ValidationHelper helper = new ValidationHelper(LogManager.getLogger(Secret.class));
+    private static final ValidationHelper HELPER = new ValidationHelper(LogManager.getLogger(Secret.class));
     private static final String MSG_ERR_VERSION = "Version must be >= 0";
     private static final String MSG_ERR_NULL_SECRET = "Secret can't be null or empty";
     private final int version;
@@ -29,9 +29,9 @@ public abstract class Secret {
 
     private static void validateAbstractSecret(int version, byte[] secretBytes) throws StorageClientException {
         boolean invalidVersion = version < 0;
-        helper.check(StorageClientException.class, invalidVersion, MSG_ERR_VERSION);
+        HELPER.check(StorageClientException.class, invalidVersion, MSG_ERR_VERSION);
         boolean invalidSecret = secretBytes == null || secretBytes.length == 0;
-        helper.check(StorageClientException.class, invalidSecret, MSG_ERR_NULL_SECRET);
+        HELPER.check(StorageClientException.class, invalidSecret, MSG_ERR_NULL_SECRET);
     }
 
 

@@ -17,7 +17,7 @@ public class SecretsData {
     private static final String MSG_ERR_EMPTY_SECRETS = "Secrets in SecretData are null";
     private static final String MSG_ERR_UNIQUE_VERSIONS = "Secret versions must be unique. Got duplicates for: %s";
     private static final String MSG_ERR_CURRENT_VERSION = "There is no SecretKey version that matches current version %d";
-    private static final String MSG_ERR_NO_SECRET="Secret not found for 'version'=%d";
+    private static final String MSG_ERR_NO_SECRET = "Secret not found for 'version'=%d";
 
     private final List<Secret> secrets;
     private final Secret currentSecret;
@@ -64,13 +64,13 @@ public class SecretsData {
     }
 
 
+    @SuppressWarnings("java:S3655")
     public Secret getSecret(Integer version) throws StorageCryptoException {
-        if (version == null)
-        {
+        if (version == null) {
             return currentSecret;
         }
-        Optional<Secret> secretOpt = secrets.stream().filter(one->one.getVersion()==version).findFirst();
-        HELPER.check(StorageCryptoException.class,secretOpt.isPresent(), MSG_ERR_NO_SECRET, version);
+        Optional<Secret> secretOpt = secrets.stream().filter(one -> one.getVersion() == version).findFirst();
+        HELPER.check(StorageCryptoException.class, secretOpt.isPresent(), MSG_ERR_NO_SECRET, version);
         return secretOpt.get();
     }
 

@@ -417,6 +417,11 @@ public class Record {
         return attachments;
     }
 
+    protected Record setAttachments(List<AttachmentMeta> attachments) {
+        this.attachments = attachments;
+        return this;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

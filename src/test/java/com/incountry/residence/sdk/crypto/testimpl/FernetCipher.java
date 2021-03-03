@@ -1,8 +1,9 @@
 package com.incountry.residence.sdk.crypto.testimpl;
 
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.crypto.AbstractCipher;
+import com.incountry.residence.sdk.crypto.CustomEncryptionKey;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.macasaet.fernet.Key;
 import com.macasaet.fernet.PayloadValidationException;
 import com.macasaet.fernet.StringValidator;
@@ -10,25 +11,25 @@ import com.macasaet.fernet.Token;
 import com.macasaet.fernet.Validator;
 
 /**
- * Example of custom implementation of {@link Crypto} using Fernet algorithm
+ * Example of custom implementation of {@link AbstractCipher} using Fernet algorithm
  */
-public class FernetCrypto implements Crypto {
+public class FernetCipher extends AbstractCipher {
 
     private static final String VERSION = "fernet custom encryption";
-    private boolean current;
     private Validator<String> validator;
 
-    public FernetCrypto(boolean current) {
-        this.current = current;
+
+    public FernetCipher() throws StorageClientException {
+        super(VERSION);
         this.validator = new StringValidator() {
         };
     }
 
     @Override
-    public String encrypt(String text, SecretKey secretKey) throws StorageCryptoException {
+    public String encrypt(byte[] textBytes, CustomEncryptionKey secretKey) throws StorageCryptoException {
         try {
-            Key key = new Key(secretKey.getSecret());
-            Token result = Token.generate(key, text);
+            Key key = new Key(secretKey.getSecretBytes());
+            Token result = Token.generate(key, textBytes);
             return result.serialise();
         } catch (IllegalStateException | IllegalArgumentException ex) {
             throw new StorageCryptoException("Encryption error", ex);
@@ -36,23 +37,13 @@ public class FernetCrypto implements Crypto {
     }
 
     @Override
-    public String decrypt(String cipherText, SecretKey secretKey) throws StorageCryptoException {
+    public String decrypt(byte[] cipherTextBytes, CustomEncryptionKey secretKey) throws StorageCryptoException {
         try {
-            Key key = new Key(secretKey.getSecret());
-            Token result = Token.fromString(cipherText);
+            Key key = new Key(secretKey.getSecretBytes());
+            Token result = Token.fromString(new String(cipherTextBytes, charset));
             return result.validateAndDecrypt(key, validator);
         } catch (PayloadValidationException ex) {
             throw new StorageCryptoException("Decryption error", ex);
         }
-    }
-
-    @Override
-    public String getVersion() {
-        return VERSION;
-    }
-
-    @Override
-    public boolean isCurrent() {
-        return current;
     }
 }

@@ -1,6 +1,6 @@
 package com.incountry.residence.sdk.tools.http.impl;
 
-import com.incountry.residence.sdk.tools.NullChecker;
+import com.incountry.residence.sdk.tools.ValidationHelper;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAgent {
 
     private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
+    private static final ValidationHelper HELPER = new ValidationHelper(LOG);
 
     private static final String MSG_SERVER_ERROR = "Server request error: [URL=%s, method=%s]";
     private static final String MSG_URL_NULL_ERR = "URL can't be null";
@@ -68,8 +69,8 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
     @Override
     public ApiResponse request(String url, String body,
                                String audience, String region, int retryCount, RequestParameters requestParameters) throws StorageServerException, StorageClientException {
-        NullChecker.checkNull(LOG, url, new StorageClientException(MSG_URL_NULL_ERR), MSG_URL_NULL_ERR);
-        NullChecker.checkNull(LOG, requestParameters, new StorageClientException(MSG_REQ_PARAMS_NULL_ERR), MSG_REQ_PARAMS_NULL_ERR);
+        HELPER.check(StorageClientException.class, url == null, MSG_URL_NULL_ERR);
+        HELPER.check(StorageClientException.class, requestParameters == null, MSG_REQ_PARAMS_NULL_ERR);
         String method = requestParameters.getMethod();
         Map<Integer, ApiResponseCodes> codeMap = requestParameters.getCodeMap();
         CloseableHttpResponse response = null;

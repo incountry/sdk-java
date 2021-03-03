@@ -1,30 +1,26 @@
 package com.incountry.residence.sdk.tools.transfer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("java:S1068")
 public class TransferFilterContainer {
-    private Map<Object, Object> filter;
-    private TransferFindOptions options;
+    private static final String CODE_LIMIT = "limit";
+    private static final String CODE_OFFSET = "offset";
+    private static final String CODE_SORT = "sort";
 
-    public TransferFilterContainer(Map<Object, Object> filters, long limit, long offset, List<Map<Object, Object>> sort) {
+    private Map<String, Object> filter;
+    private Map<String, Object> options;
+
+    public TransferFilterContainer(Map<String, Object> filters, long limit, long offset, List<Map<String, Object>> sort) {
         filter = filters;
-        options = new TransferFindOptions(limit, offset, sort);
-    }
-
-
-    static class TransferFindOptions {
-        long limit;
-        long offset;
-        List<Map<Object, Object>> sort;
-
-        public TransferFindOptions(long limit, long offset, List<Map<Object, Object>> sort) {
-            this.limit = limit;
-            this.offset = offset;
-            if (sort != null && !sort.isEmpty()) {
-                this.sort = new ArrayList<>(sort);
-            }
+        options = new HashMap<>();
+        options.put(CODE_LIMIT, limit);
+        options.put(CODE_OFFSET, offset);
+        if (sort != null && !sort.isEmpty()) {
+            options.put(CODE_SORT, new ArrayList<>(sort));
         }
     }
 }

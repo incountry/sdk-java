@@ -51,7 +51,7 @@ public class StringFilter extends Filter {
 
     @Override
     public Object toTransferObject() {
-        if (notCondition){
+        if (notCondition) {
             Map<String, Object[]> result = new HashMap<>();
             result.put(OPERATOR_NOT, values.toArray());
             return result;

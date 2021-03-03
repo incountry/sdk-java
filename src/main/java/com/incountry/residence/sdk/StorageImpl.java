@@ -71,7 +71,7 @@ public class StorageImpl implements Storage {
     private final HashUtils hashUtils;
     private final DtoTransformer transformer;
 
-    private StorageImpl(StorageConfig config, Dao dao) throws StorageClientException {
+    private StorageImpl(StorageConfig config, Dao dao) throws StorageClientException, StorageCryptoException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("StorageImpl constructor params config={}", config);
         }
@@ -83,6 +83,7 @@ public class StorageImpl implements Storage {
         this.dao = initDao(config, dao);
         this.hashUtils = new HashUtils(config.getEnvironmentId(), config.isNormalizeKeys());
         CryptoProvider cryptoProvider = config.getCryptoProvider() == null ? new CryptoProvider(null) : config.getCryptoProvider();
+        cryptoProvider.validateCustomCiphers(config.getSecretKeyAccessor() == null ? null : config.getSecretKeyAccessor().getSecretsData());
         this.transformer = new DtoTransformer(cryptoProvider, hashUtils, config.isHashSearchKeys(), config.getSecretKeyAccessor());
     }
 
@@ -92,8 +93,9 @@ public class StorageImpl implements Storage {
      * @param config A container with configuration for Storage initialization
      * @return instance of Storage
      * @throws StorageClientException if configuration validation finished with errors
+     * @throws StorageCryptoException if custom cipher validation fails
      */
-    public static Storage newStorage(StorageConfig config) throws StorageClientException {
+    public static Storage newStorage(StorageConfig config) throws StorageClientException, StorageCryptoException {
         return newStorage(config, null);
     }
 
@@ -104,8 +106,9 @@ public class StorageImpl implements Storage {
      * @param dao    dao, can be mocked for tests
      * @return instance of Storage
      * @throws StorageClientException if parameter validation finished with errors
+     * @throws StorageCryptoException if custom cipher validation fails
      */
-    public static Storage newStorage(StorageConfig config, Dao dao) throws StorageClientException {
+    public static Storage newStorage(StorageConfig config, Dao dao) throws StorageClientException, StorageCryptoException {
         Storage instance = new StorageImpl(config, dao);
         return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
@@ -200,8 +203,8 @@ public class StorageImpl implements Storage {
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
         checkCountryAndRecordKey(country, recordKey);
-        TransferRecord tRecord = dao.read(country, hashUtils.getSha256Hash(recordKey));
-        return transformer.getRecord(tRecord);
+        TransferRecord transferRecord = dao.read(country, hashUtils.getSha256Hash(recordKey));
+        return transformer.getRecord(transferRecord);
     }
 
     public MigrateResult migrate(String country, int limit) throws

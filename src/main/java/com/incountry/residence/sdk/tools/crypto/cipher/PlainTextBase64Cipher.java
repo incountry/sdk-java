@@ -19,7 +19,7 @@ public class PlainTextBase64Cipher implements Cipher {
     @Override
     public Ciphertext encrypt(String text, Secret secret) {
         String ptEncoded = new String(Base64.getEncoder().encode(text.getBytes(CHARSET)), CHARSET);
-        return new Ciphertext(ptEncoded, null);
+        return new Ciphertext(getName() + ":" + ptEncoded, null);
     }
 
     @Override

@@ -54,20 +54,9 @@ public class SecretsDataGenerator {
             List<Secret> secrets = new ArrayList<>();
             Secret currentSecret = null;
             if (container.secrets != null) {
-                for (SecretKeyContainer key : container.secrets) {
-                    Secret secret = null;
-                    if (key.isForCustomEncryption || key.isKey) {
-                        base64Validation(key.secret);
-                        byte[] byteKey = DatatypeConverter.parseBase64Binary(key.secret);
-                        secret = key.isForCustomEncryption ?
-                                new CustomEncryptionKey(key.version, byteKey) :
-                                new EncryptionKey(key.version, byteKey);
-
-                    } else {
-                        byte[] byteKey = key.secret.getBytes(StandardCharsets.UTF_8);
-                        secret = new EncryptionSecret(key.version, byteKey);
-                    }
-                    if (container.currentVersion.equals(key.version)) {
+                for (SecretKeyContainer keyContainer : container.secrets) {
+                    Secret secret = getSecret(keyContainer);
+                    if (container.currentVersion.equals(keyContainer.version)) {
                         currentSecret = secret;
                     }
                     secrets.add(secret);
@@ -78,6 +67,22 @@ public class SecretsDataGenerator {
             throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
         }
         return result;
+    }
+
+    private static Secret getSecret(SecretKeyContainer keyContainer) throws StorageClientException {
+        Secret secret;
+        if (keyContainer.isForCustomEncryption || keyContainer.isKey) {
+            base64Validation(keyContainer.secret);
+            byte[] byteKey = DatatypeConverter.parseBase64Binary(keyContainer.secret);
+            secret = keyContainer.isForCustomEncryption
+                    ? new CustomEncryptionKey(keyContainer.version, byteKey)
+                    : new EncryptionKey(keyContainer.version, byteKey);
+
+        } else {
+            byte[] byteKey = keyContainer.secret.getBytes(StandardCharsets.UTF_8);
+            secret = new EncryptionSecret(keyContainer.version, byteKey);
+        }
+        return secret;
     }
 
     private static void base64Validation(String byteKey) throws StorageClientException {

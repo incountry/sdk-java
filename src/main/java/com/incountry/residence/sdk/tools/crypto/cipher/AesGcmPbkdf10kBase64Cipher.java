@@ -2,7 +2,7 @@ package com.incountry.residence.sdk.tools.crypto.cipher;
 
 import java.nio.charset.Charset;
 
-public class AesGcmPbkdf10kBase64Cipher  extends  AesGcmPbkdfBase64Cipher{
+public class AesGcmPbkdf10kBase64Cipher extends AesGcmPbkdfBase64Cipher {
 
     private static final String CIPHER_NAME = "2";
     private static final int ITERATIONS = 10_000;

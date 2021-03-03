@@ -57,7 +57,7 @@ public abstract class AesGcmPbkdfBase64Cipher extends AesGcmPbkdfCipher implemen
             throw new StorageCryptoException(MSG_ERR_ENCRYPTION, e);
         }
         byte[] encoded = Base64.getEncoder().encode(resultByteArray);
-        return new Ciphertext(new String(encoded, charset), secret.getVersion());
+        return new Ciphertext(getName() + ":" + new String(encoded, charset), secret.getVersion());
     }
 
     private static byte[] generateRandomBytes(int length) {

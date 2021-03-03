@@ -67,7 +67,6 @@ public class DtoTransformer {
         this.keyAccessor = keyAccessor;
         gson = new GsonBuilder()
                 .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                //todo exclude empty fields
                 .disableHtmlEscaping()
                 .create();
     }
@@ -113,7 +112,7 @@ public class DtoTransformer {
     }
 
     private TransferRecord getEncryptedTransferRecord(String complexBody, Record originalRecord) throws StorageClientException, StorageCryptoException {
-        SecretsData secretsData = getSecretsData(keyAccessor != null);
+        SecretsData secretsData = getSecretsData();
         Ciphertext ciphertext = cryptoProvider.encrypt(complexBody, secretsData);
         TransferRecord resultRecord = new TransferRecord(hashUtils.getSha256Hash(originalRecord.getRecordKey()));
         resultRecord.setProfileKey(hashUtils.getSha256Hash(originalRecord.getProfileKey()))
@@ -156,6 +155,7 @@ public class DtoTransformer {
                 .setKey18(transformSearchKey(originalRecord.getKey18(), hashSearchKeys, true))
                 .setKey19(transformSearchKey(originalRecord.getKey19(), hashSearchKeys, true))
                 .setKey20(transformSearchKey(originalRecord.getKey20(), hashSearchKeys, true));
+        resultRecord.setAttachments(null);
         return resultRecord;
     }
 
@@ -168,17 +168,19 @@ public class DtoTransformer {
         return value;
     }
 
-    private SecretsData getSecretsData(boolean exceptionIfNull) throws StorageClientException {
-        SecretsData result;
-        try {
-            result = keyAccessor.getSecretsData();
-        } catch (StorageClientException sce) {
-            throw sce;
-        } catch (Exception ex) {
-            throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
-        }
-        if (result == null && exceptionIfNull) {
-            throw new StorageClientException(MSG_ERR_NULL_SECRET);
+    private SecretsData getSecretsData() throws StorageClientException {
+        SecretsData result = null;
+        if (keyAccessor != null) {
+            try {
+                result = keyAccessor.getSecretsData();
+            } catch (StorageClientException sce) {
+                throw sce;
+            } catch (Exception ex) {
+                throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
+            }
+            if (result == null) {
+                throw new StorageClientException(MSG_ERR_NULL_SECRET);
+            }
         }
         return result;
     }
@@ -190,7 +192,7 @@ public class DtoTransformer {
         }
         validateTransferRecord(transferRecord);
         int recordVersion = transferRecord.getVersion() != null ? transferRecord.getVersion() : DEFAULT_RECORD_VERSION;
-        SecretsData secretsData = getSecretsData(keyAccessor != null);
+        SecretsData secretsData = getSecretsData();
 
         String complexBodyJson = cryptoProvider.decrypt(transferRecord.getBody(), secretsData, recordVersion);
         String precommitBody = null;
@@ -250,7 +252,7 @@ public class DtoTransformer {
         validateTransferFindResult(findResult);
         List<Record> records = new ArrayList<>();
         List<RecordException> recordExceptions = new ArrayList<>();
-        if (findResult.getMeta().count != 0) {
+        if (findResult.getMeta().getCount() != 0) {
             for (TransferRecord transferRecord : findResult.getData()) {
                 if (transferRecord.getVersion() == null) {
                     transferRecord.setVersion(DEFAULT_RECORD_VERSION);
@@ -264,8 +266,8 @@ public class DtoTransformer {
                 }
             }
         }
-        return new FindResult(records, findResult.getMeta().count, findResult.getMeta().limit, findResult.getMeta().offset,
-                findResult.getMeta().total, recordExceptions);
+        return new FindResult(records, findResult.getMeta().getCount(), findResult.getMeta().getLimit(), findResult.getMeta().getOffset(),
+                findResult.getMeta().getTotal(), recordExceptions);
     }
 
     private void validateTransferFindResult(TransferFindResult findResult) throws StorageServerException {
@@ -274,22 +276,22 @@ public class DtoTransformer {
         if (meta == null) {
             throw new StorageServerException(MSG_ERR_NULL_META);
         }
-        boolean negativeNumber = findResult.getMeta().count < 0 || meta.limit < 0 || meta.offset < 0 || meta.total < 0;
-        boolean positiveMetaEmptyData = meta.count > 0 && (data == null || data.isEmpty() || data.size() != meta.count);
-        boolean zeroMetaNonEmptyData = meta.count == 0 && data != null && !data.isEmpty();
+        boolean negativeNumber = findResult.getMeta().getCount() < 0 || meta.getLimit() < 0 || meta.getOffset() < 0 || meta.getTotal() < 0;
+        boolean positiveMetaEmptyData = meta.getCount() > 0 && (data == null || data.isEmpty() || data.size() != meta.getCount());
+        boolean zeroMetaNonEmptyData = meta.getCount() == 0 && data != null && !data.isEmpty();
         if (negativeNumber) {
             throw new StorageServerException(MSG_ERR_NEGATIVE_META);
         } else if (positiveMetaEmptyData || zeroMetaNonEmptyData) {
             throw new StorageServerException(MSG_ERR_INCORRECT_COUNT);
-        } else if (meta.count > meta.total) {
+        } else if (meta.getCount() > meta.getTotal()) {
             throw new StorageServerException(MSG_ERR_INCORRECT_TOTAL);
         }
     }
 
     public TransferFilterContainer getTransferFilterContainer(FindFilter filter) throws StorageClientException {
-        Map<Object, Object> transformedFilters = new HashMap<>();
+        Map<String, Object> transformedFilters = new HashMap<>();
         for (Map.Entry<NumberField, Filter> entry : filter.getNumberFilters().entrySet()) {
-            transformedFilters.put(entry.getKey(), entry.getValue().toTransferObject());
+            transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
         }
 
         for (Map.Entry<StringField, Filter> entry : filter.getStringFilters().entrySet()) {
@@ -302,21 +304,22 @@ public class DtoTransformer {
                     transformedStrings.add(transformSearchKey(one, needHash, false));
                 }
                 StringFilter transformedFilter = new StringFilter(transformedStrings.toArray(new String[0]), stringFilter.isNotCondition());
-                transformedFilters.put(entry.getKey(), transformedFilter.toTransferObject());
+                transformedFilters.put(entry.getKey().toString().toLowerCase(), transformedFilter.toTransferObject());
             } else {
-                transformedFilters.put(entry.getKey(), entry.getValue().toTransferObject());
+                transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
             }
         }
         if (filter.getSearchKeys() != null) {
             transformedFilters.put(SEARCH_KEYS, filter.getSearchKeys());
         }
         HELPER.check(StorageClientException.class, transformedFilters.isEmpty(), MSG_ERR_NULL_FILTERS);
-        List<Map<Object, Object>> transferSortList = new ArrayList<>();
+        List<Map<String, Object>> transferSortList = new ArrayList<>();
         List<SortingParam> sorting = filter.getSortingList();
         if (!sorting.isEmpty()) {
             for (SortingParam oneSortParam : sorting) {
-                Map<Object, Object> transferSortParam = new HashMap<>();
-                transferSortParam.put(oneSortParam.getField(), oneSortParam.getOrder());
+                Map<String, Object> transferSortParam = new HashMap<>();
+                transferSortParam.put(oneSortParam.getField().toString().toLowerCase(),
+                        oneSortParam.getOrder().toString().toLowerCase());
                 transferSortList.add(transferSortParam);
             }
         }
@@ -327,7 +330,7 @@ public class DtoTransformer {
         TransferRecord meta;
         String payload;
 
-        public ComplexBody(TransferRecord meta, String payload) {
+        ComplexBody(TransferRecord meta, String payload) {
             this.meta = meta;
             this.payload = payload;
         }

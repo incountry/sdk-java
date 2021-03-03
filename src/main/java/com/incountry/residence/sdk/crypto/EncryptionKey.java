@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager;
 
 public class EncryptionKey extends Secret {
 
-    private static final ValidationHelper helper = new ValidationHelper(LogManager.getLogger(EncryptionKey.class));
+    private static final ValidationHelper HELPER = new ValidationHelper(LogManager.getLogger(EncryptionKey.class));
     private static final int KEY_LENGTH = 32;
     private static final String MSG_ERR_LENGTH = "Wrong key length for encryption key . Should be "
             + KEY_LENGTH + "-byte array";
@@ -14,7 +14,7 @@ public class EncryptionKey extends Secret {
     public EncryptionKey(int version, byte[] secretBytes) throws StorageClientException {
         super(version, secretBytes);
         boolean invalidLength = secretBytes.length != KEY_LENGTH;
-        helper.check(StorageClientException.class, invalidLength, MSG_ERR_LENGTH);
+        HELPER.check(StorageClientException.class, invalidLength, MSG_ERR_LENGTH);
     }
 
     @Override

@@ -56,7 +56,7 @@ public class OAuthTest {
         accessor = () -> secretsData;
     }
 
-    private Storage initStorage() throws StorageClientException {
+    private Storage initStorage() throws StorageClientException, StorageCryptoException {
         StorageConfig config = new StorageConfig()
                 .setClientId(CLIENT_ID)
                 .setClientSecret(SECRET)
@@ -95,7 +95,7 @@ public class OAuthTest {
     }
 
     @Test
-    public void authRegionTest() throws StorageClientException {
+    public void authRegionTest() throws StorageClientException, StorageCryptoException {
         Map<String, String> authEndpoints = new HashMap<>();
         authEndpoints.put("emea", "https://emea.localhost");
         authEndpoints.put("apac", "https://apac.localhost");

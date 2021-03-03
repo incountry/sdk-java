@@ -24,6 +24,7 @@ public abstract class AbstractCipher implements Cipher {
 
     protected Charset charset = StandardCharsets.UTF_8;
 
+    @SuppressWarnings("java:S2259")
     protected AbstractCipher(String name) throws StorageClientException {
         boolean invalidName = name == null || name.isEmpty();
         HELPER.check(StorageClientException.class, invalidName, MSG_ERR_NULL_CIPHER_NAME);
@@ -56,6 +57,14 @@ public abstract class AbstractCipher implements Cipher {
      */
     public abstract String encrypt(byte[] textBytes, CustomEncryptionKey secretKey) throws StorageClientException, StorageCryptoException;
 
+    public Ciphertext encrypt(String text, Secret secret) throws StorageCryptoException, StorageClientException {
+        boolean correctSecretType = secret instanceof CustomEncryptionKey;
+        HELPER.check(StorageCryptoException.class, !correctSecretType, MSG_ERR_INVALID_KEY_CLASS);
+        String cipheredText = encrypt(text != null ? text.getBytes(charset) : null, (CustomEncryptionKey) secret);
+        return new Ciphertext(nameBase64 + ":" + Base64.getEncoder().encodeToString(cipheredText.getBytes(charset)),
+                secret.getVersion());
+    }
+
     /**
      * decrypts data with Secret
      *
@@ -66,14 +75,6 @@ public abstract class AbstractCipher implements Cipher {
      * @throws StorageCryptoException when decryption fails
      */
     public abstract String decrypt(byte[] cipherTextBytes, CustomEncryptionKey secretKey) throws StorageClientException, StorageCryptoException;
-
-    public Ciphertext encrypt(String text, Secret secret) throws StorageCryptoException, StorageClientException {
-        boolean correctSecretType = secret instanceof CustomEncryptionKey;
-        HELPER.check(StorageCryptoException.class, !correctSecretType, MSG_ERR_INVALID_KEY_CLASS);
-        String cipheredText = encrypt(text != null ? text.getBytes(charset) : null, (CustomEncryptionKey) secret);
-        return new Ciphertext(nameBase64 + ":" + Base64.getEncoder().encodeToString(cipheredText.getBytes(charset)),
-                secret.getVersion());
-    }
 
     public String decrypt(String cipherText, Secret secret) throws StorageCryptoException, StorageClientException {
         boolean correctSecretType = secret instanceof CustomEncryptionKey;

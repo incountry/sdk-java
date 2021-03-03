@@ -52,11 +52,11 @@ public class StorageConfig {
     }
 
     /**
-     * load envId from env variable 'INC_ENVIRONMENT_ID'
+     * load environmentId from env variable 'INC_ENVIRONMENT_ID'
      *
      * @return StorageConfig
      */
-    public StorageConfig useEnvIdFromEnv() {
+    public StorageConfig useEnvironmentIdFromEnv() {
         this.environmentId = loadFromEnv(PARAM_ENV_ID);
         return this;
     }
@@ -135,7 +135,7 @@ public class StorageConfig {
      * Optional. Provider of encryption ciphers. Allows to register custom ciphers for encrypting stored data.
      * If null - default AES GCM cipher will be used
      *
-     * @param cryptoProvider
+     * @param cryptoProvider provider
      * @return StorageConfig
      */
     public StorageConfig setCryptoProvider(CryptoProvider cryptoProvider) {

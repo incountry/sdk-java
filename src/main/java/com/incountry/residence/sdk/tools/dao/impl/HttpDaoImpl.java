@@ -23,6 +23,7 @@ import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferPop;
 import com.incountry.residence.sdk.tools.transfer.TransferPopList;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +31,6 @@ import org.apache.logging.log4j.LogManager;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -75,6 +75,7 @@ public class HttpDaoImpl implements Dao {
     private final boolean isDefaultEndpoint;
     private final String countriesEndpoint;
     private final Gson gson;
+    private final Gson gsonWithNull;
     private final AtomicLong lastLoadedTime = new AtomicLong(0);
 
     public HttpDaoImpl(String environmentId, String endPoint, String endpointMask, String countriesEndpoint, TokenClient tokenClient, CloseableHttpClient httpClient) {
@@ -88,6 +89,7 @@ public class HttpDaoImpl implements Dao {
 
     public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) {
         this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+        this.gsonWithNull = new GsonBuilder().serializeNulls().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
         this.isDefaultEndpoint = (endPoint == null);
         this.endPointUrl = isDefaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;
@@ -194,7 +196,7 @@ public class HttpDaoImpl implements Dao {
     @Override
     public void createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
-        String recListJson = gson.toJson(records);
+        String recListJson = gson.toJson(new TransferRecordList(records));
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
         httpAgent.request(url, recListJson, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.BATCH_WRITE));
@@ -222,7 +224,7 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endpoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endpoint.mainUrl, lowerCountry, URI_FIND);
-        String postData = gson.toJson(filterContainer);
+        String postData = gsonWithNull.toJson(filterContainer);
         ApiResponse response = httpAgent.request(url, postData, endpoint.audience, endpoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.FIND));
         if (response.getContent() == null) {
             return new TransferFindResult();
