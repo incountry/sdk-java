@@ -470,8 +470,7 @@ public class Record {
                 Objects.equals(serviceKey2, record.serviceKey2) &&
                 Objects.equals(createdAt, record.createdAt) &&
                 Objects.equals(updatedAt, record.updatedAt) &&
-                Objects.equals(attachments, record.attachments) &&
-                Objects.equals(version, record.version);
+                Objects.equals(attachments, record.attachments);
     }
 
     @Override
