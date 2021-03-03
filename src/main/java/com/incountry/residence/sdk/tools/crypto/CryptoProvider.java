@@ -114,12 +114,11 @@ public class CryptoProvider {
         if (customCipherMap.isEmpty()) {
             return;
         }
-        boolean containsCustomEncryption = false;
+        boolean containsCustomEncryptionKey = false;
         if (secretsData != null) {
-            containsCustomEncryption = secretsData.getSecrets().stream()
-                    .anyMatch(key -> key instanceof CustomEncryptionKey);
+            containsCustomEncryptionKey = secretsData.getSecrets().stream().anyMatch(CustomEncryptionKey.class::isInstance);
         }
-        HELPER.check(StorageClientException.class, !containsCustomEncryption, MSG_ERR_NO_CUSTOM_ENC_KEY);
+        HELPER.check(StorageClientException.class, !containsCustomEncryptionKey, MSG_ERR_NO_CUSTOM_ENC_KEY);
         CustomEncryptionKey customEncryptionKey = (secretsData.getCurrentSecret() instanceof CustomEncryptionKey)
                 ? (CustomEncryptionKey) secretsData.getCurrentSecret()
                 : new CustomEncryptionKey(0, getRandomEncryptionKey());

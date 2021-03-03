@@ -27,6 +27,9 @@ public class SecretKeyFactory {
     private static final int KEY_LENGTH = 32;
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
+    private SecretKeyFactory() {
+    }
+
     public static byte[] getKey(byte[] salt, Secret secret, int pbkdf2Iterations) throws StorageCryptoException {
         if (secret != null) {
             return (secret instanceof EncryptionSecret)

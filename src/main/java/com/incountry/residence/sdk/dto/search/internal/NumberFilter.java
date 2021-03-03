@@ -32,6 +32,7 @@ public class NumberFilter extends Filter {
         this.operator = operator;
     }
 
+    @SuppressWarnings("java:S2259")
     private void validate(Long[] values, String operator) throws StorageClientException {
         boolean invalidFilter = values == null || values.length == 0;
         HELPER.check(StorageClientException.class, invalidFilter, MSG_ERR_NULL_NUMBER_FILTER);

@@ -27,6 +27,7 @@ public abstract class AesGcmPbkdfBase64Cipher extends AesGcmPbkdfCipher implemen
     private final Charset charset;
 
     protected AesGcmPbkdfBase64Cipher(int pbkdf2Iterations, Charset charset) {
+        super();
         this.pbkdf2Iterations = pbkdf2Iterations;
         this.charset = charset;
     }

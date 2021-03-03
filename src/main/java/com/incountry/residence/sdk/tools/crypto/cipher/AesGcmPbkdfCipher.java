@@ -31,6 +31,10 @@ public abstract class AesGcmPbkdfCipher {
     protected static final int IV_LENGTH = 12;
     private static final int META_INFO_LENGTH = SALT_LENGTH + IV_LENGTH;
 
+    protected AesGcmPbkdfCipher() {
+    }
+
+    @SuppressWarnings("java:S2259")
     protected static String decodeBytes(byte[] decodedBytes, Secret secret, int pbkdf2Iterations, Charset charset) throws StorageCryptoException {
         boolean invalidCipherLength = decodedBytes == null || decodedBytes.length < META_INFO_LENGTH;
         HELPER.check(StorageCryptoException.class, invalidCipherLength, MSG_ERR_LENGTH);

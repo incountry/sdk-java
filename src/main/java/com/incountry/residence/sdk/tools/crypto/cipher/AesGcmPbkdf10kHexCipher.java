@@ -16,6 +16,7 @@ public class AesGcmPbkdf10kHexCipher extends AesGcmPbkdfCipher implements Cipher
     private final Charset charset;
 
     public AesGcmPbkdf10kHexCipher(Charset charset) {
+        super();
         this.charset = charset;
     }
 
