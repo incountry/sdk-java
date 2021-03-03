@@ -14,8 +14,8 @@ public class TransferFilterContainer {
     private Map<String, Object> filter;
     private Map<String, Object> options;
 
-    public TransferFilterContainer(Map<String, Object> filters, long limit, long offset, List<Map<String, Object>> sort) {
-        filter = filters;
+    public TransferFilterContainer(Map<String, Object> filter, long limit, long offset, List<Map<String, Object>> sort) {
+        this.filter = filter;
         options = new HashMap<>();
         options.put(CODE_LIMIT, limit);
         options.put(CODE_OFFSET, offset);

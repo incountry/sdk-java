@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +39,7 @@ public class FindFilter {
     private static final String MSG_ERR_NULL_SORT_ORDER = "Sorting order is null";
     private static final String MSG_ERR_DUPL_SORT_FIELD = "Field %s is already in sorting list";
 
-    public static final List<StringField> NON_HASHED_KEY_LIST = Arrays.asList(
+    private static final List<StringField> NON_HASHED_KEY_LIST = Arrays.asList(
             StringField.KEY1, StringField.KEY2, StringField.KEY3, StringField.KEY4, StringField.KEY5,
             StringField.KEY6, StringField.KEY7, StringField.KEY8, StringField.KEY9, StringField.KEY10,
             StringField.KEY11, StringField.KEY12, StringField.KEY13, StringField.KEY14, StringField.KEY15,
@@ -48,8 +48,8 @@ public class FindFilter {
 
     private int limit = MAX_LIMIT;
     private int offset = DEFAULT_OFFSET;
-    private final Map<StringField, Filter> stringFilters = new HashMap<>();
-    private final Map<NumberField, Filter> numberFilters = new HashMap<>();
+    private final Map<StringField, Filter> stringFilters = new EnumMap<>(StringField.class);
+    private final Map<NumberField, Filter> numberFilters = new EnumMap<>(NumberField.class);
     private final List<SortingParam> sortingList = new ArrayList<>();
     private String searchKeys;
 
@@ -213,6 +213,10 @@ public class FindFilter {
         newFilter.numberFilters.putAll(numberFilters);
         newFilter.stringFilters.putAll(stringFilters);
         return newFilter;
+    }
+
+    public static boolean nonHashedKeysListContains(StringField key) {
+        return NON_HASHED_KEY_LIST.contains(key);
     }
 
     @Override

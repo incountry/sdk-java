@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class CryptoProvider {
     private static final Logger LOG = LogManager.getLogger(CryptoProvider.class);
@@ -51,7 +50,7 @@ public class CryptoProvider {
             defaultCipher = tempCipher;
             return;
         }
-        boolean invalidCipher = currentCipher.getName() != null && !currentCipher.getName().isEmpty();
+        boolean invalidCipher = currentCipher.getName() == null || currentCipher.getName().isEmpty();
         HELPER.check(StorageClientException.class, invalidCipher, MSG_ERR_INVALID_CIPHER_NAME);
         customCipherMap.put(currentCipher.getNameBase64(), currentCipher);
         defaultCipher = currentCipher;
@@ -110,16 +109,15 @@ public class CryptoProvider {
         }
     }
 
+    @SuppressWarnings("java:S2259")
     public void validateCustomCiphers(SecretsData secretsData) throws StorageClientException, StorageCryptoException {
         if (customCipherMap.isEmpty()) {
             return;
         }
         boolean containsCustomEncryption = false;
         if (secretsData != null) {
-            for (Secret secret : secretsData.getSecrets().stream()
-                    .filter(one -> one instanceof CustomEncryptionKey).collect(Collectors.toList())) {
-                containsCustomEncryption = true;
-            }
+            containsCustomEncryption = secretsData.getSecrets().stream()
+                    .anyMatch(key -> key instanceof CustomEncryptionKey);
         }
         HELPER.check(StorageClientException.class, !containsCustomEncryption, MSG_ERR_NO_CUSTOM_ENC_KEY);
         CustomEncryptionKey customEncryptionKey = (secretsData.getCurrentSecret() instanceof CustomEncryptionKey)

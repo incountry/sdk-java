@@ -298,7 +298,7 @@ public class DtoTransformer {
             Filter oneFilter = entry.getValue();
             if (oneFilter instanceof StringFilter) {
                 StringFilter stringFilter = (StringFilter) oneFilter;
-                boolean needHash = hashSearchKeys || !FindFilter.NON_HASHED_KEY_LIST.contains(entry.getKey());
+                boolean needHash = hashSearchKeys || !FindFilter.nonHashedKeysListContains(entry.getKey());
                 List<String> transformedStrings = new ArrayList<>();
                 for (String one : stringFilter.getValues()) {
                     transformedStrings.add(transformSearchKey(one, needHash, false));

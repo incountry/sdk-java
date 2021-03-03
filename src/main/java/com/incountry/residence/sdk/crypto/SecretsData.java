@@ -70,7 +70,7 @@ public class SecretsData {
             return currentSecret;
         }
         Optional<Secret> secretOpt = secrets.stream().filter(one -> one.getVersion() == version).findFirst();
-        HELPER.check(StorageCryptoException.class, secretOpt.isPresent(), MSG_ERR_NO_SECRET, version);
+        HELPER.check(StorageCryptoException.class, !secretOpt.isPresent(), MSG_ERR_NO_SECRET, version);
         return secretOpt.get();
     }
 
