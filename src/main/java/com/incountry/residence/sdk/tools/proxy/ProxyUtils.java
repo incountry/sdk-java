@@ -1,5 +1,7 @@
 package com.incountry.residence.sdk.tools.proxy;
 
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ProxyUtils {
+    private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
 
     private ProxyUtils() {
     }
@@ -27,7 +30,11 @@ public class ProxyUtils {
             try {
                 result = method.invoke(object, args);
             } catch (InvocationTargetException ex) {
-                throw ex.getTargetException();
+                Throwable targetException = ex.getTargetException();
+                if (StorageException.class.isAssignableFrom(targetException.getClass())) {
+                    throw ex.getTargetException();
+                }
+                throw new StorageClientException(MSG_ERR_UNEXPECTED, targetException);
             } finally {
                 if (log.isDebugEnabled()) {
                     currentTime = System.currentTimeMillis() - currentTime;
