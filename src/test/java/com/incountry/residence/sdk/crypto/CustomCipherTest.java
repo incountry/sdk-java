@@ -8,7 +8,6 @@ import com.incountry.residence.sdk.crypto.testimpl.FernetCipher;
 import com.incountry.residence.sdk.crypto.testimpl.InvalidCipher;
 import com.incountry.residence.sdk.crypto.testimpl.PseudoCustomCipher;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
-import com.incountry.residence.sdk.tools.crypto.cipher.Cipher;
 import com.incountry.residence.sdk.tools.crypto.cipher.Ciphertext;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;

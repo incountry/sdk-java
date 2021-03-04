@@ -16,7 +16,7 @@ public class SecretsData {
 
     private static final String MSG_ERR_EMPTY_SECRETS = "Secrets in SecretData are null";
     private static final String MSG_ERR_UNIQUE_VERSIONS = "Secret versions must be unique. Got duplicates for: %s";
-    private static final String MSG_ERR_CURRENT_VERSION = "There is no SecretKey version that matches current version %d";
+    private static final String MSG_ERR_CURRENT_VERSION = "There is no current secret at the secrets list";
     private static final String MSG_ERR_NO_SECRET = "Secret not found for 'version'=%d";
 
     private final List<Secret> secrets;
