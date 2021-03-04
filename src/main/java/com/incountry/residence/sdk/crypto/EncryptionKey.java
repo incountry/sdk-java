@@ -19,6 +19,6 @@ public class EncryptionKey extends Secret {
 
     @Override
     public String toString() {
-        return toString(EncryptionKey.class.getName());
+        return toString(EncryptionKey.class.getSimpleName());
     }
 }

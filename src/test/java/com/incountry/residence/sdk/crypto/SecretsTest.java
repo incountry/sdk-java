@@ -128,7 +128,7 @@ class SecretsTest {
 
     @Test
     void secretsDataToStringTest() throws StorageClientException {
-        String expected = "SecretsData{secrets=[com.incountry.residence.sdk.crypto.EncryptionSecret{version=0, secretBytes=HASH[761978414]}], currentSecret=com.incountry.residence.sdk.crypto.EncryptionSecret{version=0, secretBytes=HASH[761978414]}}";
+        String expected = "SecretsData{secrets=[EncryptionSecret{version=0, secretBytes=HASH[761978414]}], currentSecret=EncryptionSecret{version=0, secretBytes=HASH[761978414]}}";
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData secretsData = accessor.getSecretsData();
         assertEquals(expected, secretsData.toString());
@@ -170,5 +170,15 @@ class SecretsTest {
                 "}";
         StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretKeyString));
         assertEquals("Secret key must be base64-encoded string", ex.getMessage());
+    }
+
+    @Test
+    void toStringPositive() throws StorageClientException {
+        Secret secret1 = new EncryptionSecret(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        assertEquals("EncryptionSecret{version=1, secretBytes=HASH[-847010189]}", secret1.toString());
+        Secret secret2 = new EncryptionKey(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        assertEquals("EncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret2.toString());
+        Secret secret3 = new CustomEncryptionKey(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        assertEquals("CustomEncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret3.toString());
     }
 }
