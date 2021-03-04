@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -7,7 +7,6 @@ import com.incountry.residence.sdk.tools.crypto.cipher.Ciphertext;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

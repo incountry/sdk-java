@@ -1,7 +1,6 @@
-package com.incountry.residence.sdk.tools.keyaccessor;
+package com.incountry.residence.sdk.crypto;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.crypto.SecretsData;
 
 /**
  * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked on each encryption/decryption.

@@ -19,7 +19,7 @@ import com.incountry.residence.sdk.tools.exceptions.RecordException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.transfer.TransferFilterContainer;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;

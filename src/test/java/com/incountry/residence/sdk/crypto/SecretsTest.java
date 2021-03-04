@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
