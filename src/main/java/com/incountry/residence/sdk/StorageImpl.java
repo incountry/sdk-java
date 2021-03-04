@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 /**
  * Basic implementation
  */
@@ -78,7 +80,7 @@ public class StorageImpl implements Storage {
             LOG.debug("StorageImpl constructor params config={}", config);
         }
         HELPER.check(StorageClientException.class, config == null, MSG_ERR_CONFIG);
-        HELPER.check(StorageClientException.class, config.getEnvironmentId() == null, MSG_ERR_PASS_ENV);
+        HELPER.check(StorageClientException.class, isNullOrEmpty(config.getEnvironmentId()), MSG_ERR_PASS_ENV);
         boolean invalidAuth = config.getApiKey() != null && config.getClientId() != null;
         HELPER.check(StorageClientException.class, invalidAuth, MSG_ERR_AUTH_DUPL);
 
@@ -157,8 +159,8 @@ public class StorageImpl implements Storage {
             CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null && config.getClientSecret() != null) {
-                HELPER.check(StorageClientException.class, config.getClientId() == null, MSG_ERR_PASS_CLIENT_ID);
-                HELPER.check(StorageClientException.class, config.getClientSecret() == null, MSG_ERR_PASS_CLIENT_SECRET);
+                HELPER.check(StorageClientException.class, isNullOrEmpty(config.getClientId()), MSG_ERR_PASS_CLIENT_ID);
+                HELPER.check(StorageClientException.class, isNullOrEmpty(config.getClientSecret()), MSG_ERR_PASS_CLIENT_SECRET);
                 tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(),
                         config.getAuthEndpoints(),
                         config.getEnvironmentId(),
@@ -168,7 +170,7 @@ public class StorageImpl implements Storage {
                 );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
             } else if (config.getApiKey() != null) {
-                HELPER.check(StorageClientException.class, config.getApiKey() == null, MSG_ERR_PASS_API_KEY);
+                HELPER.check(StorageClientException.class, isNullOrEmpty(config.getApiKey()), MSG_ERR_PASS_API_KEY);
                 tokenClient = new ApiKeyTokenClient(config.getApiKey());
             } else {
                 LOG.error(MSG_ERR_PASS_AUTH);
@@ -191,17 +193,18 @@ public class StorageImpl implements Storage {
     }
 
     private static void checkFileNameAndMimeType(String fileName, String mimeType) throws StorageClientException {
-        boolean invalidParams = (fileName == null || fileName.isEmpty()) && (mimeType == null || mimeType.isEmpty());
+        boolean invalidParams = isNullOrEmpty(fileName) && isNullOrEmpty(mimeType);
         HELPER.check(StorageClientException.class, invalidParams, MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE);
     }
 
     private void checkCountryAndRecordKey(String country, String key) throws StorageClientException {
-        HELPER.check(StorageClientException.class, country == null, MSG_ERR_NULL_COUNTRY);
-        HELPER.check(StorageClientException.class, key == null, MSG_ERR_NULL_KEY);
+        HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
+        HELPER.check(StorageClientException.class, isNullOrEmpty(key), MSG_ERR_NULL_KEY);
     }
 
     private void checkAttachmentParameters(String country, String key, String fileId) throws StorageClientException {
-        HELPER.check(StorageClientException.class, fileId == null, MSG_ERR_NULL_FILE_ID);
+        boolean invalidFileId = isNullOrEmpty(fileId);
+        HELPER.check(StorageClientException.class, invalidFileId, MSG_ERR_NULL_FILE_ID);
         checkCountryAndRecordKey(country, key);
     }
 
@@ -254,7 +257,7 @@ public class StorageImpl implements Storage {
     }
 
     public FindResult find(String country, FindFilter filter) throws StorageClientException, StorageServerException {
-        HELPER.check(StorageClientException.class, country == null, MSG_ERR_NULL_COUNTRY);
+        HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
         HELPER.check(StorageClientException.class, filter == null, MSG_ERR_NULL_FILTERS);
         TransferFindResult transferFindResult = dao.find(country, transformer.getTransferFilterContainer(filter));
         return transformer.getFindResult(transferFindResult);

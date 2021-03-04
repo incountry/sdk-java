@@ -24,4 +24,8 @@ public class ValidationHelper {
             log.error(ex);
         }
     }
+
+    public static boolean isNullOrEmpty(String value) {
+        return value == null || value.isEmpty();
+    }
 }
