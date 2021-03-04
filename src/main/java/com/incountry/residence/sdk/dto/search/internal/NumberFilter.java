@@ -15,7 +15,7 @@ public class NumberFilter extends Filter {
 
     private static final ValidationHelper HELPER = new ValidationHelper(LogManager.getLogger(NumberFilter.class));
 
-    private static final List<String> ALL_OPERATORS = Arrays.asList(OPERATOR_GREATER, OPERATOR_GREATER_OR_EQUALS, OPERATOR_LESS, OPERATOR_GREATER_OR_EQUALS, OPERATOR_NOT, null);
+    private static final List<String> ALL_OPERATORS = Arrays.asList(OPERATOR_GREATER, OPERATOR_GREATER_OR_EQUALS, OPERATOR_LESS, OPERATOR_LESS_OR_EQUALS, OPERATOR_NOT, null);
     private static final List<String> MULTIPLE_VALUE_OPERATORS = Arrays.asList(OPERATOR_NOT, null);
 
     private static final String MSG_ERR_NULL_NUMBER_FILTER = "Number filter or it's values can't be null";

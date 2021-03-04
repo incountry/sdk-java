@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.dto.search.FindFilter;
+import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
@@ -45,6 +46,50 @@ class FindFilterTest {
         assertNotEquals(filterJson, filterJson2);
         assertNotEquals(filterJson, filterJson3);
         assertNotEquals(filterJson2, filterJson3);
+    }
+
+    @Test
+    void numberKeyEqPositive() throws StorageClientException {
+        FindFilter filter = new FindFilter();
+        NumberField[] numberFields = NumberField.values();
+        for (int i = 0; i < numberFields.length; i++) {
+            filter.keyEq(numberFields[i], Long.valueOf(i));
+        }
+        DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
+        String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"range_key8\":[7],\"range_key7\":[6],\"range_key6\":[5],\"range_key5\":[4]," +
+                "\"range_key9\":[8],\"range_key4\":[3],\"range_key3\":[2],\"range_key10\":[9],\"version\":[10]," +
+                "\"range_key2\":[1],\"range_key1\":[0]},\"options\":{\"offset\":0,\"limit\":100}}", filterJson);
+    }
+
+    @Test
+    void advancedFilterPositive() throws StorageClientException {
+        FindFilter filter = new FindFilter()
+                .keyIsNotNull(StringField.KEY1)
+                .keyIsNotNull(NumberField.RANGE_KEY1)
+                .keyIsNull(StringField.KEY2)
+                .keyIsNull(NumberField.RANGE_KEY2)
+                .keyEq(StringField.KEY3, "one", "two")
+                .keyEq(NumberField.RANGE_KEY3, 1L, 2L)
+                .keyNotEq(StringField.KEY4, "three", "four")
+                .keyNotEq(NumberField.RANGE_KEY5, 3L, 4L)
+                .keyGreater(NumberField.RANGE_KEY6, 5L)
+                .keyGreater(NumberField.RANGE_KEY7, 6L, true)
+                .keyLess(NumberField.RANGE_KEY8, 7L)
+                .keyLess(NumberField.RANGE_KEY9, 8L, true)
+                .keyBetween(NumberField.RANGE_KEY10, 1, 2)
+                .keyBetween(NumberField.VERSION, 3, true, 5, true);
+        DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
+        String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null," +
+                "\"key3\":[\"2850267d7ddfe1cd8116d22607200eb386817af3fa2114acef1483376353ac17\"," +
+                "\"7f28b8ad3e4a2924f08b030d95e320653441b6e91425c678291ba87c9adfbbd7\"]," +
+                "\"key4\":{\"$not\":[\"95b47bb565136599af99e6510d2676d0d8d9f211818df1dd6944a232021eec30\"," +
+                "\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
+                "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gte\":3,\"$lte\":5},\"range_key8\":{\"$lt\":[7]}," +
+                "\"range_key7\":{\"$gte\":[6]},\"range_key6\":{\"$gt\":[5]},\"range_key5\":{\"$not\":[3,4]}," +
+                "\"range_key9\":{\"$lte\":[8]},\"range_key3\":[1,2],\"range_key2\":null,\"range_key1\":{\"$not\":null}}," +
+                "\"options\":{\"offset\":0,\"limit\":100}}", filterJson);
     }
 
     @Test
