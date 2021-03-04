@@ -226,7 +226,7 @@ public class StorageIntegrationTest {
                 .copy()
                 .setNormalizeKeys(false)
                 .setSecretKeyAccessor(anotherAccessor)
-                .setCryptoProvider(new CryptoProvider(new FernetCipher()));
+                .setCryptoProvider(new CryptoProvider(new FernetCipher("Fernet")));
         storageWithCustomCipher = StorageImpl.newStorage(config);
     }
 

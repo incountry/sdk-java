@@ -15,12 +15,11 @@ import com.macasaet.fernet.Validator;
  */
 public class FernetCipher extends AbstractCipher {
 
-    private static final String VERSION = "fernet custom encryption";
     private Validator<String> validator;
 
 
-    public FernetCipher() throws StorageClientException {
-        super(VERSION);
+    public FernetCipher(String name) throws StorageClientException {
+        super(name);
         this.validator = new StringValidator() {
         };
     }

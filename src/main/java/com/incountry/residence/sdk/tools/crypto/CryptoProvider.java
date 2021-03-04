@@ -33,7 +33,7 @@ public class CryptoProvider {
     private static final String MSG_ERR_UNREGISTER_DEFAULT = "Can't unregister default cipher with name %s";
     private static final String MSG_ERR_UNKNOWN_CIPHER = "Unknown cipher format";
     private static final String MSG_ERR_NO_CUSTOM_ENC_KEY = "There is no custom encryption key for the custom ciphers";
-    private static final String MSG_ERR_INVALID_CIPHER = "Validation failed for custom cipher with version '%s'";
+    private static final String MSG_ERR_INVALID_CIPHER = "Validation failed for custom cipher with name '%s'";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected exception";
 
     private static final String VALIDATION_TEXT = "This is test message for enc/dec {Louis César de La Baume Le Blanc}" +
@@ -70,7 +70,7 @@ public class CryptoProvider {
         }
         boolean isDefault = defaultCipher.getName().equals(cipher.getName());
         HELPER.check(StorageClientException.class, isDefault, MSG_ERR_UNREGISTER_DEFAULT, cipher.getName());
-        return customCipherMap.remove(cipher.getNameBase64()) == null;
+        return customCipherMap.remove(cipher.getNameBase64()) != null;
     }
 
     public Ciphertext encrypt(String text, SecretsData secretsData) throws StorageClientException, StorageCryptoException {
