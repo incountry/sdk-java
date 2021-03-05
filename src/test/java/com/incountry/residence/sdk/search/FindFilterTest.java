@@ -5,6 +5,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.SortField;
+import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
@@ -30,6 +32,7 @@ class FindFilterTest {
         for (StringField field : StringField.values()) {
             filter.keyEq(field, field.toString());
         }
+        filter.searchKeysLike(null);
 
         DtoTransformer defaultTransformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(defaultTransformer.getTransferFilterContainer(filter));
@@ -78,7 +81,7 @@ class FindFilterTest {
                 .keyLess(NumberField.RANGE_KEY8, 7L)
                 .keyLess(NumberField.RANGE_KEY9, 8L, true)
                 .keyBetween(NumberField.RANGE_KEY10, 1, 2)
-                .keyBetween(NumberField.VERSION, 3, true, 5, true);
+                .keyBetween(NumberField.VERSION, 3, false, 5, false);
         DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null," +
@@ -86,7 +89,7 @@ class FindFilterTest {
                 "\"7f28b8ad3e4a2924f08b030d95e320653441b6e91425c678291ba87c9adfbbd7\"]," +
                 "\"key4\":{\"$not\":[\"95b47bb565136599af99e6510d2676d0d8d9f211818df1dd6944a232021eec30\"," +
                 "\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
-                "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gte\":3,\"$lte\":5},\"range_key8\":{\"$lt\":[7]}," +
+                "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gt\":3,\"$lt\":5},\"range_key8\":{\"$lt\":[7]}," +
                 "\"range_key7\":{\"$gte\":[6]},\"range_key6\":{\"$gt\":[5]},\"range_key5\":{\"$not\":[3,4]}," +
                 "\"range_key9\":{\"$lte\":[8]},\"range_key3\":[1,2],\"range_key2\":null,\"range_key1\":{\"$not\":null}}," +
                 "\"options\":{\"offset\":0,\"limit\":100}}", filterJson);
@@ -101,6 +104,36 @@ class FindFilterTest {
         assertEquals("Max limit is 100. Use offset to populate more", ex2.getMessage());
         StorageClientException ex3 = assertThrows(StorageClientException.class, () -> findFilter.limitAndOffset(1, -1));
         assertEquals("Offset must be more than 0", ex3.getMessage());
+    }
+
+    @Test
+    void sortNegative() throws StorageClientException {
+        FindFilter findFilter = new FindFilter();
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> findFilter.sortBy(null, null));
+        assertEquals("Sorting field is null", ex.getMessage());
+
+        ex = assertThrows(StorageClientException.class, () -> findFilter.sortBy(SortField.KEY4, null));
+        assertEquals("Sorting order is null", ex.getMessage());
+
+        findFilter.sortBy(SortField.KEY1, SortOrder.ASC)
+                .sortBy(SortField.KEY2, SortOrder.DESC);
+
+        ex = assertThrows(StorageClientException.class, () -> findFilter.sortBy(SortField.KEY1, SortOrder.DESC));
+        assertEquals("Field KEY1 is already in sorting list", ex.getMessage());
+    }
+
+    @Test
+    void searchKeysLikeNegative() throws StorageClientException {
+        FindFilter findFilter = new FindFilter()
+                .keyEq(StringField.SERVICE_KEY1, "service")
+                .searchKeysLike("value")
+                .keyEq(StringField.PROFILE_KEY, "profile_key");
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> findFilter.keyEq(StringField.KEY1, "value1"));
+        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup", ex.getMessage());
+
+        findFilter.clear().keyEq(StringField.KEY1, "value1");
+        ex = assertThrows(StorageClientException.class, () -> findFilter.searchKeysLike("value2"));
+        assertEquals("SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup", ex.getMessage());
     }
 
     private static final String NORMALIZED_STRING_FILTER = "{\"filter\":{" +

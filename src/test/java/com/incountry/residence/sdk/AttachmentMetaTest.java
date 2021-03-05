@@ -7,7 +7,10 @@ import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -19,6 +22,7 @@ class AttachmentMetaTest {
     private static final String MIME_TYPE = "text/plain";
     private static final int SIZE = 1000;
 
+    @SuppressWarnings("java:S5785")
     @Test
     void testEquals() {
         AttachmentMeta attachmentMeta1 = new AttachmentMeta();
@@ -69,6 +73,9 @@ class AttachmentMetaTest {
         assertEquals(attachmentMeta1, attachmentMeta1);
         assertNotEquals(new AttachmentMeta(), attachmentMeta1);
         assertNotEquals(attachmentMeta1, new Object());
+        assertNotEquals(null, attachmentMeta1);
+        assertFalse(attachmentMeta1.equals(UUID.randomUUID()));
+        assertFalse(attachmentMeta1.equals(null));
         assertNotNull(attachmentMeta1);
 
         String createUpdateAt = "2020-10-09T10:52:54+00:00";

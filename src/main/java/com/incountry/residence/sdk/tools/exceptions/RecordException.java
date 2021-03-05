@@ -4,6 +4,10 @@ public class RecordException extends Exception {
 
     private final String rawData;
 
+    public RecordException(String rawData) {
+        this.rawData = rawData;
+    }
+
     public RecordException(String message, String rawData, Throwable exception) {
         super(message, exception);
         this.rawData = rawData;
