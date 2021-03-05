@@ -244,6 +244,8 @@ class StorageTest {
         assertEquals("Country can't be null", ex.getMessage());
         ex = assertThrows(StorageClientException.class, () -> storage.batchWrite(null, Collections.singletonList(record)));
         assertEquals("Country can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> storage.batchWrite("us", Collections.singletonList(null)));
+        assertEquals("Can't write null record", ex.getMessage());
     }
 
     @Test

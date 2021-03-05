@@ -77,7 +77,7 @@ public class ProxyUtils {
             return null;
         }
         if (obj instanceof List) {
-            return ((List) obj).stream().map(Object::toString).collect(Collectors.joining(",")).toString();
+            return ((List) obj).stream().map(String::valueOf).collect(Collectors.joining(",")).toString();
         }
         return obj.toString();
     }

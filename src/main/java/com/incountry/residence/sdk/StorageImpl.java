@@ -320,10 +320,10 @@ public class StorageImpl implements Storage {
         checkFileNameAndMimeType(fileName, mimeType);
         checkAttachmentParameters(country, recordKey, fileId);
         AttachmentMeta updatedMeta = new AttachmentMeta();
-        if (fileName != null && !fileName.isEmpty()) {
+        if (!isNullOrEmpty(fileName)) {
             updatedMeta.setFilename(fileName);
         }
-        if (mimeType != null && !mimeType.isEmpty()) {
+        if (!isNullOrEmpty(mimeType)) {
             updatedMeta.setMimeType(mimeType);
         }
         return dao.updateAttachmentMeta(country, hashUtils.getSha256Hash(recordKey), fileId, updatedMeta);
