@@ -1,12 +1,23 @@
 package com.incountry.residence.sdk;
 
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.incountry.residence.sdk.crypto.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.tools.DtoTransformer;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.crypto.HashUtils;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +27,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RecordTest {
@@ -344,5 +356,30 @@ class RecordTest {
         newRecord = expectedRecord.copy()
                 .setPrecommitBody(newRecord.getPrecommitBody() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
+    }
+
+    @Test
+    void dateFieldTest() throws StorageClientException, StorageServerException, StorageCryptoException {
+        String json = "  {\n" +
+                "      'record_key': '976143aa1fd12b9ad7449fd9d3a6d25347d71b890b49d4fb5c738e798238865f',\n" +
+                "      'body': '2:0Xxd0QYOXstTmrA1Erqm6F/jxt83IHFFHqJPf+QuMpwOObh+OaJ1hCjLLGi2GVnBXENQ5sIt92ayemBXr5JEY2CNUI9lp18gOim+aXveWH1FN8yk5HYqoSyOb5CkJHvp73+AaFmpzTJA3Zxy7z7rfZE2ByCwGtX454iY35jQcUGr1Zpo3m4BX2Y8Rc+RYvAO0J+1y6iDnaNk228d0QwDK4VRISslct+vp7T+O/fnOuyTZzoy/2IoUuvHpkhGsKB2sA+elqCMHz64HGlbGL1OWMmChmQ4R3Ax+/ddzd3xorUQdyz0S1L0YoByE/vCAgGMCkXkQ7kSnqFsRLyJPK4tZWen+G7pt4SdLHoD60vh8QrGtPXVQe4P9HeNCwZXOyhpZbTKvHRXIzsmzGud7Z6rU4DGSBEoeWXcVKIgQ7H0sBCHFZ6ixsw0fb/ciw66HGS/06tyjrWyMsq7HsaOkL01bzaRM9SMeZZskHDGsi4fOvt498SvKF2VT28PMWH8h4Wj24q7o18Ms7NrhnkqDql11FsKLb/O6hcKo5c9GzsSkYN+7KoPwHcj+eWs0Odu4BL2xq7VJiIjCw+25pqlXSpyKV0QTUSXI31VTNoqRRMpBlM06n4SC6SidQfRiiWXqptJEhLA9g==',\n" +
+                "      'version': 0,\n" +
+                "      'created_at': '2030-01-01T23:59:00+03:00',\n" +
+                "      'updated_at': '2030-01-01T23:59:00+03:00',\n" +
+                "      'is_encrypted': true\n" +
+                "    }";
+
+        Gson gson= new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+        TransferRecord transferRecord=gson.fromJson(json,TransferRecord.class);
+
+        CryptoProvider cryptoProvider = new CryptoProvider(null);
+        SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
+        DtoTransformer transformer = new DtoTransformer(cryptoProvider,
+                new HashUtils("InCountry", false),
+                true,
+                () -> secretsData);
+        Record record=transformer.getRecord(transferRecord);
+        assertNotNull(record.getCreatedAt());
+        assertNotNull(record.getUpdatedAt());
     }
 }

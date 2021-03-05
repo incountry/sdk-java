@@ -468,8 +468,6 @@ public class Record {
                 Objects.equals(precommitBody, record.precommitBody) &&
                 Objects.equals(serviceKey1, record.serviceKey1) &&
                 Objects.equals(serviceKey2, record.serviceKey2) &&
-                Objects.equals(createdAt, record.createdAt) &&
-                Objects.equals(updatedAt, record.updatedAt) &&
                 Objects.equals(attachments, record.attachments);
     }
 
@@ -478,8 +476,7 @@ public class Record {
         return Objects.hash(recordKey, parentKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 key11, key12, key13, key14, key15, key16, key17, key18, key19, key20,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
-                body, profileKey, precommitBody, serviceKey1, serviceKey2,
-                createdAt, updatedAt, attachments, version);
+                body, profileKey, precommitBody, serviceKey1, serviceKey2, attachments, version);
     }
 
     /**

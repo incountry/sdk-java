@@ -19,7 +19,7 @@ class FindResultTest {
         assertEquals("FindResult{count=6, limit=7, offset=8, total=9, records=[], errors=null}",
                 batch2.toString());
         FindResult batch3 = new FindResult(Collections.singletonList(new Record("recKey")), 10, 11, 12, 13, null);
-        assertEquals("FindResult{count=10, limit=11, offset=12, total=13, records=[Record{recordKey='recKey', hash=-1907786259}], errors=null}",
+        assertEquals("FindResult{count=10, limit=11, offset=12, total=13, records=[Record{recordKey='recKey', hash=109746541}], errors=null}",
                 batch3.toString());
     }
 }
