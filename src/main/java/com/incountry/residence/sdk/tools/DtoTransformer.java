@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 public class DtoTransformer {
     private static final Logger LOG = LogManager.getLogger(DtoTransformer.class);
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
@@ -196,7 +198,7 @@ public class DtoTransformer {
 
         String complexBodyJson = cryptoProvider.decrypt(transferRecord.getBody(), secretsData, recordVersion);
         String precommitBody = null;
-        if (transferRecord.getPrecommitBody() != null && !transferRecord.getPrecommitBody().isEmpty()) {
+        if (!isNullOrEmpty(transferRecord.getPrecommitBody())) {
             precommitBody = cryptoProvider.decrypt(transferRecord.getPrecommitBody(), secretsData, recordVersion);
         }
         ComplexBody complexBody = gson.fromJson(complexBodyJson, ComplexBody.class);
@@ -234,9 +236,9 @@ public class DtoTransformer {
     }
 
     private static void validateTransferRecord(TransferRecord record) throws StorageServerException {
-        boolean invalidRecordKey = record.getRecordKey() == null || record.getRecordKey().isEmpty();
+        boolean invalidRecordKey = isNullOrEmpty(record.getRecordKey());
         HELPER.check(StorageServerException.class, invalidRecordKey, MSG_ERR_NULL_RECORD_KEY);
-        boolean invalidBody = record.getBody() == null || record.getBody().isEmpty();
+        boolean invalidBody = isNullOrEmpty(record.getBody());
         HELPER.check(StorageServerException.class, invalidBody, MSG_ERR_NULL_BODY);
     }
 
