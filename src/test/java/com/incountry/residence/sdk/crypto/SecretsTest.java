@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
@@ -96,6 +97,18 @@ class SecretsTest {
         assertTrue(Arrays.equals("someSecret".getBytes(StandardCharsets.UTF_8), data.getSecrets().get(0).getSecretBytes()));
         assertEquals(1, data.getSecrets().get(0).getVersion());
         assertTrue(data.getSecrets().get(0) instanceof EncryptionSecret);
+
+        String secretsDataInJson = "{\n" +
+                "    \"currentVersion\": 1,\n" +
+                "    \"secrets\": [\n" +
+                "        {\"secret\": \"password0\", \"version\": 0},\n" +
+                "        {\"secret\": \"password1\", \"version\": 1}\n" +
+                "    ]\n" +
+                "}";
+        SecretsData data1 = SecretsDataGenerator.fromJson(secretsDataInJson);
+        assertEquals(1, data1.getCurrentSecret().getVersion());
+        assertTrue(data1.getCurrentSecret() instanceof EncryptionSecret);
+        assertEquals(2, data1.getSecrets().size());
     }
 
     @Test
@@ -124,6 +137,8 @@ class SecretsTest {
         assertEquals("Secret versions must be unique. Got duplicates for: [0]", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), secretKey3));
         assertEquals("There is no current secret at the secrets list", ex2.getMessage());
+        StorageClientException ex3 = assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), null));
+        assertEquals("There is no current secret at the secrets list", ex3.getMessage());
     }
 
     @Test
@@ -180,5 +195,31 @@ class SecretsTest {
         assertEquals("EncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret2.toString());
         Secret secret3 = new CustomEncryptionKey(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
         assertEquals("CustomEncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret3.toString());
+    }
+
+    @Test
+    void createSecretInvalid() {
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(1, null));
+        assertEquals("Secret can't be null or empty", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(1, "".getBytes(StandardCharsets.UTF_8)));
+        assertEquals("Secret can't be null or empty", ex.getMessage());
+    }
+
+    @Test
+    void secretsDataGetSecretPositive() throws StorageClientException, StorageCryptoException {
+        String secretsDataInJson = "{\n" +
+                "    \"currentVersion\": 1,\n" +
+                "    \"secrets\": [\n" +
+                "        {\"secret\": \"password0\", \"version\": 0},\n" +
+                "        {\"secret\": \"password1\", \"version\": 1}\n" +
+                "    ]\n" +
+                "}";
+        SecretsData secretsData = SecretsDataGenerator.fromJson(secretsDataInJson);
+        Secret secret = secretsData.getSecret(null);
+        assertEquals(1, secret.getVersion());
+        secret = secretsData.getSecret(1);
+        assertEquals(1, secret.getVersion());
+        secret = secretsData.getSecret(0);
+        assertEquals(0, secret.getVersion());
     }
 }

@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -142,7 +143,6 @@ class CryptoProviderTest {
     void positiveDecryptNull() throws StorageClientException, StorageCryptoException {
         CryptoProvider provider = new CryptoProvider(null);
         assertNull(provider.decrypt(null, secretsData, 1));
-        assertNull(provider.decrypt("", secretsData, 1));
     }
 
     @Test
@@ -171,5 +171,13 @@ class CryptoProviderTest {
         Ciphertext ciphertext = provider.encrypt(text, secretsData);
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> provider.decrypt(ciphertext.getData(), secretsData, 100500));
         assertEquals("Secret not found for 'version'=100500", ex.getMessage());
+    }
+
+    @Test
+    void illegalCipherTextNegative() throws StorageClientException {
+        SecretsData secretsData = SecretsDataGenerator.fromPassword("123456789_123456789_123456789_12");
+        CryptoProvider provider = new CryptoProvider(null);
+        StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> provider.decrypt(UUID.randomUUID().toString(), secretsData, secretsData.getCurrentSecret().getVersion()));
+        assertEquals("Unknown cipher format", ex.getMessage());
     }
 }

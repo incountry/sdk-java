@@ -60,7 +60,7 @@ public abstract class AbstractCipher implements Cipher {
     public Ciphertext encrypt(String text, Secret secret) throws StorageCryptoException, StorageClientException {
         boolean correctSecretType = secret instanceof CustomEncryptionKey;
         HELPER.check(StorageCryptoException.class, !correctSecretType, MSG_ERR_INVALID_KEY_CLASS);
-        String cipheredText = encrypt(text != null ? text.getBytes(charset) : null, (CustomEncryptionKey) secret);
+        String cipheredText = encrypt(text.getBytes(charset), (CustomEncryptionKey) secret);
         return new Ciphertext(nameBase64 + ":" + Base64.getEncoder().encodeToString(cipheredText.getBytes(charset)),
                 secret.getVersion());
     }

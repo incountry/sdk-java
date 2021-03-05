@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 public class CryptoProvider {
     private static final Logger LOG = LogManager.getLogger(CryptoProvider.class);
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
@@ -50,7 +52,7 @@ public class CryptoProvider {
             defaultCipher = tempCipher;
             return;
         }
-        boolean invalidCipher = currentCipher.getName() == null || currentCipher.getName().isEmpty();
+        boolean invalidCipher = isNullOrEmpty(currentCipher.getName());
         HELPER.check(StorageClientException.class, invalidCipher, MSG_ERR_INVALID_CIPHER_NAME);
         customCipherMap.put(currentCipher.getNameBase64(), currentCipher);
         defaultCipher = currentCipher;
@@ -65,7 +67,7 @@ public class CryptoProvider {
     }
 
     public boolean unregisterCipher(AbstractCipher cipher) throws StorageClientException {
-        if (cipher == null || cipher.getName() == null) {
+        if (cipher == null) {
             return false;
         }
         boolean isDefault = defaultCipher.getName().equals(cipher.getName());
@@ -74,6 +76,9 @@ public class CryptoProvider {
     }
 
     public Ciphertext encrypt(String text, SecretsData secretsData) throws StorageClientException, StorageCryptoException {
+        if (text == null) {
+            return new Ciphertext(null, null);
+        }
         Cipher cipher = defaultCipher;
         boolean nullSecrets = secretsData == null;
         if (nullSecrets) {
@@ -90,7 +95,7 @@ public class CryptoProvider {
     }
 
     public String decrypt(String cipherText, SecretsData secretsData, Integer decryptKeyVersion) throws StorageCryptoException, StorageClientException {
-        if (cipherText == null || cipherText.isEmpty()) {
+        if (cipherText == null) {
             return null;
         }
 

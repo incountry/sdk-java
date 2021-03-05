@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,6 +56,7 @@ class CustomCipherTest {
         assertNotNull(storage);
         assertTrue(provider.unregisterCipher(cipher));
         assertFalse(provider.unregisterCipher(cipher));
+        assertFalse(provider.unregisterCipher(null));
     }
 
     @Test
@@ -78,6 +80,18 @@ class CustomCipherTest {
         Secret key = new CustomEncryptionKey(1, CUSTOM_PASSWORD_1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         assertDoesNotThrow(() -> provider.validateCustomCiphers(secretsData));
+        Secret key2 = new EncryptionSecret(2, CUSTOM_PASSWORD_1);
+        SecretsData secretsData2 = new SecretsData(Arrays.asList(key, key2), key2);
+        assertDoesNotThrow(() -> provider.validateCustomCiphers(secretsData2));
+    }
+
+    @Test
+    void validateCustomCiphersNegative() throws StorageClientException {
+        CryptoProvider provider = new CryptoProvider(new PseudoCustomCipher(0, 0, false));
+        Secret key = new CustomEncryptionKey(1, CUSTOM_PASSWORD_1);
+        SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> provider.validateCustomCiphers(secretsData));
+        assertEquals("Validation failed for custom cipher with name 'PseudoCustomCipher'", ex.getMessage());
     }
 
     @Test
@@ -129,6 +143,8 @@ class CustomCipherTest {
         assertEquals(keyVersion, ciphertext.getKeyVersion());
         String text2 = provider.decrypt(ciphertext.getData(), secretsData, ciphertext.getKeyVersion());
         assertEquals(text, text2);
+        assertNull(provider.encrypt(null, secretsData).getData());
+        assertNull(provider.decrypt(null, secretsData, keyVersion));
     }
 
     @Test
@@ -199,5 +215,16 @@ class CustomCipherTest {
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () ->
                 provider.decrypt(ciphertext.getData(), secretsData, ciphertext.getKeyVersion() + 1));
         assertEquals("Secret not found for 'version'=4", ex.getMessage());
+    }
+
+    @Test
+    void invalidSecretNegative() throws StorageClientException {
+        FernetCipher cipher = new FernetCipher("fernet");
+        EncryptionSecret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        String text = "text";
+        StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> cipher.encrypt(text, secret));
+        assertEquals("Used key from secrets data is not instance of CustomEncryptionKey", ex.getMessage());
+        ex = assertThrows(StorageCryptoException.class, () -> cipher.decrypt(text, secret));
+        assertEquals("Used key from secrets data is not instance of CustomEncryptionKey", ex.getMessage());
     }
 }

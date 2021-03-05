@@ -20,7 +20,7 @@ public class PseudoCustomCipher extends AbstractCipher {
     }
 
     public PseudoCustomCipher(Integer encryptCountBeforeException, Integer decryptCountBeforeException, boolean exceptionType) throws StorageClientException {
-        super(PseudoCustomCipher.class.getName());
+        super(PseudoCustomCipher.class.getSimpleName());
         this.exceptionType = exceptionType;
         this.encryptCountBeforeException = encryptCountBeforeException;
         this.decryptCountBeforeException = decryptCountBeforeException;
