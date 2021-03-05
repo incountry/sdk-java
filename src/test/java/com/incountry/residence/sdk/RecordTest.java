@@ -369,8 +369,8 @@ class RecordTest {
                 "      'is_encrypted': true\n" +
                 "    }";
 
-        Gson gson= new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-        TransferRecord transferRecord=gson.fromJson(json,TransferRecord.class);
+        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+        TransferRecord transferRecord = gson.fromJson(json, TransferRecord.class);
 
         CryptoProvider cryptoProvider = new CryptoProvider(null);
         SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
@@ -378,7 +378,7 @@ class RecordTest {
                 new HashUtils("InCountry", false),
                 true,
                 () -> secretsData);
-        Record record=transformer.getRecord(transferRecord);
+        Record record = transformer.getRecord(transferRecord);
         assertNotNull(record.getCreatedAt());
         assertNotNull(record.getUpdatedAt());
     }
