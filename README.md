@@ -31,11 +31,11 @@ To access your data in InCountry Platform by using Java SDK, you need to create 
 ```java
 SecretsData secretsData = SecretsDataGenerator.fromPassword("<encryption_secret>");
 StorageConfig config = new StorageConfig()
-        .setEnvId("<environment_id>")
+        .setEnvironmentId("<environment_id>")
         .setClientId("client_id")
         .setClientSecret("<client_secret>")
         .setSecretKeyAccessor(() -> secretsData);
-Storage storage = StorageImpl.getInstance(config);
+Storage storage = StorageImpl.newStorage(config);
 ```
 
 ## Storage Configuration
@@ -44,14 +44,15 @@ Below you can find a full list of possible configuration options for creating a 
 ```java
 public class StorageImpl implements Storage {
   /**
-   * creating Storage instance
+   * create new Storage instance
    *
    * @param config A container with configuration for Storage initialization
    * @return instance of Storage
-   * @throws StorageClientException if configuration validation finished with errors   
+   * @throws StorageClientException if configuration validation finished with errors
+   * @throws StorageCryptoException if custom cipher validation fails
    */
-  public static Storage getInstance(StorageConfig config)
-                                    throws StorageClientException, StorageServerException  {...}
+  public static Storage newStorage(StorageConfig config)
+                                    throws StorageClientException, StorageCryptoException  {...}
 //...
 }
 ```
@@ -62,8 +63,8 @@ StorageConfig provides the following parameters:
  */
 public class StorageConfig {
    //...
-   /** Required to be passed in, or as environment variable INC_API_KEY */
-   private String envId;
+   /** Required to be passed in, or as environment variable INC_ENVIRONMENT_ID */
+   private String environmentId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
    private String clientId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
@@ -74,8 +75,9 @@ public class StorageConfig {
    private String endPoint;
    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
    private SecretKeyAccessor secretKeyAccessor;
-   /** Optional. List of custom encryption configurations */
-   private List<Crypto> customEncryptionConfigsList;
+   /** Optional. Provider of encryption ciphers. Allows to register custom ciphers
+    * for encrypting stored data. If null - default AES GCM cipher will be used */
+   private CryptoProvider cryptoProvider;
    /** Optional. If true - all keys will be stored as lower cased. default is false */
    private boolean normalizeKeys;
    /** Optional. Parameter endpointMask is used for switching from `default` InCountry host
@@ -100,9 +102,10 @@ public class StorageConfig {
     * Expected value - null or positive integer.
     * Default value == {@link #maxHttpPoolSize}. */
    private Integer maxHttpConnectionsPerRoute;
-   /** Optional. If false - key1-key10 will be not hashed. Default is true */
+   /** Optional. If false - key1-key20 will be not hashed. Default is true */
    private boolean hashSearchKeys = true;
    //...
+}
 ```
 
 ---
@@ -114,10 +117,10 @@ Below you can find API Key authorization usage example:
 ```java
 SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
-    .setEnvId("<env_id>")
+    .setEnvironmentId("<env_id>")
     .setApiKey("<api_key>")
     .setSecretKeyAccessor(() -> secretsData);
-Storage storage=StorageImpl.getInstance(config);
+Storage storage=StorageImpl.newStorage(config);
 ```
 ---
 
@@ -138,8 +141,8 @@ StorageConfig config = new StorageConfig()
    .setAuthEndpoints(authEndpointsMap)
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
-   .setEnvId(ENV_ID)
-Storage storage = StorageImpl.getInstance(config);
+   .setEnvironmentId(ENV_ID)
+Storage storage = StorageImpl.newStorage(config);
 ```
 
 Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`-private.incountry.io` will make all further requests to be sent to `https://{COUNTRY_CODE}-private.incountry.io`
@@ -148,12 +151,14 @@ If your PoPAPI configuration relies on a custom PoPAPI server (rather than the d
 StorageConfig config = new StorageConfig()
    .setCountriesEndpoint(countriesEndpoint)
    //...
-Storage storage = StorageImpl.getInstance(config);
+Storage storage = StorageImpl.newStorage(config);
 ```
 
 ### Encryption key/secret
 
-SDK provides `SecretKeyAccessor` interface which allows you to pass your own secrets/keys to the SDK.
+`StorageConfig` contains parameter `SecretKeyAccessor`. It is an interface which allows you to pass your own secrets/keys to
+the SDK.
+
 ```java
 /**
  * Secrets accessor. Method {@link SecretKeyAccessor#getSecretsData()} is invoked 
@@ -172,31 +177,22 @@ public interface SecretKeyAccessor {
 
 
 public class SecretsData {
-    /**
-     * creates a container with secrets
-     *
-     * @param secrets non-empty list of secrets. One of the secrets must have
-     *        same version as currentVersion in SecretsData
-     * @param currentVersion Should be a non-negative integer
-     * @throws StorageClientException when parameter validation fails
-     */
-     public SecretsData(List<SecretKey> secrets, int currentVersion)
-                throws StorageClientException {...}
+   /**
+    * creates a container with secrets
+    *
+    * @param secrets non-empty list of secrets. One of the secrets should 
+    *                be the second parameter {@link #currentSecret}
+    * @param currentSecret Should be a non-negative integer
+    * @throws StorageClientException when parameter validation fails
+    */
+    public SecretsData(List<Secret> secrets, Secret currentSecret) 
+            throws StorageClientException {
     //...
 }
 
-
-public class SecretKey {
-    /**
-    * Creates a secret key
-    *
-    * @param secret  secret/key as byte array
-    * @param version secret version, should be a non-negative integer
-    * @param isKey   should be True only for user-defined encryption keys
-    * @throws StorageClientException when parameter validation fails
-    */
-    public SecretKey(byte[] secret, int version, boolean isKey)
-              throws StorageClientException {...}
+public abstract class Secret {
+    private final int version;
+    private final byte[] secretBytes;
     //...
 }
 ```
@@ -204,44 +200,44 @@ public class SecretKey {
 You can implement `SecretKeyAccessor` interface and pass secrets/keys in multiple ways:
 
 1. As a constant SecretsData object
-    ```java
-    SecretsData secretsData = new SecretsData(secretsList, currentVersion);
-    SecretKeyAccessor accessor = () -> secretsData;
-    ```
+```java
+SecretsData secretsData = new SecretsData(secretsList, currentSecret);
+SecretKeyAccessor accessor = () -> secretsData;
+```
 
 2. As a function that dynamically fetches secrets
-    ```java
-    SecretKeyAccessor accessor = () -> loadSecretsData();
+```java
+SecretKeyAccessor accessor = () -> loadSecretsData();
 
-    private SecretsData loadSecretsData()  {
-       String url = "<your_secret_url>";
-       String responseJson = loadFromUrl(url).asJson();
-       return SecretsDataGenerator.fromJson(responseJson);
-    }
-    ```
+private SecretsData loadSecretsData()  {
+    String url = "<your_secret_url>";
+    String responseJson = loadFromUrl(url).asJson();
+    return SecretsDataGenerator.fromJson(responseJson);
+}
+```
 
 You can also use `SecretsDataGenerator` class for creating `SecretsData` instances:
 
 1. from a String password
-    ```java
-    SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
-    ```
+```java
+SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
+```
 
 2. from a JSON string representing SecretsData object
-    ```java
-    SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
-    ```
+```java
+SecretsData secretsData = SecretsDataGenerator.fromJson(jsonString);
+```
 
 ```javascript
 {
     "secrets": [
         {
-            "secret": "secret0",
+            "secret": "secret_password_0",
             "version": 0,
             "isKey": false
         },
         {
-            "secret": "secret1",
+            "secret": "secret_password_1",
             "version": 1,
             "isKey": false
         }
@@ -252,7 +248,7 @@ You can also use `SecretsDataGenerator` class for creating `SecretsData` instanc
 
 `SecretsData` allows you to specify multiple keys/secrets which SDK will use for decryption based on the version of the key or secret used for encryption.
 
-Meanwhile SDK will encrypt only using key/secret that matches `currentVersion` provided in `SecretsData` object. This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
+Meanwhile SDK will encrypt only using key/secret that matches `currentSecret` provided in `SecretsData` object. This enables the flexibility required to support Key Rotation policies when secrets/keys need to be changed with time.
 
 SDK will encrypt data using current secret/key while maintaining the ability to decrypt records encrypted with old keys/secrets.
 SDK also provides a method for data migration which allows to re-encrypt data with the newest key/secret. For details please see [migrate](#Data-Migration-and-Key-Rotation-support) method.
@@ -444,28 +440,28 @@ public interface Storage {
     * Find records in remote storage according to filters
     *
     * @param country country identifier
-    * @param builder object representing find filters and search options
-    * @return BatchRecord object which contains required records
+    * @param filter object representing find filters and search options
+    * @return FindResult object which contains required records
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    BatchRecord find(String country, FindFilterBuilder builder)
+    FindResult find(String country, FindFilter filter)
          throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
 ```
 
-Use `FindFilterBuilder` class to refine your find request.
+Use `FindFilter` class to refine your find request.
 
-Below is the example how to use `find` method along with `FindFilterBuilder`:
+Below is the example how to use `find` method along with `FindFilter`:
 ```java
-FindFilterBuilder builder = FindFilterBuilder.create()
+FindFilter filter = new FindFilter()
                   .keyEq(StringField.KEY2, "someKey")
                   .keyEq(StringField.KEY3, "firstValue", "secondValue")
                   .keyEq(NumberField.RANGE_KEY1, 123L, 456L);
 
-BatchRecord findResult = storage.find("us", builder);
+FindResult findResult = storage.find("us", filter);
 if (findResult.getCount() > 0) {
     Record record = findResult.getRecords().get(0);
     //...
@@ -477,14 +473,14 @@ The request will return records, filtered according to the following pseudo-sql
 key2 = 'someKey' AND key3 in ('firstValue' , 'secondValue') AND (123 < = `rangeKey1` < = 456)
 ```
 
-All conditions added via `FindFilterBuilder` are joined using logical `AND`. You may not add multiple conditions for the same key - if you do only the last one will be used.
+All conditions added via `FindFilter` are joined using logical `AND`. You may not add multiple conditions for the same key - if you do only the last one will be used.
 
 SDK returns 100 records at most. Use `limit` and `offset` to iterate through the records.
 ```java
-FindFilterBuilder builder = FindFilterBuilder.create()
+FindFilter filter = new FindFilter()
                   //...
                   .limitAndOffset(20, 80);
-BatchRecord records = storage.find("us", builder);
+FindResult findResult = storage.find("us", filter);
 ```
 
 ---
@@ -496,11 +492,11 @@ Sorting find results is currently available for InCountry dedicated instances on
 
 By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilterBuilder` .
 ```java
-FindFilterBuilder builder = FindFilterBuilder.create()
+FindFilter builder = new FindFilter()
                   //...
                   .sortBy(SortField.CREATED_AT, SortOrder.ASC)
                   .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
-BatchRecord records = storage.find("us", builder);
+FindResult findResult = storage.find("us", filter);
 ```
 The request will return records, sorted according to the following pseudo-sql
 ```sql
@@ -509,7 +505,7 @@ SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
 
 ##### Fields that records can be sorted by:
 ```java
-public enum SortFields {
+public enum SortField {
    KEY1,
    KEY2,
    KEY3,
@@ -547,29 +543,27 @@ public enum SortFields {
 
 Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
 ```java
-EQUALS              (FindFilterBuilder::keyEq)
-NOT_EQUALS          (FindFilterBuilder::keyNotEq)
-IS_NULL             (FindFilterBuilder::keyIsNull)
-IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
+EQUALS              (FindFilter::keyEq)
+NOT_EQUALS          (FindFilter::keyNotEq)
+IS_NULL             (FindFilter::keyIsNull)
+IS_NOT_NULL         (FindFilter::keyIsNotNull)
 
 ```
 
 You can use the following builder methods for filtering by numerical fields:
 ```java
-EQUALS              (FindFilterBuilder::keyEq)
-IS_NULL             (FindFilterBuilder::keyIsNull)
-IS_NOT_NULL         (FindFilterBuilder::keyIsNotNull)
-IN                  (FindFilterBuilder::keyIn)
-GREATER             (FindFilterBuilder::keyGT)
-GREATER OR EQUALS   (FindFilterBuilder::keyGTE)
-LESS                (FindFilterBuilder::keyLT)
-LESS OR EQUALS      (FindFilterBuilder::keyLTE)
-BETWEEN             (FindFilterBuilder::keyBetween)
+EQUALS              (FindFilter::keyEq)
+NOT_EQUALS          (FindFilter::keyNotEq)
+IS_NULL             (FindFilter::keyIsNull)
+IS_NOT_NULL         (FindFilter::keyIsNotNull)
+GREATER             (FindFilter::keyGreater)
+LESS                (FindFilter::keyLess)
+BETWEEN             (FindFilter::keyBetween)
 ```
 
-Method `find` returns `BatchRecord` object which contains a list of `Record` and some metadata:
+Method `find` returns `FindResult` object which contains a list of `Record` and some metadata:
 ```java
-class BatchRecord {
+class FindResult {
     private int count;
     private int limit;
     private int offset;
@@ -582,10 +576,40 @@ class BatchRecord {
 These fields can be accessed using getters, for example:
 
 ```java
-int limit = records.getTotal();
+int total = findResult.getTotal();
 ```
 
-`BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
+`FindResult.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
+
+##### Partial text match search
+
+You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs
+partial match search (similar to the `LIKE` SQL operator, without special characters) within records text
+fields `key1, key2, ..., Key20`.
+
+```java
+// Matches all records where 
+// Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc");
+```
+
+**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and
+works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
+
+```java
+// Matches all records where 
+// (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc') 
+// AND (Record.rangeKey1 = 1 OR Record.rangeKey1 = 2)
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc")
+    .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
+
+// Causes validation error (StorageClientException)
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc")
+    .keyEq(StringField.KEY1, "def");
+```
 
 ### Find one record matching filter
 
@@ -596,13 +620,13 @@ public interface Storage {
     * Find only one first record in remote storage according to filters
     *
     * @param country country identifier
-    * @param builder object representing find filters
+    * @param filter object representing find filters
     * @return founded record or null
     * @throws StorageClientException if validation finished with errors
     * @throws StorageServerException if server connection failed or server response error
     * @throws StorageCryptoException if decryption failed
     */
-    Record findOne(String country, FindFilterBuilder builder)
+    Record findOne(String country, FindFilter filter)
            throws StorageClientException, StorageServerException, StorageCryptoException;
     //...
 }
@@ -612,12 +636,12 @@ It works the same way as `find` but returns the first record or `null` if no rec
 
 Here is the example of how `findOne` method can be used:
 ```java
-FindFilterBuilder builder = FindFilterBuilder.create()
+FindFilter filter = new FindFilter()
                   .keyEq(StringField.KEY2, "someKey")
                   .keyEq(StringField.KEY3, "firstValue", "secondValue")
                   .keyEq(NumberField.RANGE_KEY1, 123L, 456L);
 
-Record record = storage.findOne("us", builder);
+Record record = storage.findOne("us", filter);
 //...
 ```
 
@@ -897,88 +921,65 @@ public void test() {
 
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
 
-Use method `setCustomEncryptionConfigsList` of `StorageConfig` for passing a list of custom encryption implementations:
+Set `cryptoProvider` of `StorageConfig` with registered custom cipher implementations:
 
 ```java
-public class StorageConfig {
-  //...
-  /**
-   * for custom encryption
-   *
-   * @param customEncryptionConfigsList List with custom encryption functions
-   * @return StorageConfig
-   */
-  public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
-      this.customEncryptionConfigsList = customEncryptionConfigsList;
-      return this;
-  }
-  //...
-}
+Cipher customCipher = new FernetCipher("Fernet cipher demo");
+Cipher anotherCipher = new AnotherCustomCipher();
+CryptoProvider provider = new CryptoProvider(customCipher);
+provider.registerCipher(anotherCipher);
+StorageConfig config = new StorageConfig();
+//...
+config.setCryptoProvider(provider);
+Storage storage = StorageImpl.newStorage(config);
+
 ```
 
-For using of custom encryption you need to implement the following interface:
+For using of custom encryption you need to create an implementation the following abstract class:
 ```java
-public interface Crypto {
+public abstract class AbstractCipher implements Cipher {
+
+    protected AbstractCipher(String name) throws StorageClientException {
+        //...
+    }
+    
     /**
-     * encrypts data with secret
+     * encrypts data with secretKey
      *
-     * @param text      data for encryption
+     * @param textBytes data for encryption
      * @param secretKey secret
      * @return encrypted data as String
      * @throws StorageClientException when parameters validation fails
-     * @throws StorageCryptoException when decryption fails
+     * @throws StorageCryptoException when encryption fails
      */
-    String encrypt(String text, SecretKey secretKey)
+    public abstract String encrypt(byte[] textBytes, CustomEncryptionKey secretKey) 
             throws StorageClientException, StorageCryptoException;
 
     /**
      * decrypts data with Secret
      *
-     * @param cipherText encrypted data
-     * @param secretKey  secret
+     * @param cipherTextBytes encrypted data
+     * @param secretKey       secret
      * @return decrypted data as String
      * @throws StorageClientException when parameters validation fails
      * @throws StorageCryptoException when decryption fails
      */
-    String decrypt(String cipherText, SecretKey secretKey)
+    public abstract String decrypt(byte[] cipherTextBytes, CustomEncryptionKey secretKey) 
             throws StorageClientException, StorageCryptoException;
-
-    /**
-     * version of encryption algorithm as String
-     *
-     * @return version
-     */
-    String getVersion();
-
-    /**
-     * only one CustomCrypto can be current. This parameter
-     * used only during {@link com.incountry.residence.sdk.Storage}
-     * initialisation. Changing this parameter will be ignored after initialization
-     *
-     * @return is current or not
-     */
-    boolean isCurrent();
+    //...
 }
 ```
 
 ---
 **NOTE**
 
-You should provide a specific `SecretKey` via `SecretsData` passed to `SecretKeyAccessor`. This secret should have flag `isForCustomEncryption` set to `true` and flag `isKey` set to `false`:
+You should provide an instance of `CustomEncryptionKey` via `SecretsData` passed to `SecretKeyAccessor`.
 ```java
-public class SecretKey {
-    /**
-     * @param secret secret/key as byte array
-     * @param version secret version, should be a non-negative integer
-     * @param isKey should be True only for user-defined encryption keys
-     * @param isForCustomEncryption should be True for using this key in custom encryption
-     *                              implementations. Either ({@link #isKey} or
-     *                              {@link #isForCustomEncryption}) can be True at the same
-     *                              moment, not both
-     * @throws StorageClientException when parameter validation fails
-     */
-    public SecretKey(byte[] secret, int version, boolean isKey, boolean isForCustomEncryption)
-              throws StorageClientException {...}
+public class CustomEncryptionKey extends Secret {
+    public CustomEncryptionKey(int version, byte[] secretBytes) 
+            throws StorageClientException {
+        //...
+    }
     //...
 }
 ```
@@ -997,65 +998,15 @@ secrets_data = {
 ```
 ---
 
-`version` attribute is used to differ one custom encryption from another and from the default encryption as well.
-This way SDK will be able to successfully decrypt any old data if encryption changes with time.
+`name` attribute of `AbstractCipher` constructor is used to differ one custom encryption from another and from the default encryption as well. This way SDK will be able to successfully decrypt any old data if encryption changes with time.
 
-`isCurrent` attribute allows to specify one of the custom encryption implementations that will be used for encryption. Only one implementation can be set as `isCurrent() == true`.
+You can set current cipher implementation via a constructor of `CryptoProvider`. Such cipher will be used for encryption.
 
-If none of the configurations have `isCurrent() == true` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
+If none of the custom implementations of `AbstractCipher` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
 
-Here's an example of how you can set up SDK to use custom encryption (using Fernet encryption from https://github.com/l0s/fernet-java8 )
+You can see an example of an implementation of custom encryption (using Fernet encryption from https://github.com/l0s/fernet-java8) by [following this link](/src/test/java/com/incountry/residence/sdk/crypto/testimpl/FernetCipher.java)
 
-```java
-/**
- * Example of custom implementation of {@link Crypto} using Fernet algorithm
- */
-public class FernetCrypto implements Crypto {
-    private static final String VERSION = "fernet custom encryption";
-    private boolean current;
-    private Validator<String> validator;
 
-    public FernetCrypto(boolean current) {
-        this.current = current;
-        this.validator = new StringValidator() {
-        };
-    }
-
-    @Override
-    public String encrypt(String text, SecretKey secretKey)
-            throws StorageCryptoException {
-        try {
-            Key key = new Key(secretKey.getSecret());
-            Token result = Token.generate(key, text);
-            return result.serialise();
-        } catch (IllegalStateException ex) {
-            throw new StorageCryptoException("Encryption error", ex);
-        }
-    }
-
-    @Override
-    public String decrypt(String cipherText, SecretKey secretKey)
-            throws StorageCryptoException {
-        try {
-            Key key = new Key(secretKey.getSecret());
-            Token result = Token.fromString(cipherText);
-            return result.validateAndDecrypt(key, validator);
-        } catch (PayloadValidationException ex) {
-            throw new StorageCryptoException("Decryption error", ex);
-        }
-    }
-
-    @Override
-    public String getVersion() {
-        return VERSION;
-    }
-
-    @Override
-    public boolean isCurrent() {
-        return current;
-    }
-}
-```
 
 ## Project dependencies
 
