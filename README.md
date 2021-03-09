@@ -998,7 +998,7 @@ secrets_data = {
 ```
 ---
 
-`name` attribute of `AbstractCipher` constructor is used to differ one custom encryption from another and from the default encryption as well. This way SDK will be able to successfully decrypt any old data if encryption changes with time.
+Parameter `name` of `AbstractCipher` constructor is used to differ one custom encryption from another and from the default encryption as well. This way SDK will be able to successfully decrypt any old data if encryption changes with time.
 
 You can set current cipher implementation via a constructor of `CryptoProvider`. Such cipher will be used for encryption.
 
