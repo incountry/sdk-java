@@ -13,13 +13,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>3.1.0</version>
+  <version>3.3.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:3.0.0"
+compile "com.incountry:incountry-java-client:3.3.0"
 ```
 
 ## Countries List
@@ -62,7 +62,7 @@ StorageConfig provides the following parameters:
  */
 public class StorageConfig {
    //...
-   /** Required to be passed in, or as environment variable INC_API_KEY */
+   /** Required to be passed in, or as environment variable INC_ENVIRONMENT_ID */
    private String envId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
    private String clientId;
@@ -484,7 +484,6 @@ NOT_EQUALS     (FindFilterBuilder::keyNotEq)
 You can use the following builder methods for filtering by numerical fields:
 ```java
 EQUALS              (FindFilterBuilder::keyEq)
-IN                  (FindFilterBuilder::keyIn)
 GREATER             (FindFilterBuilder::keyGT)
 GREATER OR EQUALS   (FindFilterBuilder::keyGTE)
 LESS                (FindFilterBuilder::keyLT)
@@ -507,10 +506,37 @@ class BatchRecord {
 These fields can be accessed using getters, for example:
 
 ```java
-int limit = records.getTotal();
+int total = batchRecord.getTotal();
 ```
 
 `BatchRecord.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
+
+##### Partial text match search
+You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., Key10`.
+```java
+// Matches all records where 
+// Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key10 LIKE 'abc'
+FindFilterBuilder builder = FindFilterBuilder.create()
+    .searchKeysLike("abc");
+```
+
+**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key10` filters and
+works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
+```java
+// Matches all records where 
+// (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key10 LIKE 'abc') 
+// AND (Record.rangeKey1 = 1 OR Record.rangeKey1 = 2)
+FindFilterBuilder builder = FindFilterBuilder.create()
+    .searchKeysLike("abc")
+    .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
+storage.find("us", builder);
+
+// Causes validation error (StorageClientException)
+FindFilterBuilder builder = FindFilterBuilder.create()
+    .searchKeysLike("abc")
+    .keyEq(StringField.KEY1, "def");
+storage.find("us", builder);
+```
 
 ### Find one record matching filter
 
