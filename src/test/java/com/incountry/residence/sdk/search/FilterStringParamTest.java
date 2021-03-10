@@ -18,18 +18,10 @@ class FilterStringParamTest {
     @Test
     void toJSONStringTestWithCrypto() throws StorageClientException {
         String filterValue = "filterValue";
-        CryptoManager crypto = new CryptoManager(null, "envId", null, false);
+        CryptoManager crypto = new CryptoManager(null, "envId", null, false, true);
         FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
-        JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, crypto);
+        JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, "", crypto);
         assertEquals(crypto.createKeyHash(filterValue), jsonArray.get(0).getAsString());
-    }
-
-    @Test
-    void toJSONStringWithCryptoNullTest() throws StorageClientException {
-        String filterValue = "filterValue";
-        FilterStringParam filterStringParam = new FilterStringParam(new String[]{filterValue});
-        JsonArray jsonArray = JsonUtils.toJsonArray(filterStringParam, null);
-        assertEquals(filterValue, jsonArray.get(0).getAsString());
     }
 
     @Test

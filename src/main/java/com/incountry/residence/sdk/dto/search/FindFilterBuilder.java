@@ -1,11 +1,23 @@
 package com.incountry.residence.sdk.dto.search;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Builder for cosy creation of FindFilter
  */
 public class FindFilterBuilder {
+
+    private static final Logger LOG = LogManager.getLogger(FindFilterBuilder.class);
+
+    private static final String MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY10 lookup";
+    private static final String MSG_ERR_SEARCH_KEYS_LEN = "SEARCH_KEYS should contain at least 3 characters and be not longer than 200";
+    private static final String MSG_ERR_SEARCH_KEYS_ADD = "SEARCH_KEYS can be used only via searchKeysLike method";
 
     public static final String OPER_NOT = "$not";
     public static final String OPER_GT = "$gt";
@@ -14,6 +26,20 @@ public class FindFilterBuilder {
     public static final String OPER_LTE = "$lte";
 
     private FindFilter filter;
+    private static List<StringField> searchableKeys = new ArrayList<>();
+
+    static {
+        searchableKeys.add(StringField.KEY1);
+        searchableKeys.add(StringField.KEY2);
+        searchableKeys.add(StringField.KEY3);
+        searchableKeys.add(StringField.KEY4);
+        searchableKeys.add(StringField.KEY5);
+        searchableKeys.add(StringField.KEY6);
+        searchableKeys.add(StringField.KEY7);
+        searchableKeys.add(StringField.KEY8);
+        searchableKeys.add(StringField.KEY9);
+        searchableKeys.add(StringField.KEY10);
+    }
 
     public static FindFilterBuilder create() {
         return new FindFilterBuilder();
@@ -43,6 +69,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyEq(StringField field, String... keys) throws StorageClientException {
+        validateStringFilters(field);
         filter.setStringFilter(field, new FilterStringParam(keys));
         return this;
     }
@@ -53,6 +80,7 @@ public class FindFilterBuilder {
     }
 
     public FindFilterBuilder keyNotEq(StringField field, String... keys) throws StorageClientException {
+        validateStringFilters(field);
         filter.setStringFilter(field, new FilterStringParam(keys, true));
         return this;
     }
@@ -89,6 +117,22 @@ public class FindFilterBuilder {
         return this;
     }
 
+    public FindFilterBuilder searchKeysLike(String value) throws StorageClientException {
+        Set<StringField> searchKeys = filter.getStringFilterMap().keySet();
+        for (StringField key : searchableKeys) {
+            if (searchKeys.contains(key)) {
+                LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+                throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+            }
+        }
+        if (value.length() < 3 || value.length() > 200) {
+            LOG.error(MSG_ERR_SEARCH_KEYS_LEN);
+            throw new StorageClientException(MSG_ERR_SEARCH_KEYS_LEN);
+        }
+        filter.setStringFilter(StringField.SEARCH_KEYS, new FilterStringParam(new String[] {value}));
+        return this;
+    }
+
     @Override
     public String toString() {
         return "FindFilterBuilder{" +
@@ -98,5 +142,17 @@ public class FindFilterBuilder {
 
     public FindFilterBuilder copy() throws StorageClientException {
         return new FindFilterBuilder(this.filter.copy());
+    }
+
+    private void validateStringFilters(StringField field) throws StorageClientException {
+        if (field == StringField.SEARCH_KEYS) {
+            LOG.error(MSG_ERR_SEARCH_KEYS_ADD);
+            throw new StorageClientException(MSG_ERR_SEARCH_KEYS_ADD);
+        }
+        if (searchableKeys.contains(field)
+                && filter.getStringFilterMap().keySet().contains(StringField.SEARCH_KEYS)) {
+            LOG.error(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+            throw new StorageClientException(MSG_ERR_KEY1_KEY10_AND_SEARCH_KEYS);
+        }
     }
 }

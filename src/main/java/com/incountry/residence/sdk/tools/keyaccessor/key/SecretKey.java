@@ -15,7 +15,7 @@ public class SecretKey {
     private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
     private static final String MSG_ERR_OPTION = "SecretKey can have either 'isKey' or 'isForCustomEncryption' set to True, not both";
     private static final String MSG_ERR_KEY_LEN = "Wrong key length for secret key with 'isKey==true'. Should be "
-            + KEY_LENGTH + " characters ‘utf8’";
+            + KEY_LENGTH + "-byte array";
 
     private final byte[] secret;
     private final int version;
@@ -25,7 +25,7 @@ public class SecretKey {
     /**
      * Creates a secret key
      *
-     * @param secret  secret/key as byte array from UTF8 String
+     * @param secret  secret/key as byte array
      * @param version secret version, should be a non-negative integer
      * @param isKey   should be True only for user-defined encryption keys
      * @throws StorageClientException when parameter validation fails
@@ -39,7 +39,7 @@ public class SecretKey {
     }
 
     /**
-     * @param secret                secret/key as byte array from UTF8 String
+     * @param secret                secret/key as byte array from base64 String
      * @param version               secret version, should be a non-negative integer
      * @param isKey                 should be True only for user-defined encryption keys
      * @param isForCustomEncryption should be True for using this key in custom encryption implementations.

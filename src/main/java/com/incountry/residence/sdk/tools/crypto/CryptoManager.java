@@ -6,6 +6,7 @@ import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -47,11 +48,13 @@ public class CryptoManager {
     private final DefaultCrypto defaultCrypto = new DefaultCrypto(CHARSET);
     private String envId;
     private boolean usePTEncryption;
-    private boolean normalizeKeys;
+    private final boolean normalizeKeys;
+    private final boolean hashSearchKeys;
 
-    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean normalizeKeys)
+    public CryptoManager(SecretKeyAccessor keyAccessor, String envId, List<Crypto> customEncryptionList, boolean normalizeKeys, boolean hashSearchKeys)
             throws StorageClientException {
         this.normalizeKeys = normalizeKeys;
+        this.hashSearchKeys = hashSearchKeys;
         initFields(keyAccessor, envId);
         initCustomEncryptionMap(customEncryptionList);
         if (!usePTEncryption) {
@@ -116,10 +119,6 @@ public class CryptoManager {
         return new AbstractMap.SimpleEntry<>(defaultCrypto.getVersion() + ":" + cipher, secretKey.getVersion());
     }
 
-    private String createHash(String stringToHash) {
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(normalizeKeys ? stringToHash.toLowerCase() : stringToHash);
-    }
-
     private SecretKey getSecret(Integer version, boolean isForCustomEncryption) throws StorageClientException {
         SecretsData secretsData = getSecretsDataOrException();
         if (version == null) {
@@ -160,12 +159,19 @@ public class CryptoManager {
         return result;
     }
 
+    public String createSearchKeyHash(String key) {
+        if (hashSearchKeys) {
+            return createKeyHash(key);
+        }
+        return key;
+    }
+
     public String createKeyHash(String key) {
         if (key == null) {
             return null;
         }
         String stringToHash = key + ":" + envId;
-        return createHash(stringToHash);
+        return DigestUtils.sha256Hex(normalizeKeys ? stringToHash.toLowerCase() : stringToHash);
     }
 
     public String decrypt(String cipherText, Integer decryptKeyVersion) throws StorageClientException, StorageCryptoException {

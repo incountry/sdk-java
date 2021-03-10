@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
@@ -22,6 +24,8 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
+import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
@@ -29,14 +33,21 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
@@ -49,10 +60,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpDaoImplTests {
 
-    private byte[] secret = "passwordpasswordpasswordpassword".getBytes(StandardCharsets.UTF_8);
-    private int version = 0;
-    private int currentVersion = 0;
-    private String fakeEndpoint = "http://fakeEndpoint.localhost:8081";
+    private static final byte[] SECRET = "passwordpasswordpasswordpassword".getBytes(StandardCharsets.UTF_8);
+    private static final String FAKE_ENDPOINT = "http://fakeEndpoint.localhost:8081";
 
     private Storage initializeStorage(boolean isKey, boolean encrypt, HttpDaoImpl dao) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
@@ -61,14 +70,16 @@ class HttpDaoImplTests {
 
     private CryptoManager initCryptoManager(boolean isKey, boolean encrypt) throws StorageClientException {
         SecretKeyAccessor secretKeyAccessor = initializeSecretKeyAccessor(isKey);
-        return new CryptoManager(encrypt ? secretKeyAccessor : null, "envId", null, false);
+        return new CryptoManager(encrypt ? secretKeyAccessor : null, "envId", null, false, true);
     }
 
 
     private SecretKeyAccessor initializeSecretKeyAccessor(boolean isKey) throws StorageClientException {
-        SecretKey secretKey = new SecretKey(secret, version, isKey);
+        int version = 0;
+        SecretKey secretKey = new SecretKey(SECRET, version, isKey);
         List<SecretKey> secretKeyList = new ArrayList<>();
         secretKeyList.add(secretKey);
+        int currentVersion = 0;
         SecretsData secretsData = new SecretsData(secretKeyList, currentVersion);
         return () -> secretsData;
     }
@@ -103,7 +114,7 @@ class HttpDaoImplTests {
                    boolean isKey,
                    boolean encrypt) throws StorageException, MalformedURLException {
         FakeHttpAgent agent = new FakeHttpAgent("OK");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
         Record record = new Record(recordKey, body)
@@ -159,7 +170,7 @@ class HttpDaoImplTests {
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
         FakeHttpAgent agent = new FakeHttpAgent(JsonUtils.toJsonString(record, cryptoManager));
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         Record fetched = storage.read(country, recordKey);
         assertEquals(expectedPath, new URL(agent.getCallUrl()).getPath());
@@ -184,7 +195,7 @@ class HttpDaoImplTests {
                     boolean encrypt) throws StorageException, IOException {
 
         FakeHttpAgent agent = new FakeHttpAgent("{}");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.delete(country, recordKey);
         CryptoManager cryptoManager = initCryptoManager(false, encrypt);
         String keyHash = cryptoManager.createKeyHash(recordKey);
@@ -196,7 +207,7 @@ class HttpDaoImplTests {
     @Test
     void batchWriteNullTest() throws StorageClientException {
         FakeHttpAgent agent = new FakeHttpAgent("");
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
         assertEquals("Can't write empty batch", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", new ArrayList<>()));
@@ -216,7 +227,7 @@ class HttpDaoImplTests {
                         boolean encrypt) throws StorageException {
 
         FakeHttpAgent agent = new FakeHttpAgent("ok");
-        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(isKey, encrypt, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         List<Record> records = new ArrayList<>();
         Record record = new Record(recordKey, body)
@@ -256,7 +267,7 @@ class HttpDaoImplTests {
     @Test
     void testWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String country = "US";
         Record record = new Record("key", "body");
         Record resRecord = storage.write(country, record); //ok
@@ -274,7 +285,7 @@ class HttpDaoImplTests {
     @Test
     void testBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String country = "US";
         List<Record> list = Collections.singletonList(new Record("key", "body"));
         BatchRecord batchRecord = storage.batchWrite(country, list); //ok
@@ -307,7 +318,7 @@ class HttpDaoImplTests {
         String notJson = "StringNotJson";
         String wrongJson = "{\"FirstName\":\"<first name>\"}";
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodReRespPTE, goodRespEnc, null, notJson, wrongJson));
-        Storage storage = initializeStorage(true, true, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(true, true, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String country = "US";
         String someKey = "someRecordKey";
         Record recordPte = storage.read(country, someKey);
@@ -338,7 +349,7 @@ class HttpDaoImplTests {
         String encrypted = JsonUtils.toJsonString(record, initCryptoManager(false, false));
         String goodResponse = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(goodResponse, "StringNotJson"));
-        Storage storage = initializeStorage(false, false, new HttpDaoImpl(fakeEndpoint, null, null, agent));
+        Storage storage = initializeStorage(false, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String country = "US";
         BatchRecord batchRecord = storage.find(country, builder);
         assertNotNull(batchRecord);
@@ -349,7 +360,12 @@ class HttpDaoImplTests {
 
     @Test
     void testLoadCountriesPopApiResponse() throws StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(countryLoadResponse,
+        String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";
+        String countryLoadBadResponseEmptyName = "{ \"countries\": [{\"direct\":true, \"name\": \"\" } ] }";
+        String countryLoadBadResponseNullId = "{ \"countries\": [{\"name\":\"USA\" } ] }";
+        String countryLoadBadResponseEmptyId = "{ \"countries\": [{\"name\":\"USA\",\"id\":\"\" } ] }";
+        String countryLoadBadResponseEmptyCountries = "{ \"countries\": [ ] }";
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(COUNTRY_LOAD_RESPONSE,
                 "StringNotJson",
                 countryLoadBadResponseNullName,
                 countryLoadBadResponseEmptyName,
@@ -371,7 +387,7 @@ class HttpDaoImplTests {
     @RepeatedTest(3)
     void testLoadCountriesInDefaultEndPoint(RepetitionInfo repeatInfo) throws StorageServerException, StorageCryptoException, StorageClientException {
         iterateLogLevel(repeatInfo, HttpDaoImpl.class);
-        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE);
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, null, "https://localhost:8080", agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
@@ -389,20 +405,20 @@ class HttpDaoImplTests {
         //country 'PU' has no separate endpoint
         storage.write("PU", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("pu", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
         //country 'SU' is not in country list
         storage.write("SU", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("su", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
     }
 
     @Test
     void testLoadCountriesInDefaultEndPointWithMask() throws StorageServerException, StorageCryptoException, StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent(countryLoadResponse);
+        FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE);
         Storage storage = initializeStorage(false, false, new HttpDaoImpl(null, "-test-01.debug.org", null, agent));
         Record record = new Record("1", "body");
         agent.setResponse("OK");
@@ -430,7 +446,7 @@ class HttpDaoImplTests {
         storage.write("PU", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("pu", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
@@ -439,7 +455,7 @@ class HttpDaoImplTests {
         storage.write("SU", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage.write("su", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
@@ -486,11 +502,11 @@ class HttpDaoImplTests {
         String createResponseNull = null;
         FakeHttpAgent httpAgent = new FakeHttpAgent(Arrays.asList(
                 readResponse, deleteResponse, createResponse, createResponseBad, createResponseNull));
-        HttpDaoImpl dao = new HttpDaoImpl(fakeEndpoint, null, null, httpAgent);
+        HttpDaoImpl dao = new HttpDaoImpl(FAKE_ENDPOINT, null, null, httpAgent);
         String country = "US";
         String recordKey = "someRecordKey";
         assertNull(dao.read(country, recordKey, null));
-        dao.delete(country, recordKey, null);
+        dao.delete(country, recordKey);
         dao.createRecord(country, new Record(recordKey, "<body>"), null);
         dao.createRecord(country, new Record(recordKey, "<body>"), null);
         dao.createRecord(country, new Record(recordKey, "<body>"), null);
@@ -508,7 +524,7 @@ class HttpDaoImplTests {
         assertEquals("https://custom.io", agent.getAudienceUrl());
 
         //storage has only endpoint mask
-        agent.setResponse(countryLoadResponse);
+        agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage = initializeStorage(false, false, new HttpDaoImpl(null, "-custom-01.test.io", null, agent));
         //US is midpop
         agent.setResponse("OK");
@@ -547,13 +563,167 @@ class HttpDaoImplTests {
 
     }
 
-    private String countryLoadBadResponseNullName = "{ \"countries\": [{\"direct\":true } ] }";
-    private String countryLoadBadResponseEmptyName = "{ \"countries\": [{\"direct\":true, \"name\": \"\" } ] }";
-    private String countryLoadBadResponseNullId = "{ \"countries\": [{\"name\":\"USA\" } ] }";
-    private String countryLoadBadResponseEmptyId = "{ \"countries\": [{\"name\":\"USA\",\"id\":\"\" } ] }";
-    private String countryLoadBadResponseEmptyCountries = "{ \"countries\": [ ] }";
+    @Test
+    void addAttachmentTest() throws StorageClientException, StorageServerException, IOException {
+        String country = "us";
+        String recordKey = UUID.randomUUID().toString();
+        String fileContent = "File content " + recordKey;
+        String fileId = "file_id_" + recordKey;
+        String fileName = "file_name_" + recordKey + ".txt";
 
-    private String countryLoadResponse = "{\n" +
+        FakeHttpAgent agent = new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId));
+        Storage storage = initializeStorage(true, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        CryptoManager cryptoManager = initCryptoManager(true, true);
+        String keyHash = cryptoManager.createKeyHash(recordKey);
+        String expectedPath = "/v2/storage/records/" + country + "/" + keyHash + "/attachments";
+        ByteArrayInputStream stream = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
+        AttachmentMeta attachmentMeta = storage.addAttachment(country, recordKey, stream, fileName, false);
+        String callPath = new URL(agent.getCallUrl()).getPath();
+        assertEquals(fileId, attachmentMeta.getFileId());
+        assertEquals(expectedPath, callPath);
+        assertEquals(stream, agent.getDataStream());
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void deleteAttachmentTest(String country,
+                              String recordKey,
+                              String body,
+                              String key2,
+                              String key3,
+                              String profileKey,
+                              Long rangeKey1,
+                              boolean isKey,
+                              boolean encrypt) throws StorageClientException, StorageServerException, IOException {
+
+        String fileId = "1";
+        FakeHttpAgent agent = new FakeHttpAgent("{}");
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        storage.deleteAttachment(country, recordKey, fileId);
+        CryptoManager cryptoManager = initCryptoManager(isKey, encrypt);
+        String keyHash = cryptoManager.createKeyHash(recordKey);
+        String expectedPath = "/v2/storage/records/"
+                .concat(country)
+                .concat("/")
+                .concat(keyHash)
+                .concat("/attachments/")
+                .concat(fileId);
+        String callPath = new URL(agent.getCallUrl()).getPath();
+        assertEquals(expectedPath, callPath);
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void getAttachmentFileTest(String country,
+                               String recordKey,
+                               String body,
+                               String key2,
+                               String key3,
+                               String profileKey,
+                               Long rangeKey1,
+                               boolean isKey,
+                               boolean encrypt) throws StorageClientException, StorageServerException, IOException {
+        String fileId = "1";
+        String fileContent = "Hello world!";
+
+        Path tempFile = Files.createTempFile("sdk_incountry_unit_tests_file", "txt");
+        InputStream fileInputStream = Files.newInputStream(tempFile);
+        Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
+
+        Map<MetaInfoTypes, String> metaInfo1 = new HashMap<>();
+        metaInfo1.put(MetaInfoTypes.NAME, "fileName");
+
+        String expectedResponse = IOUtils.toString(Files.newInputStream(tempFile), StandardCharsets.UTF_8.name());
+        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, metaInfo1, fileInputStream);
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+
+        AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
+
+        agent = new FakeHttpAgent(null, null, null);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileContent());
+
+        Map<MetaInfoTypes, String> metaInfo3 = new HashMap<>();
+        agent = new FakeHttpAgent(null, metaInfo3, null);
+        storage = initializeStorage(isKey, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        file = storage.getAttachmentFile(country, recordKey, fileId);
+        assertNull(file.getFileName());
+
+        fileInputStream.close();
+        Files.delete(tempFile);
+    }
+
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void updateAttachmentMetaTest(String country,
+                                  String recordKey,
+                                  String body,
+                                  String key2,
+                                  String key3,
+                                  String profileKey,
+                                  Long rangeKey1,
+                                  boolean isKey,
+                                  boolean encrypt) throws StorageClientException, StorageServerException {
+
+        String fileId = "1";
+        String fileName = "test_file";
+        String mimeType = "text/plain";
+
+        FakeHttpAgent agent = new FakeHttpAgent("{}");
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+
+        storage.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
+
+        JsonObject received = new Gson().fromJson(agent.getCallBody(), JsonObject.class);
+        assertEquals(fileName, received.get("filename").getAsString());
+        assertEquals(mimeType, received.get("mime_type").getAsString());
+    }
+
+    @SuppressWarnings({"java:S5785", "java:S5863"})
+    @ParameterizedTest
+    @MethodSource("recordArgs")
+    void getAttachmentMetaTest(String country,
+                               String recordKey,
+                               String body,
+                               String key2,
+                               String key3,
+                               String profileKey,
+                               Long rangeKey1,
+                               boolean isKey,
+                               boolean encrypt) throws StorageClientException, StorageServerException {
+
+        String fileId = "1";
+        String downloadLink = "some_link";
+        String fileName = "test_file";
+        String hash = "1234567890";
+        String mimeType = "text/plain";
+        int size = 1000;
+
+        JsonObject response = new JsonObject();
+        response.addProperty("file_id", fileId);
+        response.addProperty("download_link", downloadLink);
+        response.addProperty("filename", fileName);
+        response.addProperty("hash", hash);
+        response.addProperty("mime_type", mimeType);
+        response.addProperty("size", size);
+
+        FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response));
+        Storage storage = initializeStorage(isKey, false, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+
+        AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
+        assertEquals(fileId, attachmentMeta.getFileId());
+        assertEquals(downloadLink, attachmentMeta.getDownloadLink());
+        assertEquals(fileName, attachmentMeta.getFilename());
+        assertEquals(hash, attachmentMeta.getHash());
+        assertEquals(mimeType, attachmentMeta.getMimeType());
+        assertEquals(size, attachmentMeta.getSize());
+        assertNull(attachmentMeta.getCreatedAt());
+        assertNull(attachmentMeta.getUpdatedAt());
+    }
+
+    private static final String COUNTRY_LOAD_RESPONSE = "{\n" +
             "  \"countries\": [\n" +
             "    {\n" +
             "      \"direct\": true,\n" +

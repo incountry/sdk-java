@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk;
 
+import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FilterNumberParam;
@@ -60,13 +61,18 @@ class JsonUtilsTest {
     void testFilterConditionVersion() throws StorageClientException {
         FindFilter filter = new FindFilter();
         filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, true));
-        String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
+        String jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":{\"$not\":[1]}},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
 
         filter = new FindFilter();
         filter.setStringFilter(StringField.VERSION, new FilterStringParam(new String[]{"1"}, false));
-        jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false));
+        jsonString = JsonUtils.toJsonString(filter, new CryptoManager(null, "envId", null, false, true));
         assertEquals("{\"filter\":{\"version\":[1]},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
+
+        FindFilterBuilder builder = FindFilterBuilder.create()
+                .searchKeysLike("search_keys");
+        jsonString = JsonUtils.toJsonString(builder.build(), new CryptoManager(null, "envId", null, false, true));
+        assertEquals("{\"filter\":{\"search_keys\":\"search_keys\"},\"options\":{\"limit\":100,\"offset\":0}}", jsonString);
     }
 
     @Test
@@ -94,19 +100,53 @@ class JsonUtilsTest {
 
     @Test
     void testPassNullToJsonArray() {
-        assertNull(JsonUtils.toJsonArray(null, null));
+        assertNull(JsonUtils.toJsonArray(null, null, null));
     }
 
     @Test
     void testBatchRecordFromStringWithNullVersion() throws StorageException {
         String content = "{\"data\":[{\"version\":0,\"is_encrypted\":false,\"record_key\":\"cd59def71c1fc1c42bce810ee3e629c345f749cd988d28ab4639311de36ca867\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsicmVjb3JkX2tleSI6InJlY29yZEtleSIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         Record record = new Record("recordKey", "body").setProfileKey("profileKey");
-        BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, new CryptoManager(null, "envId", null, false));
+        BatchRecord batchRecord = JsonUtils.batchRecordFromString(content, new CryptoManager(null, "envId", null, false, true));
         assertEquals(record, batchRecord.getRecords().get(0));
 
         String content1 = "{\"data\":[{\"is_encrypted\":false,\"record_key\":\"cd59def71c1fc1c42bce810ee3e629c345f749cd988d28ab4639311de36ca867\",\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\",\"body\":\"pt:eyJwYXlsb2FkIjoiYm9keSIsIm1ldGEiOnsicmVjb3JkX2tleSI6InJlY29yZEtleSIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
         Record record1 = new Record("recordKey", "body").setProfileKey("profileKey");
-        BatchRecord batchRecord1 = JsonUtils.batchRecordFromString(content1, new CryptoManager(null, "envId", null, false));
+        BatchRecord batchRecord1 = JsonUtils.batchRecordFromString(content1, new CryptoManager(null, "envId", null, false, true));
         assertEquals(record1, batchRecord1.getRecords().get(0));
+    }
+
+    @Test
+    void testCreateUpdatedMetaJson() {
+        String fileNameProperty = "filename";
+        String mimeTypeProperty = "mime_type";
+        String fileName = "file.txt";
+        String mimeType = "application/json";
+
+        String json = JsonUtils.createUpdatedMetaJson(fileName, mimeType);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(fileNameProperty, fileName);
+        jsonObject.addProperty(mimeTypeProperty, mimeType);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson(fileName, null);
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(fileNameProperty, fileName);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson(fileName, "");
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(fileNameProperty, fileName);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson(null, mimeType);
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(mimeTypeProperty, mimeType);
+        assertEquals(json, jsonObject.toString());
+
+        json = JsonUtils.createUpdatedMetaJson("", mimeType);
+        jsonObject = new JsonObject();
+        jsonObject.addProperty(mimeTypeProperty, mimeType);
+        assertEquals(json, jsonObject.toString());
     }
 }

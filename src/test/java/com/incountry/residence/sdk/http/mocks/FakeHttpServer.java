@@ -3,6 +3,8 @@ package com.incountry.residence.sdk.http.mocks;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,12 +14,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class FakeHttpServer {
+
+    private static final Logger LOG = LogManager.getLogger(FakeHttpServer.class);
     private final HttpServer server;
 
     public FakeHttpServer(String response, int responseCode, int port) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 0);
         server.createContext("/", new FakeHandler(response, responseCode));
+    }
+
+    public FakeHttpServer(String response, int responseCode, int port, String path) throws IOException {
+        server = HttpServer.create();
+        server.bind(new InetSocketAddress("localhost", port), 0);
+        server.createContext(path, new FakeHandler(response, responseCode));
     }
 
     public FakeHttpServer(List<String> responseList, int responseCode, int port) throws IOException {
@@ -80,8 +90,8 @@ public class FakeHttpServer {
             if (sleepTimeout != null) {
                 try {
                     Thread.sleep(sleepTimeout * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ex) {
+                    LOG.error(ex.getMessage());
                 }
             }
             String currentResponse = null;
@@ -103,6 +113,10 @@ public class FakeHttpServer {
                 }
             }
             byte[] bytes = currentResponse != null ? currentResponse.getBytes(StandardCharsets.UTF_8) : new byte[0];
+            exchange.getResponseHeaders().set("Content-Type", "text/plain");
+            if (exchange.getRequestURI().toString().equals("/attachments/file_id")) {
+                exchange.getResponseHeaders().set("Content-disposition", "attachment; filename*=UTF-8''filename.txt");
+            }
             exchange.sendResponseHeaders(currentCode, bytes.length);
             OutputStream os = exchange.getResponseBody();
             os.write(bytes);

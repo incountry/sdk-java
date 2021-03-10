@@ -14,6 +14,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
@@ -116,6 +117,7 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
     private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
         String body = String.format(BODY, audience, scope);
         String authUrl = null;
+        CloseableHttpResponse response = null;
         try {
             authUrl = regionMap.get(region);
             if (authUrl == null) {
@@ -126,13 +128,12 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
                 LOG.trace(MSG_AUTH_URL, authUrl);
             }
 
-            HttpRequestBase request = createRequest(authUrl, POST, body);
+            HttpRequestBase request = createRequest(authUrl, POST, body, null);
             addHeaders(request);
-            CloseableHttpResponse response = httpClient.execute(request);
+            response = httpClient.execute(request);
 
             int status = response.getStatusLine().getStatusCode();
             String responseContent = EntityUtils.toString(response.getEntity());
-            response.close();
             boolean isSuccess = status == 200;
 
             if (!isSuccess) {
@@ -145,6 +146,14 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
             String errorMessage = String.format(MSG_ERR_AUTH, authUrl, audience);
             LOG.error(errorMessage);
             throw new StorageServerException(errorMessage, ex);
+        } finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    LOG.warn(e);
+                }
+            }
         }
     }
 

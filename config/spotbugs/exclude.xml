@@ -4,8 +4,8 @@
         <Or>
             <Class name="com.incountry.residence.sdk.tools.transfer.TransferPop"/>
             <Class name="com.incountry.residence.sdk.StorageImpl"/>
-            <Class name="com.incountry.residence.sdk.tools.JsonUtils"/>
-            <Class name="com.incountry.residence.sdk.tools.JsonUtils$SecretKeyContainer"/>
+            <Class name="com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator"/>
+            <Class name="com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator$SecretKeyContainer"/>
         </Or>
         <Bug code="NP,SIC,SS,ST,UrF,UuF,UwF"/>
     </Match>
@@ -16,6 +16,18 @@
             <Class name="com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient"/>
         </Or>
         <Bug pattern="URLCONNECTION_SSRF_FD"/>
+    </Match>
+
+    <Match>
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Method name="request" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH" />
+    </Match>
+
+    <Match>
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Method name="request" />
+        <Bug code="RCN" />
     </Match>
 
     <Match>

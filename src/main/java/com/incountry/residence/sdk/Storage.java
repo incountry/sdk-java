@@ -1,5 +1,7 @@
 package com.incountry.residence.sdk;
 
+import com.incountry.residence.sdk.dto.AttachedFile;
+import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.BatchRecord;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
@@ -8,6 +10,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -97,4 +100,110 @@ public interface Storage {
      * @throws StorageCryptoException if decryption failed
      */
     MigrateResult migrate(String country, int limit) throws StorageClientException, StorageServerException, StorageCryptoException;
+
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName) throws StorageClientException, StorageServerException;
+
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
+     * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert) throws StorageClientException, StorageServerException;
+
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @param mimeType        mime type for attached file
+     * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, String mimeType) throws StorageClientException, StorageServerException;
+
+    /**
+     * Add attached file to existing record
+     *
+     * @param country         country identifier
+     * @param recordKey       the record's recordKey
+     * @param fileInputStream input data stream
+     * @param fileName        file name
+     * @param upsert          if true will overwrite existing file with the same name. Otherwise will throw exception
+     * @param mimeType        mime type for attached file
+     * @return AttachmentMeta attachment meta information: fileId, mimeType, size, etc.
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, String mimeType) throws StorageClientException, StorageServerException;
+
+    /**
+     * Delete attached file of existing record
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return true when file was deleted
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    boolean deleteAttachment(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    /**
+     * Get attached file of existing record
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return AttachedFile object which contains required file
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachedFile getAttachmentFile(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    /**
+     * Update attached file meta information
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @param fileName  file name (optional if mimeType provided)
+     * @param mimeType  file MIME type (optional if fileName provided)
+     * @return AttachmentMeta object which contains updated fields
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, String fileName, String mimeType) throws StorageClientException, StorageServerException;
+
+    /**
+     * Get attached file meta information
+     *
+     * @param country   country identifier
+     * @param recordKey the record's recordKey
+     * @param fileId    file identifier
+     * @return AttachmentMeta object which contains required meta information fileId, mimeType, size, filename, downloadLink, updatedAt and createdAt
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
 }

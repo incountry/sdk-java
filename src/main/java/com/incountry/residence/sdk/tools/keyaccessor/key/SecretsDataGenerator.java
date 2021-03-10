@@ -1,8 +1,13 @@
 package com.incountry.residence.sdk.tools.keyaccessor.key;
 
-import com.incountry.residence.sdk.tools.JsonUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +17,11 @@ import java.util.List;
  */
 public class SecretsDataGenerator {
 
+    private static final Logger LOG = LogManager.getLogger(SecretsDataGenerator.class);
+
     public static final int DEFAULT_VERSION = 0;
+    private static final String MSG_ERR_INCORRECT_SECRETS = "Incorrect JSON with SecretsData";
+    private static final String MSG_ERR_BASE64_SECRET = "Secret key must be base64-encoded string";
 
     private SecretsDataGenerator() {
     }
@@ -39,6 +48,45 @@ public class SecretsDataGenerator {
      * @throws StorageClientException when parameter validation fails
      */
     public static SecretsData fromJson(String secretsDataJson) throws StorageClientException {
-        return JsonUtils.getSecretsDataFromJson(secretsDataJson);
+        SecretsData result;
+        try {
+            SecretsDataContainer container = new Gson().fromJson(secretsDataJson, SecretsDataContainer.class);
+            List<SecretKey> secrets = new ArrayList<>();
+            if (container.secrets != null) {
+                for (SecretKeyContainer key : container.secrets) {
+                    if (key.isForCustomEncryption || key.isKey) {
+                        base64Validation(key.secret);
+                        byte[] byteKey = DatatypeConverter.parseBase64Binary(key.secret);
+                        secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                    } else {
+                        byte[] byteKey = key.secret.getBytes(StandardCharsets.UTF_8);
+                        secrets.add(new SecretKey(byteKey, key.version, key.isKey, key.isForCustomEncryption));
+                    }
+                }
+            }
+            result = new SecretsData(secrets, container.currentVersion);
+        } catch (JsonSyntaxException | NullPointerException e) {
+            throw new StorageClientException(MSG_ERR_INCORRECT_SECRETS, e);
+        }
+        return result;
+    }
+
+    private static void base64Validation(String byteKey) throws StorageClientException {
+        if (!Base64.isBase64(byteKey)) {
+            LOG.error(MSG_ERR_BASE64_SECRET);
+            throw new StorageClientException(MSG_ERR_BASE64_SECRET);
+        }
+    }
+
+    private static class SecretsDataContainer {
+        List<SecretKeyContainer> secrets;
+        Integer currentVersion;
+    }
+
+    private static class SecretKeyContainer {
+        String secret;
+        Integer version;
+        boolean isKey;
+        boolean isForCustomEncryption;
     }
 }

@@ -12,8 +12,8 @@ public class FullMigrationExample {
                 "    \"currentVersion\": 1,\n" +
                 "    \"secrets\": [\n" +
                 "        {\"secret\": \"password0\", \"version\": 0},\n" +
-                "        {\"secret\": \"password1\", \"version\": 1},\n" +
-                "    ],\n" +
+                "        {\"secret\": \"password1\", \"version\": 1}\n" +
+                "    ]\n" +
                 "}";
         SecretKeyAccessor secretKeyAccessor = () -> SecretsDataGenerator.fromJson(secretsDataInJson);
         String endPoint = "https://us-mt-01.api.incountry.example";

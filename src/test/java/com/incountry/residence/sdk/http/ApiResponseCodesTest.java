@@ -1,19 +1,19 @@
 package com.incountry.residence.sdk.http;
 
-import com.incountry.residence.sdk.tools.dao.impl.ApiResponse;
+import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class ApiResponseTest {
+class ApiResponseCodesTest {
 
     @Test
     void createApiResponseTest() {
         boolean error = false;
         boolean ignore = false;
         boolean canRetry = false;
-        ApiResponse response = new ApiResponse(error, ignore, canRetry);
+        ApiResponseCodes response = new ApiResponseCodes(error, ignore, canRetry);
         assertNotNull(response);
         assertEquals(error, response.isError());
         assertEquals(ignore, response.isIgnored());
@@ -23,7 +23,7 @@ class ApiResponseTest {
         error = true;
         ignore = true;
         canRetry = true;
-        response = new ApiResponse(error, ignore, canRetry);
+        response = new ApiResponseCodes(error, ignore, canRetry);
         assertNotNull(response);
         assertEquals(error, response.isError());
         assertEquals(ignore, response.isIgnored());

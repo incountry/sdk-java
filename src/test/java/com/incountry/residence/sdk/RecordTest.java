@@ -2,6 +2,7 @@ package com.incountry.residence.sdk;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
@@ -138,7 +139,7 @@ class RecordTest {
                 .setRangeKey1(rangeKey1)
                 .setKey2(key2)
                 .setKey3(key3);
-        CryptoManager crypto = new CryptoManager(null, "envId", null, false);
+        CryptoManager crypto = new CryptoManager(null, "envId", null, false, true);
         String recordJson = JsonUtils.toJsonString(record, crypto);
         assertEquals("{\"version\":0," +
                         "\"is_encrypted\":false," +
@@ -147,7 +148,8 @@ class RecordTest {
                         "\"key3\":\"eecb9d4b64b2bb6ada38bbfb2100e9267cf6ec944880ad6045f4516adf9c56d6\"," +
                         "\"profile_key\":\"ee597d2e9e8ed19fd1b891af76495586da223cdbd6251fdac201531451b3329d\"," +
                         "\"range_key1\":1," +
-                        "\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7InJlY29yZF9rZXkiOiJyZWNvcmRLZXkxIiwia2V5MiI6ImtleTIiLCJrZXkzIjoia2V5MyIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"}",
+                        "\"body\":\"pt:eyJwYXlsb2FkIjoie1wiRmlyc3ROYW1lXCI6XCI8Zmlyc3QgbmFtZT5cIn0iLCJtZXRhIjp7InJlY29yZF9rZXkiOiJyZWNvcmRLZXkxIiwia2V5MiI6ImtleTIiLCJrZXkzIjoia2V5MyIsInByb2ZpbGVfa2V5IjoicHJvZmlsZUtleSJ9fQ==\"" +
+                        "}",
                 recordJson);
         Record record2 = JsonUtils.recordFromString(recordJson, crypto);
         assertEquals(record, record2);
@@ -241,7 +243,7 @@ class RecordTest {
                 .setServiceKey2(errorCorrectionKey2)
                 .setPrecommitBody(precommit);
 
-        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false);
+        CryptoManager cryptoManager = new CryptoManager(null, "envId", null, false, true);
         String recordString = JsonUtils.toJsonString(record3, cryptoManager);
         Record record4 = JsonUtils.recordFromString(recordString, cryptoManager);
         assertEquals(record3, record4);
@@ -267,6 +269,34 @@ class RecordTest {
 
         checkKeys(record3, recordString, cryptoManager);
         checkRangeKeys(record3, recordString, cryptoManager);
+
+        String attachmentMetaJson = "{\n" +
+                "   \"downloadLink\":\"123456\",\n" +
+                "   \"fileId\":\"some_link\",\n" +
+                "   \"fileName\":\"test_file\",\n" +
+                "   \"hash\":\"1234567890\",\n" +
+                "   \"mimeType\":\"text/plain\",\n" +
+                "   \"size\":1000\n" +
+                "}";
+        JsonArray jsonArray = new JsonArray();
+        jsonArray.add(new Gson().fromJson(attachmentMetaJson, JsonObject.class));
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("body", "test");
+        jsonObject.addProperty("env_id", "5422b4ba-016d-4a3b-aea5-a832083697b1");
+        jsonObject.addProperty("record_key", "write_record_key");
+        jsonObject.addProperty("key2", "key2");
+        jsonObject.addProperty("key3", "key3");
+        jsonObject.addProperty("profile_key", "profileKey");
+        jsonObject.addProperty("range_key1", 1);
+        jsonObject.addProperty("version", 2);
+
+        Record recordWithoutAttachmentMeta = JsonUtils.recordFromString(jsonObject.toString(), null);
+
+        jsonObject.add("attachments", jsonArray);
+
+        Record recordWithAttachmentMeta = JsonUtils.recordFromString(jsonObject.toString(), null);
+        assertNotEquals(recordWithoutAttachmentMeta, recordWithAttachmentMeta);
     }
 
     private void checkRangeKeys(Record expectedRecord, String recordString, CryptoManager cryptoManager) throws StorageServerException, StorageClientException, StorageCryptoException {

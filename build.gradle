@@ -6,9 +6,6 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath "org.owasp:dependency-check-gradle:${dependencyCheckVersion}"
-    }
 }
 
 plugins {
@@ -62,17 +59,9 @@ dependencies {
     compile "org.apache.logging.log4j:log4j-jcl:${log4jVersion}"
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:${findsecbugsVersion}"
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: "${apacheHttpClientVersion}"
+    compile group: 'commons-io', name: 'commons-io', version: "${commonsIoVersion}"
+    compile group: 'org.apache.httpcomponents', name: 'httpmime', version: "${apacheHttpMimeVersion}"
 }
-
-apply plugin: 'org.owasp.dependencycheck'
-dependencyCheck {
-    data {
-        directory = "$projectDir/dependencyCheck"
-    }
-    failOnError = true
-}
-
-check.dependsOn dependencyCheckAnalyze
 
 apply plugin: 'com.github.spotbugs'
 spotbugs {
@@ -258,3 +247,7 @@ task generateVersionClass(type: Copy) {
     filter { line -> line.replaceAll('DEV-SNAPSHOT', "${project.version}") }
 }
 compileJava.dependsOn generateVersionClass
+
+compileJava {
+    options.compilerArgs << '-parameters'
+}
