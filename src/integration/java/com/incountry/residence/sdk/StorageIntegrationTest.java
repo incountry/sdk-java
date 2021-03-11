@@ -183,7 +183,9 @@ public class StorageIntegrationTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(loadFromEnv(INT_INC_ENVIRONMENT_ID))
                 .setApiKey(loadFromEnv(INT_INC_API_KEY))
-                .setEndPoint(loadFromEnv(INT_INC_ENDPOINT))
+                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
+                .setEndpointMask(ENDPOINT_MASK)
+                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE)
                 .setMaxHttpConnectionsPerRoute(HTTP_POOL_SIZE / 2);
