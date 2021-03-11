@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -55,6 +56,7 @@ import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY1;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -742,6 +744,22 @@ public class StorageIntegrationTest {
         fileId = attachmentMeta.getFileId();
         assertEquals(fileName, attachmentMeta.getFilename());
         Files.delete(tempFile);
+    }
+
+    @Test
+    @Order(813)
+    void addBinaryFilesTest() throws StorageException, IOException {
+        String filePath = "./gradle/wrapper/gradle-wrapper.jar";
+        String fileName = "gradle-wrapper.jar";
+        try (InputStream inputStream = new FileInputStream(filePath)) {
+            AttachmentMeta meta = storageOrdinary.addAttachment(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY, inputStream, fileName, false);
+            assertNotNull(meta);
+            assertNotNull(meta.getFilename());
+            assertNotNull(meta.getFileId());
+            AttachedFile file = storageOrdinary.getAttachmentFile(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY, meta.getFileId());
+            assertArrayEquals(IOUtils.toByteArray(new FileInputStream(filePath)), IOUtils.toByteArray(file.getFileContent()));
+            assertTrue(storageOrdinary.deleteAttachment(MIDIPOP_COUNTRY, ATTACHMENT_RECORD_KEY, meta.getFileId()));
+        }
     }
 
     @Test

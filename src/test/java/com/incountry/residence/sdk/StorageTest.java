@@ -883,8 +883,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo)));
-
+        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo, Files.newInputStream(tempFile))));
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
 
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));

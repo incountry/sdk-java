@@ -4,6 +4,7 @@ import com.incountry.residence.sdk.Storage;
 import com.incountry.residence.sdk.StorageConfig;
 import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.http.mocks.FakeHttpServer;
+import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
@@ -151,13 +152,18 @@ class HttpAgentImplTest {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         String url = "http://localhost:8769/attachments/file_id";
         RequestParameters params = new RequestParameters("GET", ApiResponseCodes.DELETE);
-        String response = agent.request(url, "<body>", null, null, 0, params).getContent();
+        ApiResponse response = agent.request(url, "<body>", null, null, 0, params);
         assertNotNull(response);
+        assertNull(response.getContent());
+        assertNotNull(response.getInputStream());
         server.stop(0);
 
         server = new FakeHttpServer("{}", respCode, PORT, "/attachments");
         server.start();
-        assertNotNull(agent.request("http://localhost:8769/attachments/", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE)).getContent());
+        response = agent.request("http://localhost:8769/attachments/", "<body>", null, null, 0, new RequestParameters("GET", ApiResponseCodes.DELETE));
+        assertNotNull(response);
+        assertNull(response.getContent());
+        assertNotNull(response.getInputStream());
         server.stop(0);
     }
 
@@ -188,7 +194,10 @@ class HttpAgentImplTest {
         server.start();
 
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
-        assertNotNull(agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("DELETE", ApiResponseCodes.DELETE_ATTACHMENT)).getContent());
+        ApiResponse response = agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("DELETE", ApiResponseCodes.DELETE_ATTACHMENT));
+        assertNotNull(response);
+        assertNull(response.getInputStream());
+        assertNull(response.getContent());
         server.stop(0);
     }
 
