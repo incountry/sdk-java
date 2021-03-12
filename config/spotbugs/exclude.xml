@@ -49,6 +49,7 @@
     <Match>
         <Or>
             <Class name="com.incountry.residence.sdk.crypto.Secret"/>
+            <Class name="com.incountry.residence.sdk.dto.search.internal.DateFilter"/>
         </Or>
         <Bug code="EI,EI2,MS"/>
     </Match>

@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.dto.search.DateField;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.StringField;
@@ -109,7 +110,10 @@ public class DtoTransformer {
                 .setKey20(sourceRecord.getKey20())
                 .setParentKey(sourceRecord.getParentKey())
                 .setServiceKey1(sourceRecord.getServiceKey1())
-                .setServiceKey2(sourceRecord.getServiceKey2());
+                .setServiceKey2(sourceRecord.getServiceKey2())
+                .setServiceKey3(sourceRecord.getServiceKey3())
+                .setServiceKey4(sourceRecord.getServiceKey4())
+                .setServiceKey5(sourceRecord.getServiceKey5());
         return resRecord;
     }
 
@@ -120,6 +124,9 @@ public class DtoTransformer {
         resultRecord.setProfileKey(hashUtils.getSha256Hash(originalRecord.getProfileKey()))
                 .setServiceKey1(hashUtils.getSha256Hash(originalRecord.getServiceKey1()))
                 .setServiceKey2(hashUtils.getSha256Hash(originalRecord.getServiceKey2()))
+                .setServiceKey3(hashUtils.getSha256Hash(originalRecord.getServiceKey3()))
+                .setServiceKey4(hashUtils.getSha256Hash(originalRecord.getServiceKey4()))
+                .setServiceKey5(hashUtils.getSha256Hash(originalRecord.getServiceKey5()))
                 .setParentKey(hashUtils.getSha256Hash(originalRecord.getParentKey()));
         resultRecord.setBody(ciphertext.getData());
         resultRecord.setPrecommitBody(originalRecord.getPrecommitBody() != null
@@ -136,7 +143,8 @@ public class DtoTransformer {
                 .setRangeKey7(originalRecord.getRangeKey7())
                 .setRangeKey8(originalRecord.getRangeKey8())
                 .setRangeKey9(originalRecord.getRangeKey9())
-                .setRangeKey10(originalRecord.getRangeKey10());
+                .setRangeKey10(originalRecord.getRangeKey10())
+                .setExpiresAt(originalRecord.getExpiresAt());
         resultRecord.setKey1(transformSearchKey(originalRecord.getKey1(), hashSearchKeys, true))
                 .setKey2(transformSearchKey(originalRecord.getKey2(), hashSearchKeys, true))
                 .setKey3(transformSearchKey(originalRecord.getKey3(), hashSearchKeys, true))
@@ -232,7 +240,10 @@ public class DtoTransformer {
                 .setKey20(complexBody.meta.getKey20())
                 .setParentKey(complexBody.meta.getParentKey())
                 .setServiceKey1(complexBody.meta.getServiceKey1())
-                .setServiceKey2(complexBody.meta.getServiceKey2());
+                .setServiceKey2(complexBody.meta.getServiceKey2())
+                .setServiceKey3(complexBody.meta.getServiceKey3())
+                .setServiceKey4(complexBody.meta.getServiceKey4())
+                .setServiceKey5(complexBody.meta.getServiceKey5());
     }
 
     private static void validateTransferRecord(TransferRecord record) throws StorageServerException {
@@ -310,6 +321,9 @@ public class DtoTransformer {
             } else {
                 transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
             }
+        }
+        for (Map.Entry<DateField, Filter> entry : filter.getDateFilters().entrySet()) {
+            transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
         }
         if (filter.getSearchKeys() != null) {
             transformedFilters.put(SEARCH_KEYS, filter.getSearchKeys());

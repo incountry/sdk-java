@@ -20,7 +20,7 @@ class FindResultTest {
         assertEquals("FindResult{count=6, limit=7, offset=8, total=9, records=[], errors=null}",
                 findResult1.toString());
         FindResult findResult2 = new FindResult(Collections.singletonList(new Record("recKey")), 10, 11, 12, 13, null);
-        assertEquals("FindResult{count=10, limit=11, offset=12, total=13, records=[Record{recordKey='recKey', hash=109746541}], errors=null}",
+        assertEquals("FindResult{count=10, limit=11, offset=12, total=13, records=[Record{recordKey='recKey', hash=568410733}], errors=null}",
                 findResult2.toString());
     }
 

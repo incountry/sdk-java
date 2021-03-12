@@ -25,5 +25,8 @@ public enum StringField {
     KEY20,
     PROFILE_KEY,
     SERVICE_KEY1,
-    SERVICE_KEY2
+    SERVICE_KEY2,
+    SERVICE_KEY3,
+    SERVICE_KEY4,
+    SERVICE_KEY5
 }

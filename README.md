@@ -321,6 +321,9 @@ public class Record {
     private String profileKey;
     private String serviceKey1;
     private String serviceKey2;
+    private String serviceKey3;
+    private String serviceKey4;
+    private String serviceKey5;
    //String fields, hashed or original
     private String key1;
     private String key2;
@@ -356,6 +359,8 @@ public class Record {
     private Long rangeKey8;
     private Long rangeKey9;
     private Long rangeKey10;
+    //Date field
+    private Date expiresAt;
     //Readonly service fields, date
     protected Date createdAt;
     protected Date updatedAt;
@@ -372,7 +377,8 @@ record.setProfileKey("customer")
 ```
 
 #### Date fields
-Use `createdAt` and `updatedAt` fields to access date-related information about records. `createdAt` indicates date when the record was initially created in the target country. `updatedAt` shows the date of the latest write operation for the given `recordKey`
+Use `createdAt` and `updatedAt` fields to access date-related information about records. `createdAt` indicates date when the record was initially created in the target country. `UpdatedAt` shows the date of the latest write operation for the given `RecordKey`.
+Field `expiresAt` can be set by user, value is stored and returned in UTC+0.
 
 ### Batches
 
@@ -537,7 +543,8 @@ public enum SortField {
    RANGE_KEY9,
    RANGE_KEY10,
    CREATED_AT,
-   UPDATED_AT
+   UPDATED_AT,
+   EXPIRES_AT
 }
 ```
 
@@ -547,7 +554,6 @@ EQUALS              (FindFilter::keyEq)
 NOT_EQUALS          (FindFilter::keyNotEq)
 IS_NULL             (FindFilter::keyIsNull)
 IS_NOT_NULL         (FindFilter::keyIsNotNull)
-
 ```
 
 You can use the following builder methods for filtering by numerical fields:
@@ -559,6 +565,13 @@ IS_NOT_NULL         (FindFilter::keyIsNotNull)
 GREATER             (FindFilter::keyGreater)
 LESS                (FindFilter::keyLess)
 BETWEEN             (FindFilter::keyBetween)
+```
+
+You can use the following builder methods for filtering by date fields:
+```java
+EQUALS              (FindFilter::keyEq)
+IS_NULL             (FindFilter::keyIsNull)
+IS_NOT_NULL         (FindFilter::keyIsNotNull)
 ```
 
 Method `find` returns `FindResult` object which contains a list of `Record` and some metadata:
