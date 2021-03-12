@@ -8,6 +8,7 @@ import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
+import com.incountry.residence.sdk.dto.search.DateField;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.SortField;
@@ -40,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +58,9 @@ import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY1;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY3;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY4;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY5;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -129,6 +134,10 @@ public class StorageIntegrationTest {
     private static final String KEY_20 = "Key20_" + TEMP;
     private static final String SERVICE_KEY_1 = "ServiceKey1_" + TEMP;
     private static final String SERVICE_KEY_2 = "ServiceKey2_" + TEMP;
+    private static final String SERVICE_KEY_3 = "ServiceKey3_" + TEMP;
+    private static final String SERVICE_KEY_4 = "ServiceKey4_" + TEMP;
+    private static final String SERVICE_KEY_5 = "ServiceKey5_" + TEMP;
+    private static final Date EXPIRES_AT = new Date(System.currentTimeMillis() + 300_000);
     private static final String PRECOMMIT_BODY = "PreсommitBody_" + TEMP;
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
@@ -285,7 +294,11 @@ public class StorageIntegrationTest {
                 .setKey19(KEY_19).setKey20(KEY_20).setParentKey(PARENT_KEY)
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
-                .setServiceKey2(SERVICE_KEY_2);
+                .setServiceKey2(SERVICE_KEY_2)
+                .setServiceKey3(SERVICE_KEY_3)
+                .setServiceKey4(SERVICE_KEY_4)
+                .setServiceKey5(SERVICE_KEY_5)
+                .setExpiresAt(EXPIRES_AT);
         storage.write(MIDIPOP_COUNTRY, record);
     }
 
@@ -321,6 +334,9 @@ public class StorageIntegrationTest {
         assertEquals(PRECOMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
         assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
+        assertEquals(SERVICE_KEY_3, incomingRecord.getServiceKey3());
+        assertEquals(SERVICE_KEY_4, incomingRecord.getServiceKey4());
+        assertEquals(SERVICE_KEY_5, incomingRecord.getServiceKey5());
         assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
         assertEquals(RANGE_KEY_2, incomingRecord.getRangeKey2());
         assertEquals(RANGE_KEY_3, incomingRecord.getRangeKey3());
@@ -333,6 +349,11 @@ public class StorageIntegrationTest {
         assertNotNull(incomingRecord.getRangeKey10());
         assertNotNull(incomingRecord.getCreatedAt());
         assertNotNull(incomingRecord.getUpdatedAt());
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(EXPIRES_AT);
+        calendar.set(Calendar.MILLISECOND, 0);
+        assertEquals(calendar.getTime(), incomingRecord.getExpiresAt());
     }
 
     @ParameterizedTest(name = "findTest [{index}] {arguments}")
@@ -346,13 +367,19 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY20, KEY_20)
                 .keyEq(StringField.PARENT_KEY, PARENT_KEY)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
-                .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
+                .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1)
+                .keyEq(DateField.EXPIRES_AT, EXPIRES_AT);
         FindResult findResult = storage.find(MIDIPOP_COUNTRY, filter);
         assertEquals(1, findResult.getCount());
         assertEquals(1, findResult.getRecords().size());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertNotNull(findResult.getRecords().get(0).getCreatedAt());
         assertNotNull(findResult.getRecords().get(0).getUpdatedAt());
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(EXPIRES_AT);
+        calendar.set(Calendar.MILLISECOND, 0);
+        assertEquals(calendar.getTime(), findResult.getRecords().get(0).getExpiresAt());
 
         filter.clear()
                 .keyEq(StringField.RECORD_KEY, batchRecordKey)
@@ -426,13 +453,21 @@ public class StorageIntegrationTest {
         assertTrue(record1date.after(record2date) || record1date.equals(record2date));
 
         filter = new FindFilter().keyEq(StringField.KEY2, key2);
-        findResult = storage.find(MIDIPOP_COUNTRY, filter.copy().keyIsNotNull(StringField.KEY20));
+        findResult = storage.find(MIDIPOP_COUNTRY, filter
+                .copy()
+                .keyIsNotNull(StringField.KEY20)
+                .keyIsNotNull(DateField.EXPIRES_AT));
         assertEquals(1, findResult.getCount());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNotNull(findResult.getRecords().get(0).getExpiresAt());
 
-        findResult = storage.find(MIDIPOP_COUNTRY, filter.copy().keyIsNull(StringField.KEY20));
+        findResult = storage.find(MIDIPOP_COUNTRY, filter
+                .copy()
+                .keyIsNull(StringField.KEY20)
+                .keyIsNull(DateField.EXPIRES_AT));
         assertEquals(1, findResult.getCount());
         assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNull(findResult.getRecords().get(0).getExpiresAt());
     }
 
     @ParameterizedTest(name = "findByVersionTest [{index}] {arguments}")
@@ -489,7 +524,10 @@ public class StorageIntegrationTest {
                 .keyEq(NumberField.RANGE_KEY9, RANGE_KEY_9)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(SERVICE_KEY1, SERVICE_KEY_1)
-                .keyEq(SERVICE_KEY2, SERVICE_KEY_2);
+                .keyEq(SERVICE_KEY2, SERVICE_KEY_2)
+                .keyEq(SERVICE_KEY3, SERVICE_KEY_3)
+                .keyEq(SERVICE_KEY4, SERVICE_KEY_4)
+                .keyEq(SERVICE_KEY5, SERVICE_KEY_5);
 
         FindResult findResult = storage.find(MIDIPOP_COUNTRY, filter);
         assertEquals(1, findResult.getCount());
@@ -518,6 +556,9 @@ public class StorageIntegrationTest {
         assertEquals(PROFILE_KEY, record.getProfileKey());
         assertEquals(SERVICE_KEY_1, record.getServiceKey1());
         assertEquals(SERVICE_KEY_2, record.getServiceKey2());
+        assertEquals(SERVICE_KEY_3, record.getServiceKey3());
+        assertEquals(SERVICE_KEY_4, record.getServiceKey4());
+        assertEquals(SERVICE_KEY_5, record.getServiceKey5());
     }
 
     @ParameterizedTest(name = "findOneTest [{index}] {arguments}")
@@ -788,9 +829,7 @@ public class StorageIntegrationTest {
                 .setRangeKey9(RANGE_KEY_9)
                 .setRangeKey10(RANDOM.nextLong())
                 .setKey1(KEY_1)
-                .setPrecommitBody(PRECOMMIT_BODY)
-                .setServiceKey1(SERVICE_KEY_1)
-                .setServiceKey2(SERVICE_KEY_2);
+                .setPrecommitBody(PRECOMMIT_BODY);
         storageNonHashing.write(MIDIPOP_COUNTRY_2, record);
 
         FindFilter filter = new FindFilter()
