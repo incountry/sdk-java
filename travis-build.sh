@@ -5,7 +5,6 @@ if [[ "${TRAVIS_BUILD_SCRIPT_DEBUG_ENABLED:-false}" == 'true' ]]; then
 fi
 
 set -e
-set -o pipefail
 
 RED="\033[31;1m"
 GREEN="\033[32;1m"
