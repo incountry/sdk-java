@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.incountry.residence.sdk.dto.search.DateField;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.SortField;
@@ -15,15 +16,20 @@ import com.incountry.residence.sdk.tools.crypto.HashUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FindFilterTest {
 
     private static final String ENV_ID = "envId";
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .serializeNulls()
             .create();
 
@@ -70,6 +76,33 @@ class FindFilterTest {
     }
 
     @Test
+    void dateFiltersPositive() throws StorageClientException {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
+        FindFilter filter = new FindFilter().keyEq(DateField.EXPIRES_AT, calendar.getTime());
+        DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
+        String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":\"1970-01-01T00:00:00\"},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+        filter.clear().keyIsNull(DateField.EXPIRES_AT);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":null},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+        filter.clear().keyIsNotNull(DateField.EXPIRES_AT);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":{\"$not\":null}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+    }
+
+    @Test
+    void dateKeyEqNegative() {
+        FindFilter filter = new FindFilter();
+        StorageClientException ex = assertThrows(StorageClientException.class, () ->
+                filter.keyEq(DateField.EXPIRES_AT, null));
+        assertEquals("Date filter can't be null", ex.getMessage());
+    }
+
+    @Test
     void advancedFilterPositive() throws StorageClientException {
         FindFilter filter = new FindFilter()
                 .keyIsNotNull(StringField.KEY1)
@@ -86,6 +119,10 @@ class FindFilterTest {
                 .keyLess(NumberField.RANGE_KEY9, 8L, true)
                 .keyBetween(NumberField.RANGE_KEY10, 1, 2)
                 .keyBetween(NumberField.VERSION, 3, false, 5, false);
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
+        filter.keyEq(DateField.EXPIRES_AT, calendar.getTime());
+
         DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null," +
@@ -95,6 +132,7 @@ class FindFilterTest {
                 "\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
                 "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gt\":3,\"$lt\":5},\"range_key8\":{\"$lt\":[7]}," +
                 "\"range_key7\":{\"$gte\":[6]},\"range_key6\":{\"$gt\":[5]},\"range_key5\":{\"$not\":[3,4]}," +
+                "\"expires_at\":\"1970-01-01T00:00:00\"," +
                 "\"range_key9\":{\"$lte\":[8]},\"range_key3\":[1,2],\"range_key2\":null,\"range_key1\":{\"$not\":null}}," +
                 "\"options\":{\"offset\":0,\"limit\":100}}", filterJson);
     }
