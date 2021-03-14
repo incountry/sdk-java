@@ -17,12 +17,10 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FindFilterTest {
 
