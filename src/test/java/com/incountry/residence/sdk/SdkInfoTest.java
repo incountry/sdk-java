@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -12,9 +13,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 class SdkInfoTest {
 
     @Test
-    void knownPropertiesTest() {
+    void getPropertyTest() {
         assertNotEquals("unknown", SdkInfo.getInstance().getProperty(SdkInfo.PROPERTY_VERSION));
         assertNotEquals("unknown", SdkInfo.getInstance().getProperty(SdkInfo.PROPERTY_USER_AGENT));
+        assertEquals("unknown", SdkInfo.getInstance().getProperty(UUID.randomUUID().toString()));
     }
 
     @Test
