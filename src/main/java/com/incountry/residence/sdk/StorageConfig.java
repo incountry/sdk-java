@@ -357,6 +357,7 @@ public class StorageConfig {
      *
      * @param oauthToken non-empty token
      * @return StorageConfig config
+     * @throws StorageClientException when a token is null or empty
      */
     public StorageConfig setOauthToken(String oauthToken) throws StorageClientException {
         HELPER.check(StorageClientException.class, isNullOrEmpty(oauthToken), MSG_ERR_NULL_TOKEN);
