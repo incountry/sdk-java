@@ -104,6 +104,9 @@ public class StorageConfig {
    private Integer maxHttpConnectionsPerRoute;
    /** Optional. If false - key1-key20 will be not hashed. Default is true */
    private boolean hashSearchKeys = true;
+   /** Optional. For using of a previously acquired oAuth token for OAuth2 authorisation or
+    * for an external acquiring of oAuth2 tokens for OAuth2 authorisation */
+   private OauthTokenAccessor oauthTokenAccessor;
    //...
 }
 ```
@@ -151,6 +154,24 @@ If your PoPAPI configuration relies on a custom PoPAPI server (rather than the d
 StorageConfig config = new StorageConfig()
    .setCountriesEndpoint(countriesEndpoint)
    //...
+Storage storage = StorageImpl.newStorage(config);
+```
+
+The SDK also allows using previously acquired oAuth tokens if needed or pass token getting function. In this mode SDK is not responsible for oAuth a token renewal, and it should be done by SDK user himself.
+
+Below you can find the example of how to specify OAuth token while creating a Storage instance:
+```java
+//pass a constant token
+String oauthToken = yourGetTokenFunction();
+StorageConfig config = new StorageConfig()
+        .setEnvironmentId(ENV_ID)
+        .setOauthToken(oauthToken);
+Storage storage = StorageImpl.newStorage(config);
+
+//pass an external acquiring of oAuth2 tokens for OAuth2 authorisation 
+StorageConfig config = new StorageConfig()
+        .setEnvironmentId(ENV_ID)
+        .setOauthTokenAccessor(() -> yourGetTokenFunction());
 Storage storage = StorageImpl.newStorage(config);
 ```
 
