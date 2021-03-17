@@ -604,7 +604,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass only one parameter combination for authorisation: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -614,7 +614,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config, null));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass only one parameter combination for authorisation: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -642,7 +642,7 @@ class StorageTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("clientId");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass clientSecret in configuration", ex.getMessage());
     }
 
     @Test
@@ -657,7 +657,7 @@ class StorageTest {
                 .setClientId("")
                 .setClientSecret("");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass clientId in configuration or set INC_CLIENT_ID env var", ex.getMessage());
+        assertEquals("Please pass clientId in configuration", ex.getMessage());
     }
 
     @Test
@@ -672,7 +672,7 @@ class StorageTest {
                 .setClientId("<clientId>")
                 .setApiKey("<apiKey>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Either apiKey or clientId/clientSecret can be used at the same moment, not both", ex.getMessage());
+        assertEquals("Please pass only one parameter combination for authorisation: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
