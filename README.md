@@ -27,12 +27,12 @@ For a full list of supported countries and their codes please [follow this link]
 
 
 ## Quickstart guide
-To access your data in InCountry Platform by using Java SDK, you need to create an instance of the `Storage` class using the `getInstance` method and pass `StorageConfig` object to it. You can retrieve the `CLIENT_ID`, `CLIENT_SECRET` and `ENV_ID` variables from your dashboard on InCountry Portal.
+To access your data in InCountry Platform by using Java SDK, you need to create an instance of the `Storage` class using the `getInstance` method and pass `StorageConfig` object to it. You can retrieve the `clientId`, `clientSecret` and `environmentId` values from your dashboard on InCountry Portal.
 ```java
 SecretsData secretsData = SecretsDataGenerator.fromPassword("<encryption_secret>");
 StorageConfig config = new StorageConfig()
         .setEnvironmentId("<environment_id>")
-        .setClientId("client_id")
+        .setClientId("<client_id>")
         .setClientSecret("<client_secret>")
         .setSecretKeyAccessor(() -> secretsData);
 Storage storage = StorageImpl.newStorage(config);
@@ -120,7 +120,7 @@ Below you can find API Key authorization usage example:
 ```java
 SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
 StorageConfig config = new StorageConfig()
-    .setEnvironmentId("<env_id>")
+    .setEnvironmentId("<environment_id>")
     .setApiKey("<api_key>")
     .setSecretKeyAccessor(() -> secretsData);
 Storage storage=StorageImpl.newStorage(config);
@@ -144,7 +144,7 @@ StorageConfig config = new StorageConfig()
    .setAuthEndpoints(authEndpointsMap)
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
-   .setEnvironmentId(ENV_ID)
+   .setEnvironmentId(ENVIRONMENT_ID)
 Storage storage = StorageImpl.newStorage(config);
 ```
 
@@ -164,13 +164,13 @@ Below you can find the example of how to specify OAuth token while creating a St
 //pass a constant token
 String oauthToken = yourGetTokenFunction();
 StorageConfig config = new StorageConfig()
-        .setEnvironmentId(ENV_ID)
+        .setEnvironmentId("<environment_id>")
         .setOauthToken(oauthToken);
 Storage storage = StorageImpl.newStorage(config);
 
 //pass an external acquiring of oAuth2 tokens for OAuth2 authorization 
 StorageConfig config = new StorageConfig()
-        .setEnvironmentId(ENV_ID)
+        .setEnvironmentId("<environment_id>")
         .setOauthTokenAccessor(() -> yourGetTokenFunction());
 Storage storage = StorageImpl.newStorage(config);
 ```
