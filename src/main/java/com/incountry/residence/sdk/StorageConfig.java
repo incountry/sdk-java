@@ -177,7 +177,7 @@ public class StorageConfig {
 
     /**
      * Set login for oAuth authorization, can be also set via environment variable INC_CLIENT_ID.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     * Alternative way for authorization - to use {@link #setApiKey(String)}
      *
      * @param clientId login
      * @return StorageConfig
@@ -203,7 +203,7 @@ public class StorageConfig {
 
     /**
      * Set user secret for oAuth authorization, can be also set via environment variable INC_CLIENT_SECRET.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     * Alternative way for authorization - to use {@link #setApiKey(String)}
      *
      * @param clientSecret password
      * @return StorageConfig
@@ -248,7 +248,7 @@ public class StorageConfig {
      * Optional. Set custom oAuth authorization server URL, will be used as default one.
      * Can't be null when {@link #setAuthEndpoints(Map)} is used
      *
-     * @param defaultAuthEndpoint custom authorisation endpoint
+     * @param defaultAuthEndpoint custom authorization endpoint
      * @return StorageConfig
      */
     public StorageConfig setDefaultAuthEndpoint(String defaultAuthEndpoint) {
@@ -353,7 +353,7 @@ public class StorageConfig {
     }
 
     /**
-     * Optional. For using of a previously acquired oAuth token for OAuth2 authorisation
+     * Optional. For using of a previously acquired oAuth token for OAuth2 authorization
      *
      * @param oauthToken non-empty token
      * @return StorageConfig config
@@ -366,7 +366,7 @@ public class StorageConfig {
     }
 
     /**
-     * Optional. For an external acquiring of oAuth2 tokens for OAuth2 authorisation
+     * Optional. For an external acquiring of oAuth2 tokens for OAuth2 authorization
      *
      * @param oauthTokenAccessor token access function
      * @return StorageConfig config

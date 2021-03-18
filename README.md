@@ -104,8 +104,8 @@ public class StorageConfig {
    private Integer maxHttpConnectionsPerRoute;
    /** Optional. If false - key1-key20 will be not hashed. Default is true */
    private boolean hashSearchKeys = true;
-   /** Optional. For using of a previously acquired oAuth token for OAuth2 authorisation or
-    * for an external acquiring of oAuth2 tokens for OAuth2 authorisation */
+   /** Optional. For using of a previously acquired oAuth token for OAuth2 authorization or
+    * for an external acquiring of oAuth2 tokens for OAuth2 authorization */
    private OauthTokenAccessor oauthTokenAccessor;
    //...
 }
@@ -168,7 +168,7 @@ StorageConfig config = new StorageConfig()
         .setOauthToken(oauthToken);
 Storage storage = StorageImpl.newStorage(config);
 
-//pass an external acquiring of oAuth2 tokens for OAuth2 authorisation 
+//pass an external acquiring of oAuth2 tokens for OAuth2 authorization 
 StorageConfig config = new StorageConfig()
         .setEnvironmentId(ENV_ID)
         .setOauthTokenAccessor(() -> yourGetTokenFunction());
