@@ -197,7 +197,7 @@ public class HttpDaoImpl implements Dao {
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry);
         String body = gson.toJson(record);
         ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.WRITE));
-        return response.getContent() == null ? null : gson.fromJson(response.getContent(), TransferRecord.class);
+        return gson.fromJson(response.getContent(), TransferRecord.class);
     }
 
     @Override
