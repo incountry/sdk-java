@@ -221,10 +221,9 @@ public class StorageImpl implements Storage {
     public Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException {
         HELPER.check(StorageClientException.class, record == null, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, record.getRecordKey());
-        dao.createRecord(country, transformer.getTransferRecord(record));
-        return record;
+        TransferRecord recordedRecord = dao.createRecord(country, transformer.getTransferRecord(record));
+        return transformer.getRecord(recordedRecord);
     }
-
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
         checkCountryAndRecordKey(country, recordKey);

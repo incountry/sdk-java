@@ -299,7 +299,8 @@ public class StorageIntegrationTest {
                 .setServiceKey4(SERVICE_KEY_4)
                 .setServiceKey5(SERVICE_KEY_5)
                 .setExpiresAt(EXPIRES_AT);
-        storage.write(MIDIPOP_COUNTRY, record);
+        Record recordedRecord = storage.write(MIDIPOP_COUNTRY, record);
+        checkAllFields(recordedRecord, recordKey, key2);
     }
 
     @ParameterizedTest(name = "readTest [{index}] {arguments}")
@@ -307,6 +308,10 @@ public class StorageIntegrationTest {
     @Order(300)
     public void readTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         Record incomingRecord = storage.read(MIDIPOP_COUNTRY, recordKey);
+        checkAllFields(incomingRecord, recordKey, key2);
+    }
+
+    private void checkAllFields(Record incomingRecord, String recordKey, String key2) {
         assertEquals(recordKey, incomingRecord.getRecordKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());

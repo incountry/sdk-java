@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.util.List;
 
 public interface Dao {
-    void createRecord(String country, TransferRecord record) throws StorageClientException, StorageServerException;
+    TransferRecord createRecord(String country, TransferRecord record) throws StorageClientException, StorageServerException;
 
     void createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException;
 

@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
+import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -68,7 +69,6 @@ class StorageTest {
     private static final Long RANGE_KEY_1 = 1L;
     private static final String BODY = "body";
     private static final Integer HTTP_POOL_SIZE = 5;
-
     private DtoTransformer dtoTransformer;
     private HashUtils hashUtils;
     private SecretKeyAccessor secretKeyAccessor;
@@ -177,17 +177,17 @@ class StorageTest {
     void customEndpointPositive(RepetitionInfo repeatInfo) throws StorageException, IOException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         String endpoint = "https://custom.endpoint.io";
-        FakeHttpAgent agent = new FakeHttpAgent("OK");
-        StorageConfig config = new StorageConfig()
-                .setEnvironmentId(ENVIRONMENT_ID)
-                .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(endpoint, null, null, agent));
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
                 .setKey2(KEY_2)
                 .setKey3(KEY_3);
+        FakeHttpAgent agent = new FakeHttpAgent(getRecordStubResponse(record, dtoTransformer));
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setApiKey("apiKey");
+        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(endpoint, null, null, agent));
         storage.write(COUNTRY, record);
         String expectedURL = endpoint + "/v2/storage/records/" + COUNTRY;
         String realURL = new URL(agent.getCallUrl()).toString();
