@@ -129,7 +129,6 @@ class DtoTransformerTest {
         DtoTransformer transformer = new DtoTransformer(provider, hashUtils, true, accessor);
         TransferRecordList transferRecordList = new TransferRecordList(null);
         assertTrue(transformer.getRecordList(transferRecordList).isEmpty());
-        transferRecordList = new TransferRecordList(new ArrayList<>());
-        assertTrue(transformer.getRecordList(transferRecordList).isEmpty());
+        assertTrue(transformer.getRecordList(null).isEmpty());
     }
 }

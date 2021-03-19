@@ -13,10 +13,6 @@ public class ApiResponse {
         this(null, null, null);
     }
 
-    public ApiResponse(String content, Map<MetaInfoTypes, String> metaInfo) {
-        this(content, metaInfo, null);
-    }
-
     public ApiResponse(String content, Map<MetaInfoTypes, String> metaInfo, InputStream inputStream) {
         this.content = content;
         this.metaInfo = metaInfo;
