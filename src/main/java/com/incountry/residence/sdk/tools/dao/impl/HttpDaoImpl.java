@@ -201,12 +201,13 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public void createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException {
+    public TransferRecordList createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         String recListJson = gson.toJson(new TransferRecordList(records));
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
-        httpAgent.request(url, recListJson, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.BATCH_WRITE));
+        ApiResponse response = httpAgent.request(url, recListJson, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.BATCH_WRITE));
+        return gson.fromJson(response.getContent(), TransferRecordList.class);
     }
 
     @Override

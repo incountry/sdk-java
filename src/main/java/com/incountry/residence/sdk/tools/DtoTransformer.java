@@ -24,6 +24,7 @@ import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.transfer.TransferFilterContainer;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -340,6 +341,16 @@ public class DtoTransformer {
             }
         }
         return new TransferFilterContainer(transformedFilters, filter.getLimit(), filter.getOffset(), transferSortList);
+    }
+
+    public List<Record> getRecordList(TransferRecordList transferRecordList) throws StorageServerException, StorageClientException, StorageCryptoException {
+        List<Record> resultRecordList = new ArrayList<>();
+        if (transferRecordList != null && transferRecordList.getRecords() != null) {
+            for (TransferRecord transferRecord : transferRecordList.getRecords()) {
+                resultRecordList.add(getRecord(transferRecord));
+            }
+        }
+        return resultRecordList;
     }
 
     static class ComplexBody {

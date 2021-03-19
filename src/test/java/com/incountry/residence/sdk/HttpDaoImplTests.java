@@ -48,7 +48,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -237,6 +236,8 @@ class HttpDaoImplTests {
                 .setKey2(key2)
                 .setKey3(key3);
         records.add(record);
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), transformer) + "]}";
+        agent.setResponse(batchRecordResponse);
         storage.batchWrite(country, records);
 
         String encryptedHttpBody = agent.getCallBody();
@@ -262,24 +263,6 @@ class HttpDaoImplTests {
         assertEquals(record.getRangeKey1() == null, jsonObject.get("range_key1") == null);
         assertEquals(record.getProfileKey() == null, jsonObject.get("profile_key") == null);
         //recordKey & body aren't checked because it's always not null
-    }
-
-    @Test
-    void testBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        String country = "US";
-        List<Record> list = Collections.singletonList(new Record("key", "body"));
-        List<Record> recordList = storage.batchWrite(country, list); //ok
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //Ok
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //OK
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //OKokok
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //null
-        assertNotNull(recordList);
     }
 
     @Test

@@ -23,6 +23,7 @@ import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -255,8 +256,8 @@ public class StorageImpl implements Storage {
             HELPER.check(StorageClientException.class, record == null, MSG_ERR_NULL_RECORD);
             checkCountryAndRecordKey(country, record.getRecordKey());
         }
-        dao.createBatch(country, transformer.getTransferRecordList(records));
-        return records;
+        TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
+        return transformer.getRecordList(transferRecordList);
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {

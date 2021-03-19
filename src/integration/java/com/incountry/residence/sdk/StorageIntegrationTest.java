@@ -273,7 +273,15 @@ public class StorageIntegrationTest {
                 .setRangeKey10(RANDOM.nextLong());
 
         records.add(record);
-        storage.batchWrite(MIDIPOP_COUNTRY, records);
+        List<Record> recordedList = storage.batchWrite(MIDIPOP_COUNTRY, records);
+        assertEquals(1, recordedList.size());
+        Record recordedRecord = recordedList.get(0);
+        assertEquals(batchRecordKey, recordedRecord.getRecordKey());
+        assertEquals(RECORD_BODY, recordedRecord.getBody());
+        assertEquals(PROFILE_KEY, recordedRecord.getProfileKey());
+        assertEquals(BATCH_WRITE_RANGE_KEY_1, recordedRecord.getRangeKey1());
+        assertEquals(key2, recordedRecord.getKey2());
+        assertEquals(record.getRangeKey10(), recordedRecord.getRangeKey10());
     }
 
     @ParameterizedTest(name = "writeTest [{index}] {arguments}")

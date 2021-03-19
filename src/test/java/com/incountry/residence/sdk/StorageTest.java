@@ -108,9 +108,12 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), dtoTransformer) + "]}";
         Storage storage = StorageImpl.newStorage(config,
-                new HttpDaoImpl(FAKE_ENDPOINT, null, null,
-                        new FakeHttpAgent(Arrays.asList(response1, "OK", response2, "OK", response3, "OK"))));
+                new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(Arrays.asList(
+                        response1, batchRecordResponse,
+                        response2, batchRecordResponse,
+                        response3, "{\"records\": []"))));
 
         String expected1 = "MigrateResult{migrated=1, totalLeft=1, errors=[com.incountry.residence.sdk.tools.exceptions.RecordException: Record parse exception]}";
         runMigrationChecks(response1, expected1, storage);
