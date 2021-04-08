@@ -1,16 +1,16 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.crypto.testimpl.CryptoStub;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.crypto.testimpl.FernetCipher;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 class StorageConfigTest {
@@ -28,12 +28,11 @@ class StorageConfigTest {
     }
 
     @Test
-    void testGetCustomEncryptionConfigsList() {
-        List<Crypto> cryptoList = new ArrayList<>();
-        cryptoList.add(new CryptoStub(true));
+    void testGetCustomEncryptionConfigsList() throws StorageClientException {
+        CryptoProvider provider = new CryptoProvider(new FernetCipher("fernet"));
         StorageConfig config = new StorageConfig()
-                .setCustomEncryptionConfigsList(cryptoList);
-        assertNotSame(cryptoList, config.getCustomEncryptionConfigsList());
-        assertEquals(cryptoList, config.getCustomEncryptionConfigsList());
+                .setCryptoProvider(provider);
+        assertEquals(provider, config.getCryptoProvider());
+        assertNull(new StorageConfig().getCryptoProvider());
     }
 }

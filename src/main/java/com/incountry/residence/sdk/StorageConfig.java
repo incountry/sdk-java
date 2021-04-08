@@ -1,11 +1,9 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,11 +19,11 @@ public class StorageConfig {
     public static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
     public static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
 
-    private String envId;
+    private String environmentId;
     private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customEncryptionConfigsList;
+    private CryptoProvider cryptoProvider;
     private String clientId;
     private String clientSecret;
     private boolean normalizeKeys;
@@ -38,28 +36,28 @@ public class StorageConfig {
     private Integer maxHttpConnectionsPerRoute;
     private boolean hashSearchKeys = true;
 
-    public String getEnvId() {
-        return envId;
+    public String getEnvironmentId() {
+        return environmentId;
     }
 
     /**
      * sets environment ID
      *
-     * @param envId environment ID
+     * @param environmentId environment ID
      * @return StorageConfig
      */
-    public StorageConfig setEnvId(String envId) {
-        this.envId = envId;
+    public StorageConfig setEnvironmentId(String environmentId) {
+        this.environmentId = environmentId;
         return this;
     }
 
     /**
-     * load envId from env variable 'INC_ENVIRONMENT_ID'
+     * load environmentId from env variable 'INC_ENVIRONMENT_ID'
      *
      * @return StorageConfig
      */
-    public StorageConfig useEnvIdFromEnv() {
-        this.envId = loadFromEnv(PARAM_ENV_ID);
+    public StorageConfig useEnvironmentIdFromEnv() {
+        this.environmentId = loadFromEnv(PARAM_ENV_ID);
         return this;
     }
 
@@ -129,18 +127,19 @@ public class StorageConfig {
         return this;
     }
 
-    public List<Crypto> getCustomEncryptionConfigsList() {
-        return customEncryptionConfigsList == null ? null : new ArrayList<>(customEncryptionConfigsList);
+    public CryptoProvider getCryptoProvider() {
+        return cryptoProvider;
     }
 
     /**
-     * Optional. For custom encryption
+     * Optional. Provider of encryption ciphers. Allows to register custom ciphers for encrypting stored data.
+     * If null - default AES GCM cipher will be used
      *
-     * @param customEncryptionConfigsList List with custom encryption functions
+     * @param cryptoProvider provider
      * @return StorageConfig
      */
-    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
-        this.customEncryptionConfigsList = customEncryptionConfigsList;
+    public StorageConfig setCryptoProvider(CryptoProvider cryptoProvider) {
+        this.cryptoProvider = cryptoProvider;
         return this;
     }
 
@@ -338,11 +337,11 @@ public class StorageConfig {
 
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
-        newInstance.setEnvId(getEnvId());
+        newInstance.setEnvironmentId(getEnvironmentId());
         newInstance.setApiKey(getApiKey());
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
-        newInstance.setCustomEncryptionConfigsList(getCustomEncryptionConfigsList());
+        newInstance.setCryptoProvider(getCryptoProvider());
         newInstance.setNormalizeKeys(isNormalizeKeys());
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
@@ -359,11 +358,11 @@ public class StorageConfig {
     @Override
     public String toString() {
         return "StorageConfig{" +
-                "envId='" + hideParam(envId) + '\'' +
+                "envId='" + hideParam(environmentId) + '\'' +
                 ", apiKey='" + hideParam(apiKey) + '\'' +
                 ", endPoint='" + endPoint + '\'' +
                 ", secretKeyAccessor=" + secretKeyAccessor +
-                ", customEncryptionConfigsList=" + customEncryptionConfigsList +
+                ", cryptoProvider=" + cryptoProvider +
                 ", ignoreKeyCase=" + normalizeKeys +
                 ", clientId='" + hideParam(clientId) + '\'' +
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +

@@ -1,7 +1,7 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -30,12 +30,12 @@ class ParamsFromEnvTest {
         String clientSecret = "<clientSecret>";
         setEnv(PARAM_CLIENT_SECRET, clientSecret);
         StorageConfig config = new StorageConfig()
-                .useEnvIdFromEnv()
+                .useEnvironmentIdFromEnv()
                 .useApiKeyFromEnv()
                 .useEndPointFromEnv()
                 .useClientIdFromEnv()
                 .useClientSecretFromEnv();
-        assertEquals(envId, config.getEnvId());
+        assertEquals(envId, config.getEnvironmentId());
         assertEquals(apiKey, config.getApiKey());
         assertEquals(endPoint, config.getEndPoint());
         assertEquals(clientId, config.getClientId());
@@ -48,14 +48,18 @@ class ParamsFromEnvTest {
     }
 
     @Test
-    void getStorageWithParamsFromEnv() throws StorageClientException, StorageServerException {
+    void getStorageWithParamsFromEnv() throws StorageClientException, StorageCryptoException {
         String envId = "<env>";
         setEnv(PARAM_ENV_ID, envId);
         String apiKey = "<apikey>";
         setEnv(PARAM_API_KEY, apiKey);
         String endPoint = "<endPoint>";
         setEnv(PARAM_ENDPOINT, endPoint);
-        Storage storage = StorageImpl.getInstance();
+        StorageConfig config = new StorageConfig()
+                .useEnvironmentIdFromEnv()
+                .useApiKeyFromEnv()
+                .useEndPointFromEnv();
+        Storage storage = StorageImpl.newStorage(config);
         assertNotNull(storage);
         unsetEnv(PARAM_ENV_ID);
         unsetEnv(PARAM_API_KEY);

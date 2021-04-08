@@ -8,10 +8,11 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
+import com.incountry.residence.sdk.crypto.EncryptionKey;
+import com.incountry.residence.sdk.crypto.SecretsData;
+import com.incountry.residence.sdk.crypto.Secret;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
 
 import java.nio.ByteBuffer;
 import java.util.Base64;
@@ -45,14 +46,14 @@ public class AwsKmsExample {
         DecryptResult decryptedKey = kmsClient.decrypt(decryptRequest);
         ByteBuffer keyByteBuffer = decryptedKey.getPlaintext();
 
-        SecretKey secretKey = new SecretKey(keyByteBuffer.array(), 1, true);
-        SecretsData secretsData = new SecretsData(Collections.singletonList(secretKey), secretKey.getVersion());
+        Secret secret = new EncryptionKey(1, keyByteBuffer.array());
+        SecretsData secretsData = new SecretsData(Collections.singletonList(secret), secret);
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENVIRONMENT_ID)
+                .setEnvironmentId(ENVIRONMENT_ID)
                 .setClientId(CLIENT_ID)
                 .setClientSecret(CLIENT_SECRET)
                 .setSecretKeyAccessor(() -> secretsData);
-        Storage storage = StorageImpl.getInstance(config);
+        Storage storage = StorageImpl.newStorage(config);
         Record record = new Record("recordKey-testAWSKMSKeys", "Test AWS KMS keys in Java SDK")
                 .setKey1("<key1>")
                 .setKey2("<key2>")

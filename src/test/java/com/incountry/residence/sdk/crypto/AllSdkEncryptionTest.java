@@ -5,12 +5,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.tools.JsonUtils;
-import com.incountry.residence.sdk.tools.crypto.CryptoManager;
+import com.incountry.residence.sdk.tools.DtoTransformer;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.crypto.HashUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
+import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -110,14 +111,22 @@ class AllSdkEncryptionTest {
             "      'is_encrypted': true\n" +
             "    }";
 
-    private static CryptoManager cryptoManager;
     private static final Record ORIGINAL_RECORD;
     private static final Record ORIGINAL_RECORD_SCHEMA_2_2;
     private static final Record ORIGINAL_RECORD_SCHEMA_2_3;
 
+    private static DtoTransformer transformer;
+    private static Gson gson;
+
     static {
         try {
-            cryptoManager = new CryptoManager(() -> SecretsDataGenerator.fromPassword(PASSWORD), ENV_ID, null, false, true);
+            CryptoProvider cryptoProvider = new CryptoProvider(null);
+            SecretsData secretsData = SecretsDataGenerator.fromPassword(PASSWORD);
+            transformer = new DtoTransformer(cryptoProvider,
+                    new HashUtils(ENV_ID, false),
+                    true,
+                    () -> secretsData);
+            gson = new GsonBuilder().setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
         } catch (StorageClientException ex) {
             LOG.error(ex.getMessage());
         }
@@ -182,14 +191,15 @@ class AllSdkEncryptionTest {
     @ParameterizedTest
     @MethodSource("getResponseAndRecord")
     void testDecryptionFromOtherSDK(Record record, String jsonResponse) throws StorageServerException, StorageClientException, StorageCryptoException {
-        Record decodedRecord = JsonUtils.recordFromString(jsonResponse, cryptoManager);
+        TransferRecord transferRecord = gson.fromJson(jsonResponse, TransferRecord.class);
+        Record decodedRecord = transformer.getRecord(transferRecord);
         assertEquals(record, decodedRecord);
     }
 
     @ParameterizedTest
     @MethodSource("getResponseAndRecord")
     void testEncryptionFromOtherSDK(Record record, String jsonResponse) throws StorageClientException, StorageCryptoException {
-        String recordJsonString = JsonUtils.toJsonString(record, cryptoManager);
+        String recordJsonString = gson.toJson(transformer.getTransferRecord(record));
         JsonObject jsonObject = getGson().fromJson(recordJsonString, JsonObject.class);
         JsonObject originalJsonObject = getGson().fromJson(jsonResponse, JsonObject.class);
 

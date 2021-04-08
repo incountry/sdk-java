@@ -1,9 +1,9 @@
 package com.incountry.residence.sdk;
 
+import com.incountry.residence.sdk.crypto.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 
 public class FullMigrationExample {
 
@@ -16,16 +16,16 @@ public class FullMigrationExample {
                 "    \"currentVersion\": 1,\n" +
                 "    \"secrets\": [\n" +
                 "        {\"secret\": \"password0\", \"version\": 0},\n" +
-                "        {\"secret\": \"password1\", \"version\": 1},\n" +
-                "    ],\n" +
+                "        {\"secret\": \"password1\", \"version\": 1}\n" +
+                "    ]\n" +
                 "}";
         SecretsData secretsData = SecretsDataGenerator.fromJson(secretsDataInJson);
         StorageConfig config = new StorageConfig()
-                .setEnvId(ENVIRONMENT_ID)
+                .setEnvironmentId(ENVIRONMENT_ID)
                 .setClientId(CLIENT_ID)
                 .setClientSecret(CLIENT_SECRET)
                 .setSecretKeyAccessor(() -> secretsData);
-        Storage storage = StorageImpl.getInstance(config);
+        Storage storage = StorageImpl.newStorage(config);
         String country = "US";
         boolean migrationComplete = false;
         while (!migrationComplete) {
