@@ -943,7 +943,7 @@ Storage storage = StorageImpl.newStorage(config);
 
 ```
 
-For using of custom encryption you need to create an implementation the following abstract class:
+To use custom encryption you need to implement the following abstract class:
 ```java
 public abstract class AbstractCipher implements Cipher {
 
@@ -1010,9 +1010,9 @@ Parameter `name` of `AbstractCipher` constructor is used to differ one custom en
 
 You can set current cipher implementation via a constructor of `CryptoProvider`. Such cipher will be used for encryption.
 
-If none of the custom implementations of `AbstractCipher` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
+If you don't override default cipher then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
 
-You can see an example of an implementation of custom encryption (using Fernet encryption from https://github.com/l0s/fernet-java8) by [following this link](/src/test/java/com/incountry/residence/sdk/crypto/testimpl/FernetCipher.java)
+You can see an example of custom encryption implementation (using Fernet encryption from https://github.com/l0s/fernet-java8) by [following this link](/src/test/java/com/incountry/residence/sdk/crypto/testimpl/FernetCipher.java)
 
 
 
