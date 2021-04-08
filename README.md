@@ -13,13 +13,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>3.1.0</version>
+  <version>3.4.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:3.0.0"
+compile "com.incountry:incountry-java-client:3.4.0"
 ```
 
 ## Countries List
@@ -604,6 +604,32 @@ works only in combination with the non-hashing Storage mode (`hashSearchKeys` pa
 FindFilter filter = new FindFilter()
     .searchKeysLike("abc")
     .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
+
+// Causes validation error (StorageClientException)
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc")
+    .keyEq(StringField.KEY1, "def");
+```
+
+##### Partial text match search
+You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., key20`.
+```java
+// Matches all records where 
+// Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
+FindFilterBuilder builder = FindFilterBuilder.create()
+    .searchKeysLike("abc");
+```
+
+**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and
+works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
+```java
+// Matches all records where 
+// (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc') 
+// AND (Record.rangeKey1 = 1 OR Record.rangeKey1 = 2)
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc")
+    .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
+storage.find("us", builder);
 
 // Causes validation error (StorageClientException)
 FindFilter filter = new FindFilter()

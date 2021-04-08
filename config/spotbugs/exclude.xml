@@ -27,6 +27,12 @@
     </Match>
 
     <Match>
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Method name="request" />
+        <Bug code="RCN" />
+    </Match>
+
+    <Match>
         <Or>
             <Class name="com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl"/>
         </Or>

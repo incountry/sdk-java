@@ -624,20 +624,20 @@ class HttpDaoImplTests {
         Map<MetaInfoTypes, String> metaInfo1 = new HashMap<>();
         metaInfo1.put(MetaInfoTypes.NAME, "fileName");
 
-        String expectedResponse = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8.name());
-        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, metaInfo1);
+        String expectedResponse = IOUtils.toString(Files.newInputStream(tempFile), StandardCharsets.UTF_8.name());
+        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, metaInfo1, fileInputStream);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
 
-        agent = new FakeHttpAgent(null, null);
+        agent = new FakeHttpAgent(null, null, null);
         storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         file = storage.getAttachmentFile(country, recordKey, fileId);
         assertNull(file.getFileContent());
 
         Map<MetaInfoTypes, String> metaInfo3 = new HashMap<>();
-        agent = new FakeHttpAgent(null, metaInfo3);
+        agent = new FakeHttpAgent(null, metaInfo3, null);
         storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         file = storage.getAttachmentFile(country, recordKey, fileId);
         assertNull(file.getFileName());
