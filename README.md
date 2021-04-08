@@ -63,8 +63,8 @@ StorageConfig provides the following parameters:
  */
 public class StorageConfig {
    //...
-   /** Required to be passed in, or as environment variable INC_API_KEY */
-   private String envId;
+   /** Required to be passed in, or as environment variable INC_ENVIRONMENT_ID */
+   private String environmentId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
    private String clientId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
