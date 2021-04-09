@@ -32,5 +32,6 @@ public enum SortField {
     RANGE_KEY9,
     RANGE_KEY10,
     CREATED_AT,
-    UPDATED_AT
+    UPDATED_AT,
+    EXPIRES_AT
 }

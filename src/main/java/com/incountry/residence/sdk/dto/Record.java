@@ -43,8 +43,12 @@ public class Record {
     private String precommitBody;
     private String serviceKey1;
     private String serviceKey2;
+    private String serviceKey3;
+    private String serviceKey4;
+    private String serviceKey5;
     protected Date createdAt;
     protected Date updatedAt;
+    private Date expiresAt;
     protected Integer version;
     private List<AttachmentMeta> attachments = new ArrayList<>();
 
@@ -401,6 +405,33 @@ public class Record {
         return this;
     }
 
+    public String getServiceKey3() {
+        return serviceKey3;
+    }
+
+    public Record setServiceKey3(String serviceKey3) {
+        this.serviceKey3 = serviceKey3;
+        return this;
+    }
+
+    public String getServiceKey4() {
+        return serviceKey4;
+    }
+
+    public Record setServiceKey4(String serviceKey4) {
+        this.serviceKey4 = serviceKey4;
+        return this;
+    }
+
+    public String getServiceKey5() {
+        return serviceKey5;
+    }
+
+    public Record setServiceKey5(String serviceKey5) {
+        this.serviceKey5 = serviceKey5;
+        return this;
+    }
+
     public Integer getVersion() {
         return version;
     }
@@ -411,6 +442,15 @@ public class Record {
 
     public Date getUpdatedAt() {
         return updatedAt != null ? new Date(updatedAt.getTime()) : null;
+    }
+
+    public Date getExpiresAt() {
+        return expiresAt != null ? new Date(expiresAt.getTime()) : null;
+    }
+
+    public Record setExpiresAt(Date expiresAt) {
+        this.expiresAt = expiresAt != null ? new Date(expiresAt.getTime()) : null;
+        return this;
     }
 
     public List<AttachmentMeta> getAttachments() {
@@ -468,6 +508,10 @@ public class Record {
                 Objects.equals(precommitBody, record.precommitBody) &&
                 Objects.equals(serviceKey1, record.serviceKey1) &&
                 Objects.equals(serviceKey2, record.serviceKey2) &&
+                Objects.equals(serviceKey3, record.serviceKey3) &&
+                Objects.equals(serviceKey4, record.serviceKey4) &&
+                Objects.equals(serviceKey5, record.serviceKey5) &&
+                Objects.equals(expiresAt, record.expiresAt) &&
                 Objects.equals(attachments, record.attachments);
     }
 
@@ -476,7 +520,8 @@ public class Record {
         return Objects.hash(recordKey, parentKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
                 key11, key12, key13, key14, key15, key16, key17, key18, key19, key20,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
-                body, profileKey, precommitBody, serviceKey1, serviceKey2, attachments, version);
+                body, profileKey, precommitBody, serviceKey1, serviceKey2, serviceKey3, serviceKey4, serviceKey5,
+                expiresAt, attachments, version);
     }
 
     /**
@@ -522,8 +567,12 @@ public class Record {
         newRecord.precommitBody = precommitBody;
         newRecord.serviceKey1 = serviceKey1;
         newRecord.serviceKey2 = serviceKey2;
+        newRecord.serviceKey3 = serviceKey3;
+        newRecord.serviceKey4 = serviceKey4;
+        newRecord.serviceKey5 = serviceKey5;
         newRecord.createdAt = getCreatedAt();
         newRecord.updatedAt = getUpdatedAt();
+        newRecord.expiresAt = getExpiresAt();
         newRecord.version = version;
         newRecord.attachments = attachments == null ? new ArrayList<>() : new ArrayList<>(attachments);
         return newRecord;

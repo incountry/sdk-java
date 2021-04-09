@@ -87,8 +87,15 @@ public class HttpDaoImpl implements Dao {
 
 
     public HttpDaoImpl(String endPoint, String endpointMask, String countriesEndpoint, HttpAgent agent) {
-        this.gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-        this.gsonWithNull = new GsonBuilder().serializeNulls().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+        this.gson = new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+                .create();
+        this.gsonWithNull = new GsonBuilder()
+                .serializeNulls()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+                .create();
         this.isDefaultEndpoint = (endPoint == null);
         this.endPointUrl = isDefaultEndpoint ? DEFAULT_ENDPOINT : endPoint;
         this.countriesEndpoint = countriesEndpoint == null ? DEFAULT_COUNTRY_ENDPOINT : countriesEndpoint;

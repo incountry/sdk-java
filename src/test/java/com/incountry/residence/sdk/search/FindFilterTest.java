@@ -3,6 +3,8 @@ package com.incountry.residence.sdk.search;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.incountry.residence.sdk.dto.search.DateField;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.SortField;
@@ -14,6 +16,8 @@ import com.incountry.residence.sdk.tools.crypto.HashUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
+import java.util.Calendar;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,6 +27,7 @@ class FindFilterTest {
     private static final String ENV_ID = "envId";
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .serializeNulls()
             .create();
 
@@ -32,19 +37,22 @@ class FindFilterTest {
         for (StringField field : StringField.values()) {
             filter.keyEq(field, field.toString());
         }
-        filter.searchKeysLike(null);
 
         DtoTransformer defaultTransformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(defaultTransformer.getTransferFilterContainer(filter));
-        assertEquals(DEFAULT_STRING_FILTER, filterJson);
+        assertEquals(GSON.fromJson(DEFAULT_STRING_FILTER, JsonObject.class),
+                GSON.fromJson(filterJson, JsonObject.class));
 
         DtoTransformer transformerNonHashing = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), false, null);
         String filterJson2 = GSON.toJson(transformerNonHashing.getTransferFilterContainer(filter));
-        assertEquals(NON_HASHING_STRING_FILTER, filterJson2);
+        assertEquals(GSON.fromJson(NON_HASHING_STRING_FILTER, JsonObject.class),
+                GSON.fromJson(filterJson2, JsonObject.class));
 
         DtoTransformer transformerWithNormalizing = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, true), true, null);
         String filterJson3 = GSON.toJson(transformerWithNormalizing.getTransferFilterContainer(filter));
-        assertEquals(NORMALIZED_STRING_FILTER, filterJson3);
+
+        assertEquals(GSON.fromJson(NORMALIZED_STRING_FILTER, JsonObject.class),
+                GSON.fromJson(filterJson3, JsonObject.class));
 
         assertNotEquals(filterJson, filterJson2);
         assertNotEquals(filterJson, filterJson3);
@@ -66,6 +74,33 @@ class FindFilterTest {
     }
 
     @Test
+    void dateFiltersPositive() throws StorageClientException {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
+        FindFilter filter = new FindFilter().keyEq(DateField.EXPIRES_AT, calendar.getTime());
+        DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
+        String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":\"1970-01-01T00:00:00\"},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+        filter.clear().keyIsNull(DateField.EXPIRES_AT);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":null},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+        filter.clear().keyIsNotNull(DateField.EXPIRES_AT);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":{\"$not\":null}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+    }
+
+    @Test
+    void dateKeyEqNegative() {
+        FindFilter filter = new FindFilter();
+        StorageClientException ex = assertThrows(StorageClientException.class, () ->
+                filter.keyEq(DateField.EXPIRES_AT, null));
+        assertEquals("Date filter can't be null", ex.getMessage());
+    }
+
+    @Test
     void advancedFilterPositive() throws StorageClientException {
         FindFilter filter = new FindFilter()
                 .keyIsNotNull(StringField.KEY1)
@@ -82,6 +117,10 @@ class FindFilterTest {
                 .keyLess(NumberField.RANGE_KEY9, 8L, true)
                 .keyBetween(NumberField.RANGE_KEY10, 1, 2)
                 .keyBetween(NumberField.VERSION, 3, false, 5, false);
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
+        filter.keyEq(DateField.EXPIRES_AT, calendar.getTime());
+
         DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null," +
@@ -91,6 +130,7 @@ class FindFilterTest {
                 "\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
                 "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gt\":3,\"$lt\":5},\"range_key8\":{\"$lt\":[7]}," +
                 "\"range_key7\":{\"$gte\":[6]},\"range_key6\":{\"$gt\":[5]},\"range_key5\":{\"$not\":[3,4]}," +
+                "\"expires_at\":\"1970-01-01T00:00:00\"," +
                 "\"range_key9\":{\"$lte\":[8]},\"range_key3\":[1,2],\"range_key2\":null,\"range_key1\":{\"$not\":null}}," +
                 "\"options\":{\"offset\":0,\"limit\":100}}", filterJson);
     }
@@ -149,6 +189,9 @@ class FindFilterTest {
             "\"key20\":[\"6ad8da091338df58dc3eeaafe79cbe0fb0d479241ad4a54249bb1c14e9cee3a8\"]," +
             "\"service_key1\":[\"cdc3ece33af693b31d2cbb3d686109b175464f843097a2f5f068c4acf1c0b0b4\"]," +
             "\"service_key2\":[\"7db1e25b4dfe835c1dc265c1cbeeb7dee738599addffbdf39f303f0e43e65d90\"]," +
+            "\"service_key3\":[\"638f738f999ac9f918fe6d058cf4731d1db5fd3c4f9da150368be10d2b7fb72c\"]," +
+            "\"service_key4\":[\"520a2e6a545721cc64af52a455b6517b46cd729c80a114d792ee297fb186ee8e\"]," +
+            "\"service_key5\":[\"1dff5e61195c5383466066d90635fd3fb8067168e328cb88701f282dda94bd5e\"]," +
             "\"key15\":[\"411d087eb03729e55267afbcce385025df44f4c5ce0dfc4801437a5fa3573e52\"]," +
             "\"key14\":[\"9334955bd1f425b49e73d6102173d3d99647e966600f0c45e47c8bed12361904\"]," +
             "\"key13\":[\"2af29cc93072a020a4bae22b0f9932e3225d7271ce65fbb71fc84ab13e7372ac\"]," +
@@ -169,6 +212,9 @@ class FindFilterTest {
             "\"key4\":[\"KEY4\"],\"key9\":[\"KEY9\"],\"key7\":[\"KEY7\"],\"key8\":[\"KEY8\"],\"key20\":[\"KEY20\"]," +
             "\"service_key1\":[\"5294a16f78f7d9edab7b2d3da23a551bc05d4a60e8ec5ca46784a21254e9b656\"]," +
             "\"service_key2\":[\"e164d7eac1d2d39f346580e298b16704fd48bef64bc2cf61536ad22d2e1d1f30\"]," +
+            "\"service_key3\":[\"51d21f341ce5593d1df0c36c3799342be66495a745aeb188bc0cc57619edb3f9\"]," +
+            "\"service_key4\":[\"d3bb2b75ca9a3faa2cdb73a1222ad5ded992e1a16b20e13023ef2177821b2c81\"]," +
+            "\"service_key5\":[\"22eba5726e689c21b66b2bad5ee4eb64cd2f76ec8d99ce3a795741035caceb41\"]," +
             "\"key15\":[\"KEY15\"],\"key14\":[\"KEY14\"],\"key13\":[\"KEY13\"],\"key12\":[\"KEY12\"]," +
             "\"key19\":[\"KEY19\"],\"key18\":[\"KEY18\"]," +
             "\"profile_key\":[\"fa4364783409c6b2ac20f712418befa28b7875c917004f12d64fba203a1cafbb\"]," +
@@ -190,6 +236,9 @@ class FindFilterTest {
             "\"key20\":[\"b920f493cca851e2fa931bfcc206cbdc2ed551c837814170ec91445341df2b1b\"]," +
             "\"service_key1\":[\"5294a16f78f7d9edab7b2d3da23a551bc05d4a60e8ec5ca46784a21254e9b656\"]," +
             "\"service_key2\":[\"e164d7eac1d2d39f346580e298b16704fd48bef64bc2cf61536ad22d2e1d1f30\"]," +
+            "\"service_key3\":[\"51d21f341ce5593d1df0c36c3799342be66495a745aeb188bc0cc57619edb3f9\"]," +
+            "\"service_key4\":[\"d3bb2b75ca9a3faa2cdb73a1222ad5ded992e1a16b20e13023ef2177821b2c81\"]," +
+            "\"service_key5\":[\"22eba5726e689c21b66b2bad5ee4eb64cd2f76ec8d99ce3a795741035caceb41\"]," +
             "\"key15\":[\"27ba0ee9c4f1bc147f61aa765e41d2661995d9317d706b67cdd9bfea62d9a885\"]," +
             "\"key14\":[\"dedf8616cab4ba110a075f27dc54ca73aa498976654ee77b18bf4bbc6027d3f8\"]," +
             "\"key13\":[\"c9aa113cc2900f0b0a4252aee14e37d62c9e4593a9a950c420bc70b1a2e69fef\"]," +

@@ -4,8 +4,6 @@ package com.incountry.residence.sdk;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
@@ -18,11 +16,11 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,108 +29,60 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RecordTest {
-    @Expose
-    @SerializedName("record_key")
-    public String recordKey;
-    @SerializedName("parent_key")
-    public String parentKey;
-    @Expose
-    public String body;
-    @Expose
-    @SerializedName("profile_key")
-    public String profileKey;
-    @Expose
-    @SerializedName("range_key1")
-    public long rangeKey1;
-    public long rangeKey2;
-    public long rangeKey3;
-    public long rangeKey4;
-    public long rangeKey5;
-    public long rangeKey6;
-    public long rangeKey7;
-    public long rangeKey8;
-    public long rangeKey9;
-    public long rangeKey10;
-    public String key1;
-    @Expose
-    public String key2;
-    @Expose
-    public String key3;
-    public String key4;
-    public String key5;
-    public String key6;
-    public String key7;
-    public String key8;
-    public String key9;
-    public String key10;
-    public String key11;
-    public String key12;
-    public String key13;
-    public String key14;
-    public String key15;
-    public String key16;
-    public String key17;
-    public String key18;
-    public String key19;
-    public String key20;
-    public String errorCorrectionKey1;
-    public String errorCorrectionKey2;
-    public String precommit;
-
-    @BeforeEach
-    public void init() {
-        body = "body";
-        recordKey = "recordKey1";
-        parentKey = "parentKey";
-        key1 = "key1";
-        key2 = "key2";
-        key3 = "key3";
-        key4 = "key4";
-        key5 = "key5";
-        key6 = "key6";
-        key7 = "key7";
-        key8 = "key8";
-        key9 = "key9";
-        key10 = "key10";
-        key11 = "key11";
-        key12 = "key12";
-        key13 = "key13";
-        key14 = "key14";
-        key15 = "key15";
-        key16 = "key16";
-        key17 = "key17";
-        key18 = "key18";
-        key19 = "key19";
-        key20 = "key20";
-        profileKey = "profileKey";
-        rangeKey1 = 1;
-        rangeKey2 = 2;
-        rangeKey3 = 3;
-        rangeKey4 = 4;
-        rangeKey5 = 5;
-        rangeKey6 = 6;
-        rangeKey7 = 7;
-        rangeKey8 = 8;
-        rangeKey9 = 9;
-        rangeKey10 = 10;
-        precommit = "precommit";
-        errorCorrectionKey1 = "errorCorrectionKey1";
-        errorCorrectionKey2 = "errorCorrectionKey2";
-    }
-
+    private static final String BODY = "body";
+    private static final String RECORD_KEY = "recordKey1";
+    private static final String PARENT_KEY = "parentKey";
+    private static final String KEY_1 = "key1";
+    private static final String KEY_2 = "key2";
+    private static final String KEY_3 = "key3";
+    private static final String KEY_4 = "key4";
+    private static final String KEY_5 = "key5";
+    private static final String KEY_6 = "key6";
+    private static final String KEY_7 = "key7";
+    private static final String KEY_8 = "key8";
+    private static final String KEY_9 = "key9";
+    private static final String KEY_10 = "key10";
+    private static final String KEY_11 = "key11";
+    private static final String KEY_12 = "key12";
+    private static final String KEY_13 = "key13";
+    private static final String KEY_14 = "key14";
+    private static final String KEY_15 = "key15";
+    private static final String KEY_16 = "key16";
+    private static final String KEY_17 = "key17";
+    private static final String KEY_18 = "key18";
+    private static final String KEY_19 = "key19";
+    private static final String KEY_20 = "key20";
+    private static final String PROFILE_KEY = "profileKey";
+    private static final Long RANGE_KEY_1 = 1L;
+    private static final Long RANGE_KEY_2 = 2L;
+    private static final Long RANGE_KEY_3 = 3L;
+    private static final Long RANGE_KEY_4 = 4L;
+    private static final Long RANGE_KEY_5 = 5L;
+    private static final Long RANGE_KEY_6 = 6L;
+    private static final Long RANGE_KEY_7 = 7L;
+    private static final Long RANGE_KEY_8 = 8L;
+    private static final Long RANGE_KEY_9 = 9L;
+    private static final Long RANGE_KEY_10 = 10L;
+    private static final String PRECOMMIT_BODY = "precommit";
+    private static final String SERVICE_KEY_1 = "serviceKey1";
+    private static final String SERVICE_KEY_2 = "serviceKey2";
+    private static final String SERVICE_KEY_3 = "serviceKey3";
+    private static final String SERVICE_KEY_4 = "serviceKey4";
+    private static final String SERVICE_KEY_5 = "serviceKey5";
+    private static final Date EXPIRES_AT = new Date();
 
     @Test
     void findResultToStringPositive() {
-        Record record1 = new Record(recordKey + 1, body + 1)
-                .setProfileKey(profileKey + 1)
-                .setRangeKey1(rangeKey1 + 1)
-                .setKey2(key2 + 1)
-                .setKey3(key3 + 1);
-        Record record2 = new Record(recordKey + 2, body + 2)
-                .setProfileKey(profileKey + 2)
-                .setRangeKey1(rangeKey1 + 2)
-                .setKey2(key2 + 2)
-                .setKey3(key3 + 2);
+        Record record1 = new Record(RECORD_KEY + 1, BODY + 1)
+                .setProfileKey(PROFILE_KEY + 1)
+                .setRangeKey1(RANGE_KEY_1 + 1)
+                .setKey2(KEY_2 + 1)
+                .setKey3(KEY_3 + 1);
+        Record record2 = new Record(RECORD_KEY + 2, BODY + 2)
+                .setProfileKey(PROFILE_KEY + 2)
+                .setRangeKey1(RANGE_KEY_1 + 2)
+                .setKey2(KEY_2 + 2)
+                .setKey3(KEY_3 + 2);
         FindResult findResult = new FindResult(Arrays.asList(record1, record2), 2, 2, 0, 2, new ArrayList<>());
         String str = findResult.toString();
         assertTrue(str.contains(String.valueOf(record1.hashCode())));
@@ -142,43 +92,47 @@ class RecordTest {
     @SuppressWarnings("java:S3415")
     @Test
     void equalsPositive() {
-        Record record1 = new Record(recordKey)
-                .setParentKey(parentKey)
-                .setKey1(key1)
-                .setKey2(key2)
-                .setKey3(key3)
-                .setKey4(key4)
-                .setKey5(key5)
-                .setKey6(key6)
-                .setKey7(key7)
-                .setKey8(key8)
-                .setKey9(key9)
-                .setKey10(key10)
-                .setKey11(key11)
-                .setKey12(key12)
-                .setKey13(key13)
-                .setKey14(key14)
-                .setKey15(key15)
-                .setKey16(key16)
-                .setKey17(key17)
-                .setKey18(key18)
-                .setKey19(key19)
-                .setKey20(key20)
-                .setProfileKey(profileKey)
-                .setRangeKey1(rangeKey1)
-                .setRangeKey2(rangeKey2)
-                .setRangeKey3(rangeKey3)
-                .setRangeKey4(rangeKey4)
-                .setRangeKey5(rangeKey5)
-                .setRangeKey6(rangeKey6)
-                .setRangeKey7(rangeKey7)
-                .setRangeKey8(rangeKey8)
-                .setRangeKey9(rangeKey9)
-                .setRangeKey10(rangeKey10)
-                .setBody(body)
-                .setServiceKey1(errorCorrectionKey1)
-                .setServiceKey2(errorCorrectionKey2)
-                .setPrecommitBody(precommit);
+        Record record1 = new Record(RECORD_KEY)
+                .setParentKey(PARENT_KEY)
+                .setKey1(KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3)
+                .setKey4(KEY_4)
+                .setKey5(KEY_5)
+                .setKey6(KEY_6)
+                .setKey7(KEY_7)
+                .setKey8(KEY_8)
+                .setKey9(KEY_9)
+                .setKey10(KEY_10)
+                .setKey11(KEY_11)
+                .setKey12(KEY_12)
+                .setKey13(KEY_13)
+                .setKey14(KEY_14)
+                .setKey15(KEY_15)
+                .setKey16(KEY_16)
+                .setKey17(KEY_17)
+                .setKey18(KEY_18)
+                .setKey19(KEY_19)
+                .setKey20(KEY_20)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setRangeKey2(RANGE_KEY_2)
+                .setRangeKey3(RANGE_KEY_3)
+                .setRangeKey4(RANGE_KEY_4)
+                .setRangeKey5(RANGE_KEY_5)
+                .setRangeKey6(RANGE_KEY_6)
+                .setRangeKey7(RANGE_KEY_7)
+                .setRangeKey8(RANGE_KEY_8)
+                .setRangeKey9(RANGE_KEY_9)
+                .setRangeKey10(RANGE_KEY_10)
+                .setBody(BODY)
+                .setServiceKey1(SERVICE_KEY_1)
+                .setServiceKey2(SERVICE_KEY_2)
+                .setServiceKey3(SERVICE_KEY_3)
+                .setServiceKey4(SERVICE_KEY_4)
+                .setServiceKey5(SERVICE_KEY_5)
+                .setExpiresAt(EXPIRES_AT)
+                .setPrecommitBody(PRECOMMIT_BODY);
 
         String attachmentMetaJson = "{\n" +
                 "   \"downloadLink\":\"123456\",\n" +
@@ -204,6 +158,15 @@ class RecordTest {
 
         checkRangeKeys(record1);
         checkStringKeys(record1);
+        checkDateKeys(record1);
+    }
+
+    private void checkDateKeys(Record expectedRecord) {
+        Record newRecord = expectedRecord.copy();
+        newRecord.setExpiresAt(new Date(expectedRecord.getExpiresAt().getTime() + 1000));
+        assertNotEquals(expectedRecord, newRecord);
+        newRecord.setExpiresAt(null);
+        assertNotEquals(expectedRecord, newRecord);
     }
 
     private void checkRangeKeys(Record expectedRecord) {
@@ -343,6 +306,18 @@ class RecordTest {
 
         newRecord = expectedRecord.copy()
                 .setServiceKey2(newRecord.getServiceKey2() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = expectedRecord.copy()
+                .setServiceKey3(newRecord.getServiceKey3() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = expectedRecord.copy()
+                .setServiceKey4(newRecord.getServiceKey4() + UUID.randomUUID());
+        assertNotEquals(expectedRecord, newRecord);
+
+        newRecord = expectedRecord.copy()
+                .setServiceKey5(newRecord.getServiceKey5() + UUID.randomUUID());
         assertNotEquals(expectedRecord, newRecord);
 
         newRecord = expectedRecord.copy()

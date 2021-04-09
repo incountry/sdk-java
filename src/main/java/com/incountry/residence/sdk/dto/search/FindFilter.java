@@ -1,5 +1,6 @@
 package com.incountry.residence.sdk.dto.search;
 
+import com.incountry.residence.sdk.dto.search.internal.DateFilter;
 import com.incountry.residence.sdk.dto.search.internal.Filter;
 import com.incountry.residence.sdk.dto.search.internal.NullFilter;
 import com.incountry.residence.sdk.dto.search.internal.NumberFilter;
@@ -13,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ public class FindFilter {
     public static final int SEARCH_KEYS_MAX_LENGTH = 200;
 
     private static final String MSG_ERR_MAX_LIMIT = "Max limit is " + MAX_LIMIT + ". Use offset to populate more";
+    private static final String MSG_ERR_NULL_DATE = "Date filter can't be null";
     private static final String MSG_ERR_NEGATIVE_LIMIT = "Limit must be more than 1";
     private static final String MSG_ERR_NEGATIVE_OFFSET = "Offset must be more than 0";
     private static final String MSG_ERR_SEARCH_KEYS_COMBINATION = "SEARCH_KEYS cannot be used in conjunction with regular KEY1...KEY20 lookup";
@@ -50,12 +53,14 @@ public class FindFilter {
     private int offset = DEFAULT_OFFSET;
     private final Map<StringField, Filter> stringFilters = new EnumMap<>(StringField.class);
     private final Map<NumberField, Filter> numberFilters = new EnumMap<>(NumberField.class);
+    private final Map<DateField, Filter> dateFilters = new EnumMap<>(DateField.class);
     private final List<SortingParam> sortingList = new ArrayList<>();
     private String searchKeys;
 
     public FindFilter clear() {
         stringFilters.clear();
         numberFilters.clear();
+        dateFilters.clear();
         sortingList.clear();
         limit = MAX_LIMIT;
         offset = DEFAULT_OFFSET;
@@ -83,6 +88,12 @@ public class FindFilter {
         return this;
     }
 
+    public FindFilter keyEq(DateField field, Date date) throws StorageClientException {
+        HELPER.check(StorageClientException.class, date == null, MSG_ERR_NULL_DATE);
+        dateFilters.put(field, new DateFilter(date));
+        return this;
+    }
+
     public FindFilter keyIsNull(StringField field) throws StorageClientException {
         validateStringFilters(field, searchKeys);
         stringFilters.put(field, new NullFilter(true));
@@ -94,6 +105,11 @@ public class FindFilter {
         return this;
     }
 
+    public FindFilter keyIsNull(DateField field) {
+        dateFilters.put(field, new NullFilter(true));
+        return this;
+    }
+
     public FindFilter keyIsNotNull(StringField field) throws StorageClientException {
         validateStringFilters(field, searchKeys);
         stringFilters.put(field, new NullFilter(false));
@@ -102,6 +118,11 @@ public class FindFilter {
 
     public FindFilter keyIsNotNull(NumberField field) {
         numberFilters.put(field, new NullFilter(false));
+        return this;
+    }
+
+    public FindFilter keyIsNotNull(DateField field) {
+        dateFilters.put(field, new NullFilter(false));
         return this;
     }
 
@@ -200,6 +221,10 @@ public class FindFilter {
         return numberFilters;
     }
 
+    public Map<DateField, Filter> getDateFilters() {
+        return dateFilters;
+    }
+
     public String getSearchKeys() {
         return searchKeys;
     }
@@ -212,6 +237,7 @@ public class FindFilter {
         newFilter.sortingList.addAll(sortingList);
         newFilter.numberFilters.putAll(numberFilters);
         newFilter.stringFilters.putAll(stringFilters);
+        newFilter.dateFilters.putAll(dateFilters);
         return newFilter;
     }
 
@@ -224,6 +250,7 @@ public class FindFilter {
         return "FindFilter{" +
                 "stringFilters=" + stringFilters +
                 ", numberFilters=" + numberFilters +
+                ", dateFilters=" + dateFilters +
                 ", searchKeys=" + searchKeys +
                 ", limit=" + limit +
                 ", offset=" + offset +
