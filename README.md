@@ -63,8 +63,8 @@ StorageConfig provides the following parameters:
  */
 public class StorageConfig {
    //...
-   /** Required to be passed in, or as environment variable INC_API_KEY */
-   private String envId;
+   /** Required to be passed in, or as environment variable INC_ENVIRONMENT_ID */
+   private String environmentId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_ID */
    private String clientId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
@@ -949,6 +949,14 @@ public class MigrateResult {
 
 For detailed example of a migration usage please [follow this link](/src/integration/java/com/incountry/residence/sdk/FullMigrationExample.java).
 
+## AWS KMS integration
+
+InCountry Java SDK supports usage of any 32-byte (256-bit) AES key, including ones produced by AWS KMS symmetric master key (CMK).
+
+The suggested use case assumes that AWS user already got his KMS encrypted data key (AES_256) generated. Afterwards the key gets decrypted using AWS KMS Java client library and then provided to InCountry Java SDK's `SecretKeyAccessor`.
+
+For a detailed example of AWS KMS keys usage please see [AwsKmsExample.java](/src/integration/java/com/incountry/residence/sdk/AwsKmsExample.java)
+
 ## Error Handling
 
 InCountry Java SDK throws following Exceptions:
@@ -995,7 +1003,7 @@ Storage storage = StorageImpl.newStorage(config);
 
 ```
 
-For using of custom encryption you need to create an implementation the following abstract class:
+To use custom encryption you need to implement the following abstract class:
 ```java
 public abstract class AbstractCipher implements Cipher {
 
@@ -1062,9 +1070,9 @@ Parameter `name` of `AbstractCipher` constructor is used to differ one custom en
 
 You can set current cipher implementation via a constructor of `CryptoProvider`. Such cipher will be used for encryption.
 
-If none of the custom implementations of `AbstractCipher` then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
+If you don't override default cipher then the SDK will use default encryption to encrypt stored data. At the same time it will keep the ability to decrypt old data, encrypted with custom encryption (if any).
 
-You can see an example of an implementation of custom encryption (using Fernet encryption from https://github.com/l0s/fernet-java8) by [following this link](/src/test/java/com/incountry/residence/sdk/crypto/testimpl/FernetCipher.java)
+You can see an example of custom encryption implementation (using Fernet encryption from https://github.com/l0s/fernet-java8) by [following this link](/src/test/java/com/incountry/residence/sdk/crypto/testimpl/FernetCipher.java)
 
 
 
