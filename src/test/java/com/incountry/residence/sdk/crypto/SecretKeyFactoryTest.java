@@ -11,6 +11,6 @@ class SecretKeyFactoryTest {
     @Test
     void getKeyNegative() {
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> SecretKeyFactory.getKey(null, null, 5));
-        assertEquals("Secret is null", ex.getMessage());
+        assertEquals("Secret can't be null", ex.getMessage());
     }
 }
