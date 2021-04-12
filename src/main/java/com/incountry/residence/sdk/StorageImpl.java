@@ -7,6 +7,7 @@ import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.oauth.OauthTokenAccessor;
 import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.ValidationHelper;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
@@ -44,7 +45,7 @@ public class StorageImpl implements Storage {
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_ERR_AUTH_DUPL = "Either apiKey or clientId/clientSecret can be used at the same moment, not both";
+    private static final String MSG_ERR_AUTH = "Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor";
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
@@ -55,9 +56,8 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
     private static final String MSG_ERR_CONFIG = "Storage configuration is null";
-    private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration or set INC_CLIENT_ID env var";
-    private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration or set INC_CLIENT_SECRET env var";
-    private static final String MSG_ERR_PASS_AUTH = "Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars";
+    private static final String MSG_ERR_PASS_CLIENT_ID = "Please pass clientId in configuration";
+    private static final String MSG_ERR_PASS_CLIENT_SECRET = "Please pass clientSecret in configuration";
     private static final String MSG_ERR_ILLEGAL_TIMEOUT = "Connection timeout can't be <1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_CONNECTION_POOL = "HTTP pool size can't be < 1. Expected 'null' or positive value, received=%d";
     private static final String MSG_ERR_MAX_CONNECTIONS_PER_ROUTE = "Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=%d";
@@ -81,8 +81,11 @@ public class StorageImpl implements Storage {
         }
         HELPER.check(StorageClientException.class, config == null, MSG_ERR_CONFIG);
         HELPER.check(StorageClientException.class, isNullOrEmpty(config.getEnvironmentId()), MSG_ERR_PASS_ENV);
-        boolean invalidAuth = config.getApiKey() != null && config.getClientId() != null;
-        HELPER.check(StorageClientException.class, invalidAuth, MSG_ERR_AUTH_DUPL);
+        int alternativeAuthCount = 0;
+        alternativeAuthCount += config.getApiKey() != null ? 1 : 0;
+        alternativeAuthCount += config.getClientId() != null ? 1 : 0;
+        alternativeAuthCount += config.getOauthTokenAccessor() != null ? 1 : 0;
+        HELPER.check(StorageClientException.class, alternativeAuthCount != 1, MSG_ERR_AUTH);
 
         this.dao = initDao(config, dao);
         this.hashUtils = new HashUtils(config.getEnvironmentId(), config.isNormalizeKeys());
@@ -158,7 +161,7 @@ public class StorageImpl implements Storage {
 
             CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
-            if (config.getClientId() != null && config.getClientSecret() != null) {
+            if (config.getClientId() != null) {
                 HELPER.check(StorageClientException.class, isNullOrEmpty(config.getClientId()), MSG_ERR_PASS_CLIENT_ID);
                 HELPER.check(StorageClientException.class, isNullOrEmpty(config.getClientSecret()), MSG_ERR_PASS_CLIENT_SECRET);
                 tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(),
@@ -173,8 +176,15 @@ public class StorageImpl implements Storage {
                 HELPER.check(StorageClientException.class, isNullOrEmpty(config.getApiKey()), MSG_ERR_PASS_API_KEY);
                 tokenClient = new ApiKeyTokenClient(config.getApiKey());
             } else {
-                LOG.error(MSG_ERR_PASS_AUTH);
-                throw new StorageClientException(MSG_ERR_PASS_AUTH);
+                OauthTokenAccessor accessor = config.getOauthTokenAccessor();
+                tokenClient = (force, audience, region) -> {
+                    try {
+                        return accessor.getToken();
+                    } catch (Exception ex) {
+                        LOG.error(MSG_ERR_UNEXPECTED, ex);
+                        throw new StorageServerException(MSG_ERR_UNEXPECTED, ex);
+                    }
+                };
             }
             return new HttpDaoImpl(config.getEnvironmentId(),
                     config.getEndPoint(),

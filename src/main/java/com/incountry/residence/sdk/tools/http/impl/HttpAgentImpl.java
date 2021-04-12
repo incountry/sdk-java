@@ -136,7 +136,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
     private HttpRequestBase addHeaders(HttpRequestBase request, String audience, String region, String contentType, boolean isFileUpload) throws StorageServerException {
         if (audience != null) {
-            request.addHeader(AUTHORIZATION, BEARER + tokenClient.getToken(audience, region));
+            request.addHeader(AUTHORIZATION, BEARER + tokenClient.refreshToken(false, audience, region));
         }
         if (!isFileUpload) {
             request.addHeader(CONTENT_TYPE, contentType);

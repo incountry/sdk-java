@@ -90,11 +90,6 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
         return row == null || row.isEmpty();
     }
 
-    @Override
-    public String getToken(String audience, String region) throws StorageServerException {
-        return refreshToken(false, audience, region);
-    }
-
     public synchronized String refreshToken(final boolean force, final String audience, String region) throws StorageServerException {
         if (LOG.isTraceEnabled()) {
             LOG.trace(MSG_REFRESH_TOKEN, force, audience);

@@ -50,7 +50,7 @@ class TokenClientTest {
         server.start();
         TokenClient tokenClient = getTokenClient();
         for (int i = 0; i < 1_000; i++) {
-            assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+            assertNotNull(tokenClient.refreshToken(false, AUDIENCE_URL, null));
         }
 
         tokenClient.refreshToken(false, AUDIENCE_URL, null);
@@ -66,7 +66,7 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(getTokenClient().getToken(AUDIENCE_URL, null));
+        assertNotNull(getTokenClient().refreshToken(false, AUDIENCE_URL, null));
         server.stop(0);
     }
 
@@ -79,8 +79,8 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
-        assertNotNull(tokenClient.getToken(AUDIENCE_URL, null));
+        assertNotNull(tokenClient.refreshToken(false, AUDIENCE_URL, null));
+        assertNotNull(tokenClient.refreshToken(false, AUDIENCE_URL, null));
         server.stop(0);
     }
 
@@ -97,10 +97,10 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        String token1 = tokenClient.getToken(AUDIENCE_URL, null);
+        String token1 = tokenClient.refreshToken(false, AUDIENCE_URL, null);
         assertEquals(expectedValue1, token1);
         Thread.sleep(2000);
-        String token2 = tokenClient.getToken(AUDIENCE_URL, null);
+        String token2 = tokenClient.refreshToken(false, AUDIENCE_URL, null);
         assertEquals(expectedValue2, token2);
         assertNotEquals(token1, token2);
         server.stop(0);
@@ -113,10 +113,10 @@ class TokenClientTest {
         FakeHttpServer server = new FakeHttpServer(Arrays.asList(errorMessage, null), respCode, PORT);
         server.start();
         TokenClient tokenClient = getTokenClient();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, AUDIENCE_URL, null));
         assertEquals("Error in parsing authorization response: '" + errorMessage + "'", ex.getMessage());
 
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, AUDIENCE_URL, null));
         assertEquals("Error in parsing authorization response: ''", ex.getMessage());
         server.stop(0);
     }
@@ -146,7 +146,7 @@ class TokenClientTest {
         server.start();
         TokenClient tokenClient = getTokenClient();
         for (String s : responseList) {
-            StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+            StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, AUDIENCE_URL, null));
             assertEquals(responsesWithExpectedExceptions.get(s), ex.getMessage());
         }
         server.stop(0);
@@ -161,7 +161,7 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, AUDIENCE_URL, null));
         assertEquals("Token is null", ex.getMessage());
         server.stop(0);
     }
@@ -175,7 +175,7 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, AUDIENCE_URL, null));
         assertEquals("Token type is invalid", ex.getMessage());
         server.stop(0);
     }
@@ -189,7 +189,7 @@ class TokenClientTest {
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer(responseList, respCode, PORT);
         server.start();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken(AUDIENCE_URL, null));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, AUDIENCE_URL, null));
         assertEquals("Token scope is invalid", ex.getMessage());
         server.stop(0);
     }
@@ -201,24 +201,24 @@ class TokenClientTest {
         authEndpoints.put("apac", "https://auth-apac-localhost.localhost");
         TokenClient tokenClient = new OAuthTokenClient("https://auth-emea-localhost.localhost", authEndpoints, ENV_ID, "<client_id>", "<client_secret>", HttpClients.createDefault());
 
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-null", null));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, "audience-null", null));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-null]", ex.getMessage());
         List<Class> expectedClasses = Arrays.asList(HttpHostConnectException.class, UnknownHostException.class);
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-emea", "emea"));
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, "audience-emea", "emea"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-emea]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-apac", "apac"));
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, "audience-apac", "apac"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-apac-localhost.localhost, audience=audience-apac]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-amer", "amer"));
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, "audience-amer", "amer"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-amer]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
 
-        ex = assertThrows(StorageServerException.class, () -> tokenClient.getToken("audience-wrong_value", "wrong_value"));
+        ex = assertThrows(StorageServerException.class, () -> tokenClient.refreshToken(false, "audience-wrong_value", "wrong_value"));
         assertEquals("Unexpected exception during authorization, params [OAuth URL=https://auth-emea-localhost.localhost, audience=audience-wrong_value]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
     }

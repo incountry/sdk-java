@@ -90,7 +90,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    void migratePositiveTest(RepetitionInfo repeatInfo) throws StorageException {
+    void migratePositive(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -134,7 +134,7 @@ class StorageTest {
     }
 
     @Test
-    void migrateNegativeTest() throws StorageClientException, StorageCryptoException {
+    void migrateNegative() throws StorageClientException, StorageCryptoException {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
@@ -174,7 +174,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    void testCustomEndpoint(RepetitionInfo repeatInfo) throws StorageException, IOException {
+    void customEndpointPositive(RepetitionInfo repeatInfo) throws StorageException, IOException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
@@ -195,7 +195,7 @@ class StorageTest {
     }
 
     @Test
-    void testNegativeWriteNullKey() throws StorageException {
+    void writeNullKeyNegative() throws StorageException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         StorageConfig config = new StorageConfig()
@@ -249,7 +249,7 @@ class StorageTest {
     }
 
     @Test
-    void testFindWithEnc() throws StorageException {
+    void findWithEncryptionPositive() throws StorageException {
         FindFilter filter = new FindFilter()
                 .limitAndOffset(1, 0)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
@@ -283,7 +283,7 @@ class StorageTest {
     }
 
     @RepeatedTest(3)
-    void testFindOne(RepetitionInfo repeatInfo) throws StorageException {
+    void findOnePositive(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         FindFilter filter = new FindFilter()
                 .limitAndOffset(1, 0)
@@ -595,7 +595,7 @@ class StorageTest {
     }
 
     @Test
-    void testNegativeWithConstructor3emptyApikey() throws StorageClientException {
+    void authorizationParamsNegative() throws StorageClientException {
         Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
@@ -604,7 +604,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -614,7 +614,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config, null));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -642,7 +642,7 @@ class StorageTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("clientId");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass (clientId, clientSecret) in configuration or set (INC_CLIENT_ID, INC_CLIENT_SECRET) env vars", ex.getMessage());
+        assertEquals("Please pass clientSecret in configuration", ex.getMessage());
     }
 
     @Test
@@ -657,11 +657,11 @@ class StorageTest {
                 .setClientId("")
                 .setClientSecret("");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass clientId in configuration or set INC_CLIENT_ID env var", ex.getMessage());
+        assertEquals("Please pass clientId in configuration", ex.getMessage());
     }
 
     @Test
-    void negativeTestBothAuth() throws StorageClientException {
+    void allAuthParamsNegative() throws StorageClientException {
         Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
@@ -670,13 +670,14 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("<clientId>")
-                .setApiKey("<apiKey>");
+                .setApiKey("<apiKey>")
+                .setOauthToken("<token>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Either apiKey or clientId/clientSecret can be used at the same moment, not both", ex.getMessage());
+        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
-    void positiveTestCustomTimeout() throws StorageException, IOException {
+    void customTimeoutPositive() throws StorageException, IOException {
         FakeHttpServer server = new FakeHttpServer("{}", 200, PORT);
         server.start();
         StorageConfig config = new StorageConfig()
@@ -1053,5 +1054,37 @@ class StorageTest {
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 StorageImpl.newStorage(null));
         assertEquals("Storage configuration is null", ex.getMessage());
+    }
+
+    @Test
+    void oauthTokenPositive() throws StorageException, IOException {
+        FakeHttpServer server = new FakeHttpServer("{}", 200, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setOauthToken("<token>")
+                .setEnvironmentId("<envId>");
+        Storage storage = StorageImpl.newStorage(config);
+        assertTrue(storage.delete(COUNTRY, RECORD_KEY));
+        server.stop(0);
+    }
+
+    @Test
+    void oauthTokenNegative() throws StorageException, IOException {
+        FakeHttpServer server = new FakeHttpServer("{}", 200, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setHttpTimeout(31)
+                .setEndPoint("http://localhost:" + PORT)
+                .setOauthTokenAccessor(() -> {
+                    throw new NullPointerException();
+                })
+                .setEnvironmentId("<envId>");
+        Storage storage = StorageImpl.newStorage(config);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, RECORD_KEY));
+        assertEquals("Unexpected error", ex.getMessage());
+        assertTrue(ex.getCause() instanceof NullPointerException);
+        server.stop(0);
     }
 }

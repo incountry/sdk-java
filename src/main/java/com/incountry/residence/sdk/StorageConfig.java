@@ -1,16 +1,28 @@
 package com.incountry.residence.sdk;
 
+import com.incountry.residence.sdk.oauth.OauthTokenAccessor;
+import com.incountry.residence.sdk.tools.ValidationHelper;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
 
 /**
  * container with Storage configuration, using pattern 'builder'
  */
 public class StorageConfig {
 
+    private static final Logger LOG = LogManager.getLogger(StorageConfig.class);
+    private static final ValidationHelper HELPER = new ValidationHelper(LOG);
+
+
+    public static final String MSG_ERR_NULL_TOKEN = "OAuth2 token is null or empty";
     public static final String MSG_SECURE = "[SECURE[%s]]";
     //params from OS env
     public static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
@@ -35,6 +47,7 @@ public class StorageConfig {
     private Integer maxHttpPoolSize;
     private Integer maxHttpConnectionsPerRoute;
     private boolean hashSearchKeys = true;
+    private OauthTokenAccessor oauthTokenAccessor;
 
     public String getEnvironmentId() {
         return environmentId;
@@ -164,7 +177,7 @@ public class StorageConfig {
 
     /**
      * Set login for oAuth authorization, can be also set via environment variable INC_CLIENT_ID.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     * Alternative way for authorization - to use {@link #setApiKey(String)}
      *
      * @param clientId login
      * @return StorageConfig
@@ -190,7 +203,7 @@ public class StorageConfig {
 
     /**
      * Set user secret for oAuth authorization, can be also set via environment variable INC_CLIENT_SECRET.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
+     * Alternative way for authorization - to use {@link #setApiKey(String)}
      *
      * @param clientSecret password
      * @return StorageConfig
@@ -235,7 +248,7 @@ public class StorageConfig {
      * Optional. Set custom oAuth authorization server URL, will be used as default one.
      * Can't be null when {@link #setAuthEndpoints(Map)} is used
      *
-     * @param defaultAuthEndpoint custom authorisation endpoint
+     * @param defaultAuthEndpoint custom authorization endpoint
      * @return StorageConfig
      */
     public StorageConfig setDefaultAuthEndpoint(String defaultAuthEndpoint) {
@@ -335,6 +348,34 @@ public class StorageConfig {
         return this;
     }
 
+    public OauthTokenAccessor getOauthTokenAccessor() {
+        return oauthTokenAccessor;
+    }
+
+    /**
+     * Optional. For using of a previously acquired oAuth token for OAuth2 authorization
+     *
+     * @param oauthToken non-empty token
+     * @return StorageConfig config
+     * @throws StorageClientException when a token is null or empty
+     */
+    public StorageConfig setOauthToken(String oauthToken) throws StorageClientException {
+        HELPER.check(StorageClientException.class, isNullOrEmpty(oauthToken), MSG_ERR_NULL_TOKEN);
+        this.oauthTokenAccessor = () -> oauthToken;
+        return this;
+    }
+
+    /**
+     * Optional. For an external acquiring of oAuth2 tokens for OAuth2 authorization
+     *
+     * @param oauthTokenAccessor token access function
+     * @return StorageConfig config
+     */
+    public StorageConfig setOauthTokenAccessor(OauthTokenAccessor oauthTokenAccessor) {
+        this.oauthTokenAccessor = oauthTokenAccessor;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvironmentId(getEnvironmentId());
@@ -352,13 +393,14 @@ public class StorageConfig {
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
         newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
         newInstance.setHashSearchKeys(isHashSearchKeys());
+        newInstance.setOauthTokenAccessor(getOauthTokenAccessor());
         return newInstance;
     }
 
     @Override
     public String toString() {
         return "StorageConfig{" +
-                "envId='" + hideParam(environmentId) + '\'' +
+                "environmentId='" + hideParam(environmentId) + '\'' +
                 ", apiKey='" + hideParam(apiKey) + '\'' +
                 ", endPoint='" + endPoint + '\'' +
                 ", secretKeyAccessor=" + secretKeyAccessor +
@@ -373,6 +415,7 @@ public class StorageConfig {
                 ", httpTimeout='" + httpTimeout + '\'' +
                 ", httpPoolSize='" + maxHttpPoolSize + '\'' +
                 ", ignoreKeysHashing='" + hashSearchKeys + '\'' +
+                ", oauthTokenAccessor=" + oauthTokenAccessor +
                 '}';
     }
 

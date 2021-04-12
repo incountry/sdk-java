@@ -33,6 +33,7 @@ import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENVIRON
 import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -88,8 +89,8 @@ public class OAuthTest {
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
         TokenClient client = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HttpClients.createDefault());
         TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(client, true);
-        assertNotNull(tokenClient.getToken(END_POINT, null));
-        assertNotNull(tokenClient.getToken(END_POINT, null));
+        assertNotNull(tokenClient.refreshToken(false, END_POINT, null));
+        assertNotNull(tokenClient.refreshToken(false, END_POINT, null));
         assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
         assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
     }
@@ -136,5 +137,28 @@ public class OAuthTest {
         assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765 https://some_minipop_country-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
+    }
+
+    @Test
+    void tokenAccessorTest() throws StorageClientException, StorageServerException, StorageCryptoException {
+        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HttpClients.createDefault());
+        String audience = "https://" + COUNTRY.toLowerCase() + ENDPOINT_MASK;
+        String oauthToken = tokenClient.refreshToken(false, audience, "emea");
+
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENV_ID)
+                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
+                .setEndpointMask(ENDPOINT_MASK)
+                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
+                .setOauthToken(oauthToken);
+        Storage storage = StorageImpl.newStorage(config);
+        Record record = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        storage.write(COUNTRY, record);
+        Record readRecord = storage.read(COUNTRY, record.getRecordKey());
+        assertEquals(record.getRecordKey(), readRecord.getRecordKey());
+        assertEquals(record.getBody(), readRecord.getBody());
+        storage.delete(COUNTRY, record.getRecordKey());
+        readRecord = storage.read(COUNTRY, record.getRecordKey());
+        assertNull(readRecord);
     }
 }
