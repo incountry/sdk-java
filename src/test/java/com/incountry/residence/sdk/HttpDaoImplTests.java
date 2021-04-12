@@ -301,7 +301,7 @@ class HttpDaoImplTests {
         assertTrue(ex1.getCause() instanceof JsonSyntaxException);
 
         StorageServerException ex2 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
-        assertEquals("Null required record fields: recordKey", ex2.getMessage());
+        assertEquals("Record key can't be null", ex2.getMessage());
     }
 
     @Test

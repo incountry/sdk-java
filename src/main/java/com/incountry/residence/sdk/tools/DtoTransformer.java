@@ -47,7 +47,7 @@ public class DtoTransformer {
     private static final String MSG_ERR_INVALID_LENGTH = "key1-key20 length can't be more than " + MAX_STRING_KEY_LENGTH
             + " chars with option 'hashSearchKeys' = false";
     private static final String MSG_DEBUG_NULL_RECORD = "Received record is null";
-    private static final String MSG_ERR_NULL_RECORD_KEY = "Null required record fields: recordKey";
+    private static final String MSG_ERR_NULL_RECORD_KEY = "Record key can't be null";
     private static final String MSG_ERR_NULL_BODY = "Null required record fields: body";
     private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_RECORD_PARSE = "Record parse exception";
