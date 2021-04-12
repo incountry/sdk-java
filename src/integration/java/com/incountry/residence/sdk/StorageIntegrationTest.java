@@ -41,7 +41,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -362,11 +361,7 @@ public class StorageIntegrationTest {
         assertNotNull(incomingRecord.getRangeKey10());
         assertNotNull(incomingRecord.getCreatedAt());
         assertNotNull(incomingRecord.getUpdatedAt());
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(EXPIRES_AT);
-        calendar.set(Calendar.MILLISECOND, 0);
-        assertEquals(calendar.getTime(), incomingRecord.getExpiresAt());
+        assertEquals(EXPIRES_AT, incomingRecord.getExpiresAt());
     }
 
     @ParameterizedTest(name = "findTest [{index}] {arguments}")
@@ -388,11 +383,7 @@ public class StorageIntegrationTest {
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertNotNull(findResult.getRecords().get(0).getCreatedAt());
         assertNotNull(findResult.getRecords().get(0).getUpdatedAt());
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(EXPIRES_AT);
-        calendar.set(Calendar.MILLISECOND, 0);
-        assertEquals(calendar.getTime(), findResult.getRecords().get(0).getExpiresAt());
+        assertEquals(EXPIRES_AT, findResult.getRecords().get(0).getExpiresAt());
 
         filter.clear()
                 .keyEq(StringField.RECORD_KEY, batchRecordKey)

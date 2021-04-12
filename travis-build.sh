@@ -5,7 +5,6 @@ if [[ "${TRAVIS_BUILD_SCRIPT_DEBUG_ENABLED:-false}" == 'true' ]]; then
 fi
 
 set -e
-set -o pipefail
 
 RED="\033[31;1m"
 GREEN="\033[32;1m"
@@ -33,6 +32,8 @@ gradle build --exclude-task test
 # Separate command to run unit tests with full log at console output
 gradle test jacocoTestReport sonarqube
 
+# Install SNYK. SNYK should be used only for scanning master,SB,RC,FB_DEVOPS branches
+# SNYK should run only for Travis 'branch' builds, and shouldn't run for Travis 'PR' builds
 if [[ "$TRAVIS_PULL_REQUEST" == 'false' ]] && branch_matches "^master$|^develop$|^SB_*|^RC_*"; then
   npm install -g snyk
   snyk monitor --org=incountry --prune-repeated-subdependencies --remote-repo-url="${APP_NAME}" --project-name="${APP_NAME}:${TRAVIS_BRANCH}"
