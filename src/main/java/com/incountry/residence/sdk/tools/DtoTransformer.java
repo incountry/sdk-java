@@ -174,8 +174,8 @@ public class DtoTransformer {
         if (hashSearchKeys) {
             return hashUtils.getSha256Hash(value);
         }
-        boolean invalidLength = validateLength && value != null && value.length() > MAX_STRING_KEY_LENGTH;
-        HELPER.check(StorageClientException.class, invalidLength, MSG_ERR_INVALID_LENGTH);
+        boolean isInvalidLength = validateLength && value != null && value.length() > MAX_STRING_KEY_LENGTH;
+        HELPER.check(StorageClientException.class, isInvalidLength, MSG_ERR_INVALID_LENGTH);
         return value;
     }
 
@@ -248,10 +248,8 @@ public class DtoTransformer {
     }
 
     private static void validateTransferRecord(TransferRecord record) throws StorageServerException {
-        boolean invalidRecordKey = isNullOrEmpty(record.getRecordKey());
-        HELPER.check(StorageServerException.class, invalidRecordKey, MSG_ERR_NULL_RECORD_KEY);
-        boolean invalidBody = isNullOrEmpty(record.getBody());
-        HELPER.check(StorageServerException.class, invalidBody, MSG_ERR_NULL_BODY);
+        HELPER.check(StorageServerException.class, isNullOrEmpty(record.getRecordKey()), MSG_ERR_NULL_RECORD_KEY);
+        HELPER.check(StorageServerException.class, isNullOrEmpty(record.getBody()), MSG_ERR_NULL_BODY);
     }
 
     public List<TransferRecord> getTransferRecordList(List<Record> recordList) throws StorageClientException, StorageCryptoException {

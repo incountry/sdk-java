@@ -34,12 +34,12 @@ public class NumberFilter extends Filter {
 
     @SuppressWarnings("java:S2259")
     private void validate(Long[] values, String operator) throws StorageClientException {
-        boolean invalidFilter = values == null || values.length == 0;
-        HELPER.check(StorageClientException.class, invalidFilter, MSG_ERR_NULL_NUMBER_FILTER);
-        boolean invalidOperator = !ALL_OPERATORS.contains(operator);
-        HELPER.check(StorageClientException.class, invalidOperator, MSG_ERR_ILLEGAL_OPERATOR);
-        boolean invalidSingleOperatorValues = !MULTIPLE_VALUE_OPERATORS.contains(operator) && values.length > 1;
-        HELPER.check(StorageClientException.class, invalidSingleOperatorValues, MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE);
+        boolean isInvalidFilter = values == null || values.length == 0;
+        HELPER.check(StorageClientException.class, isInvalidFilter, MSG_ERR_NULL_NUMBER_FILTER);
+        boolean isInvalidOperator = !ALL_OPERATORS.contains(operator);
+        HELPER.check(StorageClientException.class, isInvalidOperator, MSG_ERR_ILLEGAL_OPERATOR);
+        boolean isInvalidSingleOperatorValues = !MULTIPLE_VALUE_OPERATORS.contains(operator) && values.length > 1;
+        HELPER.check(StorageClientException.class, isInvalidSingleOperatorValues, MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE);
     }
 
     @Override

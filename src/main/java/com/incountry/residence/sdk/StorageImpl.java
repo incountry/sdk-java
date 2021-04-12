@@ -92,14 +92,14 @@ public class StorageImpl implements Storage {
         this.hashUtils = new HashUtils(config.getEnvironmentId(), config.isNormalizeKeys());
         CryptoProvider cryptoProvider = config.getCryptoProvider() == null ? new CryptoProvider(null) : config.getCryptoProvider();
         if (config.getSecretKeyAccessor() != null) {
-            boolean invalidAccessor;
+            boolean isInvalidAccessor;
             try {
-                invalidAccessor = config.getSecretKeyAccessor().getSecretsData() == null;
+                isInvalidAccessor = config.getSecretKeyAccessor().getSecretsData() == null;
             } catch (Exception ex) {
                 LOG.error(MSG_ERR_UNEXPECTED, ex);
                 throw new StorageClientException(MSG_ERR_UNEXPECTED, ex);
             }
-            HELPER.check(StorageClientException.class, invalidAccessor, MSG_ERR_NULL_SECRETS);
+            HELPER.check(StorageClientException.class, isInvalidAccessor, MSG_ERR_NULL_SECRETS);
         }
         cryptoProvider.validateCustomCiphers(config.getSecretKeyAccessor() == null ? null : config.getSecretKeyAccessor().getSecretsData());
         this.transformer = new DtoTransformer(cryptoProvider, hashUtils, config.isHashSearchKeys(), config.getSecretKeyAccessor());
@@ -199,13 +199,13 @@ public class StorageImpl implements Storage {
     }
 
     private static void checkPositiveOrNull(Integer intValue, String errorMessage) throws StorageClientException {
-        boolean invalidParams = intValue != null && intValue < 1;
-        HELPER.check(StorageClientException.class, invalidParams, errorMessage, intValue);
+        boolean isInvalidParam = intValue != null && intValue < 1;
+        HELPER.check(StorageClientException.class, isInvalidParam, errorMessage, intValue);
     }
 
     private static void checkFileNameAndMimeType(String fileName, String mimeType) throws StorageClientException {
-        boolean invalidParams = isNullOrEmpty(fileName) && isNullOrEmpty(mimeType);
-        HELPER.check(StorageClientException.class, invalidParams, MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE);
+        boolean isInvalidParams = isNullOrEmpty(fileName) && isNullOrEmpty(mimeType);
+        HELPER.check(StorageClientException.class, isInvalidParams, MSG_ERR_NULL_FILE_NAME_AND_MIME_TYPE);
     }
 
     private void checkCountryAndRecordKey(String country, String key) throws StorageClientException {
@@ -214,8 +214,8 @@ public class StorageImpl implements Storage {
     }
 
     private void checkAttachmentParameters(String country, String key, String fileId) throws StorageClientException {
-        boolean invalidFileId = isNullOrEmpty(fileId);
-        HELPER.check(StorageClientException.class, invalidFileId, MSG_ERR_NULL_FILE_ID);
+        boolean isInvalidFileId = isNullOrEmpty(fileId);
+        HELPER.check(StorageClientException.class, isInvalidFileId, MSG_ERR_NULL_FILE_ID);
         checkCountryAndRecordKey(country, key);
     }
 
@@ -250,8 +250,8 @@ public class StorageImpl implements Storage {
 
     public List<Record> batchWrite(String country, List<Record> records)
             throws StorageClientException, StorageServerException, StorageCryptoException {
-        boolean invalidList = records == null || records.isEmpty();
-        HELPER.check(StorageClientException.class, invalidList, MSG_ERR_NULL_BATCH);
+        boolean isInvalidList = records == null || records.isEmpty();
+        HELPER.check(StorageClientException.class, isInvalidList, MSG_ERR_NULL_BATCH);
         for (Record record : records) {
             HELPER.check(StorageClientException.class, record == null, MSG_ERR_NULL_RECORD);
             checkCountryAndRecordKey(country, record.getRecordKey());
@@ -303,8 +303,8 @@ public class StorageImpl implements Storage {
     public AttachmentMeta addAttachment(String country, String recordKey, InputStream inputStream, String fileName, boolean upsert, String mimeType) throws StorageClientException, StorageServerException {
         checkCountryAndRecordKey(country, recordKey);
         try {
-            boolean invalidStream = inputStream == null || inputStream.available() < 0;
-            HELPER.check(StorageClientException.class, invalidStream, MSG_ERR_NULL_FILE_INPUT_STREAM);
+            boolean isInvalidStream = inputStream == null || inputStream.available() < 0;
+            HELPER.check(StorageClientException.class, isInvalidStream, MSG_ERR_NULL_FILE_INPUT_STREAM);
         } catch (IOException ex) {
             LOG.error(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM);
             throw new StorageClientException(MSG_ERR_NOT_AVAILABLE_FILE_INPUT_STREAM, ex);

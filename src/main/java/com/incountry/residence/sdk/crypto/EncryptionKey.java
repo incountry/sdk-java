@@ -13,8 +13,8 @@ public class EncryptionKey extends Secret {
 
     public EncryptionKey(int version, byte[] secretBytes) throws StorageClientException {
         super(version, secretBytes);
-        boolean invalidLength = secretBytes.length != KEY_LENGTH;
-        HELPER.check(StorageClientException.class, invalidLength, MSG_ERR_LENGTH);
+        boolean isInvalidLength = secretBytes.length != KEY_LENGTH;
+        HELPER.check(StorageClientException.class, isInvalidLength, MSG_ERR_LENGTH);
     }
 
     @Override

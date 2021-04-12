@@ -52,8 +52,8 @@ public class CryptoProvider {
             defaultCipher = tempCipher;
             return;
         }
-        boolean invalidCipher = isNullOrEmpty(currentCipher.getName());
-        HELPER.check(StorageClientException.class, invalidCipher, MSG_ERR_INVALID_CIPHER_NAME);
+        boolean isInvalidCipher = isNullOrEmpty(currentCipher.getName());
+        HELPER.check(StorageClientException.class, isInvalidCipher, MSG_ERR_INVALID_CIPHER_NAME);
         customCipherMap.put(currentCipher.getNameBase64(), currentCipher);
         defaultCipher = currentCipher;
     }
@@ -142,8 +142,8 @@ public class CryptoProvider {
         if (defaultCipherMap.containsKey(cipherName)) {
             return defaultCipherMap.get(cipherName);
         }
-        boolean invalidCipher = !customCipherMap.containsKey(cipherName);
-        HELPER.check(StorageCryptoException.class, invalidCipher, MSG_ERR_UNKNOWN_CIPHER);
+        boolean isInvalidCipher = !customCipherMap.containsKey(cipherName);
+        HELPER.check(StorageCryptoException.class, isInvalidCipher, MSG_ERR_UNKNOWN_CIPHER);
         return customCipherMap.get(cipherName);
     }
 

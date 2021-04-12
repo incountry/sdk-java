@@ -11,6 +11,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 public abstract class AbstractCipher implements Cipher {
 
     private static final ValidationHelper HELPER = new ValidationHelper(LogManager.getLogger(AbstractCipher.class));
@@ -26,8 +28,7 @@ public abstract class AbstractCipher implements Cipher {
 
     @SuppressWarnings("java:S2259")
     protected AbstractCipher(String name) throws StorageClientException {
-        boolean invalidName = name == null || name.isEmpty();
-        HELPER.check(StorageClientException.class, invalidName, MSG_ERR_NULL_CIPHER_NAME);
+        HELPER.check(StorageClientException.class, isNullOrEmpty(name), MSG_ERR_NULL_CIPHER_NAME);
         this.name = name;
         this.nameBase64 = base64(name);
     }
