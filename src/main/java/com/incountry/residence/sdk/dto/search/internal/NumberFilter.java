@@ -20,7 +20,7 @@ public class NumberFilter extends Filter {
 
     private static final String MSG_ERR_NULL_NUMBER_FILTER = "Number filter or it's values can't be null";
     private static final String MSG_ERR_ILLEGAL_OPERATOR = "Operator in non-range number filter can be only one of [NULL,$not,$lt,$lte,$gt,$gte]";
-    private static final String MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE = "Operator in list number filter can by only in [NULL,$not]";
+    private static final String MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE = "Operator in list number filter can be only one of [NULL,$not]";
 
     private final List<Long> values = new ArrayList<>();
     public final String operator;

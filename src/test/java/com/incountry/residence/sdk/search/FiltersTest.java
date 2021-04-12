@@ -35,7 +35,7 @@ class FiltersTest {
         assertEquals("Operator in non-range number filter can be only one of [NULL,$not,$lt,$lte,$gt,$gte]", ex.getMessage());
 
         ex = assertThrows(StorageClientException.class, () -> new NumberFilter(new Long[]{1L, 2L}, Filter.OPERATOR_LESS));
-        assertEquals("Operator in list number filter can by only in [NULL,$not]", ex.getMessage());
+        assertEquals("Operator in list number filter can be only one of [NULL,$not]", ex.getMessage());
     }
 
     @Test
