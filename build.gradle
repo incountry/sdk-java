@@ -19,13 +19,16 @@ apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'signing'
 
+def sdkProperties = new Properties()
+sdkProperties.load(new FileInputStream(new File("src/main/resources/sdk.properties")))
+
 group group
-version version
+version sdkProperties.artifactVersion
+archivesBaseName = rootProject.name
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-archivesBaseName = rootProject.name
 
 sourceSets {
     integration {
@@ -240,14 +243,6 @@ tasks.withType(Test) {
         }
     }
 }
-
-
-task generateVersionClass(type: Copy) {
-    from "${projectDir}/config/template"
-    into "${projectDir}/src/main/java/com/incountry/residence/sdk/version/"
-    filter { line -> line.replaceAll('DEV-SNAPSHOT', "${project.version}") }
-}
-compileJava.dependsOn generateVersionClass
 
 compileJava {
     options.compilerArgs << '-parameters'

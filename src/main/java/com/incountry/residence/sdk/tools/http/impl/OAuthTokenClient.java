@@ -6,7 +6,7 @@ import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.version.Version;
+import com.incountry.residence.sdk.version.SdkInfo;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -44,7 +44,9 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
     private static final String MSG_ERR_ILLEGAL_AUTH_ENDPOINTS = "Parameter 'authEndpoints' contains null keys/values";
 
     private static final String USER_AGENT = "User-Agent";
-    private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
+    private static final SdkInfo SDK_INFO = SdkInfo.getInstance();
+    private static final String USER_AGENT_VALUE =
+            SDK_INFO.getProperty(SdkInfo.PROPERTY_USER_AGENT) + "/" + SDK_INFO.getProperty(SdkInfo.PROPERTY_VERSION);
     private static final String BODY = "grant_type=client_credentials&audience=%s&scope=%s";
     private static final String BEARER_TOKEN_TYPE = "bearer";
     private static final String BASIC = "Basic ";
