@@ -694,6 +694,14 @@ class StorageTest {
     }
 
     @Test
+    void otherSdkTest() throws IOException, InterruptedException {
+        FakeHttpServer server = new FakeHttpServer("{}", 200, 8088);
+        server.start();
+        Thread.sleep(1000*60*60);
+        server.stop(0);
+    }
+
+    @Test
     void negativeTestNullResponse() throws StorageException, IOException {
         FakeHttpServer server = new FakeHttpServer((String) null, 200, PORT);
         server.start();

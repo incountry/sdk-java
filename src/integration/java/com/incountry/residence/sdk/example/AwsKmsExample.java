@@ -1,4 +1,4 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.example;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -8,6 +8,9 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
+import com.incountry.residence.sdk.Storage;
+import com.incountry.residence.sdk.StorageConfig;
+import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.crypto.EncryptionKey;
 import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.crypto.Secret;

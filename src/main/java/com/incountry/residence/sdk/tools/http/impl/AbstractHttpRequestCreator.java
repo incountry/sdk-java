@@ -11,11 +11,17 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -70,13 +76,29 @@ public abstract class AbstractHttpRequestCreator {
         } else {
             mimeType = ContentType.create(mimeTypeString);
         }
-
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.setCharset(StandardCharsets.UTF_8);
-        builder.addBinaryBody(FILE, dataStream, mimeType, fileName);
-        HttpEntity entity = builder.build();
-
+        InputStreamBodyWithLength streamBody = new InputStreamBodyWithLength(dataStream, mimeType, fileName);
+        FormBodyPart bodyPart = FormBodyPartBuilder
+                .create()
+                .setName(FILE)
+//                .setBody(new FileBody(new File("/Users/vladimir.levitsky/test/example.txt"),mimeType,fileName))
+                .setBody(streamBody)
+//                .setField("Content-Length", String.valueOf(streamBody.getContentLength()))
+//                .setField("Content-Type", mimeType.getMimeType())
+                .build();
+//        bodyPart.getHeader().removeFields("Content-Transfer-Encoding");
+        HttpEntity entity = MultipartEntityBuilder
+                .create()
+                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+//                .setCharset(StandardCharsets.UTF_8)
+                .addPart(bodyPart).build();
+//        HttpEntity entity = MultipartEntityBuilder
+//                .create()
+//                .setMode(HttpMultipartMode.STRICT)
+////                .setCharset(StandardCharsets.UTF_8)
+//                .addBinaryBody(FILE,new File("/Users/vladimir.levitsky/test/example.txt"),mimeType,fileName)
+////                .addBinaryBody(FILE,dataStream,mimeType,fileName)
+//                .build();
+        LOG.debug(bodyPart.getHeader().getField("Content-Disposition"));
         if (method.equals(POST)) {
             HttpPost request = new HttpPost(uri);
             request.setEntity(entity);
@@ -85,6 +107,26 @@ public abstract class AbstractHttpRequestCreator {
             HttpPut request = new HttpPut(uri);
             request.setEntity(entity);
             return request;
+        }
+    }
+
+    static class InputStreamBodyWithLength extends InputStreamBody {
+
+        InputStreamBodyWithLength(InputStream in, ContentType contentType, String filename) {
+            super(in, contentType, filename);
+        }
+
+        @Override
+        public long getContentLength() {
+            InputStream inputStream = getInputStream();
+            if (inputStream != null) {
+                try {
+                    return inputStream.available();
+                } catch (IOException e) {
+                    return 0;
+                }
+            }
+            return 0;
         }
     }
 

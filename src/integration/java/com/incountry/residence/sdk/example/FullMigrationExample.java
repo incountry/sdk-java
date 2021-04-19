@@ -1,5 +1,8 @@
-package com.incountry.residence.sdk;
+package com.incountry.residence.sdk.example;
 
+import com.incountry.residence.sdk.Storage;
+import com.incountry.residence.sdk.StorageConfig;
+import com.incountry.residence.sdk.StorageImpl;
 import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.dto.MigrateResult;
