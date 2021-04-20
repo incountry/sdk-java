@@ -1002,4 +1002,28 @@ class StorageTest {
         Files.delete(tempFile);
         server.stop(0);
     }
+
+    @Test
+    void addAttachmentWithNonAsciiFilenameTest() throws IOException, StorageClientException, StorageServerException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvId("environmentId");
+        Storage storage = StorageImpl.getInstance(config);
+        List<String> nonAsciiFileNames = Arrays.asList("Просто", "مرحبا", "你好嗎", "Naïve");
+        for (String fileName : nonAsciiFileNames) {
+            Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            InputStream inputStream = Files.newInputStream(tempFile);
+            String finalFileName = fileName + " file.txt";
+            AttachmentMeta meta =
+                    storage.addAttachment("us", "recordKey", inputStream, finalFileName, "text/plain");
+            assertNotNull(meta);
+            Files.delete(tempFile);
+            assertTrue(server.getLastRequestBody().contains("filename=\"" + finalFileName + "\""));
+        }
+        server.stop(0);
+    }
 }
