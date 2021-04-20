@@ -48,7 +48,7 @@ public class DtoTransformer {
             + " chars with option 'hashSearchKeys' = false";
     private static final String MSG_DEBUG_NULL_RECORD = "Received record is null";
     private static final String MSG_ERR_NULL_RECORD_KEY = "Record key can't be null";
-    private static final String MSG_ERR_NULL_BODY = "Null required record fields: body";
+    private static final String MSG_ERR_NULL_BODY = "Transfer record body can't be null";
     private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_RECORD_PARSE = "Record parse exception";
     private static final String MSG_ERR_NULL_META = "Response error: Meta is null";

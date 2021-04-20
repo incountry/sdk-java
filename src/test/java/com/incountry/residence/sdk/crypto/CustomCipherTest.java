@@ -107,7 +107,7 @@ class CustomCipherTest {
         AbstractCipher cipher = new CipherStub();
         CryptoProvider provider = new CryptoProvider(cipher);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> provider.registerCipher(null));
-        assertEquals("Custom cipher is null", ex.getMessage());
+        assertEquals("Custom cipher can't be null", ex.getMessage());
         ex = assertThrows(StorageClientException.class, () -> provider.registerCipher(cipher));
         assertEquals("Custom cipher with name com.incountry.residence.sdk.crypto.testimpl.CipherStub is already registered", ex.getMessage());
     }

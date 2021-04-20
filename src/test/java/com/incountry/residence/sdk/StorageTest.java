@@ -609,7 +609,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -619,7 +619,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config, null));
-        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -678,7 +678,7 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setOauthToken("<token>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test

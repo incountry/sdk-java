@@ -29,8 +29,8 @@ public class CryptoProvider {
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-    private static final String MSG_ERR_INVALID_CIPHER_NAME = "Custom cipher has null name";
-    private static final String MSG_ERR_NULL_CIPHER = "Custom cipher is null";
+    private static final String MSG_ERR_INVALID_CIPHER_NAME = "Custom cipher name can't be null";
+    private static final String MSG_ERR_NULL_CIPHER = "Custom cipher can't be null";
     private static final String MSG_ERR_CIPHER_EXISTS = "Custom cipher with name %s is already registered";
     private static final String MSG_ERR_UNREGISTER_DEFAULT = "Can't unregister default cipher with name %s";
     private static final String MSG_ERR_UNKNOWN_CIPHER = "Unknown cipher format";
