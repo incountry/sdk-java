@@ -4,7 +4,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 
 public class EncryptionSecret extends Secret {
     public EncryptionSecret(int version, byte[] secretBytes) throws StorageClientException {
-        super(version, secretBytes);
+        super(secretBytes, version);
     }
 
     @Override

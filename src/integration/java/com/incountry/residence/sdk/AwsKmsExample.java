@@ -46,7 +46,7 @@ public class AwsKmsExample {
         DecryptResult decryptedKey = kmsClient.decrypt(decryptRequest);
         ByteBuffer keyByteBuffer = decryptedKey.getPlaintext();
 
-        Secret secret = new EncryptionKey(1, keyByteBuffer.array());
+        Secret secret = new EncryptionKey(keyByteBuffer.array(), 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secret), secret);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)

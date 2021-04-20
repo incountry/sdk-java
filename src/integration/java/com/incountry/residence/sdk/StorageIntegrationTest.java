@@ -187,7 +187,7 @@ public class StorageIntegrationTest {
                 .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
 
-        Secret customSecretKey = new CustomEncryptionKey(VERSION, ENCRYPTION_SECRET);
+        Secret customSecretKey = new CustomEncryptionKey(ENCRYPTION_SECRET, VERSION);
         List<Secret> secretList2 = new ArrayList<>();
         secretList2.add(customSecretKey);
         SecretsData anotherSecretsData = new SecretsData(secretList2, customSecretKey);

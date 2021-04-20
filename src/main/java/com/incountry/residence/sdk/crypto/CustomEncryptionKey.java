@@ -3,8 +3,8 @@ package com.incountry.residence.sdk.crypto;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 
 public class CustomEncryptionKey extends Secret {
-    public CustomEncryptionKey(int version, byte[] secretBytes) throws StorageClientException {
-        super(version, secretBytes);
+    public CustomEncryptionKey(byte[] secretBytes, int version) throws StorageClientException {
+        super(secretBytes, version);
     }
 
     @Override

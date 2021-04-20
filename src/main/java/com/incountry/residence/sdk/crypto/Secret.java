@@ -21,7 +21,7 @@ public abstract class Secret {
         return secretBytes;
     }
 
-    protected Secret(int version, byte[] secretBytes) throws StorageClientException {
+    protected Secret(byte[] secretBytes, int version) throws StorageClientException {
         validateAbstractSecret(version, secretBytes);
         this.version = version;
         this.secretBytes = secretBytes;

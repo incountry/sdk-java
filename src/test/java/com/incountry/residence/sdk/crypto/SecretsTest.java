@@ -166,7 +166,7 @@ class SecretsTest {
 
     @Test
     void secretsKeyWrongLength() {
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionKey(1, "123".getBytes(StandardCharsets.UTF_8)));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionKey("123".getBytes(StandardCharsets.UTF_8), 1));
         assertEquals("Wrong key length for encryption key . Should be 32-byte array", ex.getMessage());
     }
 
@@ -191,9 +191,9 @@ class SecretsTest {
     void toStringPositive() throws StorageClientException {
         Secret secret1 = new EncryptionSecret(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
         assertEquals("EncryptionSecret{version=1, secretBytes=HASH[-847010189]}", secret1.toString());
-        Secret secret2 = new EncryptionKey(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        Secret secret2 = new EncryptionKey("123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8), 1);
         assertEquals("EncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret2.toString());
-        Secret secret3 = new CustomEncryptionKey(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        Secret secret3 = new CustomEncryptionKey("123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8), 1);
         assertEquals("CustomEncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret3.toString());
     }
 

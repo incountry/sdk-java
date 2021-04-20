@@ -126,7 +126,7 @@ public class CryptoProvider {
         HELPER.check(StorageClientException.class, !containsCustomEncryptionKey, MSG_ERR_NO_CUSTOM_ENC_KEY);
         CustomEncryptionKey customEncryptionKey = (secretsData.getCurrentSecret() instanceof CustomEncryptionKey)
                 ? (CustomEncryptionKey) secretsData.getCurrentSecret()
-                : new CustomEncryptionKey(0, getRandomEncryptionKey());
+                : new CustomEncryptionKey(getRandomEncryptionKey(), 0);
         for (AbstractCipher cipher : customCipherMap.values()) {
             validateCipher(cipher, customEncryptionKey);
         }
