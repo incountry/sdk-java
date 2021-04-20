@@ -13,13 +13,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>3.4.0</version>
+  <version>4.0.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:3.4.0"
+compile "com.incountry:incountry-java-client:4.0.0"
 ```
 
 ## Countries List

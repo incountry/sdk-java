@@ -6,6 +6,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.crypto.EncryptionSecret;
 import com.incountry.residence.sdk.crypto.Secret;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
+import com.incountry.residence.sdk.crypto.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.FindResult;
@@ -23,9 +26,6 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
-import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
-import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
@@ -46,7 +46,9 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
@@ -1088,6 +1090,58 @@ class StorageTest {
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, RECORD_KEY));
         assertEquals("Unexpected error", ex.getMessage());
         assertTrue(ex.getCause() instanceof NullPointerException);
+        server.stop(0);
+    }
+
+    @Test
+    void addAttachmentWithContentLengthHeader() throws IOException, StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId");
+
+        Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+        InputStream inputStream = Files.newInputStream(tempFile);
+
+        Storage storage = StorageImpl.newStorage(config);
+        AttachmentMeta meta =
+                storage.addAttachment("us", "recordKey", inputStream, "file_name.txt", "text/plain");
+        assertNotNull(meta);
+        String lengthString = server.getLastRequestHeaders().get("Content-length").get(0);
+        assertNotNull(lengthString);
+        assertTrue(Integer.parseInt(lengthString) > 0);
+        String requestBody = server.getLastRequestBody();
+        assertTrue(requestBody.contains("Content-Disposition: form-data; name=\"file\"; filename=\"file_name.txt\""));
+        assertTrue(requestBody.contains("Content-Type: text/plain"));
+        Files.delete(tempFile);
+        server.stop(0);
+    }
+
+    @Test
+    void addAttachmentWithNonAsciiFilenameTest() throws IOException, StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId");
+        Storage storage = StorageImpl.newStorage(config);
+        List<String> nonAsciiFileNames = Arrays.asList("Просто", "مرحبا", "你好嗎", "Naïve");
+        for (String fileName : nonAsciiFileNames) {
+            Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            InputStream inputStream = Files.newInputStream(tempFile);
+            String finalFileName = fileName + " file.txt";
+            AttachmentMeta meta =
+                    storage.addAttachment("us", "recordKey", inputStream, finalFileName, "text/plain");
+            assertNotNull(meta);
+            Files.delete(tempFile);
+            assertTrue(server.getLastRequestBody().contains("filename=\"" + finalFileName + "\""));
+        }
         server.stop(0);
     }
 }

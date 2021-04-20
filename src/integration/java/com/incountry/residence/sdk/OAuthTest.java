@@ -22,15 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_COUNTRY;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENDPOINT;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_COUNTRIES_LIST_ENDPOINT;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_ID;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_CLIENT_SECRET;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_DEFAULT_AUTH_ENDPOINT;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENDPOINT_MASK;
-import static com.incountry.residence.sdk.StorageIntegrationTest.INT_INC_ENVIRONMENT_ID_OAUTH;
-import static com.incountry.residence.sdk.StorageIntegrationTest.loadFromEnv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -38,17 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OAuthTest {
-    private static final String INT_MINIPOP_COUNTRY = "INT_MINIPOP_COUNTRY";
-
-    private static final String DEFAULT_AUTH_ENDPOINT = loadFromEnv(INT_INC_DEFAULT_AUTH_ENDPOINT);
-    private static final String CLIENT_ID = loadFromEnv(INT_INC_CLIENT_ID);
-    private static final String SECRET = loadFromEnv(INT_INC_CLIENT_SECRET);
-    private static final String END_POINT = loadFromEnv(INT_INC_ENDPOINT);
-    private static final String ENV_ID = loadFromEnv(INT_INC_ENVIRONMENT_ID_OAUTH);
-    private static final String COUNTRY = loadFromEnv(INT_INC_COUNTRY);
-    private static final String ENDPOINT_MASK = loadFromEnv(INT_INC_ENDPOINT_MASK);
-    private static final String MINIPOP_COUNTRY = loadFromEnv(INT_MINIPOP_COUNTRY);
-    private static final String COUNTRIES_LIST_ENDPOINT = loadFromEnv(INT_COUNTRIES_LIST_ENDPOINT);
+    private static final String COUNTRY = CredentialsHelper.getMidPopCountry(true);
+    private static final String MINIPOP_COUNTRY = CredentialsHelper.getMiniPopCountry();
 
     private final SecretKeyAccessor accessor;
 
@@ -58,16 +40,11 @@ public class OAuthTest {
     }
 
     private Storage initStorage() throws StorageClientException, StorageCryptoException {
-        StorageConfig config = new StorageConfig()
-                .setClientId(CLIENT_ID)
-                .setClientSecret(SECRET)
-                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
-                .setEndpointMask(ENDPOINT_MASK)
-                .setEnvironmentId(ENV_ID)
-                .setSecretKeyAccessor(accessor)
-                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT);
+        StorageConfig config = CredentialsHelper.getConfigWithOauth()
+                .setSecretKeyAccessor(accessor);
         return StorageImpl.newStorage(config);
     }
+
 
     @Test
     public void testStorageWithAuthClient() throws StorageServerException, StorageClientException, StorageCryptoException {
@@ -87,12 +64,15 @@ public class OAuthTest {
 
     @Test
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
-        TokenClient client = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HttpClients.createDefault());
+        StorageConfig config = CredentialsHelper.getConfigWithOauth();
+        TokenClient client = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault());
         TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(client, true);
-        assertNotNull(tokenClient.refreshToken(false, END_POINT, null));
-        assertNotNull(tokenClient.refreshToken(false, END_POINT, null));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
-        assertNotNull(tokenClient.refreshToken(true, END_POINT, null));
+        String endPoint = "https://" + CredentialsHelper.getMidPopCountry(true).toLowerCase() + config.getEndpointMask();
+        assertNotNull(tokenClient.refreshToken(false, endPoint, null));
+        assertNotNull(tokenClient.refreshToken(false, endPoint, null));
+        assertNotNull(tokenClient.refreshToken(true, endPoint, null));
+        assertNotNull(tokenClient.refreshToken(true, endPoint, null));
     }
 
     @Test
@@ -141,15 +121,15 @@ public class OAuthTest {
 
     @Test
     void tokenAccessorTest() throws StorageClientException, StorageServerException, StorageCryptoException {
-        TokenClient tokenClient = new OAuthTokenClient(DEFAULT_AUTH_ENDPOINT, null, ENV_ID, CLIENT_ID, SECRET, HttpClients.createDefault());
-        String audience = "https://" + COUNTRY.toLowerCase() + ENDPOINT_MASK;
+        StorageConfig config = CredentialsHelper.getConfigWithOauth();
+        TokenClient tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault());
+        String audience = "https://" + COUNTRY.toLowerCase() + config.getEndpointMask();
         String oauthToken = tokenClient.refreshToken(false, audience, "emea");
 
-        StorageConfig config = new StorageConfig()
-                .setEnvironmentId(ENV_ID)
-                .setDefaultAuthEndpoint(DEFAULT_AUTH_ENDPOINT)
-                .setEndpointMask(ENDPOINT_MASK)
-                .setCountriesEndpoint(COUNTRIES_LIST_ENDPOINT)
+        config = CredentialsHelper.getConfigWithOauth()
+                .setClientId(null)
+                .setClientSecret(null)
                 .setOauthToken(oauthToken);
         Storage storage = StorageImpl.newStorage(config);
         Record record = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
