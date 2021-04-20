@@ -79,11 +79,11 @@ public class DtoTransformer {
         return keyAccessor;
     }
 
-    public TransferRecord getTransferRecord(Record record) throws StorageClientException, StorageCryptoException {
-        TransferRecord meta = cloneRecordForMeta(record);
-        ComplexBody newBodyObject = new ComplexBody(meta, record.getBody());
+    public TransferRecord getTransferRecord(Record originalRecord) throws StorageClientException, StorageCryptoException {
+        TransferRecord meta = cloneRecordForMeta(originalRecord);
+        ComplexBody newBodyObject = new ComplexBody(meta, originalRecord.getBody());
         String newBodyJson = gson.toJson(newBodyObject);
-        return getEncryptedTransferRecord(newBodyJson, record);
+        return getEncryptedTransferRecord(newBodyJson, originalRecord);
     }
 
     private static TransferRecord cloneRecordForMeta(Record sourceRecord) {
@@ -247,15 +247,15 @@ public class DtoTransformer {
                 .setServiceKey5(complexBody.meta.getServiceKey5());
     }
 
-    private static void validateTransferRecord(TransferRecord record) throws StorageServerException {
-        HELPER.check(StorageServerException.class, isNullOrEmpty(record.getRecordKey()), MSG_ERR_NULL_RECORD_KEY);
-        HELPER.check(StorageServerException.class, isNullOrEmpty(record.getBody()), MSG_ERR_NULL_BODY);
+    private static void validateTransferRecord(TransferRecord transferRecord) throws StorageServerException {
+        HELPER.check(StorageServerException.class, isNullOrEmpty(transferRecord.getRecordKey()), MSG_ERR_NULL_RECORD_KEY);
+        HELPER.check(StorageServerException.class, isNullOrEmpty(transferRecord.getBody()), MSG_ERR_NULL_BODY);
     }
 
     public List<TransferRecord> getTransferRecordList(List<Record> recordList) throws StorageClientException, StorageCryptoException {
         List<TransferRecord> resultList = new ArrayList<>();
-        for (Record record : recordList) {
-            resultList.add(getTransferRecord(record));
+        for (Record currentRecord : recordList) {
+            resultList.add(getTransferRecord(currentRecord));
         }
         return resultList;
     }
@@ -270,8 +270,8 @@ public class DtoTransformer {
                     transferRecord.setVersion(DEFAULT_RECORD_VERSION);
                 }
                 try {
-                    Record record = getRecord(transferRecord);
-                    records.add(record);
+                    Record resultRecord = getRecord(transferRecord);
+                    records.add(resultRecord);
                 } catch (Exception ex) {
                     LOG.warn(MSG_ERR_RECORD_PARSE, ex);
                     recordExceptions.add(new RecordException(MSG_ERR_RECORD_PARSE, gson.toJson(transferRecord), ex));

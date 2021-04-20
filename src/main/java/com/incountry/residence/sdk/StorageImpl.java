@@ -113,8 +113,8 @@ public class StorageImpl implements Storage {
      * @throws StorageClientException if configuration validation finished with errors
      * @throws StorageCryptoException if custom cipher validation fails
      */
-    public static Storage newStorage(StorageConfig config) throws StorageClientException, StorageCryptoException {
-        return newStorage(config, null);
+    public static Storage getInstance(StorageConfig config) throws StorageClientException, StorageCryptoException {
+        return getInstance(config, null);
     }
 
     /**
@@ -126,7 +126,7 @@ public class StorageImpl implements Storage {
      * @throws StorageClientException if parameter validation finished with errors
      * @throws StorageCryptoException if custom cipher validation fails
      */
-    public static Storage newStorage(StorageConfig config, Dao dao) throws StorageClientException, StorageCryptoException {
+    public static Storage getInstance(StorageConfig config, Dao dao) throws StorageClientException, StorageCryptoException {
         Storage instance = new StorageImpl(config, dao);
         return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
@@ -219,10 +219,10 @@ public class StorageImpl implements Storage {
         checkCountryAndRecordKey(country, key);
     }
 
-    public Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException {
-        HELPER.check(StorageClientException.class, record == null, MSG_ERR_NULL_RECORD);
-        checkCountryAndRecordKey(country, record.getRecordKey());
-        TransferRecord recordedRecord = dao.createRecord(country, transformer.getTransferRecord(record));
+    public Record write(String country, Record newRecord) throws StorageClientException, StorageServerException, StorageCryptoException {
+        HELPER.check(StorageClientException.class, newRecord == null, MSG_ERR_NULL_RECORD);
+        checkCountryAndRecordKey(country, newRecord.getRecordKey());
+        TransferRecord recordedRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
         return transformer.getRecord(recordedRecord);
     }
 
@@ -252,9 +252,9 @@ public class StorageImpl implements Storage {
             throws StorageClientException, StorageServerException, StorageCryptoException {
         boolean isInvalidList = records == null || records.isEmpty();
         HELPER.check(StorageClientException.class, isInvalidList, MSG_ERR_NULL_BATCH);
-        for (Record record : records) {
-            HELPER.check(StorageClientException.class, record == null, MSG_ERR_NULL_RECORD);
-            checkCountryAndRecordKey(country, record.getRecordKey());
+        for (Record currentRecord : records) {
+            HELPER.check(StorageClientException.class, currentRecord == null, MSG_ERR_NULL_RECORD);
+            checkCountryAndRecordKey(country, currentRecord.getRecordKey());
         }
         TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
         return transformer.getRecordList(transferRecordList);

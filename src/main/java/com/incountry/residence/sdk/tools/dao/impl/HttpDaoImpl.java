@@ -191,11 +191,11 @@ public class HttpDaoImpl implements Dao {
     }
 
     @Override
-    public TransferRecord createRecord(String country, TransferRecord record) throws StorageClientException, StorageServerException {
+    public TransferRecord createRecord(String country, TransferRecord transferRecord) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry);
-        String body = gson.toJson(record);
+        String body = gson.toJson(transferRecord);
         ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.WRITE));
         return gson.fromJson(response.getContent(), TransferRecord.class);
     }

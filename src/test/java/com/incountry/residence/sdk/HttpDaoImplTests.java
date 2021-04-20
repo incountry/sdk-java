@@ -88,7 +88,7 @@ class HttpDaoImplTests {
                 .setEnvironmentId(ENV_ID)
                 .setApiKey("apiKey")
                 .setSecretKeyAccessor(() -> secretsData);
-        return StorageImpl.newStorage(config, dao);
+        return StorageImpl.getInstance(config, dao);
     }
 
     private static Stream<Arguments> recordArgs() {

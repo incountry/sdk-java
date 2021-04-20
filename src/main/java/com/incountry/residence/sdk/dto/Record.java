@@ -470,49 +470,49 @@ public class Record {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        Record record = (Record) obj;
-        return Objects.equals(recordKey, record.recordKey) &&
-                Objects.equals(parentKey, record.parentKey) &&
-                Objects.equals(key1, record.key1) &&
-                Objects.equals(key2, record.key2) &&
-                Objects.equals(key3, record.key3) &&
-                Objects.equals(key4, record.key4) &&
-                Objects.equals(key5, record.key5) &&
-                Objects.equals(key6, record.key6) &&
-                Objects.equals(key7, record.key7) &&
-                Objects.equals(key8, record.key8) &&
-                Objects.equals(key9, record.key9) &&
-                Objects.equals(key10, record.key10) &&
-                Objects.equals(key11, record.key11) &&
-                Objects.equals(key12, record.key12) &&
-                Objects.equals(key13, record.key13) &&
-                Objects.equals(key14, record.key14) &&
-                Objects.equals(key15, record.key15) &&
-                Objects.equals(key16, record.key16) &&
-                Objects.equals(key17, record.key17) &&
-                Objects.equals(key18, record.key18) &&
-                Objects.equals(key19, record.key19) &&
-                Objects.equals(key20, record.key20) &&
-                Objects.equals(profileKey, record.profileKey) &&
-                Objects.equals(rangeKey1, record.rangeKey1) &&
-                Objects.equals(rangeKey2, record.rangeKey2) &&
-                Objects.equals(rangeKey3, record.rangeKey3) &&
-                Objects.equals(rangeKey4, record.rangeKey4) &&
-                Objects.equals(rangeKey5, record.rangeKey5) &&
-                Objects.equals(rangeKey6, record.rangeKey6) &&
-                Objects.equals(rangeKey7, record.rangeKey7) &&
-                Objects.equals(rangeKey8, record.rangeKey8) &&
-                Objects.equals(rangeKey9, record.rangeKey9) &&
-                Objects.equals(rangeKey10, record.rangeKey10) &&
-                Objects.equals(body, record.body) &&
-                Objects.equals(precommitBody, record.precommitBody) &&
-                Objects.equals(serviceKey1, record.serviceKey1) &&
-                Objects.equals(serviceKey2, record.serviceKey2) &&
-                Objects.equals(serviceKey3, record.serviceKey3) &&
-                Objects.equals(serviceKey4, record.serviceKey4) &&
-                Objects.equals(serviceKey5, record.serviceKey5) &&
-                Objects.equals(expiresAt, record.expiresAt) &&
-                Objects.equals(attachments, record.attachments);
+        Record otherRecord = (Record) obj;
+        return Objects.equals(recordKey, otherRecord.recordKey) &&
+                Objects.equals(parentKey, otherRecord.parentKey) &&
+                Objects.equals(key1, otherRecord.key1) &&
+                Objects.equals(key2, otherRecord.key2) &&
+                Objects.equals(key3, otherRecord.key3) &&
+                Objects.equals(key4, otherRecord.key4) &&
+                Objects.equals(key5, otherRecord.key5) &&
+                Objects.equals(key6, otherRecord.key6) &&
+                Objects.equals(key7, otherRecord.key7) &&
+                Objects.equals(key8, otherRecord.key8) &&
+                Objects.equals(key9, otherRecord.key9) &&
+                Objects.equals(key10, otherRecord.key10) &&
+                Objects.equals(key11, otherRecord.key11) &&
+                Objects.equals(key12, otherRecord.key12) &&
+                Objects.equals(key13, otherRecord.key13) &&
+                Objects.equals(key14, otherRecord.key14) &&
+                Objects.equals(key15, otherRecord.key15) &&
+                Objects.equals(key16, otherRecord.key16) &&
+                Objects.equals(key17, otherRecord.key17) &&
+                Objects.equals(key18, otherRecord.key18) &&
+                Objects.equals(key19, otherRecord.key19) &&
+                Objects.equals(key20, otherRecord.key20) &&
+                Objects.equals(profileKey, otherRecord.profileKey) &&
+                Objects.equals(rangeKey1, otherRecord.rangeKey1) &&
+                Objects.equals(rangeKey2, otherRecord.rangeKey2) &&
+                Objects.equals(rangeKey3, otherRecord.rangeKey3) &&
+                Objects.equals(rangeKey4, otherRecord.rangeKey4) &&
+                Objects.equals(rangeKey5, otherRecord.rangeKey5) &&
+                Objects.equals(rangeKey6, otherRecord.rangeKey6) &&
+                Objects.equals(rangeKey7, otherRecord.rangeKey7) &&
+                Objects.equals(rangeKey8, otherRecord.rangeKey8) &&
+                Objects.equals(rangeKey9, otherRecord.rangeKey9) &&
+                Objects.equals(rangeKey10, otherRecord.rangeKey10) &&
+                Objects.equals(body, otherRecord.body) &&
+                Objects.equals(precommitBody, otherRecord.precommitBody) &&
+                Objects.equals(serviceKey1, otherRecord.serviceKey1) &&
+                Objects.equals(serviceKey2, otherRecord.serviceKey2) &&
+                Objects.equals(serviceKey3, otherRecord.serviceKey3) &&
+                Objects.equals(serviceKey4, otherRecord.serviceKey4) &&
+                Objects.equals(serviceKey5, otherRecord.serviceKey5) &&
+                Objects.equals(expiresAt, otherRecord.expiresAt) &&
+                Objects.equals(attachments, otherRecord.attachments);
     }
 
     @Override

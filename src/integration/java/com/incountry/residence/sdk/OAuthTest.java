@@ -42,7 +42,7 @@ public class OAuthTest {
     private Storage initStorage() throws StorageClientException, StorageCryptoException {
         StorageConfig config = CredentialsHelper.getConfigWithOauth()
                 .setSecretKeyAccessor(accessor);
-        return StorageImpl.newStorage(config);
+        return StorageImpl.getInstance(config);
     }
 
 
@@ -51,8 +51,8 @@ public class OAuthTest {
         Storage storage = initStorage();
         String key = UUID.randomUUID().toString();
         String body = "body " + key;
-        Record record = new Record(key, body);
-        storage.write(COUNTRY, record);
+        Record myRecord = new Record(key, body);
+        storage.write(COUNTRY, myRecord);
         assertEquals(key, storage.read(COUNTRY, key).getRecordKey());
 
         String key2 = UUID.randomUUID().toString();
@@ -88,12 +88,12 @@ public class OAuthTest {
                 .setAuthEndpoints(authEndpoints)
                 .setDefaultAuthEndpoint("https://emea.localhost");
 
-        Storage prodStorage = StorageImpl.newStorage(config);
+        Storage prodStorage = StorageImpl.getInstance(config);
         String errorMessage = "Unexpected exception during authorization, params [OAuth URL=";
-        Record record = new Record("someKey", "someBody");
+        Record myRecord = new Record("someKey", "someBody");
 
         //IN mid APAC -> APAC auth
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", myRecord));
         assertEquals(errorMessage + "https://apac.localhost, audience=https://in-localhost.localhost:8765]", ex.getMessage());
         List<Class> expectedClasses = Arrays.asList(HttpHostConnectException.class, UnknownHostException.class);
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
@@ -101,19 +101,19 @@ public class OAuthTest {
 
         String errorEmea = "emea.localhost";
         //AE mid EMEA -> EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", myRecord));
         assertEquals(errorMessage + "https://emea.localhost, audience=https://ae-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
 
         //US mid AMER -> EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", myRecord));
         assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
 
         //Minipop - > EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", myRecord));
         assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765 https://some_minipop_country-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
@@ -131,14 +131,14 @@ public class OAuthTest {
                 .setClientId(null)
                 .setClientSecret(null)
                 .setOauthToken(oauthToken);
-        Storage storage = StorageImpl.newStorage(config);
-        Record record = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        storage.write(COUNTRY, record);
-        Record readRecord = storage.read(COUNTRY, record.getRecordKey());
-        assertEquals(record.getRecordKey(), readRecord.getRecordKey());
-        assertEquals(record.getBody(), readRecord.getBody());
-        storage.delete(COUNTRY, record.getRecordKey());
-        readRecord = storage.read(COUNTRY, record.getRecordKey());
+        Storage storage = StorageImpl.getInstance(config);
+        Record myRecord = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        storage.write(COUNTRY, myRecord);
+        Record readRecord = storage.read(COUNTRY, myRecord.getRecordKey());
+        assertEquals(myRecord.getRecordKey(), readRecord.getRecordKey());
+        assertEquals(myRecord.getBody(), readRecord.getBody());
+        storage.delete(COUNTRY, myRecord.getRecordKey());
+        readRecord = storage.read(COUNTRY, myRecord.getRecordKey());
         assertNull(readRecord);
     }
 }

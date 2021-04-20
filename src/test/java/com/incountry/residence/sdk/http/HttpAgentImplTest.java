@@ -288,7 +288,7 @@ class HttpAgentImplTest {
                 .setClientSecret("<clientSecret>")
                 .setMaxHttpPoolSize(poolSize)
                 .setMaxHttpConnectionsPerRoute(poolSize / 3);
-        final Storage multipleConnectionStorage = StorageImpl.newStorage(config);
+        final Storage multipleConnectionStorage = StorageImpl.getInstance(config);
 
         ExecutorService executorService = Executors.newFixedThreadPool(poolSize / 2);
         List<Future<StorageException>> futureList = new ArrayList<>();

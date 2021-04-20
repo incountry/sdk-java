@@ -48,11 +48,11 @@ class CustomCipherTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(() -> data)
                 .setCryptoProvider(provider);
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
-        storage = StorageImpl.newStorage(config.copy().setSecretKeyAccessor(null).setCryptoProvider(null));
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCryptoProvider(null));
         assertNotNull(storage);
-        storage = StorageImpl.newStorage(config.copy().setSecretKeyAccessor(null).setCryptoProvider(new CryptoProvider(null)));
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCryptoProvider(new CryptoProvider(null)));
         assertNotNull(storage);
         assertTrue(provider.unregisterCipher(cipher));
         assertFalse(provider.unregisterCipher(cipher));
@@ -70,7 +70,7 @@ class CustomCipherTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(() -> secretsData)
                 .setCryptoProvider(provider);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertTrue(ex.getMessage().startsWith("Validation failed for custom cipher with name"));
     }
 
