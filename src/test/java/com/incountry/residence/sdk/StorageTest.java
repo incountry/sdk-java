@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -972,5 +973,57 @@ class StorageTest {
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 StorageImpl.getInstance((StorageConfig) null));
         assertEquals("Storage configuration is null", ex.getMessage());
+    }
+
+    @Test
+    void addAttachmentWithContentLengthHeader() throws IOException, StorageClientException, StorageServerException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvId("environmentId");
+
+        Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+        InputStream inputStream = Files.newInputStream(tempFile);
+
+        Storage storage = StorageImpl.getInstance(config);
+        AttachmentMeta meta =
+                storage.addAttachment("us", "recordKey", inputStream, "file_name.txt", "text/plain");
+        assertNotNull(meta);
+        String lengthString = server.getLastRequestHeaders().get("Content-length").get(0);
+        assertNotNull(lengthString);
+        assertTrue(Integer.parseInt(lengthString) > 0);
+        String requestBody = server.getLastRequestBody();
+        assertTrue(requestBody.contains("Content-Disposition: form-data; name=\"file\"; filename=\"file_name.txt\""));
+        assertTrue(requestBody.contains("Content-Type: text/plain"));
+        Files.delete(tempFile);
+        server.stop(0);
+    }
+
+    @Test
+    void addAttachmentWithNonAsciiFilenameTest() throws IOException, StorageClientException, StorageServerException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvId("environmentId");
+        Storage storage = StorageImpl.getInstance(config);
+        List<String> nonAsciiFileNames = Arrays.asList("Просто", "مرحبا", "你好嗎", "Naïve");
+        for (String fileName : nonAsciiFileNames) {
+            Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            InputStream inputStream = Files.newInputStream(tempFile);
+            String finalFileName = fileName + " file.txt";
+            AttachmentMeta meta =
+                    storage.addAttachment("us", "recordKey", inputStream, finalFileName, "text/plain");
+            assertNotNull(meta);
+            Files.delete(tempFile);
+            assertTrue(server.getLastRequestBody().contains("filename=\"" + finalFileName + "\""));
+        }
+        server.stop(0);
     }
 }
