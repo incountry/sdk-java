@@ -382,7 +382,7 @@ public class StorageImpl implements Storage {
 
     @Override
     public AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, String mimeType) throws StorageClientException, StorageServerException {
-        return addAttachment(country, recordKey, fileInputStream, fileName, false, null);
+        return addAttachment(country, recordKey, fileInputStream, fileName, false, mimeType);
     }
 
     @Override

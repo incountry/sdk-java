@@ -11,15 +11,18 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractHttpRequestCreator {
     private static final Logger LOG = LogManager.getLogger(AbstractHttpRequestCreator.class);
@@ -42,7 +45,6 @@ public abstract class AbstractHttpRequestCreator {
 
     private HttpRequestBase createSimpleRequest(String url, String method, String body) throws StorageClientException {
         URI uri = createUri(url);
-
         if (method.equals(POST)) {
             checkBodyForNull(body);
             HttpPost request = new HttpPost(uri);
@@ -71,12 +73,16 @@ public abstract class AbstractHttpRequestCreator {
             mimeType = ContentType.create(mimeTypeString);
         }
 
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.setCharset(StandardCharsets.UTF_8);
-        builder.addBinaryBody(FILE, dataStream, mimeType, fileName);
-        HttpEntity entity = builder.build();
-
+        InputStreamBodyWithLength streamBody = new InputStreamBodyWithLength(dataStream, mimeType, fileName);
+        FormBodyPart bodyPart = FormBodyPartBuilder
+                .create()
+                .setName(FILE)
+                .setBody(streamBody)
+                .build();
+        HttpEntity entity = MultipartEntityBuilder
+                .create()
+                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+                .addPart(bodyPart).build();
         if (method.equals(POST)) {
             HttpPost request = new HttpPost(uri);
             request.setEntity(entity);
@@ -103,5 +109,25 @@ public abstract class AbstractHttpRequestCreator {
             throw new StorageClientException(MSG_ERR_URL, ex);
         }
         return uri;
+    }
+
+    static class InputStreamBodyWithLength extends InputStreamBody {
+
+        InputStreamBodyWithLength(InputStream in, ContentType contentType, String filename) {
+            super(in, contentType, filename);
+        }
+
+        @Override
+        public long getContentLength() {
+            InputStream inputStream = getInputStream();
+            if (inputStream != null) {
+                try {
+                    return inputStream.available();
+                } catch (IOException e) {
+                    return 0;
+                }
+            }
+            return 0;
+        }
     }
 }
