@@ -46,7 +46,7 @@ public class StorageImpl implements Storage {
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_ERR_AUTH = "Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor";
+    private static final String MSG_ERR_AUTH = "Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor";
     private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";

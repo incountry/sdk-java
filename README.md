@@ -157,7 +157,7 @@ StorageConfig config = new StorageConfig()
 Storage storage = StorageImpl.getInstance(config);
 ```
 
-The SDK also allows using previously acquired oAuth tokens if needed or pass token getting function. In this mode SDK is not responsible for oAuth a token renewal, and it should be done by SDK user himself.
+The SDK also allows using previously acquired oAuth token if needed or pass token accessor function. In this mode SDK is not responsible for oAuth token renewal, and it should be handled by SDK users themselves.
 
 Below you can find the example of how to specify OAuth token while creating a Storage instance:
 ```java

@@ -3,6 +3,7 @@ package com.incountry.residence.sdk.oauth;
 /**
  * OAuth2 token accessor. Method {@link OauthTokenAccessor#getToken()} is invoked on HTTP interaction with InCountry storage service.
  */
+@FunctionalInterface
 public interface OauthTokenAccessor {
 
     /**
