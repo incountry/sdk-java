@@ -41,7 +41,7 @@ class CustomCryptoTest {
     private static final String BODY_FOR_ENCRYPTION = "SomeSecretBody!234567=!@#$%^&**()_+|";
 
     @Test
-    void positiveStorageInitTest() throws StorageClientException, StorageServerException {
+    void positiveStorageInitTest() throws StorageClientException {
         List<Crypto> cryptoList = Arrays.asList(new CryptoStub(true), new PseudoCustomCrypto(false));
         SecretKey key1 = new SecretKey(CUSTOM_PASSWORD_1, 1, false, true);
         SecretKey key2 = new SecretKey(CUSTOM_PASSWORD_2, 2, false, true);
@@ -288,7 +288,6 @@ class CustomCryptoTest {
         StorageClientException ex = assertThrows(StorageClientException.class, () -> manager.decrypt(BODY_FOR_ENCRYPTION, keyVersion));
         assertEquals("Unexpected exception", ex.getMessage());
         assertEquals(ArrayIndexOutOfBoundsException.class, ex.getCause().getClass());
-        assertEquals("Index 1 out of bounds for length 1", ex.getCause().getMessage());
     }
 
     @Test
