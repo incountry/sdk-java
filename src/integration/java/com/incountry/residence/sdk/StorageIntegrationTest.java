@@ -55,6 +55,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static com.incountry.residence.sdk.CredentialsHelper.loadFromEnv;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY1;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY3;
@@ -143,20 +144,11 @@ public class StorageIntegrationTest {
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = UUID.randomUUID().toString();
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
-    private static final String NEW_FILE_NAME = UUID.randomUUID().toString() + ".txt";
+    private static final String NEW_FILE_NAME = UUID.randomUUID() + ".txt";
     private static final String MIME_TYPE = "text/plain";
-    private static final String FILE_NAME = UUID.randomUUID().toString() + ".txt";
+    private static final String FILE_NAME = UUID.randomUUID() + ".txt";
     private String fileId;
     private static Map<String, String> attachmentFiles = new HashMap<>();
-
-    public static String loadFromEnv(String key) {
-        return System.getenv(key);
-    }
-
-    public static String loadFromEnv(String key, String defaultValue) {
-        String value = loadFromEnv(key);
-        return value == null ? defaultValue : value;
-    }
 
     @BeforeAll
     public void initializeStorages() throws StorageException {
@@ -268,6 +260,26 @@ public class StorageIntegrationTest {
                 .setExpiresAt(EXPIRES_AT);
         Record recordedRecord = storage.write(COUNTRY, newRecord);
         checkAllFields(recordedRecord, recordKey, key2);
+    }
+
+    @Test
+    @Order(210)
+    public void expiredRecordTest() throws StorageException, InterruptedException {
+        Record newRecord = new Record(UUID.randomUUID().toString())
+                .setBody(UUID.randomUUID().toString())
+                //record will be expired in 5 seconds
+                .setExpiresAt(new Date(System.currentTimeMillis() + 5_000L));
+        Record recordedRecord = storageOrdinary.write(COUNTRY, newRecord);
+        assertEquals(recordedRecord.getRecordKey(), recordedRecord.getRecordKey());
+        assertEquals(recordedRecord.getBody(), recordedRecord.getBody());
+
+        Record readRecord = storageOrdinary.read(COUNTRY, newRecord.getRecordKey());
+        assertEquals(recordedRecord.getRecordKey(), readRecord.getRecordKey());
+        assertEquals(recordedRecord.getBody(), readRecord.getBody());
+        //wait 5 seconds
+        Thread.sleep(5_000L);
+        readRecord = storageOrdinary.read(COUNTRY, newRecord.getRecordKey());
+        assertNull(readRecord);
     }
 
     @ParameterizedTest(name = "readTest [{index}] {arguments}")
@@ -881,7 +893,7 @@ public class StorageIntegrationTest {
     private Callable<StorageException> createCallableTask(final Storage storage, final int numb) {
         return () -> {
             try {
-                String randomKey = "RecordKey" + TEMP + UUID.randomUUID().toString();
+                String randomKey = "RecordKey" + TEMP + UUID.randomUUID();
                 Thread currentThread = Thread.currentThread();
                 currentThread.setName("connectionPoolTest #" + numb);
                 Record newRecord = new Record(randomKey)
