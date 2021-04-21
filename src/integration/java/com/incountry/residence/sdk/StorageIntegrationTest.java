@@ -687,7 +687,7 @@ public class StorageIntegrationTest {
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
         String recordKey = "Non hashing " + RECORD_KEY;
-        Record record = new Record(recordKey)
+        Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
@@ -704,17 +704,18 @@ public class StorageIntegrationTest {
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
-        storageNonHashing.write(COUNTRY, record);
+        String country = CredentialsHelper.getMidPopCountry(false);
+        storageNonHashing.write(country, newRecord);
 
         FindFilterBuilder builder = FindFilterBuilder.create()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        BatchRecord batchRecord = storageNonHashing.find(COUNTRY, builder);
+        BatchRecord batchRecord = storageNonHashing.find(country, builder);
 
         assertEquals(1, batchRecord.getCount());
         assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
 
-        storageNonHashing.delete(COUNTRY, recordKey);
+        storageNonHashing.delete(country, recordKey);
     }
 
     @Test

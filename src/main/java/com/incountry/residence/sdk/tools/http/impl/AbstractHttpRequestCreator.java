@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractHttpRequestCreator {
     private static final Logger LOG = LogManager.getLogger(AbstractHttpRequestCreator.class);
@@ -82,8 +81,7 @@ public abstract class AbstractHttpRequestCreator {
                 .build();
         HttpEntity entity = MultipartEntityBuilder
                 .create()
-                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-                .setCharset(StandardCharsets.UTF_8)
+                .setMode(HttpMultipartMode.RFC6532)
                 .addPart(bodyPart).build();
         if (method.equals(POST)) {
             HttpPost request = new HttpPost(uri);
