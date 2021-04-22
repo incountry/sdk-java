@@ -47,8 +47,8 @@ public class NumberFilter extends Filter {
         if (operator == null) {
             return values.toArray();
         }
-        Map<String, Object[]> result = new HashMap<>();
-        result.put(operator, values.toArray());
+        Map<String, Object> result = new HashMap<>();
+        result.put(operator, values.size() == 1 ? values.get(0) : values.toArray());
         return result;
     }
 }

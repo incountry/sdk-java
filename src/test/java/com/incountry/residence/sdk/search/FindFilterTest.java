@@ -124,15 +124,13 @@ class FindFilterTest {
         DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null," +
-                "\"key3\":[\"2850267d7ddfe1cd8116d22607200eb386817af3fa2114acef1483376353ac17\"," +
-                "\"7f28b8ad3e4a2924f08b030d95e320653441b6e91425c678291ba87c9adfbbd7\"]," +
-                "\"key4\":{\"$not\":[\"95b47bb565136599af99e6510d2676d0d8d9f211818df1dd6944a232021eec30\"," +
-                "\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
-                "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gt\":3,\"$lt\":5},\"range_key8\":{\"$lt\":[7]}," +
-                "\"range_key7\":{\"$gte\":[6]},\"range_key6\":{\"$gt\":[5]},\"range_key5\":{\"$not\":[3,4]}," +
-                "\"expires_at\":\"1970-01-01T00:00:00\"," +
-                "\"range_key9\":{\"$lte\":[8]},\"range_key3\":[1,2],\"range_key2\":null,\"range_key1\":{\"$not\":null}}," +
-                "\"options\":{\"offset\":0,\"limit\":100}}", filterJson);
+                        "\"key3\":[\"2850267d7ddfe1cd8116d22607200eb386817af3fa2114acef1483376353ac17\",\"7f28b8ad3e4a2924f08b030d95e320653441b6e91425c678291ba87c9adfbbd7\"]," +
+                        "\"key4\":{\"$not\":[\"95b47bb565136599af99e6510d2676d0d8d9f211818df1dd6944a232021eec30\",\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
+                        "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gt\":3,\"$lt\":5},\"range_key8\":{\"$lt\":7}," +
+                        "\"range_key7\":{\"$gte\":6},\"range_key6\":{\"$gt\":5},\"range_key5\":{\"$not\":[3,4]}," +
+                        "\"expires_at\":\"1970-01-01T00:00:00\",\"range_key9\":{\"$lte\":8},\"range_key3\":[1,2]," +
+                        "\"range_key2\":null,\"range_key1\":{\"$not\":null}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
     }
 
     @Test

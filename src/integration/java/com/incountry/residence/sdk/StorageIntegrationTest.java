@@ -490,7 +490,7 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY9, KEY_9)
                 .keyEq(StringField.KEY10, KEY_10)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1)
-                .keyEq(NumberField.RANGE_KEY2, RANGE_KEY_2)
+                .keyGreater(NumberField.RANGE_KEY2, RANGE_KEY_2, true)
                 .keyEq(NumberField.RANGE_KEY3, RANGE_KEY_3)
                 .keyEq(NumberField.RANGE_KEY4, RANGE_KEY_4)
                 .keyEq(NumberField.RANGE_KEY5, RANGE_KEY_5)
