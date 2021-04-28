@@ -344,7 +344,7 @@ public class HttpDaoImpl implements Dao {
     public boolean healthCheck(String country) throws StorageServerException, StorageClientException {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
-        String url = endPoint.mainUrl + URI_DELIMITER + lowerCountry + URI_HEALTH_CHECK;
+        String url = endPoint.mainUrl + URI_HEALTH_CHECK;
         ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_GET));
         return response.getResponseCode() == 200;
     }

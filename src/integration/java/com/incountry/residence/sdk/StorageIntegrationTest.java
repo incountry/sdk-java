@@ -15,6 +15,7 @@ import com.incountry.residence.sdk.dto.search.SortField;
 import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.crypto.SecretsData;
@@ -847,8 +848,16 @@ public class StorageIntegrationTest {
         storageNonHashing.delete(COUNTRY, recordKey);
     }
 
-    @Test
+    @ParameterizedTest(name = "healthCheckTest [{index}] {arguments}")
+    @MethodSource("storageProvider")
     @Order(1000)
+    public void healthCheckTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageServerException, StorageClientException {
+        assertTrue(storage.healthCheck(COUNTRY));
+        assertTrue(storage.healthCheck(CredentialsHelper.getMiniPopCountry()));
+    }
+
+    @Test
+    @Order(1100)
     public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
         Secret secret = new EncryptionSecret(VERSION, ENCRYPTION_SECRET);
         List<Secret> secretList = new ArrayList<>();
