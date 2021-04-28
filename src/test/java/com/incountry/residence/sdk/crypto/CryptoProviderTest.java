@@ -131,10 +131,10 @@ class CryptoProviderTest {
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setSecretKeyAccessor(accessor1);
-        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("SecretKeyAccessor returns null secret", ex1.getMessage());
         config.setSecretKeyAccessor(accessor2);
-        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Unexpected error", ex2.getMessage());
         assertEquals("Secret can't be null or empty", ex2.getCause().getMessage());
     }

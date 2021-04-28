@@ -47,8 +47,8 @@ public class SecretsData {
     private static void validateSecretsData(List<Secret> secrets, Secret currentSecret) throws StorageClientException {
         boolean emptySecrets = secrets == null || secrets.isEmpty();
         HELPER.check(StorageClientException.class, emptySecrets, MSG_ERR_EMPTY_SECRETS);
-        boolean invalidCurrentSecret = currentSecret == null || !secrets.contains(currentSecret);
-        HELPER.check(StorageClientException.class, invalidCurrentSecret, MSG_ERR_CURRENT_VERSION);
+        boolean isInvalidCurrentSecret = currentSecret == null || !secrets.contains(currentSecret);
+        HELPER.check(StorageClientException.class, isInvalidCurrentSecret, MSG_ERR_CURRENT_VERSION);
 
         List<Integer> errorList = new ArrayList<>();
         Set<Integer> versionSet = new HashSet<>();

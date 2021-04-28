@@ -75,8 +75,8 @@ public class SecretsDataGenerator {
             base64Validation(keyContainer.secret);
             byte[] byteKey = DatatypeConverter.parseBase64Binary(keyContainer.secret);
             secret = keyContainer.isForCustomEncryption
-                    ? new CustomEncryptionKey(keyContainer.version, byteKey)
-                    : new EncryptionKey(keyContainer.version, byteKey);
+                    ? new CustomEncryptionKey(byteKey, keyContainer.version)
+                    : new EncryptionKey(byteKey, keyContainer.version);
 
         } else {
             byte[] byteKey = keyContainer.secret.getBytes(StandardCharsets.UTF_8);

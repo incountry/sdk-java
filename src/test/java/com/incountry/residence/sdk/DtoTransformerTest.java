@@ -12,15 +12,18 @@ import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.crypto.HashUtils;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DtoTransformerTest {
     @Test
@@ -116,5 +119,16 @@ class DtoTransformerTest {
         Gson gson = new GsonBuilder().serializeNulls().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
         String json = gson.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"search_keys\":\"keyword\"},\"options\":{\"offset\":0,\"limit\":100,\"sort\":[{\"created_at\":\"desc\"}]}}", json);
+    }
+
+    @Test
+    void getEmptyRecordListPositive() throws StorageClientException, StorageServerException, StorageCryptoException {
+        SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("password");
+        CryptoProvider provider = new CryptoProvider(null);
+        HashUtils hashUtils = new HashUtils("salt", false);
+        DtoTransformer transformer = new DtoTransformer(provider, hashUtils, true, accessor);
+        TransferRecordList transferRecordList = new TransferRecordList(null);
+        assertTrue(transformer.getRecordList(transferRecordList).isEmpty());
+        assertTrue(transformer.getRecordList(null).isEmpty());
     }
 }

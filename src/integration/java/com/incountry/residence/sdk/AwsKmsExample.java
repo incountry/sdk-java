@@ -46,15 +46,15 @@ public class AwsKmsExample {
         DecryptResult decryptedKey = kmsClient.decrypt(decryptRequest);
         ByteBuffer keyByteBuffer = decryptedKey.getPlaintext();
 
-        Secret secret = new EncryptionKey(1, keyByteBuffer.array());
+        Secret secret = new EncryptionKey(keyByteBuffer.array(), 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secret), secret);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setClientId(CLIENT_ID)
                 .setClientSecret(CLIENT_SECRET)
                 .setSecretKeyAccessor(() -> secretsData);
-        Storage storage = StorageImpl.newStorage(config);
-        Record record = new Record("recordKey-testAWSKMSKeys", "Test AWS KMS keys in Java SDK")
+        Storage storage = StorageImpl.getInstance(config);
+        Record myRecord = new Record("recordKey-testAWSKMSKeys", "Test AWS KMS keys in Java SDK")
                 .setKey1("<key1>")
                 .setKey2("<key2>")
                 .setKey3("<key3>")
@@ -62,7 +62,7 @@ public class AwsKmsExample {
                 .setProfileKey("<profile_key>")
                 .setRangeKey1(125L);
         String country = "US";
-        storage.write(country, record);
-        storage.delete(country, record.getRecordKey());
+        storage.write(country, myRecord);
+        storage.delete(country, myRecord.getRecordKey());
     }
 }

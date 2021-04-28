@@ -7,14 +7,15 @@ import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.transfer.TransferFilterContainer;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 
 import java.io.InputStream;
 import java.util.List;
 
 public interface Dao {
-    void createRecord(String country, TransferRecord record) throws StorageClientException, StorageServerException;
+    TransferRecord createRecord(String country, TransferRecord transferRecord) throws StorageClientException, StorageServerException;
 
-    void createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException;
+    TransferRecordList createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException;
 
     TransferRecord read(String country, String recordKey) throws StorageClientException, StorageServerException;
 

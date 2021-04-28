@@ -39,8 +39,8 @@ class CustomCipherTest {
         CryptoProvider provider = new CryptoProvider(new CipherStub());
         AbstractCipher cipher = new PseudoCustomCipher();
         provider.registerCipher(cipher);
-        Secret key1 = new CustomEncryptionKey(1, CUSTOM_PASSWORD_1);
-        Secret key2 = new CustomEncryptionKey(2, CUSTOM_PASSWORD_2);
+        Secret key1 = new CustomEncryptionKey(CUSTOM_PASSWORD_1, 1);
+        Secret key2 = new CustomEncryptionKey(CUSTOM_PASSWORD_2, 2);
         SecretsData data = new SecretsData(Arrays.asList(key1, key2), key1);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENV_ID)
@@ -48,11 +48,11 @@ class CustomCipherTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(() -> data)
                 .setCryptoProvider(provider);
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
-        storage = StorageImpl.newStorage(config.copy().setSecretKeyAccessor(null).setCryptoProvider(null));
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCryptoProvider(null));
         assertNotNull(storage);
-        storage = StorageImpl.newStorage(config.copy().setSecretKeyAccessor(null).setCryptoProvider(new CryptoProvider(null)));
+        storage = StorageImpl.getInstance(config.copy().setSecretKeyAccessor(null).setCryptoProvider(new CryptoProvider(null)));
         assertNotNull(storage);
         assertTrue(provider.unregisterCipher(cipher));
         assertFalse(provider.unregisterCipher(cipher));
@@ -62,7 +62,7 @@ class CustomCipherTest {
     @Test
     void storageWithCustomCiphersNegative() throws StorageClientException {
         CryptoProvider provider = new CryptoProvider(new InvalidCipher());
-        Secret key = new CustomEncryptionKey(1, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENV_ID)
@@ -70,14 +70,14 @@ class CustomCipherTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(() -> secretsData)
                 .setCryptoProvider(provider);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertTrue(ex.getMessage().startsWith("Validation failed for custom cipher with name"));
     }
 
     @Test
     void validateCustomCiphersPositive() throws StorageClientException {
         CryptoProvider provider = new CryptoProvider(new CipherStub());
-        Secret key = new CustomEncryptionKey(1, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         assertDoesNotThrow(() -> provider.validateCustomCiphers(secretsData));
         Secret key2 = new EncryptionSecret(2, CUSTOM_PASSWORD_1);
@@ -88,7 +88,7 @@ class CustomCipherTest {
     @Test
     void validateCustomCiphersNegative() throws StorageClientException {
         CryptoProvider provider = new CryptoProvider(new PseudoCustomCipher(0, 0, false));
-        Secret key = new CustomEncryptionKey(1, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> provider.validateCustomCiphers(secretsData));
         assertEquals("Validation failed for custom cipher with name 'PseudoCustomCipher'", ex.getMessage());
@@ -107,7 +107,7 @@ class CustomCipherTest {
         AbstractCipher cipher = new CipherStub();
         CryptoProvider provider = new CryptoProvider(cipher);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> provider.registerCipher(null));
-        assertEquals("Custom cipher is null", ex.getMessage());
+        assertEquals("Custom cipher can't be null", ex.getMessage());
         ex = assertThrows(StorageClientException.class, () -> provider.registerCipher(cipher));
         assertEquals("Custom cipher with name com.incountry.residence.sdk.crypto.testimpl.CipherStub is already registered", ex.getMessage());
     }
@@ -136,7 +136,7 @@ class CustomCipherTest {
     void customCipherEncryptDecryptPositive() throws StorageClientException, StorageCryptoException {
         Integer keyVersion = 100500;
         CryptoProvider provider = new CryptoProvider(new FernetCipher("fernet"));
-        Secret key = new CustomEncryptionKey(keyVersion, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, keyVersion);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         String text = BODY_FOR_ENCRYPTION;
         Ciphertext ciphertext = provider.encrypt(text, secretsData);
@@ -151,7 +151,7 @@ class CustomCipherTest {
     void customCipherDecryptNegative() throws StorageClientException, StorageCryptoException {
         Integer keyVersion = 2;
         CryptoProvider provider = new CryptoProvider(new FernetCipher("fernet"));
-        Secret key = new CustomEncryptionKey(keyVersion, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, keyVersion);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
 
         String wrongCipherText1 = "qqaazz" + UUID.randomUUID() + ":" + UUID.randomUUID();
@@ -168,7 +168,7 @@ class CustomCipherTest {
     void customCipherWithExceptionNegative() throws StorageClientException, StorageCryptoException {
         int keyVersion = 3;
         CryptoProvider provider = new CryptoProvider(new PseudoCustomCipher(1, 0, true));
-        Secret key = new CustomEncryptionKey(keyVersion, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, keyVersion);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         String text = BODY_FOR_ENCRYPTION;
         Ciphertext ciphertext = provider.encrypt(text, secretsData);
@@ -182,7 +182,7 @@ class CustomCipherTest {
     void negativeTestWithCryptoExceptionsInInit() throws StorageClientException {
         int keyVersion = 3;
         CryptoProvider provider = new CryptoProvider(new PseudoCustomCipher(0, 0, true));
-        Secret key = new CustomEncryptionKey(keyVersion, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, keyVersion);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> provider.validateCustomCiphers(secretsData));
         assertEquals("", ex.getMessage());
@@ -192,7 +192,7 @@ class CustomCipherTest {
     void customCipherWithUnexpectedExceptionNegative() throws StorageClientException, StorageCryptoException {
         int keyVersion = 3;
         CryptoProvider provider = new CryptoProvider(new PseudoCustomCipher(1, 0, false));
-        Secret key = new CustomEncryptionKey(keyVersion, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, keyVersion);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         String text = BODY_FOR_ENCRYPTION;
         Ciphertext ciphertext = provider.encrypt(text, secretsData);
@@ -208,7 +208,7 @@ class CustomCipherTest {
     void negativeDecryptWrongVersion() throws StorageClientException, StorageCryptoException {
         Integer keyVersion = 3;
         CryptoProvider provider = new CryptoProvider(new FernetCipher("fernet"));
-        Secret key = new CustomEncryptionKey(keyVersion, CUSTOM_PASSWORD_1);
+        Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, keyVersion);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         Ciphertext ciphertext = provider.encrypt(BODY_FOR_ENCRYPTION, secretsData);
         assertEquals(keyVersion, ciphertext.getKeyVersion());

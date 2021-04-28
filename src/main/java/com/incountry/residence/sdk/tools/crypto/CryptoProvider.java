@@ -29,8 +29,8 @@ public class CryptoProvider {
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-    private static final String MSG_ERR_INVALID_CIPHER_NAME = "Custom cipher has null name";
-    private static final String MSG_ERR_NULL_CIPHER = "Custom cipher is null";
+    private static final String MSG_ERR_INVALID_CIPHER_NAME = "Custom cipher name can't be null";
+    private static final String MSG_ERR_NULL_CIPHER = "Custom cipher can't be null";
     private static final String MSG_ERR_CIPHER_EXISTS = "Custom cipher with name %s is already registered";
     private static final String MSG_ERR_UNREGISTER_DEFAULT = "Can't unregister default cipher with name %s";
     private static final String MSG_ERR_UNKNOWN_CIPHER = "Unknown cipher format";
@@ -52,8 +52,8 @@ public class CryptoProvider {
             defaultCipher = tempCipher;
             return;
         }
-        boolean invalidCipher = isNullOrEmpty(currentCipher.getName());
-        HELPER.check(StorageClientException.class, invalidCipher, MSG_ERR_INVALID_CIPHER_NAME);
+        boolean isInvalidCipher = isNullOrEmpty(currentCipher.getName());
+        HELPER.check(StorageClientException.class, isInvalidCipher, MSG_ERR_INVALID_CIPHER_NAME);
         customCipherMap.put(currentCipher.getNameBase64(), currentCipher);
         defaultCipher = currentCipher;
     }
@@ -126,7 +126,7 @@ public class CryptoProvider {
         HELPER.check(StorageClientException.class, !containsCustomEncryptionKey, MSG_ERR_NO_CUSTOM_ENC_KEY);
         CustomEncryptionKey customEncryptionKey = (secretsData.getCurrentSecret() instanceof CustomEncryptionKey)
                 ? (CustomEncryptionKey) secretsData.getCurrentSecret()
-                : new CustomEncryptionKey(0, getRandomEncryptionKey());
+                : new CustomEncryptionKey(getRandomEncryptionKey(), 0);
         for (AbstractCipher cipher : customCipherMap.values()) {
             validateCipher(cipher, customEncryptionKey);
         }
@@ -142,8 +142,8 @@ public class CryptoProvider {
         if (defaultCipherMap.containsKey(cipherName)) {
             return defaultCipherMap.get(cipherName);
         }
-        boolean invalidCipher = !customCipherMap.containsKey(cipherName);
-        HELPER.check(StorageCryptoException.class, invalidCipher, MSG_ERR_UNKNOWN_CIPHER);
+        boolean isInvalidCipher = !customCipherMap.containsKey(cipherName);
+        HELPER.check(StorageCryptoException.class, isInvalidCipher, MSG_ERR_UNKNOWN_CIPHER);
         return customCipherMap.get(cipherName);
     }
 

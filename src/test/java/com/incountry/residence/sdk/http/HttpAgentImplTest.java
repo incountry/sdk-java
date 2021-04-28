@@ -89,7 +89,7 @@ class HttpAgentImplTest {
         assertNotNull(agent.request(ENDPOINT, "", null, null, 0, params).getContent());
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 agent.request(ENDPOINT, null, null, null, 0, params));
-        assertEquals("Body can't be null", ex.getMessage());
+        assertEquals("HTTP request body can't be null", ex.getMessage());
         server.stop(0);
     }
 
@@ -288,7 +288,7 @@ class HttpAgentImplTest {
                 .setClientSecret("<clientSecret>")
                 .setMaxHttpPoolSize(poolSize)
                 .setMaxHttpConnectionsPerRoute(poolSize / 3);
-        final Storage multipleConnectionStorage = StorageImpl.newStorage(config);
+        final Storage multipleConnectionStorage = StorageImpl.getInstance(config);
 
         ExecutorService executorService = Executors.newFixedThreadPool(poolSize / 2);
         List<Future<StorageException>> futureList = new ArrayList<>();

@@ -20,7 +20,7 @@ public class SecretKeyFactory {
 
     private static final String SECRET_KEY_FACTORY_ALGORITHM = "PBKDF2WithHmacSHA512";
 
-    private static final String MSG_ERR_NULL_SECRET = "Secret is null";
+    private static final String MSG_ERR_NULL_SECRET = "Secret can't be null";
     private static final String MSG_ERR_GEN_SECRET = "Secret generation exception";
     private static final String MSG_ERR_NO_ALGORITHM = "Unable to generate secret - cannot find PBKDF2WithHmacSHA512 algorithm. Please, check your JVM configuration";
 

@@ -6,6 +6,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.incountry.residence.sdk.crypto.EncryptionSecret;
 import com.incountry.residence.sdk.crypto.Secret;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
+import com.incountry.residence.sdk.crypto.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
 import com.incountry.residence.sdk.dto.FindResult;
@@ -23,9 +26,6 @@ import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
-import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
-import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
-import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
@@ -46,9 +46,12 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
+import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -68,7 +71,6 @@ class StorageTest {
     private static final Long RANGE_KEY_1 = 1L;
     private static final String BODY = "body";
     private static final Integer HTTP_POOL_SIZE = 5;
-
     private DtoTransformer dtoTransformer;
     private HashUtils hashUtils;
     private SecretKeyAccessor secretKeyAccessor;
@@ -108,9 +110,12 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config,
-                new HttpDaoImpl(FAKE_ENDPOINT, null, null,
-                        new FakeHttpAgent(Arrays.asList(response1, "OK", response2, "OK", response3, "OK"))));
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), dtoTransformer) + "]}";
+        Storage storage = StorageImpl.getInstance(config,
+                new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(Arrays.asList(
+                        response1, batchRecordResponse,
+                        response2, batchRecordResponse,
+                        response3, "{\"records\": []"))));
 
         String expected1 = "MigrateResult{migrated=1, totalLeft=1, errors=[com.incountry.residence.sdk.tools.exceptions.RecordException: Record parse exception]}";
         runMigrationChecks(response1, expected1, storage);
@@ -139,10 +144,10 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.migrate("us", 0));
         assertEquals("Limit can't be < 1", ex1.getMessage());
-        Storage storage2 = StorageImpl.newStorage(config.setSecretKeyAccessor(null), new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
+        Storage storage2 = StorageImpl.getInstance(config.setSecretKeyAccessor(null), new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("")));
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage2.migrate("us", 1));
         assertEquals("Migration is not supported when encryption is off", ex2.getMessage());
     }
@@ -164,7 +169,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, builder);
 
         assertEquals(1, findResult.getCount());
@@ -177,17 +182,17 @@ class StorageTest {
     void customEndpointPositive(RepetitionInfo repeatInfo) throws StorageException, IOException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
         String endpoint = "https://custom.endpoint.io";
-        FakeHttpAgent agent = new FakeHttpAgent("OK");
-        StorageConfig config = new StorageConfig()
-                .setEnvironmentId(ENVIRONMENT_ID)
-                .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(endpoint, null, null, agent));
         Record record = new Record(RECORD_KEY, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
                 .setKey2(KEY_2)
                 .setKey3(KEY_3);
+        FakeHttpAgent agent = new FakeHttpAgent(getRecordStubResponse(record, dtoTransformer));
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setApiKey("apiKey");
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         storage.write(COUNTRY, record);
         String expectedURL = endpoint + "/v2/storage/records/" + COUNTRY;
         String realURL = new URL(agent.getCallUrl()).toString();
@@ -202,7 +207,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(endpoint, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         Record record = new Record(null, BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(RANGE_KEY_1)
@@ -220,7 +225,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(endpoint, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, null));
         assertEquals("Can't write null record", ex.getMessage());
     }
@@ -233,7 +238,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(endpoint, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         String key = "<key>";
         Record record = new Record(key, "<body>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(null, record));
@@ -265,7 +270,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, filter);
         String callBody = agent.getCallBody();
         String expected = "{\"filter\":{\"profile_key\":[\"" + hashUtils.getSha256Hash(PROFILE_KEY) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
@@ -300,7 +305,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         Record foundRecord = storage.findOne(COUNTRY, filter);
 
@@ -346,7 +351,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         FindResult findResult = storage.find(COUNTRY, filter);
         assertEquals(1, findResult.getErrors().size());
@@ -371,7 +376,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.find(COUNTRY, filter);
         String body = agent.getCallBody();
         JsonObject json = (JsonObject) new Gson().fromJson(body, JsonObject.class).get("filter");
@@ -442,7 +447,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, new FindFilter().keyIsNotNull(NumberField.VERSION));
         assertEquals(0, findResult.getErrors().size());
         assertEquals(2, findResult.getRecords().size());
@@ -467,7 +472,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         FindResult findResult = storage.find(COUNTRY, new FindFilter().keyIsNotNull(NumberField.RANGE_KEY1));
         assertEquals(1, findResult.getErrors().size());
@@ -493,7 +498,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.find(COUNTRY, filter));
         assertEquals("Response error: Meta is null", ex.getMessage());
     }
@@ -506,7 +511,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         Record readRecord = storage.read(COUNTRY, RECORD_KEY);
         assertNull(readRecord);
     }
@@ -524,7 +529,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.find(null, null));
         assertEquals("Country can't be null", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, null));
@@ -534,7 +539,7 @@ class StorageTest {
     @RepeatedTest(3)
     void testInitErrorOnInsufficientArgs(RepetitionInfo repeatInfo) {
         iterateLogLevel(repeatInfo, StorageImpl.class);
-        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(new StorageConfig()));
+        StorageClientException ex1 = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(new StorageConfig()));
         assertEquals("Please pass environment_id param or set INC_ENVIRONMENT_ID env var", ex1.getMessage());
     }
 
@@ -546,7 +551,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, dao);
+        Storage storage = StorageImpl.getInstance(config, dao);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.read(null, null));
         assertEquals("Country can't be null", ex.getMessage());
     }
@@ -561,7 +566,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, dao);
+        Storage storage = StorageImpl.getInstance(config, dao);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.delete(null, null));
         assertEquals("Country can't be null", ex.getMessage());
     }
@@ -575,7 +580,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, dao);
+        Storage storage = StorageImpl.getInstance(config, dao);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.migrate(null, 100));
         assertEquals("Country can't be null", ex.getMessage());
     }
@@ -590,7 +595,7 @@ class StorageTest {
                 .setApiKey("apiLey")
                 .setEndPoint(FAKE_ENDPOINT)
                 .setEnvironmentId(ENVIRONMENT_ID);
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
     }
 
@@ -603,8 +608,8 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -613,8 +618,8 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config, null));
-        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config, null));
+        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -628,7 +633,7 @@ class StorageTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("clientId")
                 .setClientSecret("clientSecret");
-        assertNotNull(StorageImpl.newStorage(config));
+        assertNotNull(StorageImpl.getInstance(config));
     }
 
     @Test
@@ -641,7 +646,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("clientId");
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Please pass clientSecret in configuration", ex.getMessage());
     }
 
@@ -656,7 +661,7 @@ class StorageTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("")
                 .setClientSecret("");
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Please pass clientId in configuration", ex.getMessage());
     }
 
@@ -672,8 +677,8 @@ class StorageTest {
                 .setClientId("<clientId>")
                 .setApiKey("<apiKey>")
                 .setOauthToken("<token>");
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
-        assertEquals("Please pass only one parameter combination for authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -685,7 +690,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertTrue(storage.delete(COUNTRY, RECORD_KEY));
         server.stop(0);
     }
@@ -699,7 +704,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertNull(storage.read(COUNTRY, RECORD_KEY));
         server.stop(0);
     }
@@ -712,7 +717,7 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setHttpTimeout(0)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("Connection timeout can't be <1. Expected 'null' or positive value, received=0", ex.getMessage());
     }
 
@@ -726,7 +731,7 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>")
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, RECORD_KEY));
         assertEquals("Server request error: [URL=http://localhost:8767/v2/storage/records/us/463ca9fb48993ae6c598d58aa4a5e6c4e66610e869aff32916ba643387ad4afa, method=DELETE]", ex.getMessage());
         assertEquals("Read timed out", ex.getCause().getMessage());
@@ -741,26 +746,26 @@ class StorageTest {
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>")
                 .setMaxHttpPoolSize(0);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
         assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
 
         StorageConfig config1 = config
                 .copy()
                 .setMaxHttpPoolSize(-1);
-        ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config1));
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config1));
         assertEquals("HTTP pool size can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
 
         StorageConfig config2 = config
                 .copy()
                 .setMaxHttpPoolSize(20)
                 .setMaxHttpConnectionsPerRoute(0);
-        ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config2));
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config2));
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=0", ex.getMessage());
 
         StorageConfig config3 = config2
                 .copy()
                 .setMaxHttpConnectionsPerRoute(-1);
-        ex = assertThrows(StorageClientException.class, () -> StorageImpl.newStorage(config3));
+        ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config3));
         assertEquals("Max HTTP connections count per route can't be < 1. Expected 'null' or positive value, received=-1", ex.getMessage());
     }
 
@@ -777,7 +782,7 @@ class StorageTest {
                 .setEnvironmentId("<envId>")
                 .setMaxHttpPoolSize(1)
                 .setHashSearchKeys(false);
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
 
         Record record = new Record(RECORD_KEY, BODY)
                 .setKey10(generatedString);
@@ -824,7 +829,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId))));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId))));
         Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         InputStream fileInputStream = Files.newInputStream(tempFile);
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
@@ -860,7 +865,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         assertTrue(storage.deleteAttachment(country, recordKey, fileId));
     }
 
@@ -884,7 +889,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo, Files.newInputStream(tempFile))));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, metaInfo, Files.newInputStream(tempFile))));
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
 
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
@@ -916,7 +921,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         AttachmentMeta attachmentMeta = storage.updateAttachmentMeta(country, recordKey, fileId, fileName, null);
         assertEquals(gson.fromJson(response.toString(), AttachmentMeta.class), attachmentMeta);
@@ -953,7 +958,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
-        Storage storage = StorageImpl.newStorage(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
         assertEquals(gson.fromJson(response.toString(), AttachmentMeta.class), attachmentMeta);
     }
@@ -965,7 +970,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
         InputStream inputStream = null;
         String fileName = "sdk_incountry_unit_tests_file.txt";
@@ -1025,7 +1030,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
         String fileId = "123";
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.updateAttachmentMeta("us", recordKey, fileId, null, null));
@@ -1041,7 +1046,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setApiKey("<apiKey>")
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.deleteAttachment("us", recordKey, null));
         assertEquals("File ID can't be null", ex.getMessage());
@@ -1052,7 +1057,7 @@ class StorageTest {
     @Test
     void nullConfigNegativeTest() {
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
-                StorageImpl.newStorage(null));
+                StorageImpl.getInstance(null));
         assertEquals("Storage configuration is null", ex.getMessage());
     }
 
@@ -1065,7 +1070,7 @@ class StorageTest {
                 .setEndPoint("http://localhost:" + PORT)
                 .setOauthToken("<token>")
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertTrue(storage.delete(COUNTRY, RECORD_KEY));
         server.stop(0);
     }
@@ -1081,10 +1086,62 @@ class StorageTest {
                     throw new NullPointerException();
                 })
                 .setEnvironmentId("<envId>");
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete(COUNTRY, RECORD_KEY));
         assertEquals("Unexpected error", ex.getMessage());
         assertTrue(ex.getCause() instanceof NullPointerException);
+        server.stop(0);
+    }
+
+    @Test
+    void addAttachmentWithContentLengthHeader() throws IOException, StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId");
+
+        Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+        InputStream inputStream = Files.newInputStream(tempFile);
+
+        Storage storage = StorageImpl.getInstance(config);
+        AttachmentMeta meta =
+                storage.addAttachment("us", "recordKey", inputStream, "file_name.txt", "text/plain");
+        assertNotNull(meta);
+        String lengthString = server.getLastRequestHeaders().get("Content-length").get(0);
+        assertNotNull(lengthString);
+        assertTrue(Integer.parseInt(lengthString) > 0);
+        String requestBody = server.getLastRequestBody();
+        assertTrue(requestBody.contains("Content-Disposition: form-data; name=\"file\"; filename=\"file_name.txt\""));
+        assertTrue(requestBody.contains("Content-Type: text/plain"));
+        Files.delete(tempFile);
+        server.stop(0);
+    }
+
+    @Test
+    void addAttachmentWithNonAsciiFilenameTest() throws IOException, StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setApiKey("apiKey")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId");
+        Storage storage = StorageImpl.getInstance(config);
+        List<String> nonAsciiFileNames = Arrays.asList("Просто", "مرحبا", "你好嗎", "Naïve");
+        for (String fileName : nonAsciiFileNames) {
+            Path tempFile = Files.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            Files.write(tempFile, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+            InputStream inputStream = Files.newInputStream(tempFile);
+            String finalFileName = fileName + " file.txt";
+            AttachmentMeta meta =
+                    storage.addAttachment("us", "recordKey", inputStream, finalFileName, "text/plain");
+            assertNotNull(meta);
+            Files.delete(tempFile);
+            assertTrue(server.getLastRequestBody().contains("filename=\"" + finalFileName + "\""));
+        }
         server.stop(0);
     }
 }

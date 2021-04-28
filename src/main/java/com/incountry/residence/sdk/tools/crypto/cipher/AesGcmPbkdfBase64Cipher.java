@@ -16,6 +16,8 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 public abstract class AesGcmPbkdfBase64Cipher extends AesGcmPbkdfCipher implements Cipher {
     private static final Logger LOG = LogManager.getLogger(AesGcmPbkdfBase64Cipher.class);
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
@@ -70,8 +72,7 @@ public abstract class AesGcmPbkdfBase64Cipher extends AesGcmPbkdfCipher implemen
 
     @Override
     public String decrypt(String cipherText, Secret secret) throws StorageCryptoException {
-        boolean invalidCipherText = cipherText == null || cipherText.isEmpty();
-        HELPER.check(StorageCryptoException.class, invalidCipherText, MSG_ERR_LENGTH);
+        HELPER.check(StorageCryptoException.class, isNullOrEmpty(cipherText), MSG_ERR_LENGTH);
         byte[] decodedBytes = Base64.getDecoder().decode(cipherText);
         return decodeBytes(decodedBytes, secret, pbkdf2Iterations, charset);
     }

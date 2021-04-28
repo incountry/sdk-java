@@ -21,17 +21,16 @@ public abstract class Secret {
         return secretBytes;
     }
 
-    protected Secret(int version, byte[] secretBytes) throws StorageClientException {
+    protected Secret(byte[] secretBytes, int version) throws StorageClientException {
         validateAbstractSecret(version, secretBytes);
         this.version = version;
         this.secretBytes = secretBytes;
     }
 
     private static void validateAbstractSecret(int version, byte[] secretBytes) throws StorageClientException {
-        boolean invalidVersion = version < 0;
-        HELPER.check(StorageClientException.class, invalidVersion, MSG_ERR_VERSION);
-        boolean invalidSecret = secretBytes == null || secretBytes.length == 0;
-        HELPER.check(StorageClientException.class, invalidSecret, MSG_ERR_NULL_SECRET);
+        HELPER.check(StorageClientException.class, version < 0, MSG_ERR_VERSION);
+        boolean isInvalidSecret = secretBytes == null || secretBytes.length == 0;
+        HELPER.check(StorageClientException.class, isInvalidSecret, MSG_ERR_NULL_SECRET);
     }
 
 

@@ -33,14 +33,14 @@ public class RangeFilter extends Filter {
     }
 
     private void validate(long value1, String operator1, long value2, String operator2) throws StorageClientException {
-        boolean invalidOperator1 = !OPERATOR_1_VALUES.contains(operator1);
-        HELPER.check(StorageClientException.class, invalidOperator1, MSG_ERR_OPERATOR_1);
+        boolean isInvalidOperator1 = !OPERATOR_1_VALUES.contains(operator1);
+        HELPER.check(StorageClientException.class, isInvalidOperator1, MSG_ERR_OPERATOR_1);
 
-        boolean invalidOperator2 = !OPERATOR_2_VALUES.contains(operator2);
-        HELPER.check(StorageClientException.class, invalidOperator2, MSG_ERR_OPERATOR_2);
+        boolean isInvalidOperator2 = !OPERATOR_2_VALUES.contains(operator2);
+        HELPER.check(StorageClientException.class, isInvalidOperator2, MSG_ERR_OPERATOR_2);
 
-        boolean invalidRange = value1 > value2;
-        HELPER.check(StorageClientException.class, invalidRange, MSG_ERR_RANGE);
+        boolean isInvalidRange = value1 > value2;
+        HELPER.check(StorageClientException.class, isInvalidRange, MSG_ERR_RANGE);
     }
 
     @Override

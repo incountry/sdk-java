@@ -36,8 +36,8 @@ public abstract class AesGcmPbkdfCipher {
 
     @SuppressWarnings("java:S2259")
     protected static String decodeBytes(byte[] decodedBytes, Secret secret, int pbkdf2Iterations, Charset charset) throws StorageCryptoException {
-        boolean invalidCipherLength = decodedBytes.length < META_INFO_LENGTH;
-        HELPER.check(StorageCryptoException.class, invalidCipherLength, MSG_ERR_LENGTH);
+        boolean isInvalidCipherLength = decodedBytes.length < META_INFO_LENGTH;
+        HELPER.check(StorageCryptoException.class, isInvalidCipherLength, MSG_ERR_LENGTH);
         HELPER.check(StorageCryptoException.class, secret == null, MSG_ERR_NO_SECRET);
         HELPER.check(StorageCryptoException.class, charset == null, MSG_ERR_NO_CHARSET);
 

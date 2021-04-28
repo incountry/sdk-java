@@ -19,8 +19,8 @@ public class NumberFilter extends Filter {
     private static final List<String> MULTIPLE_VALUE_OPERATORS = Arrays.asList(OPERATOR_NOT, null);
 
     private static final String MSG_ERR_NULL_NUMBER_FILTER = "Number filter or it's values can't be null";
-    private static final String MSG_ERR_ILLEGAL_OPERATOR = "Operator in non range number filter can by only in [NULL,$not,$lt,$lte,$gt,$gte]";
-    private static final String MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE = "Operator in list number filter can by only in [NULL,$not]";
+    private static final String MSG_ERR_ILLEGAL_OPERATOR = "Operator in non-range number filter can be only one of [NULL,$not,$lt,$lte,$gt,$gte]";
+    private static final String MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE = "Operator in list number filter can be only one of [NULL,$not]";
 
     private final List<Long> values = new ArrayList<>();
     public final String operator;
@@ -34,12 +34,12 @@ public class NumberFilter extends Filter {
 
     @SuppressWarnings("java:S2259")
     private void validate(Long[] values, String operator) throws StorageClientException {
-        boolean invalidFilter = values == null || values.length == 0;
-        HELPER.check(StorageClientException.class, invalidFilter, MSG_ERR_NULL_NUMBER_FILTER);
-        boolean invalidOperator = !ALL_OPERATORS.contains(operator);
-        HELPER.check(StorageClientException.class, invalidOperator, MSG_ERR_ILLEGAL_OPERATOR);
-        boolean invalidSingleOperatorValues = !MULTIPLE_VALUE_OPERATORS.contains(operator) && values.length > 1;
-        HELPER.check(StorageClientException.class, invalidSingleOperatorValues, MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE);
+        boolean isInvalidFilter = values == null || values.length == 0;
+        HELPER.check(StorageClientException.class, isInvalidFilter, MSG_ERR_NULL_NUMBER_FILTER);
+        boolean isInvalidOperator = !ALL_OPERATORS.contains(operator);
+        HELPER.check(StorageClientException.class, isInvalidOperator, MSG_ERR_ILLEGAL_OPERATOR);
+        boolean isInvalidSingleOperatorValues = !MULTIPLE_VALUE_OPERATORS.contains(operator) && values.length > 1;
+        HELPER.check(StorageClientException.class, isInvalidSingleOperatorValues, MSG_ERR_ILLEGAL_OPERATOR_FOR_SINGLE_VALUE);
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.incountry.residence.sdk.http.mocks;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,35 +19,50 @@ public class FakeHttpServer {
 
     private static final Logger LOG = LogManager.getLogger(FakeHttpServer.class);
     private final HttpServer server;
+    private final FakeHandler handler;
 
     public FakeHttpServer(String response, int responseCode, int port) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 0);
-        server.createContext("/", new FakeHandler(response, responseCode));
+        handler = new FakeHandler(response, responseCode);
+        server.createContext("/", handler);
+
     }
 
     public FakeHttpServer(String response, int responseCode, int port, String path) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress("localhost", port), 0);
-        server.createContext(path, new FakeHandler(response, responseCode));
+        handler = new FakeHandler(response, responseCode);
+        server.createContext(path, handler);
     }
 
     public FakeHttpServer(List<String> responseList, int responseCode, int port) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 0);
-        server.createContext("/", new FakeHandler(responseList, responseCode));
+        handler = new FakeHandler(responseList, responseCode);
+        server.createContext("/", handler);
     }
 
     public FakeHttpServer(String response, List<Integer> respCodeList, int port) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 0);
-        server.createContext("/", new FakeHandler(response, respCodeList));
+        handler = new FakeHandler(response, respCodeList);
+        server.createContext("/", handler);
     }
 
     public FakeHttpServer(String response, int responseCode, int port, int sleepTimeoutInSeconds) throws IOException {
         server = HttpServer.create();
         server.bind(new InetSocketAddress(port), 0);
-        server.createContext("/", new FakeHandler(response, responseCode, sleepTimeoutInSeconds));
+        handler = new FakeHandler(response, responseCode, sleepTimeoutInSeconds);
+        server.createContext("/", handler);
+    }
+
+    public Headers getLastRequestHeaders() {
+        return handler.lastRequestHeaders;
+    }
+
+    public String getLastRequestBody() {
+        return handler.lastRequestBody;
     }
 
     public void start() {
@@ -62,6 +79,8 @@ public class FakeHttpServer {
         String response;
         Integer responseCode;
         Integer sleepTimeout;
+        Headers lastRequestHeaders;
+        String lastRequestBody;
 
         FakeHandler(String response, int responseCode) {
             this.response = response;
@@ -94,6 +113,8 @@ public class FakeHttpServer {
                     LOG.error(ex.getMessage());
                 }
             }
+            lastRequestHeaders = exchange.getRequestHeaders();
+            lastRequestBody = IOUtils.toString(exchange.getRequestBody(), StandardCharsets.UTF_8.name());
             String currentResponse = null;
             if (response != null) {
                 currentResponse = response;

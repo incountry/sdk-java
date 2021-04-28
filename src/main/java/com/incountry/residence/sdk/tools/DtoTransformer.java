@@ -24,6 +24,7 @@ import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.tools.transfer.TransferFilterContainer;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,8 +47,8 @@ public class DtoTransformer {
     private static final String MSG_ERR_INVALID_LENGTH = "key1-key20 length can't be more than " + MAX_STRING_KEY_LENGTH
             + " chars with option 'hashSearchKeys' = false";
     private static final String MSG_DEBUG_NULL_RECORD = "Received record is null";
-    private static final String MSG_ERR_NULL_RECORD_KEY = "Null required record fields: recordKey";
-    private static final String MSG_ERR_NULL_BODY = "Null required record fields: body";
+    private static final String MSG_ERR_NULL_RECORD_KEY = "Record key can't be null";
+    private static final String MSG_ERR_NULL_BODY = "Transfer record body can't be null";
     private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_RECORD_PARSE = "Record parse exception";
     private static final String MSG_ERR_NULL_META = "Response error: Meta is null";
@@ -78,11 +79,11 @@ public class DtoTransformer {
         return keyAccessor;
     }
 
-    public TransferRecord getTransferRecord(Record record) throws StorageClientException, StorageCryptoException {
-        TransferRecord meta = cloneRecordForMeta(record);
-        ComplexBody newBodyObject = new ComplexBody(meta, record.getBody());
+    public TransferRecord getTransferRecord(Record originalRecord) throws StorageClientException, StorageCryptoException {
+        TransferRecord meta = cloneRecordForMeta(originalRecord);
+        ComplexBody newBodyObject = new ComplexBody(meta, originalRecord.getBody());
         String newBodyJson = gson.toJson(newBodyObject);
-        return getEncryptedTransferRecord(newBodyJson, record);
+        return getEncryptedTransferRecord(newBodyJson, originalRecord);
     }
 
     private static TransferRecord cloneRecordForMeta(Record sourceRecord) {
@@ -173,8 +174,8 @@ public class DtoTransformer {
         if (hashSearchKeys) {
             return hashUtils.getSha256Hash(value);
         }
-        boolean invalidLength = validateLength && value != null && value.length() > MAX_STRING_KEY_LENGTH;
-        HELPER.check(StorageClientException.class, invalidLength, MSG_ERR_INVALID_LENGTH);
+        boolean isInvalidLength = validateLength && value != null && value.length() > MAX_STRING_KEY_LENGTH;
+        HELPER.check(StorageClientException.class, isInvalidLength, MSG_ERR_INVALID_LENGTH);
         return value;
     }
 
@@ -246,17 +247,15 @@ public class DtoTransformer {
                 .setServiceKey5(complexBody.meta.getServiceKey5());
     }
 
-    private static void validateTransferRecord(TransferRecord record) throws StorageServerException {
-        boolean invalidRecordKey = isNullOrEmpty(record.getRecordKey());
-        HELPER.check(StorageServerException.class, invalidRecordKey, MSG_ERR_NULL_RECORD_KEY);
-        boolean invalidBody = isNullOrEmpty(record.getBody());
-        HELPER.check(StorageServerException.class, invalidBody, MSG_ERR_NULL_BODY);
+    private static void validateTransferRecord(TransferRecord transferRecord) throws StorageServerException {
+        HELPER.check(StorageServerException.class, isNullOrEmpty(transferRecord.getRecordKey()), MSG_ERR_NULL_RECORD_KEY);
+        HELPER.check(StorageServerException.class, isNullOrEmpty(transferRecord.getBody()), MSG_ERR_NULL_BODY);
     }
 
     public List<TransferRecord> getTransferRecordList(List<Record> recordList) throws StorageClientException, StorageCryptoException {
         List<TransferRecord> resultList = new ArrayList<>();
-        for (Record record : recordList) {
-            resultList.add(getTransferRecord(record));
+        for (Record currentRecord : recordList) {
+            resultList.add(getTransferRecord(currentRecord));
         }
         return resultList;
     }
@@ -271,8 +270,8 @@ public class DtoTransformer {
                     transferRecord.setVersion(DEFAULT_RECORD_VERSION);
                 }
                 try {
-                    Record record = getRecord(transferRecord);
-                    records.add(record);
+                    Record resultRecord = getRecord(transferRecord);
+                    records.add(resultRecord);
                 } catch (Exception ex) {
                     LOG.warn(MSG_ERR_RECORD_PARSE, ex);
                     recordExceptions.add(new RecordException(MSG_ERR_RECORD_PARSE, gson.toJson(transferRecord), ex));
@@ -340,6 +339,16 @@ public class DtoTransformer {
             }
         }
         return new TransferFilterContainer(transformedFilters, filter.getLimit(), filter.getOffset(), transferSortList);
+    }
+
+    public List<Record> getRecordList(TransferRecordList transferRecordList) throws StorageServerException, StorageClientException, StorageCryptoException {
+        List<Record> resultRecordList = new ArrayList<>();
+        if (transferRecordList != null && transferRecordList.getRecords() != null) {
+            for (TransferRecord transferRecord : transferRecordList.getRecords()) {
+                resultRecordList.add(getRecord(transferRecord));
+            }
+        }
+        return resultRecordList;
     }
 
     static class ComplexBody {

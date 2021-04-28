@@ -59,7 +59,7 @@ class ParamsFromEnvTest {
                 .useEnvironmentIdFromEnv()
                 .useApiKeyFromEnv()
                 .useEndPointFromEnv();
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
         unsetEnv(PARAM_ENV_ID);
         unsetEnv(PARAM_API_KEY);

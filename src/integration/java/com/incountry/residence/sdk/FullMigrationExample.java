@@ -25,7 +25,7 @@ public class FullMigrationExample {
                 .setClientId(CLIENT_ID)
                 .setClientSecret(CLIENT_SECRET)
                 .setSecretKeyAccessor(() -> secretsData);
-        Storage storage = StorageImpl.newStorage(config);
+        Storage storage = StorageImpl.getInstance(config);
         String country = "US";
         boolean migrationComplete = false;
         while (!migrationComplete) {

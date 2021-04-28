@@ -13,13 +13,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>3.4.0</version>
+  <version>4.0.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:3.4.0"
+compile "com.incountry:incountry-java-client:4.0.0"
 ```
 
 ## Countries List
@@ -35,7 +35,7 @@ StorageConfig config = new StorageConfig()
         .setClientId("<client_id>")
         .setClientSecret("<client_secret>")
         .setSecretKeyAccessor(() -> secretsData);
-Storage storage = StorageImpl.newStorage(config);
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 ## Storage Configuration
@@ -51,7 +51,7 @@ public class StorageImpl implements Storage {
    * @throws StorageClientException if configuration validation finished with errors
    * @throws StorageCryptoException if custom cipher validation fails
    */
-  public static Storage newStorage(StorageConfig config)
+  public static Storage getInstance(StorageConfig config)
                                     throws StorageClientException, StorageCryptoException  {...}
 //...
 }
@@ -123,7 +123,7 @@ StorageConfig config = new StorageConfig()
     .setEnvironmentId("<environment_id>")
     .setApiKey("<api_key>")
     .setSecretKeyAccessor(() -> secretsData);
-Storage storage=StorageImpl.newStorage(config);
+Storage storage=StorageImpl.getInstance(config);
 ```
 ---
 
@@ -145,7 +145,7 @@ StorageConfig config = new StorageConfig()
    .setDefaultAuthEndpoint("https://auth-server-default.com")
    .setEndpointMask(ENDPOINT_MASK)
    .setEnvironmentId(ENVIRONMENT_ID)
-Storage storage = StorageImpl.newStorage(config);
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 Note: parameter endpointMask is used for switching from default InCountry host family (api.incountry.io) to a different one. For example setting `endpointMask`==`-private.incountry.io` will make all further requests to be sent to `https://{COUNTRY_CODE}-private.incountry.io`
@@ -154,10 +154,10 @@ If your PoPAPI configuration relies on a custom PoPAPI server (rather than the d
 StorageConfig config = new StorageConfig()
    .setCountriesEndpoint(countriesEndpoint)
    //...
-Storage storage = StorageImpl.newStorage(config);
+Storage storage = StorageImpl.getInstance(config);
 ```
 
-The SDK also allows using previously acquired oAuth tokens if needed or pass token getting function. In this mode SDK is not responsible for oAuth a token renewal, and it should be done by SDK user himself.
+The SDK also allows using previously acquired oAuth token if needed or pass token accessor function. In this mode SDK is not responsible for oAuth token renewal, and it should be handled by SDK users themselves.
 
 Below you can find the example of how to specify OAuth token while creating a Storage instance:
 ```java
@@ -166,13 +166,13 @@ String oauthToken = yourGetTokenFunction();
 StorageConfig config = new StorageConfig()
         .setEnvironmentId("<environment_id>")
         .setOauthToken(oauthToken);
-Storage storage = StorageImpl.newStorage(config);
+Storage storage = StorageImpl.getInstance(config);
 
 //pass an external acquiring of oAuth2 tokens for OAuth2 authorization 
 StorageConfig config = new StorageConfig()
         .setEnvironmentId("<environment_id>")
         .setOauthTokenAccessor(() -> yourGetTokenFunction());
-Storage storage = StorageImpl.newStorage(config);
+Storage storage = StorageImpl.getInstance(config);
 ```
 
 ### Encryption key/secret
@@ -999,7 +999,7 @@ provider.registerCipher(anotherCipher);
 StorageConfig config = new StorageConfig();
 //...
 config.setCryptoProvider(provider);
-Storage storage = StorageImpl.newStorage(config);
+Storage storage = StorageImpl.getInstance(config);
 
 ```
 

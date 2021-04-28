@@ -48,7 +48,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
+import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -88,7 +88,7 @@ class HttpDaoImplTests {
                 .setEnvironmentId(ENV_ID)
                 .setApiKey("apiKey")
                 .setSecretKeyAccessor(() -> secretsData);
-        return StorageImpl.newStorage(config, dao);
+        return StorageImpl.getInstance(config, dao);
     }
 
     private static Stream<Arguments> recordArgs() {
@@ -127,6 +127,7 @@ class HttpDaoImplTests {
                 .setRangeKey1(rangeKey1)
                 .setKey2(key2)
                 .setKey3(key3);
+        agent.setResponse(getRecordStubResponse(record, transformer));
         storage.write(country, record);
 
         String received = agent.getCallBody();
@@ -235,6 +236,8 @@ class HttpDaoImplTests {
                 .setKey2(key2)
                 .setKey3(key3);
         records.add(record);
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), transformer) + "]}";
+        agent.setResponse(batchRecordResponse);
         storage.batchWrite(country, records);
 
         String encryptedHttpBody = agent.getCallBody();
@@ -260,42 +263,6 @@ class HttpDaoImplTests {
         assertEquals(record.getRangeKey1() == null, jsonObject.get("range_key1") == null);
         assertEquals(record.getProfileKey() == null, jsonObject.get("profile_key") == null);
         //recordKey & body aren't checked because it's always not null
-    }
-
-    @Test
-    void testWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        String country = "US";
-        Record record = new Record("key", "body");
-        Record resRecord = storage.write(country, record); //ok
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //Ok
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //OK
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //okokok
-        assertNotNull(resRecord);
-        resRecord = storage.write(country, record); //null
-        assertNotNull(resRecord);
-    }
-
-    @Test
-    void testBatchWritePopApiResponse() throws StorageClientException, StorageServerException, StorageCryptoException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList("ok", "Ok", "OK", "okokok", null));
-        Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        String country = "US";
-        List<Record> list = Collections.singletonList(new Record("key", "body"));
-        List<Record> recordList = storage.batchWrite(country, list); //ok
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //Ok
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //OK
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //OKokok
-        assertNotNull(recordList);
-        recordList = storage.batchWrite(country, list); //null
-        assertNotNull(recordList);
     }
 
     @Test
@@ -334,7 +301,7 @@ class HttpDaoImplTests {
         assertTrue(ex1.getCause() instanceof JsonSyntaxException);
 
         StorageServerException ex2 = assertThrows(StorageServerException.class, () -> storage.read(country, someKey));
-        assertEquals("Null required record fields: recordKey", ex2.getMessage());
+        assertEquals("Record key can't be null", ex2.getMessage());
     }
 
     @Test
@@ -387,28 +354,29 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE);
         Storage storage = initializeStorage(new HttpDaoImpl(null, null, "https://localhost:8080", agent));
         Record record = new Record("1", "body");
-        agent.setResponse("OK");
+        String recordResponse = getRecordStubResponse(record, transformer);
+        agent.setResponse(recordResponse);
         storage.write("US", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/us", agent.getCallUrl());
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("us", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/us", agent.getCallUrl());
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("RU", record);
         assertEquals("https://ru-mt-01.api.incountry.io/v2/storage/records/ru", agent.getCallUrl());
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("ru", record);
         assertEquals("https://ru-mt-01.api.incountry.io/v2/storage/records/ru", agent.getCallUrl());
         //country 'PU' has no separate endpoint
         storage.write("PU", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
-        agent.setResponse(COUNTRY_LOAD_RESPONSE);
+        agent.setResponse(recordResponse);
         storage.write("pu", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
         //country 'SU' is not in country list
         storage.write("SU", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
-        agent.setResponse(COUNTRY_LOAD_RESPONSE);
+        agent.setResponse(recordResponse);
         storage.write("su", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
     }
@@ -418,23 +386,24 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE);
         Storage storage = initializeStorage(new HttpDaoImpl(null, "-test-01.debug.org", null, agent));
         Record record = new Record("1", "body");
-        agent.setResponse("OK");
+        String recordResponse = getRecordStubResponse(record, transformer);
+        agent.setResponse(recordResponse);
 
         //US is midpop
         storage.write("US", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/us", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("us", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/us", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org", agent.getAudienceUrl());
 
         //RU is midpop
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("RU", record);
         assertEquals("https://ru-test-01.debug.org/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://ru-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("ru", record);
         assertEquals("https://ru-test-01.debug.org/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://ru-test-01.debug.org", agent.getAudienceUrl());
@@ -443,7 +412,7 @@ class HttpDaoImplTests {
         storage.write("PU", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(COUNTRY_LOAD_RESPONSE);
+        agent.setResponse(recordResponse);
         storage.write("pu", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/pu", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
@@ -452,7 +421,7 @@ class HttpDaoImplTests {
         storage.write("SU", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(COUNTRY_LOAD_RESPONSE);
+        agent.setResponse(recordResponse);
         storage.write("su", record);
         assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
         assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
@@ -463,7 +432,8 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = initializeStorage(new HttpDaoImpl("https://us.test.org", "test.org", null, agent));
         Record record = new Record("1", "body");
-        agent.setResponse("OK");
+        String response = getRecordStubResponse(record, transformer);
+        agent.setResponse(response);
         storage.write("US", record);
         assertEquals("https://us.test.org/v2/storage/records/us", agent.getCallUrl());
     }
@@ -473,7 +443,7 @@ class HttpDaoImplTests {
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = initializeStorage(new HttpDaoImpl("https://ustest.org", "test.org", null, agent));
         Record record = new Record("1", "body");
-        agent.setResponse("OK");
+        agent.setResponse(getRecordStubResponse(record, transformer));
         storage.write("US", record);
         assertEquals("https://ustest.org/v2/storage/records/us", agent.getCallUrl());
     }
@@ -491,31 +461,14 @@ class HttpDaoImplTests {
     }
 
     @Test
-    void testHttpDaoWithoutCrypto() throws StorageServerException, StorageClientException, StorageCryptoException {
-        String readResponse = null;
-        String deleteResponse = "{}";
-        String createResponse = "OK";
-        String createResponseBad = "Not OK!";
-        String createResponseNull = null;
-        FakeHttpAgent httpAgent = new FakeHttpAgent(Arrays.asList(
-                readResponse, deleteResponse, createResponse, createResponseBad, createResponseNull));
-        HttpDaoImpl dao = new HttpDaoImpl(FAKE_ENDPOINT, null, null, httpAgent);
-        String country = "US";
-        String recordKey = "someRecordKey";
-        assertNull(dao.read(country, recordKey));
-        dao.delete(country, recordKey);
-        dao.createRecord(country, transformer.getTransferRecord(new Record(recordKey, "<body>")));
-        dao.createRecord(country, transformer.getTransferRecord(new Record(recordKey, "<body>")));
-        dao.createRecord(country, transformer.getTransferRecord(new Record(recordKey, "<body>")));
-    }
-
-    @Test
-    void testEndPointAndAudience() throws StorageServerException, StorageCryptoException, StorageClientException {
+    void endPointAndAudiencePositive() throws StorageServerException, StorageCryptoException, StorageClientException {
         //storage has only custom endpoint
         FakeHttpAgent agent = new FakeHttpAgent("OK");
         Storage storage = initializeStorage(new HttpDaoImpl("https://custom.io", null, null, agent));
         Record record = new Record("1", "body");
         //AG is minipop
+        String recordResponse = getRecordStubResponse(record, transformer);
+        agent.setResponse(recordResponse);
         storage.write("AG", record);
         assertEquals("https://custom.io/v2/storage/records/ag", agent.getCallUrl());
         assertEquals("https://custom.io", agent.getAudienceUrl());
@@ -524,17 +477,15 @@ class HttpDaoImplTests {
         agent.setResponse(COUNTRY_LOAD_RESPONSE);
         storage = initializeStorage(new HttpDaoImpl(null, "-custom-01.test.io", null, agent));
         //US is midpop
-        agent.setResponse("OK");
+        agent.setResponse(recordResponse);
         storage.write("US", record);
         assertEquals("https://us-custom-01.test.io/v2/storage/records/us", agent.getCallUrl());
         assertEquals("https://us-custom-01.test.io", agent.getAudienceUrl());
         //RU is midpop
-        agent.setResponse("OK");
         storage.write("RU", record);
         assertEquals("https://ru-custom-01.test.io/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://ru-custom-01.test.io", agent.getAudienceUrl());
         //AG is minipop
-        agent.setResponse("OK");
         storage.write("AG", record);
         assertEquals("https://us-custom-01.test.io/v2/storage/records/ag", agent.getCallUrl());
         assertEquals("https://us-custom-01.test.io https://ag-custom-01.test.io", agent.getAudienceUrl());
@@ -542,22 +493,18 @@ class HttpDaoImplTests {
         //storage has endpoint and endpoint mask
         storage = initializeStorage(new HttpDaoImpl("https://super-server.io", "-custom-02.io", null, agent));
         //US is midpop
-        agent.setResponse("OK");
+//        agent.setResponse("OK");
         storage.write("US", record);
         assertEquals("https://super-server.io/v2/storage/records/us", agent.getCallUrl());
         assertEquals("https://super-server.io https://us-custom-02.io", agent.getAudienceUrl());
         //RU is midpop
-        agent.setResponse("OK");
         storage.write("RU", record);
         assertEquals("https://super-server.io/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://super-server.io https://ru-custom-02.io", agent.getAudienceUrl());
         //AG is minipop
-        agent.setResponse("OK");
         storage.write("AG", record);
         assertEquals("https://super-server.io/v2/storage/records/ag", agent.getCallUrl());
         assertEquals("https://super-server.io https://ag-custom-02.io", agent.getAudienceUrl());
-
-
     }
 
     @Test

@@ -169,8 +169,8 @@ public class FindFilter {
 
     public FindFilter searchKeysLike(String value) throws StorageClientException {
         if (value != null) {
-            boolean invalidLength = value.length() < SEARCH_KEYS_MIN_LENGTH || value.length() > SEARCH_KEYS_MAX_LENGTH;
-            HELPER.check(StorageClientException.class, invalidLength, MSG_ERR_SEARCH_KEYS_LEN);
+            boolean isInvalidLength = value.length() < SEARCH_KEYS_MIN_LENGTH || value.length() > SEARCH_KEYS_MAX_LENGTH;
+            HELPER.check(StorageClientException.class, isInvalidLength, MSG_ERR_SEARCH_KEYS_LEN);
             validateStringFilters(null, value);
         }
         searchKeys = value;
