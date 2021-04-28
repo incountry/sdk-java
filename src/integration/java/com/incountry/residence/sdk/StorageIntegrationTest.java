@@ -792,7 +792,7 @@ public class StorageIntegrationTest {
     @Order(900)
     public void findWithSearchKeys() throws StorageException, InterruptedException {
         //to prevent exceeding the connection limit
-        Thread.sleep(10_000);
+        Thread.sleep(30_000);
         String recordKey = "Non hashing " + RECORD_KEY;
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
