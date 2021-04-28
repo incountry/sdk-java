@@ -55,6 +55,7 @@ import java.util.stream.Stream;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -345,9 +346,10 @@ class HttpDaoImplTests {
                 new HashMap.SimpleEntry<>(countryLoadBadResponseEmptyName, 200),
                 new HashMap.SimpleEntry<>(countryLoadBadResponseNullId, 200),
                 new HashMap.SimpleEntry<>(countryLoadBadResponseEmptyId, 200),
-                new HashMap.SimpleEntry<>(countryLoadBadResponseEmptyCountries, 200)
+                new HashMap.SimpleEntry<>(countryLoadBadResponseEmptyCountries, 200),
+                new HashMap.SimpleEntry<>(COUNTRY_LOAD_RESPONSE, 404)
         ));
-        Dao correctDao = new HttpDaoImpl(null, null, null, agent);
+        HttpDaoImpl correctDao = new HttpDaoImpl(null, null, null, agent);
         assertNotNull(correctDao);
 
         for (int i = 0; i < 6; i++) {
@@ -355,6 +357,7 @@ class HttpDaoImplTests {
                     new HttpDaoImpl(null, null, null, agent).read("US", "recordKey"));
             assertEquals("Country list is empty", ex.getMessage());
         }
+        assertDoesNotThrow(() -> new HttpDaoImpl(null, null, FAKE_ENDPOINT, agent));
     }
 
     @RepeatedTest(3)
@@ -666,6 +669,20 @@ class HttpDaoImplTests {
         assertEquals(size, attachmentMeta.getSize());
         assertNull(attachmentMeta.getCreatedAt());
         assertNull(attachmentMeta.getUpdatedAt());
+    }
+
+    @Test
+    void daoHealthCheckTest() throws StorageServerException, StorageClientException {
+        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(
+                new HashMap.SimpleEntry(COUNTRY_LOAD_RESPONSE, 200),
+                new HashMap.SimpleEntry("ok", 200),
+                new HashMap.SimpleEntry("ok", 200)
+        ));
+        Dao dao = new HttpDaoImpl(null, "-mask.local", FAKE_ENDPOINT, agent);
+        assertTrue(dao.healthCheck("us")); //midpop
+        assertEquals("https://us-mask.local/healthcheck", agent.getCallUrl());
+        assertTrue(dao.healthCheck("pu")); //minipop
+        assertEquals("https://us-mask.local/healthcheck", agent.getCallUrl());
     }
 
     private static final String COUNTRY_LOAD_RESPONSE = "{\n" +

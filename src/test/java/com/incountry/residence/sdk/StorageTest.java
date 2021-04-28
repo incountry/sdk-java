@@ -1159,6 +1159,8 @@ class StorageTest {
         assertTrue(storage.healthCheck("us"));
         assertFalse(storage.healthCheck("us"));
         assertFalse(storage.healthCheck("us"));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.healthCheck(null));
+        assertEquals("Country can't be null", ex.getMessage());
         server.stop(0);
     }
 }
