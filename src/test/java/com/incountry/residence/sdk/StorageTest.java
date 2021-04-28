@@ -222,6 +222,42 @@ class StorageTest {
     }
 
     @Test
+    void writeBadResponseCodeNegative() throws StorageException {
+        String endpoint = "https://custom.endpoint.io";
+        FakeHttpAgent agent = new FakeHttpAgent("not found", 404);
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record));
+        assertEquals("Code=404, url=[https://custom.endpoint.io/v2/storage/records/us], content=[not found]", ex.getMessage());
+    }
+
+    @Test
+    void batchWriteBadResponseCodeNegative() throws StorageException {
+        String endpoint = "https://custom.endpoint.io";
+        FakeHttpAgent agent = new FakeHttpAgent("not found", 404);
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.batchWrite(COUNTRY, Collections.singletonList(record)));
+        assertEquals("Code=404, url=[https://custom.endpoint.io/v2/storage/records/us/batchWrite], content=[not found]", ex.getMessage());
+    }
+
+    @Test
     void testNegativeWriteNullRecord() throws StorageException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpAgent agent = new FakeHttpAgent("OK", 200);
@@ -518,6 +554,22 @@ class StorageTest {
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         Record readRecord = storage.read(COUNTRY, RECORD_KEY);
         assertNull(readRecord);
+        agent.setResponseCode(404);
+        assertNull(storage.read(COUNTRY, RECORD_KEY));
+    }
+
+    @Test
+    void readBadResponseCodeNegative() throws StorageException {
+        String endpoint = "https://custom.endpoint.io";
+        FakeHttpAgent agent = new FakeHttpAgent("error", 400);
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.read(COUNTRY, RECORD_KEY));
+        assertEquals("Code=400, url=[https://custom.endpoint.io/v2/storage/records/us/8dd4c4ab0984aef7ec863e80fc2583329e384ab2de4d3260496af494f9aeff71], content=[error]",
+                ex.getMessage());
     }
 
     @Test
