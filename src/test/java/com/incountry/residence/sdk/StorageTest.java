@@ -51,6 +51,7 @@ import java.util.UUID;
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -496,7 +497,7 @@ class StorageTest {
         FindFilter filter = new FindFilter()
                 .limitAndOffset(2, 0)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
-        FakeHttpAgent agent = new FakeHttpAgent((String) null, 200);
+        FakeHttpAgent agent = new FakeHttpAgent(null, 200);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
@@ -509,7 +510,7 @@ class StorageTest {
     @RepeatedTest(3)
     void testReadNotFound(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
-        FakeHttpAgent agent = new FakeHttpAgent((String) null, 200);
+        FakeHttpAgent agent = new FakeHttpAgent(null, 200);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
@@ -1143,6 +1144,21 @@ class StorageTest {
             Files.delete(tempFile);
             assertTrue(server.getLastRequestBody().contains("filename=\"" + finalFileName + "\""));
         }
+        server.stop(0);
+    }
+
+    @Test
+    void healthCheckTest() throws IOException, StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpServer server = new FakeHttpServer("{}", Arrays.asList(200, 201, 400), PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setOauthToken("oauthToken")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId");
+        Storage storage = StorageImpl.getInstance(config);
+        assertTrue(storage.healthCheck("us"));
+        assertFalse(storage.healthCheck("us"));
+        assertFalse(storage.healthCheck("us"));
         server.stop(0);
     }
 }
