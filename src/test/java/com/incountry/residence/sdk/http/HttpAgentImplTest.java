@@ -210,6 +210,16 @@ class HttpAgentImplTest {
     }
 
     @Test
+    void testRetry() throws IOException, StorageServerException, StorageClientException {
+        FakeHttpServer server = new FakeHttpServer("{}", Arrays.asList(401, 200, 401), PORT);
+        server.start();
+        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        assertEquals(200, agent.request(ENDPOINT, "<body>", null, null, 1, new RequestParameters("POST")).getResponseCode());
+        assertEquals(401, agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST")).getResponseCode());
+        server.stop(0);
+    }
+
+    @Test
     void negativeTestWithIllegalUrl() {
         HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
         String url = " ";
