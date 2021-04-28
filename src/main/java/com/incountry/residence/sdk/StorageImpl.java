@@ -344,4 +344,10 @@ public class StorageImpl implements Storage {
         checkAttachmentParameters(country, recordKey, fileId);
         return dao.getAttachmentMeta(country, hashUtils.getSha256Hash(recordKey), fileId);
     }
+
+    @Override
+    public boolean healthCheck(String country) throws StorageClientException, StorageServerException {
+        HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
+        return dao.healthCheck(country);
+    }
 }

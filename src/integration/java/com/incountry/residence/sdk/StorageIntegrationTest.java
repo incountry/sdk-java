@@ -687,7 +687,7 @@ public class StorageIntegrationTest {
     void deleteAttachmentTest() throws StorageException {
         storageOrdinary.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
@@ -726,14 +726,14 @@ public class StorageIntegrationTest {
     @Order(807)
     public void getAttachmentFileFromNonExistentRecordTest() throws StorageException {
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, UUID.randomUUID().toString(), fileId);
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
     @Order(808)
     public void getNonExistentAttachmentFileTest() throws StorageException {
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test

@@ -21,8 +21,8 @@ public interface Storage {
     /**
      * Write data to remote storage
      *
-     * @param country country identifier
-     * @param newRecord  object which encapsulate data which must be written in storage
+     * @param country   country identifier
+     * @param newRecord object which encapsulate data which must be written in storage
      * @return recorded record
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
@@ -69,7 +69,7 @@ public interface Storage {
      * Find records in remote storage according to filters
      *
      * @param country country identifier
-     * @param filter object representing find filters and search options
+     * @param filter  object representing find filters and search options
      * @return BatchRecord object which contains required records
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
@@ -81,7 +81,7 @@ public interface Storage {
      * Find only one first record in remote storage according to filters
      *
      * @param country country identifier
-     * @param filter object representing find filters
+     * @param filter  object representing find filters
      * @return founded record or null
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
@@ -206,4 +206,14 @@ public interface Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    /**
+     * health check of storage service endpoint for specified country identifier
+     *
+     * @param country country identifier
+     * @return true if country endpoint is available, otherwise - false
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    boolean healthCheck(String country) throws StorageClientException, StorageServerException;
 }

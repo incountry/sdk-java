@@ -1,21 +1,18 @@
 package com.incountry.residence.sdk.tools.containers;
 
 import java.io.InputStream;
-import java.util.Map;
 
 public class ApiResponse {
 
     private final String content;
-    private final Map<MetaInfoTypes, String> metaInfo;
+    private final int responseCode;
+    private final String fileName;
     private final InputStream inputStream;
 
-    public ApiResponse() {
-        this(null, null, null);
-    }
-
-    public ApiResponse(String content, Map<MetaInfoTypes, String> metaInfo, InputStream inputStream) {
+    public ApiResponse(String content, int responseCode, String fileName, InputStream inputStream) {
         this.content = content;
-        this.metaInfo = metaInfo;
+        this.responseCode = responseCode;
+        this.fileName = fileName;
         this.inputStream = inputStream;
     }
 
@@ -23,11 +20,15 @@ public class ApiResponse {
         return content;
     }
 
-    public Map<MetaInfoTypes, String> getMetaInfo() {
-        return metaInfo;
-    }
-
     public InputStream getInputStream() {
         return inputStream;
+    }
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+
+    public String getFileName() {
+        return fileName;
     }
 }

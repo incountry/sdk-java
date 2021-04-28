@@ -32,4 +32,6 @@ public interface Dao {
     AttachmentMeta updateAttachmentMeta(String country, String recordKey, String fileId, AttachmentMeta updatedMeta) throws StorageClientException, StorageServerException;
 
     AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    boolean healthCheck(String country) throws StorageServerException, StorageClientException;
 }

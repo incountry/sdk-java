@@ -6,9 +6,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
-import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
-import com.incountry.residence.sdk.crypto.SecretsData;
-import com.incountry.residence.sdk.crypto.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClients;
@@ -30,37 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OAuthTest {
     private static final String COUNTRY = CredentialsHelper.getMidPopCountry(true);
-    private static final String MINIPOP_COUNTRY = CredentialsHelper.getMiniPopCountry();
-
-    private final SecretKeyAccessor accessor;
-
-    public OAuthTest() throws StorageClientException {
-        SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
-        accessor = () -> secretsData;
-    }
-
-    private Storage initStorage() throws StorageClientException, StorageCryptoException {
-        StorageConfig config = CredentialsHelper.getConfigWithOauth()
-                .setSecretKeyAccessor(accessor);
-        return StorageImpl.getInstance(config);
-    }
-
-
-    @Test
-    public void testStorageWithAuthClient() throws StorageServerException, StorageClientException, StorageCryptoException {
-        Storage storage = initStorage();
-        String key = UUID.randomUUID().toString();
-        String body = "body " + key;
-        Record myRecord = new Record(key, body);
-        storage.write(COUNTRY, myRecord);
-        assertEquals(key, storage.read(COUNTRY, key).getRecordKey());
-
-        String key2 = UUID.randomUUID().toString();
-        String body2 = "body " + key2;
-        Record record2 = new Record(key2, body2);
-        storage.write(MINIPOP_COUNTRY, record2);
-        assertEquals(key2, storage.read(MINIPOP_COUNTRY, key2).getRecordKey());
-    }
 
     @Test
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
