@@ -490,7 +490,7 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY9, KEY_9)
                 .keyEq(StringField.KEY10, KEY_10)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1)
-                .keyEq(NumberField.RANGE_KEY2, RANGE_KEY_2)
+                .keyGreater(NumberField.RANGE_KEY2, RANGE_KEY_2, true)
                 .keyEq(NumberField.RANGE_KEY3, RANGE_KEY_3)
                 .keyEq(NumberField.RANGE_KEY4, RANGE_KEY_4)
                 .keyEq(NumberField.RANGE_KEY5, RANGE_KEY_5)
@@ -808,17 +808,18 @@ public class StorageIntegrationTest {
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
-        storageNonHashing.write(CredentialsHelper.getMidPopCountry(false), newRecord);
+        String country = CredentialsHelper.getMidPopCountry(false);
+        storageNonHashing.write(country, newRecord);
 
         FindFilter filter = new FindFilter()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        FindResult findResult = storageNonHashing.find(CredentialsHelper.getMidPopCountry(false), filter);
+        FindResult findResult = storageNonHashing.find(country, filter);
 
         assertEquals(1, findResult.getCount());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
 
-        storageNonHashing.delete(CredentialsHelper.getMidPopCountry(false), recordKey);
+        storageNonHashing.delete(country, recordKey);
     }
 
     @Test
