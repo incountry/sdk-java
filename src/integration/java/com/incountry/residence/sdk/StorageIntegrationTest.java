@@ -15,6 +15,7 @@ import com.incountry.residence.sdk.dto.search.SortField;
 import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.crypto.SecretsData;
@@ -141,6 +142,8 @@ public class StorageIntegrationTest {
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
 
+    private static final String INT_WAIT_INTERVAL = "INT_WAIT_INTERVAL";
+
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = UUID.randomUUID().toString();
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
@@ -231,8 +234,6 @@ public class StorageIntegrationTest {
         assertEquals(BATCH_WRITE_RANGE_KEY_1, recordedRecord.getRangeKey1());
         assertEquals(key2, recordedRecord.getKey2());
         assertEquals(myRecord.getRangeKey10(), recordedRecord.getRangeKey10());
-        assertNotNull(recordedRecord.getUpdatedAt());
-        assertNotNull(recordedRecord.getCreatedAt());
     }
 
     @ParameterizedTest(name = "writeTest [{index}] {arguments}")
@@ -331,8 +332,6 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
         assertNotNull(incomingRecord.getRangeKey10());
-        assertNotNull(incomingRecord.getCreatedAt());
-        assertNotNull(incomingRecord.getUpdatedAt());
         assertEquals(EXPIRES_AT, incomingRecord.getExpiresAt());
     }
 
@@ -552,7 +551,7 @@ public class StorageIntegrationTest {
     @ParameterizedTest(name = "deleteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(600)
-    public void deleteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void deleteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException, InterruptedException {
         storage.delete(COUNTRY, recordKey);
         storage.delete(COUNTRY, batchRecordKey);
         // Cannot read deleted record
@@ -640,7 +639,7 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(800)
-    public void addAttachmentTest() throws StorageException, IOException {
+    public void addAttachmentTest() throws StorageException, IOException, InterruptedException {
         Record newRecord = new Record(ATTACHMENT_RECORD_KEY)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -687,7 +686,7 @@ public class StorageIntegrationTest {
     void deleteAttachmentTest() throws StorageException {
         storageOrdinary.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
@@ -726,14 +725,14 @@ public class StorageIntegrationTest {
     @Order(807)
     public void getAttachmentFileFromNonExistentRecordTest() throws StorageException {
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, UUID.randomUUID().toString(), fileId);
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
     @Order(808)
     public void getNonExistentAttachmentFileTest() throws StorageException {
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
@@ -789,7 +788,8 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(900)
-    public void findWithSearchKeys() throws StorageException {
+    public void findWithSearchKeys() throws StorageException, InterruptedException {
+        //to prevent exceeding the connection limit
         String recordKey = "Non hashing " + RECORD_KEY;
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
@@ -848,7 +848,15 @@ public class StorageIntegrationTest {
     }
 
     @Test
+    @MethodSource("storageProvider")
     @Order(1000)
+    public void healthCheckTest() throws StorageServerException, StorageClientException {
+        assertTrue(storageOrdinary.healthCheck(COUNTRY));
+        assertTrue(storageOrdinary.healthCheck(CredentialsHelper.getMiniPopCountry()));
+    }
+
+    @Test
+    @Order(1100)
     public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
         Secret secret = new EncryptionSecret(VERSION, ENCRYPTION_SECRET);
         List<Secret> secretList = new ArrayList<>();

@@ -4,7 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
+import com.incountry.residence.sdk.tools.ValidationHelper;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.dto.AttachedFile;
@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class HttpDaoImpl implements Dao {
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
+    private static final ValidationHelper HELPER = new ValidationHelper(LOG);
 
     private static final int RETRY_CNT = 1;
     private static final String DEFAULT_ENDPOINT = "https://us-mt-01.api.incountry.io";
@@ -48,21 +49,25 @@ public class HttpDaoImpl implements Dao {
     private static final String DEFAULT_REGION = "emea";
     private static final String STORAGE_URL = "v2/storage/records";
     private static final String URI_HTTPS = "https://";
-    private static final String URI_POST = "POST";
-    private static final String URI_PUT = "PUT";
-    private static final String URI_PATCH = "PATCH";
-    private static final String URI_GET = "GET";
-    private static final String URI_DELETE = "DELETE";
     private static final String URI_FIND = "/find";
     private static final String URI_BATCH_WRITE = "/batchWrite";
+    private static final String URI_HEALTH_CHECK = "/healthcheck";
     private static final String URI_META = "meta";
     private static final String URI_DELIMITER = "/";
     private static final String URI_ATTACHMENTS = "attachments";
+    private static final String METHOD_POST = "POST";
+    private static final String METHOD_PUT = "PUT";
+    private static final String METHOD_PATCH = "PATCH";
+    private static final String METHOD_GET = "GET";
+    private static final String METHOD_DELETE = "DELETE";
     private static final long DEFAULT_UPDATE_INTERVAL = 300_000;
 
     private static final String MSG_ERR_LOAD_COUNTRIES = "Error during country list loading";
     private static final String MSG_ERR_COUNTRIES_ARE_EMPTY = "Country list is empty";
-    private static final String MSG_ERR_RESPONSE = "Response parse error";
+    private static final String MSG_ERR_PARSE_RESPONSE = "Response parse error";
+    private static final String MSG_ERR_UNEXPECTED_RESPONSE = "Unexpected server response";
+    private static final String MSG_ERR_CONTENT = "Code=%d, url=[%s], content=[%s]";
+    private static final String MSG_ERR_UNSUPPORTED_COUNTRY = "Country [%s] is not supported";
 
 
     private Map<String, POP> popMap = new HashMap<>();
@@ -119,11 +124,15 @@ public class HttpDaoImpl implements Dao {
                 return;
             }
             try {
-                ApiResponse response = httpAgent.request(countriesEndpoint, null, null, null, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.COUNTRY));
-                String content = response.getContent();
-                ConcurrentHashMap<String, POP> newCountryMap = new ConcurrentHashMap<>(getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
-                if (newCountryMap.size() > 0) {
-                    popMap = newCountryMap;
+                ApiResponse response = httpAgent.request(countriesEndpoint, null, null, null, RETRY_CNT, new RequestParameters(METHOD_GET));
+                if (response.getResponseCode() == 200) {
+                    String content = response.getContent();
+                    ConcurrentHashMap<String, POP> newCountryMap = new ConcurrentHashMap<>(getCountryList(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
+                    if (newCountryMap.size() > 0) {
+                        popMap = newCountryMap;
+                    }
+                } else {
+                    throw generateServerException(response, countriesEndpoint, false);
                 }
             } catch (StorageException ex) {
                 LOG.error(MSG_ERR_LOAD_COUNTRIES, ex);
@@ -135,27 +144,26 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    public static Map<String, POP> getMidiPops(String response, String uriStart, String uriEnd) throws StorageServerException {
+    public static Map<String, POP> getCountryList(String response, String uriStart, String uriEnd) throws StorageServerException {
         TransferPopList popList;
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
         } catch (JsonSyntaxException ex) {
-            throw new StorageServerException(MSG_ERR_RESPONSE, ex);
+            throw new StorageServerException(MSG_ERR_PARSE_RESPONSE, ex);
         }
         Map<String, POP> result = new HashMap<>();
         TransferPopList.validatePopList(popList);
         for (TransferPop transferPop : popList.getCountries()) {
-            if (transferPop.isDirect()) {
-                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName(), transferPop.getRegion()));
-            }
+            result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName(), transferPop.getRegion(), transferPop.isDirect()));
         }
         return result;
     }
 
-    private EndPoint getEndpoint(String country) throws StorageServerException {
+    private EndPoint getEndpoint(String country) throws StorageServerException, StorageClientException {
         if (isDefaultEndpoint) {
-            POP pop = getMidPop(country);
-            if (pop != null) { //mid pop for default endpoint
+            POP pop = getPop(country);
+            HELPER.check(StorageClientException.class, pop == null, MSG_ERR_UNSUPPORTED_COUNTRY, country);
+            if (pop.isMidPop()) { //mid pop for default endpoint
                 return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
             }
             String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + (endPointMask == null ? DEFAULT_ENDPOINT_MASK : endPointMask);
@@ -164,7 +172,7 @@ public class HttpDaoImpl implements Dao {
         return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
     }
 
-    private POP getMidPop(String country) throws StorageServerException {
+    private POP getPop(String country) throws StorageServerException {
         loadCountries();
         Map<String, POP> tempMap = popMap;
         if (popMap.isEmpty()) {
@@ -196,18 +204,34 @@ public class HttpDaoImpl implements Dao {
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry);
         String body = gson.toJson(transferRecord);
-        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.WRITE));
-        return gson.fromJson(response.getContent(), TransferRecord.class);
+        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
+        if (response.getResponseCode() == 201) {
+            return gson.fromJson(body, TransferRecord.class);
+        }
+        throw generateServerException(response, url, true);
+    }
+
+    private StorageServerException generateServerException(ApiResponse response, String url, boolean logError) {
+        StorageServerException exception = new StorageServerException(
+                String.format(MSG_ERR_CONTENT, response.getResponseCode(), url, response.getContent())
+                        .replaceAll("[\r\n]", ""));
+        if (logError) {
+            LOG.error(MSG_ERR_UNEXPECTED_RESPONSE, exception);
+        }
+        return exception;
     }
 
     @Override
     public TransferRecordList createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
-        String recListJson = gson.toJson(new TransferRecordList(records));
+        String body = gson.toJson(new TransferRecordList(records));
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
-        ApiResponse response = httpAgent.request(url, recListJson, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.BATCH_WRITE));
-        return gson.fromJson(response.getContent(), TransferRecordList.class);
+        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
+        if (response.getResponseCode() == 201) {
+            return gson.fromJson(body, TransferRecordList.class);
+        }
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -215,8 +239,13 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordUrl(endPoint.mainUrl, lowerCountry, recordKey);
-        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.READ));
-        return response.getContent() == null ? null : gson.fromJson(response.getContent(), TransferRecord.class);
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_GET));
+        if (response.getResponseCode() == 200) {
+            return gson.fromJson(response.getContent(), TransferRecord.class);
+        } else if (response.getResponseCode() == 404) {
+            return null;
+        }
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -224,7 +253,11 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordUrl(endPoint.mainUrl, lowerCountry, recordKey);
-        httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_DELETE, ApiResponseCodes.DELETE));
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_DELETE));
+        if (response.getResponseCode() == 200) {
+            return;
+        }
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -233,11 +266,14 @@ public class HttpDaoImpl implements Dao {
         EndPoint endpoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endpoint.mainUrl, lowerCountry, URI_FIND);
         String postData = gsonWithNull.toJson(filterContainer);
-        ApiResponse response = httpAgent.request(url, postData, endpoint.audience, endpoint.region, RETRY_CNT, new RequestParameters(URI_POST, ApiResponseCodes.FIND));
-        if (response.getContent() == null) {
-            return new TransferFindResult();
+        ApiResponse response = httpAgent.request(url, postData, endpoint.audience, endpoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
+        if (response.getResponseCode() == 200) {
+            if (response.getContent() == null) {
+                return new TransferFindResult();
+            }
+            return gson.fromJson(response.getContent(), TransferFindResult.class);
         }
-        return gson.fromJson(response.getContent(), TransferFindResult.class);
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -245,9 +281,12 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS);
-        String method = upsert ? URI_PUT : URI_POST;
-        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(method, ApiResponseCodes.ADD_ATTACHMENT, mimeType, inputStream, fileName));
-        return gson.fromJson(response.getContent(), AttachmentMeta.class);
+        String method = upsert ? METHOD_PUT : METHOD_POST;
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(method, mimeType, inputStream, fileName));
+        if (response.getResponseCode() == 201) {
+            return gson.fromJson(response.getContent(), AttachmentMeta.class);
+        }
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -255,7 +294,11 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId);
-        httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_DELETE, ApiResponseCodes.DELETE_ATTACHMENT));
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_DELETE));
+        if (response.getResponseCode() == 204) {
+            return;
+        }
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -263,13 +306,15 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId);
-        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.GET_ATTACHMENT_FILE));
-        InputStream content = response.getInputStream() == null ? null : response.getInputStream();
-        String fileName = null;
-        if (response.getMetaInfo() != null) {
-            fileName = response.getMetaInfo().get(MetaInfoTypes.NAME);
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_GET));
+        if (response.getResponseCode() == 200) {
+            InputStream content = response.getInputStream() == null ? null : response.getInputStream();
+            String fileName = response.getFileName();
+            return new AttachedFile(content, fileName);
+        } else if (response.getResponseCode() == 404) {
+            return null;
         }
-        return new AttachedFile(content, fileName);
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -277,8 +322,11 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId, URI_META);
-        ApiResponse response = httpAgent.request(url, gson.toJson(updatedMeta), endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_PATCH, ApiResponseCodes.UPDATE_ATTACHMENT_META));
-        return gson.fromJson(response.getContent(), AttachmentMeta.class);
+        ApiResponse response = httpAgent.request(url, gson.toJson(updatedMeta), endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_PATCH));
+        if (response.getResponseCode() == 200) {
+            return gson.fromJson(response.getContent(), AttachmentMeta.class);
+        }
+        throw generateServerException(response, url, true);
     }
 
     @Override
@@ -286,8 +334,22 @@ public class HttpDaoImpl implements Dao {
         String lowerCountry = country.toLowerCase();
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getAttachmentUrl(endPoint.mainUrl, STORAGE_URL, lowerCountry, recordKey, URI_ATTACHMENTS, fileId, URI_META);
-        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(URI_GET, ApiResponseCodes.GET_ATTACHMENT_META));
-        return gson.fromJson(response.getContent(), AttachmentMeta.class);
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_GET));
+        if (response.getResponseCode() == 200) {
+            return gson.fromJson(response.getContent(), AttachmentMeta.class);
+        } else if (response.getResponseCode() == 404) {
+            return null;
+        }
+        throw generateServerException(response, url, true);
+    }
+
+    @Override
+    public boolean healthCheck(String country) throws StorageServerException, StorageClientException {
+        String lowerCountry = country.toLowerCase();
+        EndPoint endPoint = getEndpoint(lowerCountry);
+        String url = endPoint.mainUrl + URI_HEALTH_CHECK;
+        ApiResponse response = httpAgent.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_GET));
+        return response.getResponseCode() == 200;
     }
 
     private String getAttachmentUrl(String... urlParts) {

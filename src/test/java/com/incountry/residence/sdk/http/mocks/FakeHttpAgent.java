@@ -1,13 +1,10 @@
 package com.incountry.residence.sdk.http.mocks;
 
-import com.incountry.residence.sdk.tools.dao.impl.ApiResponseCodes;
-import com.incountry.residence.sdk.tools.containers.MetaInfoTypes;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,26 +15,28 @@ public class FakeHttpAgent implements HttpAgent {
     private String callBody;
     private String response;
     private String callRegion;
-    private List<String> responseList;
-    private Map<Integer, ApiResponseCodes> codeMap;
+    private List<Map.Entry<String, Integer>> responseList;
     private int retryCount;
     private String audienceUrl;
     private InputStream dataStream;
-    private Map<MetaInfoTypes, String> metaInfo = new HashMap<>();
+    private String fileName;
+    private int responseCode;
     private InputStream inputStream;
 
-    public FakeHttpAgent(String response) {
+    public FakeHttpAgent(String response, int responseCode) {
         this.response = response;
+        this.responseCode = responseCode;
     }
 
-    public FakeHttpAgent(List<String> responseList) {
+    public FakeHttpAgent(List<Map.Entry<String, Integer>> responseList) {
         this.responseList = responseList;
     }
 
-    public FakeHttpAgent(String response, Map<MetaInfoTypes, String> metaInfo, InputStream inputStream) {
+    public FakeHttpAgent(String response, String fileName, InputStream inputStream, int responseCode) {
         this.response = response;
-        this.metaInfo = metaInfo;
+        this.fileName = fileName;
         this.inputStream = inputStream;
+        this.responseCode = responseCode;
     }
 
     @Override
@@ -45,12 +44,11 @@ public class FakeHttpAgent implements HttpAgent {
         this.callUrl = url;
         this.callMethod = requestParameters.getMethod();
         this.callBody = body;
-        this.codeMap = requestParameters.getCodeMap();
         this.retryCount = retryCount;
         this.audienceUrl = audience;
         this.callRegion = region;
         this.dataStream = requestParameters.getDataStream();
-        return new ApiResponse(getResponse(), metaInfo, inputStream);
+        return new ApiResponse(getResponse(), responseCode, fileName, inputStream);
     }
 
     public InputStream getDataStream() {
@@ -73,17 +71,14 @@ public class FakeHttpAgent implements HttpAgent {
         return audienceUrl;
     }
 
-    public Map<Integer, ApiResponseCodes> getCodeMap() {
-        return codeMap;
-    }
-
     public String getCallRegion() {
         return callRegion;
     }
 
     public String getResponse() {
         if (responseList != null && !responseList.isEmpty()) {
-            response = responseList.get(0);
+            response = responseList.get(0).getKey();
+            responseCode = responseList.get(0).getValue();
             if (responseList.size() == 1) {
                 responseList = null;
             } else {
@@ -95,6 +90,10 @@ public class FakeHttpAgent implements HttpAgent {
 
     public void setResponse(String response) {
         this.response = response;
+    }
+
+    public void setResponseCode(int responseCode) {
+        this.responseCode = responseCode;
     }
 
     public int getRetryCount() {

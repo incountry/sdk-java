@@ -909,6 +909,28 @@ AttachmentMeta meta = storage
         .updateAttachmentMeta(COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
 ```
 
+## Health Check
+The `healthCheck` method of `Storage` allows you to check availability of a remote storage service by country identifier
+```java
+public interface Storage {
+   /**
+     * health check of storage service endpoint for specified country identifier
+     *
+     * @param country country identifier
+     * @return true if country endpoint is available, otherwise - false
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    boolean healthCheck(String country) throws StorageClientException, StorageServerException;
+    //...
+}
+```
+
+Example of usage:
+```java
+bool status = storage.healthCheck(COUNTRY);
+```
+
 Data Migration and Key Rotation support
 -----
 
