@@ -637,7 +637,8 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(800)
-    public void addAttachmentTest() throws StorageException, IOException {
+    public void addAttachmentTest() throws StorageException, IOException, InterruptedException {
+        Thread.sleep(10_000);
         Record newRecord = new Record(ATTACHMENT_RECORD_KEY)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -788,7 +789,7 @@ public class StorageIntegrationTest {
     @Order(900)
     public void findWithSearchKeys() throws StorageException, InterruptedException {
         //to prevent exceeding the connection limit
-        Thread.sleep(30_000);
+        Thread.sleep(10_000);
         String recordKey = "Non hashing " + RECORD_KEY;
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
