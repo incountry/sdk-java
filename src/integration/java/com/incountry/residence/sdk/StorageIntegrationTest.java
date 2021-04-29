@@ -232,8 +232,6 @@ public class StorageIntegrationTest {
         assertEquals(BATCH_WRITE_RANGE_KEY_1, recordedRecord.getRangeKey1());
         assertEquals(key2, recordedRecord.getKey2());
         assertEquals(myRecord.getRangeKey10(), recordedRecord.getRangeKey10());
-        assertNotNull(recordedRecord.getUpdatedAt());
-        assertNotNull(recordedRecord.getCreatedAt());
     }
 
     @ParameterizedTest(name = "writeTest [{index}] {arguments}")
@@ -332,8 +330,6 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
         assertNotNull(incomingRecord.getRangeKey10());
-        assertNotNull(incomingRecord.getCreatedAt());
-        assertNotNull(incomingRecord.getUpdatedAt());
         assertEquals(EXPIRES_AT, incomingRecord.getExpiresAt());
     }
 

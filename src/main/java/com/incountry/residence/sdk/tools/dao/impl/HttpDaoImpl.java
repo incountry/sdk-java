@@ -206,7 +206,7 @@ public class HttpDaoImpl implements Dao {
         String body = gson.toJson(transferRecord);
         ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 201) {
-            return gson.fromJson(response.getContent(), TransferRecord.class);
+            return gson.fromJson(body, TransferRecord.class);
         }
         throw generateServerException(response, url, true);
     }
@@ -224,12 +224,12 @@ public class HttpDaoImpl implements Dao {
     @Override
     public TransferRecordList createBatch(String country, List<TransferRecord> records) throws StorageClientException, StorageServerException {
         String lowerCountry = country.toLowerCase();
-        String recListJson = gson.toJson(new TransferRecordList(records));
+        String body = gson.toJson(new TransferRecordList(records));
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
-        ApiResponse response = httpAgent.request(url, recListJson, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
+        ApiResponse response = httpAgent.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 201) {
-            return gson.fromJson(response.getContent(), TransferRecordList.class);
+            return gson.fromJson(body, TransferRecordList.class);
         }
         throw generateServerException(response, url, true);
     }

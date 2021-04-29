@@ -77,12 +77,6 @@ public class OAuthTest {
         assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
-
-        //Minipop - > EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", myRecord));
-        assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765 https://some_minipop_country-localhost.localhost:8765]", ex.getMessage());
-        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
-        assertTrue(ex.getCause().getMessage().contains(errorEmea));
     }
 
     @Test
