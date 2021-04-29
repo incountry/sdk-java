@@ -52,7 +52,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
     private static final String MSG_ERR_NULL_FILE_ID = "File ID can't be null";
     private static final String MSG_ERR_NULL_KEY = "Key can't be null";
-    private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_NULL_RECORD = "Can't write null record";
     private static final String MSG_ERR_MIGR_NOT_SUPPORT = "Migration is not supported when encryption is off";
     private static final String MSG_ERR_MIGR_ERROR_LIMIT = "Limit can't be < 1";
@@ -268,14 +267,14 @@ public class StorageImpl implements Storage {
 
     public FindResult find(String country, FindFilter filter) throws StorageClientException, StorageServerException {
         HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
-        HELPER.check(StorageClientException.class, filter == null, MSG_ERR_NULL_FILTERS);
         TransferFindResult transferFindResult = dao.find(country, transformer.getTransferFilterContainer(filter));
         return transformer.getFindResult(transferFindResult);
     }
 
     public Record findOne(String country, FindFilter filter) throws
             StorageClientException, StorageServerException {
-        FindResult findResults = find(country, filter != null ? filter.copy().limitAndOffset(1, 0) : null);
+        FindFilter newFilter = filter != null ? filter.copy() : new FindFilter();
+        FindResult findResults = find(country, newFilter.limitAndOffset(1, 0));
         List<Record> records = findResults.getRecords();
         if (records.isEmpty()) {
             LOG.warn(MSG_FOUND_NOTHING);

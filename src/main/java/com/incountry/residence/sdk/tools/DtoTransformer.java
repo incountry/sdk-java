@@ -49,7 +49,6 @@ public class DtoTransformer {
     private static final String MSG_DEBUG_NULL_RECORD = "Received record is null";
     private static final String MSG_ERR_NULL_RECORD_KEY = "Record key can't be null";
     private static final String MSG_ERR_NULL_BODY = "Transfer record body can't be null";
-    private static final String MSG_ERR_NULL_FILTERS = "Filters can't be null";
     private static final String MSG_ERR_RECORD_PARSE = "Record parse exception";
     private static final String MSG_ERR_NULL_META = "Response error: Meta is null";
     private static final String MSG_ERR_NEGATIVE_META = "Response error: negative values in batch metadata";
@@ -301,6 +300,9 @@ public class DtoTransformer {
     }
 
     public TransferFilterContainer getTransferFilterContainer(FindFilter filter) throws StorageClientException {
+        if (filter == null) {
+            return new TransferFilterContainer(new HashMap<>(), FindFilter.MAX_LIMIT, FindFilter.DEFAULT_OFFSET, new ArrayList<>());
+        }
         Map<String, Object> transformedFilters = new HashMap<>();
         for (Map.Entry<NumberField, Filter> entry : filter.getNumberFilters().entrySet()) {
             transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
@@ -327,7 +329,6 @@ public class DtoTransformer {
         if (filter.getSearchKeys() != null) {
             transformedFilters.put(SEARCH_KEYS, filter.getSearchKeys());
         }
-        HELPER.check(StorageClientException.class, transformedFilters.isEmpty(), MSG_ERR_NULL_FILTERS);
         List<Map<String, Object>> transferSortList = new ArrayList<>();
         List<SortingParam> sorting = filter.getSortingList();
         if (!sorting.isEmpty()) {
