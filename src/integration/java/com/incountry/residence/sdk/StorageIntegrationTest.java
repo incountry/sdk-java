@@ -142,6 +142,8 @@ public class StorageIntegrationTest {
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
 
+    private static final String INT_WAIT_INTERVAL = "INT_WAIT_INTERVAL";
+
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = UUID.randomUUID().toString();
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
@@ -549,7 +551,7 @@ public class StorageIntegrationTest {
     @ParameterizedTest(name = "deleteTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(600)
-    public void deleteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void deleteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException, InterruptedException {
         storage.delete(COUNTRY, recordKey);
         storage.delete(COUNTRY, batchRecordKey);
         // Cannot read deleted record
@@ -637,7 +639,7 @@ public class StorageIntegrationTest {
 
     @Test
     @Order(800)
-    public void addAttachmentTest() throws StorageException, IOException {
+    public void addAttachmentTest() throws StorageException, IOException, InterruptedException {
         Record newRecord = new Record(ATTACHMENT_RECORD_KEY)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -788,7 +790,6 @@ public class StorageIntegrationTest {
     @Order(900)
     public void findWithSearchKeys() throws StorageException, InterruptedException {
         //to prevent exceeding the connection limit
-        Thread.sleep(30_000);
         String recordKey = "Non hashing " + RECORD_KEY;
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
@@ -846,12 +847,12 @@ public class StorageIntegrationTest {
         storageNonHashing.delete(COUNTRY, recordKey);
     }
 
-    @ParameterizedTest(name = "healthCheckTest [{index}] {arguments}")
+    @Test
     @MethodSource("storageProvider")
     @Order(1000)
-    public void healthCheckTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageServerException, StorageClientException {
-        assertTrue(storage.healthCheck(COUNTRY));
-        assertTrue(storage.healthCheck(CredentialsHelper.getMiniPopCountry()));
+    public void healthCheckTest() throws StorageServerException, StorageClientException {
+        assertTrue(storageOrdinary.healthCheck(COUNTRY));
+        assertTrue(storageOrdinary.healthCheck(CredentialsHelper.getMiniPopCountry()));
     }
 
     @Test
