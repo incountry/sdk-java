@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.incountry.residence.sdk.tools.ValidationHelper;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.dto.AttachedFile;
@@ -38,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class HttpDaoImpl implements Dao {
 
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
+    private static final ValidationHelper HELPER = new ValidationHelper(LOG);
 
     private static final int RETRY_CNT = 1;
     private static final String DEFAULT_ENDPOINT = "https://us-mt-01.api.incountry.io";
@@ -65,6 +67,8 @@ public class HttpDaoImpl implements Dao {
     private static final String MSG_ERR_PARSE_RESPONSE = "Response parse error";
     private static final String MSG_ERR_UNEXPECTED_RESPONSE = "Unexpected server response";
     private static final String MSG_ERR_CONTENT = "Code=%d, url=[%s], content=[%s]";
+    private static final String MSG_ERR_UNSUPPORTED_COUNTRY = "Country [%s] is not supported";
+
 
     private Map<String, POP> popMap = new HashMap<>();
 
@@ -123,7 +127,7 @@ public class HttpDaoImpl implements Dao {
                 ApiResponse response = httpAgent.request(countriesEndpoint, null, null, null, RETRY_CNT, new RequestParameters(METHOD_GET));
                 if (response.getResponseCode() == 200) {
                     String content = response.getContent();
-                    ConcurrentHashMap<String, POP> newCountryMap = new ConcurrentHashMap<>(getMidiPops(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
+                    ConcurrentHashMap<String, POP> newCountryMap = new ConcurrentHashMap<>(getCountryList(content, URI_HTTPS, endPointMask != null ? endPointMask : DEFAULT_ENDPOINT_MASK));
                     if (newCountryMap.size() > 0) {
                         popMap = newCountryMap;
                     }
@@ -140,7 +144,7 @@ public class HttpDaoImpl implements Dao {
         }
     }
 
-    public static Map<String, POP> getMidiPops(String response, String uriStart, String uriEnd) throws StorageServerException {
+    public static Map<String, POP> getCountryList(String response, String uriStart, String uriEnd) throws StorageServerException {
         TransferPopList popList;
         try {
             popList = new Gson().fromJson(response, TransferPopList.class);
@@ -150,17 +154,16 @@ public class HttpDaoImpl implements Dao {
         Map<String, POP> result = new HashMap<>();
         TransferPopList.validatePopList(popList);
         for (TransferPop transferPop : popList.getCountries()) {
-            if (transferPop.isDirect()) {
-                result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName(), transferPop.getRegion()));
-            }
+            result.put(transferPop.getId(), new POP(uriStart + transferPop.getId() + uriEnd, transferPop.getName(), transferPop.getRegion(), transferPop.isDirect()));
         }
         return result;
     }
 
-    private EndPoint getEndpoint(String country) throws StorageServerException {
+    private EndPoint getEndpoint(String country) throws StorageServerException, StorageClientException {
         if (isDefaultEndpoint) {
-            POP pop = getMidPop(country);
-            if (pop != null) { //mid pop for default endpoint
+            POP pop = getPop(country);
+            HELPER.check(StorageClientException.class, pop == null, MSG_ERR_UNSUPPORTED_COUNTRY, country);
+            if (pop.isMidPop()) { //mid pop for default endpoint
                 return new EndPoint(pop.getHost(), pop.getHost(), pop.getRegion(DEFAULT_REGION));
             }
             String mainUrl = URI_HTTPS + DEFAULT_COUNTRY + (endPointMask == null ? DEFAULT_ENDPOINT_MASK : endPointMask);
@@ -169,7 +172,7 @@ public class HttpDaoImpl implements Dao {
         return new EndPoint(endPointUrl, getAudienceForMiniPop(endPointUrl, country), DEFAULT_REGION);
     }
 
-    private POP getMidPop(String country) throws StorageServerException {
+    private POP getPop(String country) throws StorageServerException {
         loadCountries();
         Map<String, POP> tempMap = popMap;
         if (popMap.isEmpty()) {

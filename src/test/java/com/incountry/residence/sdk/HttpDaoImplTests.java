@@ -386,12 +386,6 @@ class HttpDaoImplTests {
         agent.setResponse(recordResponse);
         storage.write("pu", record);
         assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/pu", agent.getCallUrl());
-        //country 'SU' is not in country list
-        storage.write("SU", record);
-        assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
-        agent.setResponse(recordResponse);
-        storage.write("su", record);
-        assertEquals("https://us-mt-01.api.incountry.io/v2/storage/records/su", agent.getCallUrl());
     }
 
     @Test
@@ -432,13 +426,8 @@ class HttpDaoImplTests {
         assertEquals("https://us-test-01.debug.org https://pu-test-01.debug.org", agent.getAudienceUrl());
 
         //country 'SU' is not in country list
-        storage.write("SU", record);
-        assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
-        assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
-        agent.setResponse(recordResponse);
-        storage.write("su", record);
-        assertEquals("https://us-test-01.debug.org/v2/storage/records/su", agent.getCallUrl());
-        assertEquals("https://us-test-01.debug.org https://su-test-01.debug.org", agent.getAudienceUrl());
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write("SU", record));
+        assertEquals("Country [su] is not supported", ex.getMessage());
     }
 
     @Test
@@ -468,11 +457,11 @@ class HttpDaoImplTests {
         String name = "us";
         String host = "http://localhost";
         String region = "amer";
-        POP pop = new POP(host, name, region);
+        POP pop = new POP(host, name, region, true);
         assertEquals(name, pop.getName());
         assertEquals(host, pop.getHost());
         assertEquals(region, pop.getRegion(null));
-        assertEquals("POP{host='" + host + "', name='" + name + "', region='" + region + "'}", pop.toString());
+        assertEquals("POP{host='" + host + "', name='" + name + "', region='" + region + "', isMidPop='true'}", pop.toString());
     }
 
     @Test
@@ -503,10 +492,10 @@ class HttpDaoImplTests {
         storage.write("RU", record);
         assertEquals("https://ru-custom-01.test.io/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://ru-custom-01.test.io", agent.getAudienceUrl());
-        //AG is minipop
-        storage.write("AG", record);
-        assertEquals("https://us-custom-01.test.io/v2/storage/records/ag", agent.getCallUrl());
-        assertEquals("https://us-custom-01.test.io https://ag-custom-01.test.io", agent.getAudienceUrl());
+        //PU is minipop
+        storage.write("PU", record);
+        assertEquals("https://us-custom-01.test.io/v2/storage/records/pu", agent.getCallUrl());
+        assertEquals("https://us-custom-01.test.io https://pu-custom-01.test.io", agent.getAudienceUrl());
 
         //storage has endpoint and endpoint mask
         storage = initializeStorage(new HttpDaoImpl("https://super-server.io", "-custom-02.io", null, agent));
@@ -519,10 +508,10 @@ class HttpDaoImplTests {
         storage.write("RU", record);
         assertEquals("https://super-server.io/v2/storage/records/ru", agent.getCallUrl());
         assertEquals("https://super-server.io https://ru-custom-02.io", agent.getAudienceUrl());
-        //AG is minipop
-        storage.write("AG", record);
-        assertEquals("https://super-server.io/v2/storage/records/ag", agent.getCallUrl());
-        assertEquals("https://super-server.io https://ag-custom-02.io", agent.getAudienceUrl());
+        //PU is minipop
+        storage.write("PU", record);
+        assertEquals("https://super-server.io/v2/storage/records/pu", agent.getCallUrl());
+        assertEquals("https://super-server.io https://pu-custom-02.io", agent.getAudienceUrl());
     }
 
     @Test
