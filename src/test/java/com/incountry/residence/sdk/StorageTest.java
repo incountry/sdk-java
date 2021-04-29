@@ -184,8 +184,10 @@ class StorageTest {
 
         findResult = storage.find(COUNTRY, new FindFilter());
         assertEquals("{\"filter\":{},\"options\":{\"offset\":0,\"limit\":100}}", agent.getCallBody());
+        assertNotNull(findResult);
         findResult = storage.find(COUNTRY, null);
         assertEquals("{\"filter\":{},\"options\":{\"offset\":0,\"limit\":100}}", agent.getCallBody());
+        assertNotNull(findResult);
     }
 
     @RepeatedTest(3)
