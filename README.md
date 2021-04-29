@@ -910,7 +910,7 @@ AttachmentMeta meta = storage
 ```
 
 ## Health Check
-The `healthCheck` method of `Storage` allows you to check a remote storage service by country identifier
+The `healthCheck` method of `Storage` allows you to check availability of a remote storage service by country identifier
 ```java
 public interface Storage {
    /**
