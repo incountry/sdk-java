@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,14 +39,14 @@ class SecretsTest {
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromJson(String.format(secretKeyStringIsKey, true, false));
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(1, resultSecretsData.getCurrentSecret().getVersion());
-        assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecretBytes()));
+        assertArrayEquals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecretBytes());
         assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
         assertTrue(resultSecretsData.getSecrets().get(0) instanceof EncryptionKey);
 
         accessor = () -> SecretsDataGenerator.fromJson(String.format(secretKeyStringIsKey, false, true));
         resultSecretsData = accessor.getSecretsData();
         assertEquals(1, resultSecretsData.getCurrentSecret().getVersion());
-        assertTrue(Arrays.equals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecretBytes()));
+        assertArrayEquals(DatatypeConverter.parseBase64Binary(key), resultSecretsData.getSecrets().get(0).getSecretBytes());
         assertEquals(1, resultSecretsData.getSecrets().get(0).getVersion());
         assertTrue(resultSecretsData.getSecrets().get(0) instanceof CustomEncryptionKey);
     }
@@ -58,7 +59,7 @@ class SecretsTest {
         SecretKeyAccessor accessor = () -> SecretsDataGenerator.fromPassword("user_password");
         SecretsData resultSecretsData = accessor.getSecretsData();
         assertEquals(currentVersion, resultSecretsData.getCurrentSecret().getVersion());
-        assertTrue(Arrays.equals(secretString.getBytes(StandardCharsets.UTF_8), resultSecretsData.getSecrets().get(0).getSecretBytes()));
+        assertArrayEquals(secretString.getBytes(StandardCharsets.UTF_8), resultSecretsData.getSecrets().get(0).getSecretBytes());
         assertEquals(version, resultSecretsData.getSecrets().get(0).getVersion());
         assertTrue(resultSecretsData.getSecrets().get(0) instanceof EncryptionSecret);
     }
@@ -94,7 +95,7 @@ class SecretsTest {
         assertNotNull(data);
         assertEquals(1, data.getCurrentSecret().getVersion());
         assertEquals(1, data.getSecrets().size());
-        assertTrue(Arrays.equals("someSecret".getBytes(StandardCharsets.UTF_8), data.getSecrets().get(0).getSecretBytes()));
+        assertArrayEquals("someSecret".getBytes(StandardCharsets.UTF_8), data.getSecrets().get(0).getSecretBytes());
         assertEquals(1, data.getSecrets().get(0).getVersion());
         assertTrue(data.getSecrets().get(0) instanceof EncryptionSecret);
 
@@ -126,6 +127,19 @@ class SecretsTest {
 
         StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(secretDataWrongJson));
         assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
+    }
+
+    @Test
+    void generateSecretFromNullNegative() {
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(null));
+        assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromJson(""));
+        assertEquals("Incorrect JSON with SecretsData", ex.getMessage());
+
+        ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromPassword(""));
+        assertEquals("Secret can't be null or empty", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () -> SecretsDataGenerator.fromPassword(null));
+        assertEquals("Secret can't be null or empty", ex.getMessage());
     }
 
     @Test
