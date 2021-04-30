@@ -160,7 +160,7 @@ class StorageTest {
     @RepeatedTest(3)
     void findTest(RepetitionInfo repeatInfo) throws StorageException {
         iterateLogLevel(repeatInfo, StorageImpl.class);
-        FindFilter builder = new FindFilter()
+        FindFilter filter = new FindFilter()
                 .limitAndOffset(1, 0)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
         Record record = new Record(RECORD_KEY, BODY)
@@ -175,12 +175,19 @@ class StorageTest {
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setApiKey("apiKey");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
-        FindResult findResult = storage.find(COUNTRY, builder);
+        FindResult findResult = storage.find(COUNTRY, filter);
 
         assertEquals(1, findResult.getCount());
         assertEquals(1, findResult.getRecords().size());
         assertEquals(RECORD_KEY, findResult.getRecords().get(0).getRecordKey());
         assertEquals(BODY, findResult.getRecords().get(0).getBody());
+
+        findResult = storage.find(COUNTRY, new FindFilter());
+        assertEquals("{\"filter\":{},\"options\":{\"offset\":0,\"limit\":100}}", agent.getCallBody());
+        assertNotNull(findResult);
+        findResult = storage.find(COUNTRY, null);
+        assertEquals("{\"filter\":{},\"options\":{\"offset\":0,\"limit\":100}}", agent.getCallBody());
+        assertNotNull(findResult);
     }
 
     @RepeatedTest(3)
@@ -364,8 +371,12 @@ class StorageTest {
         agent.setResponse("{\"data\":[],\"meta\":{\"count\":0,\"limit\":10,\"offset\":0,\"total\":0}}");
         foundRecord = storage.findOne(COUNTRY, filter);
         assertNull(foundRecord);
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.findOne(COUNTRY, null));
-        assertEquals("Filters can't be null", ex.getMessage());
+        foundRecord = storage.findOne(COUNTRY, null);
+        assertEquals("{\"filter\":{},\"options\":{\"offset\":0,\"limit\":1}}", agent.getCallBody());
+        assertNull(foundRecord);
+        foundRecord = storage.findOne(COUNTRY, new FindFilter());
+        assertEquals("{\"filter\":{},\"options\":{\"offset\":0,\"limit\":1}}", agent.getCallBody());
+        assertNull(foundRecord);
     }
 
     @Test
@@ -604,8 +615,6 @@ class StorageTest {
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.find(null, null));
         assertEquals("Country can't be null", ex1.getMessage());
-        StorageClientException ex2 = assertThrows(StorageClientException.class, () -> storage.find(COUNTRY, null));
-        assertEquals("Filters can't be null", ex2.getMessage());
     }
 
     @RepeatedTest(3)
