@@ -26,13 +26,11 @@ public class StorageConfig {
     public static final String MSG_SECURE = "[SECURE[%s]]";
     //params from OS env
     public static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
-    public static final String PARAM_API_KEY = "INC_API_KEY";
     public static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     public static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
     public static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
 
     private String environmentId;
-    private String apiKey;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
     private CryptoProvider cryptoProvider;
@@ -71,32 +69,6 @@ public class StorageConfig {
      */
     public StorageConfig useEnvironmentIdFromEnv() {
         this.environmentId = loadFromEnv(PARAM_ENV_ID);
-        return this;
-    }
-
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    /**
-     * sets API key
-     *
-     * @param apiKey API key
-     * @return StorageConfig
-     */
-    public StorageConfig setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-        return this;
-    }
-
-    /**
-     * load apiKey from env variable 'INC_API_KEY'
-     *
-     * @return StorageConfig
-     */
-    public StorageConfig useApiKeyFromEnv() {
-        this.apiKey = loadFromEnv(PARAM_API_KEY);
         return this;
     }
 
@@ -177,7 +149,6 @@ public class StorageConfig {
 
     /**
      * Set login for oAuth authorization, can be also set via environment variable INC_CLIENT_ID.
-     * Alternative way for authorization - to use {@link #setApiKey(String)}
      *
      * @param clientId login
      * @return StorageConfig
@@ -203,7 +174,6 @@ public class StorageConfig {
 
     /**
      * Set user secret for oAuth authorization, can be also set via environment variable INC_CLIENT_SECRET.
-     * Alternative way for authorization - to use {@link #setApiKey(String)}
      *
      * @param clientSecret password
      * @return StorageConfig
@@ -379,7 +349,6 @@ public class StorageConfig {
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvironmentId(getEnvironmentId());
-        newInstance.setApiKey(getApiKey());
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
         newInstance.setCryptoProvider(getCryptoProvider());
@@ -401,7 +370,6 @@ public class StorageConfig {
     public String toString() {
         return "StorageConfig{" +
                 "environmentId='" + hideParam(environmentId) + '\'' +
-                ", apiKey='" + hideParam(apiKey) + '\'' +
                 ", endPoint='" + endPoint + '\'' +
                 ", secretKeyAccessor=" + secretKeyAccessor +
                 ", cryptoProvider=" + cryptoProvider +

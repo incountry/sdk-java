@@ -69,8 +69,6 @@ public class StorageConfig {
    private String clientId;
    /** Required when using oAuth authorization, can be also set via INC_CLIENT_SECRET */
    private String clientSecret;
-   /** Required when using API key authorization, or as environment variable */
-   private String apiKey;
    /** Optional. Defines custom API URL, can also be set via INC_ENDPOINT */
    private String endPoint;
    /** Instance of SecretKeyAccessor class. Used to fetch encryption secret */
@@ -110,22 +108,6 @@ public class StorageConfig {
    //...
 }
 ```
-
----
-**WARNING**
-
-API Key authorization is being deprecated. The backward compatibility is preserved for the API keys, but you no longer can access API keys (neither old nor new) from your dashboard.
-
-Below you can find API Key authorization usage example:
-```java
-SecretsData secretsData = SecretsDataGenerator.fromPassword("<password>");
-StorageConfig config = new StorageConfig()
-    .setEnvironmentId("<environment_id>")
-    .setApiKey("<api_key>")
-    .setSecretKeyAccessor(() -> secretsData);
-Storage storage=StorageImpl.getInstance(config);
-```
----
 
 #### oAuth options configuration
 
@@ -1136,11 +1118,4 @@ compileClasspath
 +--- commons-io:commons-io:2.8.0
 \--- org.apache.httpcomponents:httpmime:4.5.13
      \--- org.apache.httpcomponents:httpclient:4.5.13 (*)
-```
-
-### Minimal JVM memory options
-```
--Xms8m
--Xmx16m
--XX:MaxMetaspaceSize=32m
 ```

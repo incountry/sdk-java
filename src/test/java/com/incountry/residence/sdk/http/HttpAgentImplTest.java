@@ -11,7 +11,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.HttpAgent;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import org.apache.http.impl.client.HttpClients;
@@ -49,7 +48,7 @@ class HttpAgentImplTest {
 
     private static final int PORT = 8769;
     private static final String ENDPOINT = "http://localhost:" + PORT;
-    private static final TokenClient TOKEN_CLIENT = new ApiKeyTokenClient("<api_key>");
+    private static final TokenClient TOKEN_CLIENT = (force, audience, region) -> "<token>";
     private static final String APPLICATION_JSON = "application/json";
 
     @Test

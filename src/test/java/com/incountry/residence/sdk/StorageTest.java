@@ -109,7 +109,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), dtoTransformer) + "]}";
         Storage storage = StorageImpl.getInstance(config,
                 new HttpDaoImpl(FAKE_ENDPOINT, null, null,
@@ -148,7 +148,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent("", 200)));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.migrate("us", 0));
         assertEquals("Limit can't be < 1", ex1.getMessage());
@@ -173,7 +173,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, filter);
 
@@ -203,7 +203,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         storage.write(COUNTRY, record);
         String expectedURL = endpoint + "/v2/storage/records/" + COUNTRY;
@@ -218,7 +218,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         Record record = new Record(null, BODY)
                 .setProfileKey(PROFILE_KEY)
@@ -272,7 +272,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.write(COUNTRY, null));
         assertEquals("Can't write null record", ex.getMessage());
@@ -285,7 +285,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(endpoint, null, null, agent));
         String key = "<key>";
         Record record = new Record(key, "<body>");
@@ -317,7 +317,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, filter);
         String callBody = agent.getCallBody();
@@ -352,7 +352,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         Record foundRecord = storage.findOne(COUNTRY, filter);
@@ -402,7 +402,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         FindResult findResult = storage.find(COUNTRY, filter);
@@ -442,7 +442,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.find(COUNTRY, filter);
         String body = agent.getCallBody();
@@ -513,7 +513,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, new FindFilter().keyIsNotNull(NumberField.VERSION));
         assertEquals(0, findResult.getErrors().size());
@@ -538,7 +538,7 @@ class StorageTest {
         FakeHttpAgent agent = new FakeHttpAgent("{\"data\":[" + encryptedRec + "," + encryptedPTRec + "],\"meta\":{\"count\":2,\"limit\":10,\"offset\":0,\"total\":2}}", 200);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         FindResult findResult = storage.find(COUNTRY, new FindFilter().keyIsNotNull(NumberField.RANGE_KEY1));
@@ -564,7 +564,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.find(COUNTRY, filter));
         assertEquals("Response error: Meta is null", ex.getMessage());
@@ -577,7 +577,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         Record readRecord = storage.read(COUNTRY, RECORD_KEY);
         assertNull(readRecord);
@@ -611,7 +611,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.find(null, null));
         assertEquals("Country can't be null", ex1.getMessage());
@@ -631,7 +631,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, dao);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.read(null, null));
         assertEquals("Country can't be null", ex.getMessage());
@@ -646,7 +646,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, dao);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.delete(null, null));
         assertEquals("Country can't be null", ex.getMessage());
@@ -660,7 +660,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, dao);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.migrate(null, 100));
         assertEquals("Country can't be null", ex.getMessage());
@@ -673,7 +673,7 @@ class StorageTest {
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiLey")
+                .setOauthToken("token")
                 .setEndPoint(FAKE_ENDPOINT)
                 .setEnvironmentId(ENVIRONMENT_ID);
         Storage storage = StorageImpl.getInstance(config);
@@ -690,7 +690,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        assertEquals("Please use only one authorization: clientId/clientSecret or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -700,7 +700,7 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config, null));
-        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        assertEquals("Please use only one authorization: clientId/clientSecret or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -756,10 +756,9 @@ class StorageTest {
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setClientId("<clientId>")
-                .setApiKey("<apiKey>")
                 .setOauthToken("<token>");
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
-        assertEquals("Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor", ex.getMessage());
+        assertEquals("Please use only one authorization: clientId/clientSecret or oauthTokenAccessor", ex.getMessage());
     }
 
     @Test
@@ -769,7 +768,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
         assertTrue(storage.delete(COUNTRY, RECORD_KEY));
@@ -783,7 +782,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
         assertNull(storage.read(COUNTRY, RECORD_KEY));
@@ -791,11 +790,11 @@ class StorageTest {
     }
 
     @Test
-    void negativeTestIllegalTimeout() {
+    void negativeTestIllegalTimeout() throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setEndPoint(FAKE_ENDPOINT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setHttpTimeout(0)
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
@@ -809,7 +808,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(1)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>")
                 .setMaxHttpPoolSize(HTTP_POOL_SIZE);
         Storage storage = StorageImpl.getInstance(config);
@@ -820,11 +819,11 @@ class StorageTest {
     }
 
     @Test
-    void negativeTestWithIllegalPoolSize() {
+    void negativeTestWithIllegalPoolSize() throws StorageClientException {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(1)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>")
                 .setMaxHttpPoolSize(0);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
@@ -859,7 +858,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(1)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>")
                 .setMaxHttpPoolSize(1)
                 .setHashSearchKeys(false);
@@ -909,7 +908,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId), 201)));
         Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         InputStream fileInputStream = Files.newInputStream(tempFile);
@@ -945,7 +944,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         assertTrue(storage.deleteAttachment(country, recordKey, fileId));
     }
@@ -967,7 +966,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, new FakeHttpAgent(expectedResponse, fileName, Files.newInputStream(tempFile), 200)));
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
 
@@ -999,7 +998,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         AttachmentMeta attachmentMeta = storage.updateAttachmentMeta(country, recordKey, fileId, fileName, null);
@@ -1036,7 +1035,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
-                .setApiKey("apiKey");
+                .setOauthToken("token");
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
         assertEquals(gson.fromJson(response.toString(), AttachmentMeta.class), attachmentMeta);
@@ -1047,7 +1046,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
@@ -1158,7 +1157,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
@@ -1190,7 +1189,7 @@ class StorageTest {
         StorageConfig config = new StorageConfig()
                 .setHttpTimeout(31)
                 .setEndPoint("http://localhost:" + PORT)
-                .setApiKey("<apiKey>")
+                .setOauthToken("token")
                 .setEnvironmentId("<envId>");
         Storage storage = StorageImpl.getInstance(config);
         String recordKey = "key";
@@ -1275,7 +1274,7 @@ class StorageTest {
         server.start();
 
         StorageConfig config = new StorageConfig()
-                .setApiKey("apiKey")
+                .setOauthToken("token")
                 .setEndPoint("http://localhost:" + PORT)
                 .setEnvironmentId("environmentId");
 
@@ -1302,7 +1301,7 @@ class StorageTest {
         FakeHttpServer server = new FakeHttpServer("{}", 201, PORT, 5);
         server.start();
         StorageConfig config = new StorageConfig()
-                .setApiKey("apiKey")
+                .setOauthToken("token")
                 .setEndPoint("http://localhost:" + PORT)
                 .setEnvironmentId("environmentId");
         Storage storage = StorageImpl.getInstance(config);

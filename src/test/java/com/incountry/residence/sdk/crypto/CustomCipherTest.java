@@ -31,7 +31,7 @@ class CustomCipherTest {
     private static final byte[] CUSTOM_PASSWORD_2 = "123456789!123456789_123456789%Ab".getBytes(StandardCharsets.UTF_8);
     private static final String ENV_ID = "envId";
     private static final String FAKE_ENDPOINT = "http://localhost";
-    private static final String API_KEY = "apiKey";
+    private static final String TOKEN = "token";
     private static final String BODY_FOR_ENCRYPTION = "SomeSecretBody!234567=!@#$%^&**()_+|";
 
     @Test
@@ -44,7 +44,7 @@ class CustomCipherTest {
         SecretsData data = new SecretsData(Arrays.asList(key1, key2), key1);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENV_ID)
-                .setApiKey(API_KEY)
+                .setOauthToken(TOKEN)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(() -> data)
                 .setCryptoProvider(provider);
@@ -66,7 +66,7 @@ class CustomCipherTest {
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENV_ID)
-                .setApiKey(API_KEY)
+                .setOauthToken(TOKEN)
                 .setEndPoint(FAKE_ENDPOINT)
                 .setSecretKeyAccessor(() -> secretsData)
                 .setCryptoProvider(provider);

@@ -86,7 +86,7 @@ class HttpDaoImplTests {
     private Storage initializeStorage(HttpDaoImpl dao) throws StorageClientException, StorageCryptoException {
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENV_ID)
-                .setApiKey("apiKey")
+                .setOauthToken("token")
                 .setSecretKeyAccessor(() -> secretsData);
         return StorageImpl.getInstance(config, dao);
     }
