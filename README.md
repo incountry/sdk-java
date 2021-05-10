@@ -5,6 +5,42 @@ InCountry Storage SDK
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=incountry_sdk-java&metric=coverage)](https://sonarcloud.io/dashboard?id=incountry_sdk-java)
 [![Known Vulnerabilities](https://snyk.io/test/github/incountry/sdk-java/badge.svg?targetFile=build.gradle)](https://snyk.io/test/github/incountry/sdk-java?targetFile=build.gradle)
 
+
+
+Table of contents
+=================
+<!--ts-->
+* [Installation](#installation)
+* [Countries List](#countries-list)
+* [Quickstart guide](#quickstart-guide)
+* [Storage Configuration](#storage-configuration)
+    * [oAuth options configuration](#oauth-options-configuration)
+    * [Encryption key/secret](#encryption-key/secret)
+* [Usage](#usage) 
+    * [Writing data to Storage](#writing-data-to-storage)
+       * [List of available record fields](#list-of-available-record-fields)
+       * [Date fields](#date-fields)
+    * [Batches](#batches)
+    * [Reading stored data](#reading-stored-data)
+    * [Find records](#find-records)
+        * [Fields that records can be sorted by](#fields-that-records-can-be-sorted-by)
+        * [Partial text match search](#partial-text-match-search)
+    * [Find one record matching filter](#find-one-record-matching-filter)
+    * [Delete records](#delete-records)
+* [Attaching files to a record](#attaching-files-to-a-record)
+    * [Adding attachments](#adding-attachments)
+    * [Deleting attachments](#deleting-attachments)
+    * [Downloading attachments](#downloading-attachments)
+    * [Working with attachment meta info](#working-with-attachment-meta-info)
+* [Health check](#health-check)
+* [Data migration and key rotation support](#data-migration-and-key-rotation-support)
+* [AWS KMS integration](#aws-kms-integration)
+* [Error handling](#error-handling)
+* [Custom encryption support](#custom-encryption-support)
+* [Project dependencies](#project-dependencies)
+    * [Dependency Tree](#dependency-tree)
+<!--ts-->
+
 ## Installation
 Incountry Storage SDK requires Java Developer Kit 1.8 or higher, recommended language level 8.
 
@@ -38,7 +74,7 @@ StorageConfig config = new StorageConfig()
 Storage storage = StorageImpl.getInstance(config);
 ```
 
-## Storage Configuration
+## Storage configuration
 
 Below you can find a full list of possible configuration options for creating a Storage instance.
 ```java
@@ -109,7 +145,7 @@ public class StorageConfig {
 }
 ```
 
-#### oAuth options configuration
+### oAuth options configuration
 
 The SDK allows to precisely configure oAuth authorization endpoints (if needed). Use this option only if your plan configuration requires so.
 
@@ -260,6 +296,7 @@ SDK allows you to use custom encryption keys, instead of secrets. Please note th
 
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
+## Usage
 ### Writing data to Storage
 
 Use `write` method in order to create a record.
@@ -512,7 +549,7 @@ The request will return records, sorted according to the following pseudo-sql
 SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
 ```
 
-##### Fields that records can be sorted by:
+#### Fields that records can be sorted by
 ```java
 public enum SortField {
    KEY1,
@@ -597,12 +634,9 @@ int total = findResult.getTotal();
 
 `FindResult.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
 
-##### Partial text match search
+#### Partial text match search
 
-You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs
-partial match search (similar to the `LIKE` SQL operator, without special characters) within records text
-fields `key1, key2, ..., Key20`.
-
+You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., Key20`.
 ```java
 // Matches all records where 
 // Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
@@ -610,9 +644,7 @@ FindFilter filter = new FindFilter()
     .searchKeysLike("abc");
 ```
 
-**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and
-works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
-
+**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
 ```java
 // Matches all records where 
 // (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc') 
@@ -620,32 +652,6 @@ works only in combination with the non-hashing Storage mode (`hashSearchKeys` pa
 FindFilter filter = new FindFilter()
     .searchKeysLike("abc")
     .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
-
-// Causes validation error (StorageClientException)
-FindFilter filter = new FindFilter()
-    .searchKeysLike("abc")
-    .keyEq(StringField.KEY1, "def");
-```
-
-##### Partial text match search
-You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., key20`.
-```java
-// Matches all records where 
-// Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
-FindFilterBuilder builder = FindFilterBuilder.create()
-    .searchKeysLike("abc");
-```
-
-**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and
-works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
-```java
-// Matches all records where 
-// (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc') 
-// AND (Record.rangeKey1 = 1 OR Record.rangeKey1 = 2)
-FindFilter filter = new FindFilter()
-    .searchKeysLike("abc")
-    .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
-storage.find("us", builder);
 
 // Causes validation error (StorageClientException)
 FindFilter filter = new FindFilter()
@@ -891,7 +897,7 @@ AttachmentMeta meta = storage
         .updateAttachmentMeta(COUNTRY, RECORD_KEY, fileId, NEW_FILE_NAME, NEW_MIME_TYPE);
 ```
 
-## Health Check
+## Health check
 The `healthCheck` method of `Storage` allows you to check availability of a remote storage service by country identifier
 ```java
 public interface Storage {
@@ -913,8 +919,7 @@ Example of usage:
 bool status = storage.healthCheck(COUNTRY);
 ```
 
-Data Migration and Key Rotation support
------
+## Data migration and key rotation support
 
 Using `SecretKeyAccessor` that provides `SecretsData` object enables key rotation and data migration support.
 
@@ -961,7 +966,7 @@ The suggested use case assumes that AWS user already got his KMS encrypted data 
 
 For a detailed example of AWS KMS keys usage please see [AwsKmsExample.java](/src/integration/java/com/incountry/residence/sdk/AwsKmsExample.java)
 
-## Error Handling
+## Error handling
 
 InCountry Java SDK throws following Exceptions:
 - **StorageClientException** - used for various input validation errors
@@ -989,7 +994,7 @@ public void test() {
 }
 ```
 
-## Custom Encryption Support
+## Custom encryption support
 
 SDK supports the ability to provide custom encryption/decryption methods if you decide to use your own algorithm instead of the default one.
 
@@ -1098,7 +1103,7 @@ The following is a list of compile dependencies for this project. These dependen
 | org.apache.httpcomponents | httpcore             | 4.4.13      | jar      |
 | com.google.code.gson      | gson                 | 2.8.6       | jar      |
 
-#### Dependency Tree
+### Dependency tree
 ```
 compileClasspath
 +--- javax.xml.bind:jaxb-api:2.3.1
