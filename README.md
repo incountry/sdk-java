@@ -15,7 +15,7 @@ Table of contents
 * [Quickstart guide](#quickstart-guide)
 * [Storage configuration](#storage-configuration)
     * [oAuth options configuration](#oauth-options-configuration)
-    * [Encryption key/secret](#encryption-key/secret)
+    * [Encryption key/secret](#encryption-keysecret)
 * [Usage](#usage) 
     * [Writing data to storage](#writing-data-to-storage)
        * [List of available record fields](#list-of-available-record-fields)
