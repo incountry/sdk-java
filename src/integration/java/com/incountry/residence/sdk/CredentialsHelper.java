@@ -48,7 +48,7 @@ public class CredentialsHelper {
         if (isNullOrEmpty(standName)) {
             return System.getenv(key);
         }
-        return System.getenv(standName + '.' + key);
+        return System.getenv(standName + '_' + key);
     }
 
     public static String loadFromEnv(String key, String defaultValue) {
