@@ -11,13 +11,13 @@ Table of contents
 =================
 <!--ts-->
 * [Installation](#installation)
-* [Countries List](#countries-list)
+* [Countries list](#countries-list)
 * [Quickstart guide](#quickstart-guide)
-* [Storage Configuration](#storage-configuration)
+* [Storage configuration](#storage-configuration)
     * [oAuth options configuration](#oauth-options-configuration)
     * [Encryption key/secret](#encryption-key/secret)
 * [Usage](#usage) 
-    * [Writing data to Storage](#writing-data-to-storage)
+    * [Writing data to storage](#writing-data-to-storage)
        * [List of available record fields](#list-of-available-record-fields)
        * [Date fields](#date-fields)
     * [Batches](#batches)
@@ -58,7 +58,7 @@ For Gradle users please add this line to your dependencies list
 compile "com.incountry:incountry-java-client:4.0.0"
 ```
 
-## Countries List
+## Countries list
 For a full list of supported countries and their codes please [follow this link](countries.md).
 
 
@@ -297,7 +297,7 @@ SDK allows you to use custom encryption keys, instead of secrets. Please note th
 Note: even though SDK uses PBKDF2 to generate a cryptographically strong encryption key, you must make sure you provide a secret/password which follows modern security best practices and standards.
 
 ## Usage
-### Writing data to Storage
+### Writing data to storage
 
 Use `write` method in order to create a record.
 ```java
