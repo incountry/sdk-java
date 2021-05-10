@@ -17,7 +17,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.impl.ApiKeyTokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
@@ -46,8 +45,7 @@ public class StorageImpl implements Storage {
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
     //error messages
     private static final String MSG_ERR_PASS_ENV = "Please pass environment_id param or set INC_ENVIRONMENT_ID env var";
-    private static final String MSG_ERR_AUTH = "Please use only one authorization: clientId/clientSecret or apiKey or oauthTokenAccessor";
-    private static final String MSG_ERR_PASS_API_KEY = "Please pass api_key param or set INC_API_KEY env var";
+    private static final String MSG_ERR_AUTH = "Please use only one authorization: clientId/clientSecret or oauthTokenAccessor";
     private static final String MSG_ERR_NULL_BATCH = "Can't write empty batch";
     private static final String MSG_ERR_NULL_COUNTRY = "Country can't be null";
     private static final String MSG_ERR_NULL_FILE_ID = "File ID can't be null";
@@ -82,7 +80,6 @@ public class StorageImpl implements Storage {
         HELPER.check(StorageClientException.class, config == null, MSG_ERR_CONFIG);
         HELPER.check(StorageClientException.class, isNullOrEmpty(config.getEnvironmentId()), MSG_ERR_PASS_ENV);
         int alternativeAuthCount = 0;
-        alternativeAuthCount += config.getApiKey() != null ? 1 : 0;
         alternativeAuthCount += config.getClientId() != null ? 1 : 0;
         alternativeAuthCount += config.getOauthTokenAccessor() != null ? 1 : 0;
         HELPER.check(StorageClientException.class, alternativeAuthCount != 1, MSG_ERR_AUTH);
@@ -172,9 +169,6 @@ public class StorageImpl implements Storage {
                         httpClient
                 );
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
-            } else if (config.getApiKey() != null) {
-                HELPER.check(StorageClientException.class, isNullOrEmpty(config.getApiKey()), MSG_ERR_PASS_API_KEY);
-                tokenClient = new ApiKeyTokenClient(config.getApiKey());
             } else {
                 OauthTokenAccessor accessor = config.getOauthTokenAccessor();
                 tokenClient = (force, audience, region) -> {
