@@ -25,7 +25,7 @@ Table of contents
     * [Find records](#find-records)
         * [Fields that records can be sorted by](#fields-that-records-can-be-sorted-by)
         * [Partial text match search](#partial-text-match-search)
-    * [Find one record matching filter](#find-one-record-matching-filter)
+    * [Find one record](#find-one-record)
     * [Delete records](#delete-records)
 * [Attaching files to a record](#attaching-files-to-a-record)
     * [Adding attachments](#adding-attachments)
@@ -636,7 +636,7 @@ int total = findResult.getTotal();
 
 #### Partial text match search
 
-You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., Key20`.
+You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., key20`.
 ```java
 // Matches all records where 
 // Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
@@ -659,7 +659,7 @@ FindFilter filter = new FindFilter()
     .keyEq(StringField.KEY1, "def");
 ```
 
-### Find one record matching filter
+### Find one record
 
 If you need to find the first record matching filter, you can use `findOne` method:
 ```java
