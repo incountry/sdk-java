@@ -53,7 +53,7 @@ class CryptoProviderTest {
     public void init() throws StorageClientException {
         secret = "password".getBytes(StandardCharsets.UTF_8);
         keyVersion = 0;
-        Secret secret = new EncryptionSecret(keyVersion, this.secret);
+        Secret secret = new EncryptionSecret(this.secret, keyVersion);
         secretsData = new SecretsData(Collections.singletonList(secret), secret);
     }
 
@@ -102,7 +102,7 @@ class CryptoProviderTest {
     void testDecryptionErrorOnSecretMismatch() throws StorageClientException {
         byte[] anotherSecretBytes = "otherpassword".getBytes(StandardCharsets.UTF_8);
         keyVersion = 0;
-        Secret anotherSecret = new EncryptionSecret(keyVersion, anotherSecretBytes);
+        Secret anotherSecret = new EncryptionSecret(anotherSecretBytes, keyVersion);
         SecretsData anotherSecretsData = new SecretsData(Collections.singletonList(anotherSecret), anotherSecret);
         CryptoProvider provider = new CryptoProvider(null);
         String encrypted = "1:8b02d29be1521e992b49a9408f2777084e9d8195e4a3392c68c70545eb559670b70ec928c8eeb2e34f118d32a23d77abdcde38446241efacb71922579d1dcbc23fca62c1f9ec5d97fbc3a9862c0a9e1bb630aaa3585eac160a65b24a96af5becef3cdc2b29";
@@ -112,7 +112,7 @@ class CryptoProviderTest {
 
     @Test
     void testSecretKeyWithNegativeVersion() {
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(-1, secret));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(secret, -1));
         assertEquals("Version must be >= 0", ex.getMessage());
     }
 
