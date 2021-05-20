@@ -72,6 +72,7 @@ public class StorageImpl implements Storage {
     private final Dao dao;
     private final HashUtils hashUtils;
     private final DtoTransformer transformer;
+    private final CloseableHttpClient httpClient;
 
     private StorageImpl(StorageConfig config, Dao dao) throws StorageClientException, StorageCryptoException {
         if (LOG.isDebugEnabled()) {
@@ -83,8 +84,8 @@ public class StorageImpl implements Storage {
         alternativeAuthCount += config.getClientId() != null ? 1 : 0;
         alternativeAuthCount += config.getOauthTokenAccessor() != null ? 1 : 0;
         HELPER.check(StorageClientException.class, alternativeAuthCount != 1, MSG_ERR_AUTH);
-
-        this.dao = initDao(config, dao);
+        this.httpClient = dao == null ? initHttpClient(config) : null;
+        this.dao = initDao(config, dao, httpClient);
         this.hashUtils = new HashUtils(config.getEnvironmentId(), config.isNormalizeKeys());
         CryptoProvider cryptoProvider = config.getCryptoProvider() == null ? new CryptoProvider(null) : config.getCryptoProvider();
         if (config.getSecretKeyAccessor() != null) {
@@ -127,7 +128,13 @@ public class StorageImpl implements Storage {
         return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
 
-    private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
+    private static CloseableHttpClient initHttpClient(StorageConfig config) throws StorageClientException {
+        Integer httpTimeout = config.getHttpTimeout();
+        Integer httpPoolSize = config.getMaxHttpPoolSize();
+        Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
+        checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
+        checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
+        checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
         if (httpTimeout == null) {
             httpTimeout = DEFAULT_HTTP_TIMEOUT;
         }
@@ -137,26 +144,18 @@ public class StorageImpl implements Storage {
                 .setSocketTimeout(httpTimeout)
                 .build();
         HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
-        if (poolSize == null) {
-            poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
+        if (httpPoolSize == null) {
+            httpPoolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
         }
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(poolSize);
-        connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
+        connectionManager.setMaxTotal(httpPoolSize);
+        connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : httpPoolSize);
         builder.setConnectionManager(connectionManager);
         return builder.build();
     }
 
-    private static Dao initDao(StorageConfig config, Dao dao) throws StorageClientException {
+    private Dao initDao(StorageConfig config, Dao dao, CloseableHttpClient httpClient) throws StorageClientException {
         if (dao == null) {
-            Integer httpTimeout = config.getHttpTimeout();
-            Integer httpPoolSize = config.getMaxHttpPoolSize();
-            Integer connectionsPerRoute = config.getMaxHttpConnectionsPerRoute();
-            checkPositiveOrNull(httpTimeout, MSG_ERR_ILLEGAL_TIMEOUT);
-            checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
-            checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
-
-            CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null) {
                 HELPER.check(StorageClientException.class, isNullOrEmpty(config.getClientId()), MSG_ERR_PASS_CLIENT_ID);
@@ -342,5 +341,12 @@ public class StorageImpl implements Storage {
     public boolean healthCheck(String country) throws StorageClientException, StorageServerException {
         HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
         return dao.healthCheck(country);
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (httpClient != null) {
+            httpClient.close();
+        }
     }
 }

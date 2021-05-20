@@ -10,13 +10,14 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 
+import java.io.Closeable;
 import java.io.InputStream;
 import java.util.List;
 
 /**
  * Access point of SDK
  */
-public interface Storage {
+public interface Storage extends Closeable {
 
     /**
      * Write data to remote storage

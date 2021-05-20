@@ -444,8 +444,8 @@ public interface Storage {
  Below is the example of how you may use `batchWrite` method
 ```java
 List<Record> list = new ArrayList<>();
-list.add(new Record("some_record_key","some PII data"));
-list.add(new Record("another_record_key","another PII data"));
+list.add(new Record("some_record_key", "some PII data"));
+list.add(new Record("another_record_key", "another PII data"));
 storage.batchWrite("us", list);
 ```
 

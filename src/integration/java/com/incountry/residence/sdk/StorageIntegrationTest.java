@@ -16,6 +16,7 @@ import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.crypto.SecretsData;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -68,9 +68,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
-@TestInstance(PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StorageIntegrationTest {
     public static final String INT_INC_EMEA_AUTH_ENDPOINT = "INT_INC_EMEA_AUTH_ENDPOINT";
@@ -83,11 +81,11 @@ public class StorageIntegrationTest {
             UUID.randomUUID().toString().replace("-", "");
 
     private static final Random RANDOM = new Random(System.currentTimeMillis());
-    private Storage storageIgnoreCase;
-    private Storage storageWithoutEncryption;
-    private Storage storageOrdinary;
-    private Storage storageNonHashing;
-    private Storage storageWithCustomCipher;
+    private static StorageConfig ignoreCaseConfig;
+    private static StorageConfig withoutEncryptionConfig;
+    private static StorageConfig ordinaryConfig;
+    private static StorageConfig nonHashingConfig;
+    private static StorageConfig customCipherConfig;
 
     private static final String EMEA = "emea";
     private static final String APAC = "apac";
@@ -142,19 +140,15 @@ public class StorageIntegrationTest {
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
 
-    private static final String INT_WAIT_INTERVAL = "INT_WAIT_INTERVAL";
-
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = UUID.randomUUID().toString();
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
     private static final String NEW_FILE_NAME = UUID.randomUUID() + ".txt";
     private static final String MIME_TYPE = "text/plain";
     private static final String FILE_NAME = UUID.randomUUID() + ".txt";
-    private String fileId;
-    private static Map<String, String> attachmentFiles = new HashMap<>();
 
     @BeforeAll
-    public void initializeStorages() throws StorageException {
+    public static void initConfig() throws StorageException {
         Secret secret = new EncryptionSecret(VERSION, ENCRYPTION_SECRET);
         List<Secret> secretList = new ArrayList<>();
         secretList.add(secret);
@@ -163,24 +157,21 @@ public class StorageIntegrationTest {
 
         StorageConfig config = CredentialsHelper.getConfigWithOauth()
                 .setSecretKeyAccessor(secretKeyAccessor);
-        storageOrdinary = StorageImpl.getInstance(config);
+        ordinaryConfig = config;
 
-        config = config
+        withoutEncryptionConfig = config
                 .copy()
                 .setSecretKeyAccessor(null);
-        storageWithoutEncryption = StorageImpl.getInstance(config);
 
-        config = config
+        nonHashingConfig = config
                 .copy()
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setHashSearchKeys(false);
-        storageNonHashing = StorageImpl.getInstance(config);
 
-        config = config
+        ignoreCaseConfig = config
                 .copy()
                 .setHashSearchKeys(true)
                 .setNormalizeKeys(true);
-        storageIgnoreCase = StorageImpl.getInstance(config);
 
         Secret customSecretKey = new CustomEncryptionKey(ENCRYPTION_SECRET, VERSION);
         List<Secret> secretList2 = new ArrayList<>();
@@ -188,33 +179,63 @@ public class StorageIntegrationTest {
         SecretsData anotherSecretsData = new SecretsData(secretList2, customSecretKey);
         SecretKeyAccessor anotherAccessor = () -> anotherSecretsData;
 
-        config = config
+        customCipherConfig = config
                 .copy()
                 .setNormalizeKeys(false)
                 .setSecretKeyAccessor(anotherAccessor)
                 .setCryptoProvider(new CryptoProvider(new FernetCipher("Fernet")));
-        storageWithCustomCipher = StorageImpl.getInstance(config);
     }
 
-    private Stream<Arguments> storageProvider() {
+    private static Stream<Arguments> storageProvider() throws StorageCryptoException, StorageClientException {
         return Stream.of(
-                generateArguments(storageNonHashing),
-                generateArguments(storageOrdinary),
-                generateArguments(storageWithoutEncryption),
-                generateArguments(storageIgnoreCase),
-                generateArguments(storageWithCustomCipher)
+                generateArguments(nonHashingConfig),
+                generateArguments(ordinaryConfig),
+                generateArguments(withoutEncryptionConfig),
+                generateArguments(ignoreCaseConfig),
+                generateArguments(customCipherConfig)
         );
     }
 
-    private Arguments generateArguments(Storage storage) {
+    private static Arguments generateArguments(StorageConfig config) throws StorageCryptoException, StorageClientException {
+        Storage storage = StorageImpl.getInstance(config);
         int hash = storage.hashCode();
         return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
-    @ParameterizedTest(name = "batchWriteTest [{index}] {arguments}")
+    @ParameterizedTest(name = "commonTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(100)
-    public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void commonTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException, InterruptedException, IOException {
+        batchWriteTest(storage, batchRecordKey, key2);
+        writeTest(storage, recordKey, key2);
+        readTest(storage, recordKey, key2);
+        findTest(storage, recordKey, batchRecordKey, key2);
+        findAdvancedTest(storage, recordKey, batchRecordKey, key2);
+        findByVersionTest(storage, key2);
+        findByAllFieldsTest(storage, recordKey, key2);
+        findOneTest(storage, recordKey, key2);
+        deleteTest(storage, recordKey, batchRecordKey);
+        expiredRecordTest(storage);
+        healthCheckTest(storage);
+        String fileId = addAttachmentTest(storage);
+        getAttachmentFileTest(storage, fileId);
+        getAttachmentMetaTest(storage, fileId);
+        updateAttachmentMetaTest(storage, fileId);
+        deleteAttachmentTest(storage, fileId);
+        addAttachmentMultipleFilesTest(storage);
+        deleteOneOfAttachmentMultipleFilesTest(storage);
+        getAttachmentFileFromNonExistentRecordTest(storage, fileId);
+        getNonExistentAttachmentFileTest(storage);
+        getAttachmentMetaFromNonExistentFileTest(storage);
+        updateAttachmentMetaForNonExistentFileTest(storage);
+        addAttachmentWithUnusualFileNameTest(storage);
+        addBinaryFilesTest(storage);
+        deleteRecordWithAttachment(storage);
+
+        storage.close();
+    }
+
+    public void batchWriteTest(Storage storage, String batchRecordKey, String key2) throws StorageException {
         List<Record> records = new ArrayList<>();
         Record myRecord = new Record(batchRecordKey)
                 .setBody(RECORD_BODY)
@@ -236,10 +257,7 @@ public class StorageIntegrationTest {
         assertEquals(myRecord.getRangeKey10(), recordedRecord.getRangeKey10());
     }
 
-    @ParameterizedTest(name = "writeTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(200)
-    public void writeTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void writeTest(Storage storage, String recordKey, String key2) throws StorageException {
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY).setProfileKey(PROFILE_KEY).setRangeKey1(WRITE_RANGE_KEY_1)
                 .setRangeKey2(RANGE_KEY_2).setRangeKey3(RANGE_KEY_3).setRangeKey4(RANGE_KEY_4)
@@ -263,30 +281,26 @@ public class StorageIntegrationTest {
         checkAllFields(recordedRecord, recordKey, key2);
     }
 
-    @Test
-    @Order(210)
-    public void expiredRecordTest() throws StorageException, InterruptedException {
+
+    void expiredRecordTest(Storage storage) throws StorageException, InterruptedException {
         Record newRecord = new Record(UUID.randomUUID().toString())
                 .setBody(UUID.randomUUID().toString())
                 //record will be expired in 5 seconds
                 .setExpiresAt(new Date(System.currentTimeMillis() + 5_000L));
-        Record recordedRecord = storageOrdinary.write(COUNTRY, newRecord);
+        Record recordedRecord = storage.write(COUNTRY, newRecord);
         assertEquals(recordedRecord.getRecordKey(), recordedRecord.getRecordKey());
         assertEquals(recordedRecord.getBody(), recordedRecord.getBody());
 
-        Record readRecord = storageOrdinary.read(COUNTRY, newRecord.getRecordKey());
+        Record readRecord = storage.read(COUNTRY, newRecord.getRecordKey());
         assertEquals(recordedRecord.getRecordKey(), readRecord.getRecordKey());
         assertEquals(recordedRecord.getBody(), readRecord.getBody());
         //wait 5 seconds
         Thread.sleep(5_000L);
-        readRecord = storageOrdinary.read(COUNTRY, newRecord.getRecordKey());
+        readRecord = storage.read(COUNTRY, newRecord.getRecordKey());
         assertNull(readRecord);
     }
 
-    @ParameterizedTest(name = "readTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(300)
-    public void readTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void readTest(Storage storage, String recordKey, String key2) throws StorageException {
         Record incomingRecord = storage.read(COUNTRY, recordKey);
         checkAllFields(incomingRecord, recordKey, key2);
     }
@@ -335,9 +349,6 @@ public class StorageIntegrationTest {
         assertEquals(EXPIRES_AT, incomingRecord.getExpiresAt());
     }
 
-    @ParameterizedTest(name = "findTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(400)
     public void findTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.RECORD_KEY, recordKey)
@@ -390,9 +401,6 @@ public class StorageIntegrationTest {
         assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
     }
 
-    @ParameterizedTest(name = "findAdvancedTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(401)
     public void findAdvancedTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY2, key2)
@@ -445,10 +453,7 @@ public class StorageIntegrationTest {
         assertNull(findResult.getRecords().get(0).getExpiresAt());
     }
 
-    @ParameterizedTest(name = "findByVersionTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(402)
-    public void findByVersionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void findByVersionTest(Storage storage, String key2) throws StorageException {
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.VERSION, Long.valueOf(VERSION));
@@ -472,10 +477,7 @@ public class StorageIntegrationTest {
         assertEquals(2, findResult4.getRecords().size());
     }
 
-    @ParameterizedTest(name = "findByAllFieldsTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(403)
-    public void findByAllFieldsTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void findByAllFieldsTest(Storage storage, String recordKey, String key2) throws StorageException {
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY1, KEY_1)
@@ -536,10 +538,7 @@ public class StorageIntegrationTest {
         assertEquals(SERVICE_KEY_5, resultRecord.getServiceKey5());
     }
 
-    @ParameterizedTest(name = "findOneTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(404)
-    public void findOneTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
+    public void findOneTest(Storage storage, String recordKey, String key2) throws StorageException {
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
@@ -548,10 +547,7 @@ public class StorageIntegrationTest {
         assertEquals(RECORD_BODY, resultRecord.getBody());
     }
 
-    @ParameterizedTest(name = "deleteTest [{index}] {arguments}")
-    @MethodSource("storageProvider")
-    @Order(600)
-    public void deleteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException, InterruptedException {
+    public void deleteTest(Storage storage, String recordKey, String batchRecordKey) throws StorageException {
         storage.delete(COUNTRY, recordKey);
         storage.delete(COUNTRY, batchRecordKey);
         // Cannot read deleted record
@@ -561,25 +557,39 @@ public class StorageIntegrationTest {
         assertNull(batchWriteMethodRecord);
     }
 
+    void healthCheckTest(Storage storage) throws StorageServerException, StorageClientException {
+        assertTrue(storage.healthCheck(COUNTRY));
+        assertTrue(storage.healthCheck(CredentialsHelper.getMiniPopCountry()));
+    }
+
     @Test
-    @Order(700)
-    public void readIgnoreCaseTest() throws StorageException {
+    @Order(200)
+    void ignoreCaseTest() throws StorageException, IOException {
+        Storage storage = StorageImpl.getInstance(ignoreCaseConfig);
+        readIgnoreCaseTest(storage);
+        findIgnoreCaseTest(storage);
+        deleteIgnoreCaseTest(storage);
+        storage.close();
+    }
+
+
+    void readIgnoreCaseTest(Storage storage) throws StorageException {
         Record newRecord = new Record(RECORD_KEY_IGNORE_CASE)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
                 .setKey2(KEY_2)
                 .setKey3(KEY_3);
-        storageIgnoreCase.write(COUNTRY, newRecord);
+        storage.write(COUNTRY, newRecord);
 
-        Record incomingRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
+        Record incomingRecord = storage.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
         assertEquals(RECORD_KEY_IGNORE_CASE, incomingRecord.getRecordKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
         assertEquals(KEY_2, incomingRecord.getKey2());
         assertEquals(KEY_3, incomingRecord.getKey3());
 
-        incomingRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
+        incomingRecord = storage.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
         assertEquals(RECORD_KEY_IGNORE_CASE, incomingRecord.getRecordKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
@@ -587,16 +597,14 @@ public class StorageIntegrationTest {
         assertEquals(KEY_3, incomingRecord.getKey3());
     }
 
-    @Test
-    @Order(702)
-    public void findIgnoreCaseTest() throws StorageException {
+    void findIgnoreCaseTest(Storage storage) throws StorageException {
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE)
                 .keyEq(StringField.KEY2, KEY_2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        FindResult findResult = storageIgnoreCase.find(COUNTRY, filter);
+        FindResult findResult = storage.find(COUNTRY, filter);
         assertEquals(1, findResult.getCount());
         assertEquals(1, findResult.getRecords().size());
         assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
@@ -607,7 +615,7 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toLowerCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        findResult = storageIgnoreCase.find(COUNTRY, filter);
+        findResult = storage.find(COUNTRY, filter);
         assertEquals(1, findResult.getCount());
         assertEquals(1, findResult.getRecords().size());
         assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
@@ -618,91 +626,80 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toUpperCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        findResult = storageIgnoreCase.find(COUNTRY, filter);
+        findResult = storage.find(COUNTRY, filter);
         assertEquals(1, findResult.getCount());
         assertEquals(1, findResult.getRecords().size());
         assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
     }
 
-    @Test
-    @Order(703)
-    public void deleteIgnoreCaseTest() throws StorageException {
-        storageIgnoreCase.delete(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
+
+    void deleteIgnoreCaseTest(Storage storage) throws StorageException {
+        storage.delete(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
         // Cannot read deleted record
-        Record readRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE);
+        Record readRecord = storage.read(COUNTRY, RECORD_KEY_IGNORE_CASE);
         assertNull(readRecord);
-        readRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
+        readRecord = storage.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
         assertNull(readRecord);
-        readRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
+        readRecord = storage.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
         assertNull(readRecord);
     }
 
-    @Test
-    @Order(800)
-    public void addAttachmentTest() throws StorageException, IOException, InterruptedException {
+    String addAttachmentTest(Storage storage) throws StorageException, IOException {
         Record newRecord = new Record(ATTACHMENT_RECORD_KEY)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1);
-        storageOrdinary.write(COUNTRY, newRecord);
+        storage.write(COUNTRY, newRecord);
         Path tempFile = Files.createTempFile(FILE_NAME.split("\\.")[0], FILE_NAME.split("\\.")[1]);
         Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
         InputStream fileInputStream = Files.newInputStream(tempFile);
-        AttachmentMeta attachmentMeta = storageOrdinary.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileInputStream, FILE_NAME, false, DEFAULT_MIME_TYPE);
-        fileId = attachmentMeta.getFileId();
+        AttachmentMeta attachmentMeta = storage.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileInputStream, FILE_NAME, false, DEFAULT_MIME_TYPE);
+        String fileId = attachmentMeta.getFileId();
         assertEquals(FILE_NAME, attachmentMeta.getFilename());
         Files.delete(tempFile);
+        return fileId;
     }
 
-    @Test
-    @Order(801)
-    void getAttachmentFileTest() throws StorageException, IOException {
-        AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
+    void getAttachmentFileTest(Storage storage, String fileId) throws StorageException, IOException {
+        AttachedFile file = storage.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
         String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
         assertEquals(FILE_CONTENT, incomingFileContent);
         assertEquals(FILE_NAME, file.getFileName());
     }
 
-    @Test
-    @Order(802)
-    void getAttachmentMetaTest() throws StorageException {
-        AttachmentMeta meta = storageOrdinary.getAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
+    void getAttachmentMetaTest(Storage storage, String fileId) throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
         assertEquals(fileId, meta.getFileId());
         assertEquals(FILE_NAME, meta.getFilename());
         assertTrue(meta.getMimeType().contains(DEFAULT_MIME_TYPE));
     }
 
-    @Test
-    @Order(803)
-    void updateAttachmentMetaTest() throws StorageException {
-        AttachmentMeta meta = storageOrdinary.updateAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, fileId, NEW_FILE_NAME, MIME_TYPE);
+    void updateAttachmentMetaTest(Storage storage, String fileId) throws StorageException {
+        AttachmentMeta meta = storage.updateAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, fileId, NEW_FILE_NAME, MIME_TYPE);
         assertEquals(fileId, meta.getFileId());
         assertEquals(NEW_FILE_NAME, meta.getFilename());
         assertEquals(MIME_TYPE, meta.getMimeType());
     }
 
-    @Test
-    @Order(804)
-    void deleteAttachmentTest() throws StorageException {
-        storageOrdinary.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
-        AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
+    void deleteAttachmentTest(Storage storage, String fileId) throws StorageException {
+        storage.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
+        AttachedFile file = storage.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
         assertNull(file);
     }
 
-    @Test
-    @Order(805)
-    void addAttachmentMultipleFilesTest() throws StorageException {
+    void addAttachmentMultipleFilesTest(Storage storage) throws StorageException {
+        Map<String, String> attachmentFiles = new HashMap<>();
         for (int i = 0; i < 3; i++) {
             String fileName = UUID.randomUUID().toString();
             String fileContent = UUID.randomUUID().toString();
             InputStream fileInputStream = new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8));
-            AttachmentMeta attachmentMeta = storageOrdinary.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileInputStream, fileName, false);
+            AttachmentMeta attachmentMeta = storage.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileInputStream, fileName, false);
             attachmentFiles.put(attachmentMeta.getFileId(), fileContent);
         }
         attachmentFiles.forEach((idFile, fileContent) -> {
             Exception ex = null;
             try {
-                AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, idFile);
+                AttachedFile file = storage.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, idFile);
                 String incomingFileContent = IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name());
                 assertEquals(fileContent, incomingFileContent);
             } catch (StorageException | IOException exception) {
@@ -713,83 +710,67 @@ public class StorageIntegrationTest {
         });
     }
 
-    @Test
-    @Order(806)
-    public void deleteOneOfAttachmentMultipleFilesTest() throws StorageException {
-        storageOrdinary.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, (String) attachmentFiles.keySet().toArray()[0]);
-        Record incomingRecord = storageOrdinary.read(COUNTRY, ATTACHMENT_RECORD_KEY);
+    void deleteOneOfAttachmentMultipleFilesTest(Storage storage) throws StorageException {
+        Record recordWithFiles = storage.read(COUNTRY, ATTACHMENT_RECORD_KEY);
+        storage.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, recordWithFiles.getAttachments().get(0).getFileId());
+        Record incomingRecord = storage.read(COUNTRY, ATTACHMENT_RECORD_KEY);
         assertEquals(2, incomingRecord.getAttachments().size());
     }
 
-    @Test
-    @Order(807)
-    public void getAttachmentFileFromNonExistentRecordTest() throws StorageException {
-        AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, UUID.randomUUID().toString(), fileId);
+    void getAttachmentFileFromNonExistentRecordTest(Storage storage, String fileId) throws StorageException {
+        AttachedFile file = storage.getAttachmentFile(COUNTRY, UUID.randomUUID().toString(), fileId);
         assertNull(file);
     }
 
-    @Test
-    @Order(808)
-    public void getNonExistentAttachmentFileTest() throws StorageException {
-        AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
+    void getNonExistentAttachmentFileTest(Storage storage) throws StorageException {
+        AttachedFile file = storage.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
         assertNull(file);
     }
 
-    @Test
-    @Order(810)
-    public void getAttachmentMetaFromNonExistentFileTest() throws StorageException {
-        AttachmentMeta meta = storageOrdinary.getAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
+    void getAttachmentMetaFromNonExistentFileTest(Storage storage) throws StorageException {
+        AttachmentMeta meta = storage.getAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
         assertNull(meta);
     }
 
-    @Test
-    @Order(811)
-    public void updateAttachmentMetaForNonExistentFileTest() {
+    void updateAttachmentMetaForNonExistentFileTest(Storage storage) {
         String nonExistentFileId = UUID.randomUUID().toString();
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> storageOrdinary.updateAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, nonExistentFileId, NEW_FILE_NAME, MIME_TYPE));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.updateAttachmentMeta(COUNTRY, ATTACHMENT_RECORD_KEY, nonExistentFileId, NEW_FILE_NAME, MIME_TYPE));
         assertTrue(ex.getMessage().contains("Code=404"));
         assertTrue(ex.getMessage().contains(nonExistentFileId));
     }
 
-    @Test
-    @Order(812)
-    public void addAttachmentWithUnusualFileNameTest() throws StorageException, IOException {
+    void addAttachmentWithUnusualFileNameTest(Storage storage) throws StorageException, IOException {
         String fileName = "Naïve file.txt";
         Path tempFile = Files.createTempFile(fileName.split("\\.")[0], fileName.split("\\.")[1]);
         Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
         InputStream fileInputStream = Files.newInputStream(tempFile);
-        AttachmentMeta attachmentMeta = storageOrdinary.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileInputStream, fileName, false, DEFAULT_MIME_TYPE);
-        fileId = attachmentMeta.getFileId();
+        AttachmentMeta attachmentMeta = storage.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileInputStream, fileName, false, DEFAULT_MIME_TYPE);
         assertEquals(fileName, attachmentMeta.getFilename());
         Files.delete(tempFile);
     }
 
-    @Test
-    @Order(813)
-    void addBinaryFilesTest() throws StorageException, IOException {
+    void addBinaryFilesTest(Storage storage) throws StorageException, IOException {
         String filePath = "./gradle/wrapper/gradle-wrapper.jar";
         String fileName = "gradle-wrapper.jar";
         try (InputStream inputStream = new FileInputStream(filePath)) {
-            AttachmentMeta meta = storageOrdinary.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, inputStream, fileName, false);
+            AttachmentMeta meta = storage.addAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, inputStream, fileName, false);
             assertNotNull(meta);
             assertNotNull(meta.getFilename());
             assertNotNull(meta.getFileId());
-            AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, meta.getFileId());
+            AttachedFile file = storage.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, meta.getFileId());
             assertArrayEquals(IOUtils.toByteArray(new FileInputStream(filePath)), IOUtils.toByteArray(file.getFileContent()));
-            assertTrue(storageOrdinary.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, meta.getFileId()));
+            assertTrue(storage.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, meta.getFileId()));
         }
     }
 
-    @Test
-    @Order(899)
-    public void deleteRecordWithAttachment() throws StorageException {
-        assertTrue(storageOrdinary.delete(COUNTRY, ATTACHMENT_RECORD_KEY));
+    void deleteRecordWithAttachment(Storage storage) throws StorageException {
+        assertTrue(storage.delete(COUNTRY, ATTACHMENT_RECORD_KEY));
     }
 
     @Test
-    @Order(900)
-    public void findWithSearchKeys() throws StorageException, InterruptedException {
-        //to prevent exceeding the connection limit
+    @Order(300)
+    public void findWithSearchKeys() throws StorageException, IOException {
+        Storage storage = StorageImpl.getInstance(nonHashingConfig);
         String recordKey = "Non hashing " + RECORD_KEY;
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
@@ -809,22 +790,24 @@ public class StorageIntegrationTest {
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
         String country = CredentialsHelper.getMidPopCountry(false);
-        storageNonHashing.write(country, newRecord);
+        storage.write(country, newRecord);
 
         FindFilter filter = new FindFilter()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        FindResult findResult = storageNonHashing.find(country, filter);
+        FindResult findResult = storage.find(country, filter);
 
         assertEquals(1, findResult.getCount());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
 
-        storageNonHashing.delete(country, recordKey);
+        storage.delete(country, recordKey);
+        storage.close();
     }
 
     @Test
-    @Order(901)
-    public void utf8EncodingTest() throws StorageException {
+    @Order(400)
+    public void utf8EncodingTest() throws StorageException, IOException {
+        Storage storage = StorageImpl.getInstance(nonHashingConfig);
         String recordKey = "utf8" + RECORD_KEY;
         String key1 = "Louis César de La Baume Le Blanc" + TEMP;
         Record newRecord = new Record(recordKey)
@@ -833,31 +816,24 @@ public class StorageIntegrationTest {
                 .setRangeKey1(WRITE_RANGE_KEY_1)
                 .setKey1(key1)
                 .setPrecommitBody(PRECOMMIT_BODY);
-        storageNonHashing.write(COUNTRY, newRecord);
+        storage.write(COUNTRY, newRecord);
 
         FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY1, key1);
-        FindResult findResult = storageNonHashing.find(COUNTRY, filter);
+        FindResult findResult = storage.find(COUNTRY, filter);
 
         assertEquals(1, findResult.getCount());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
         assertEquals(key1, findResult.getRecords().get(0).getKey1());
 
-        storageNonHashing.delete(COUNTRY, recordKey);
-    }
-
-    @Test
-    @MethodSource("storageProvider")
-    @Order(1000)
-    public void healthCheckTest() throws StorageServerException, StorageClientException {
-        assertTrue(storageOrdinary.healthCheck(COUNTRY));
-        assertTrue(storageOrdinary.healthCheck(CredentialsHelper.getMiniPopCountry()));
+        storage.delete(COUNTRY, recordKey);
+        storage.close();
     }
 
     @Test
     @Order(1100)
-    public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
+    public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException, IOException {
         Secret secret = new EncryptionSecret(VERSION, ENCRYPTION_SECRET);
         List<Secret> secretList = new ArrayList<>();
         secretList.add(secret);
@@ -897,6 +873,7 @@ public class StorageIntegrationTest {
         Long finishTime = System.currentTimeMillis();
         LOG.debug("connectionPoolTest duration time = {} ms, average speed = {} ms per 1 task", finishTime - startTime, (finishTime - startTime) / taskCount);
         assertEquals(taskCount, successfulTaskCount);
+        customStorage.close();
     }
 
     private Callable<StorageException> createCallableTask(final Storage storage, final int numb) {

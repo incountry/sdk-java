@@ -51,6 +51,7 @@ import java.util.UUID;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
 import static com.incountry.residence.sdk.helper.ResponseUtils.getRecordStubResponse;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -1335,5 +1336,19 @@ class StorageTest {
         StorageClientException ex = assertThrows(StorageClientException.class, () -> storage.healthCheck(null));
         assertEquals("Country can't be null", ex.getMessage());
         server.stop(0);
+    }
+
+    @Test
+    void closeTest() throws StorageClientException, StorageCryptoException {
+        StorageConfig config = new StorageConfig()
+                .setOauthToken("token")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId");
+        Storage storage = StorageImpl.getInstance(config);
+        assertDoesNotThrow(storage::close);
+
+        FakeHttpAgent agent = new FakeHttpAgent("OK", 200);
+        storage = StorageImpl.getInstance(config, new HttpDaoImpl(null, null, null, agent));
+        assertDoesNotThrow(storage::close);
     }
 }
