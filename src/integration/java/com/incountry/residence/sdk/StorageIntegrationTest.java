@@ -24,7 +24,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -76,7 +75,6 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 public class StorageIntegrationTest {
     public static final String INT_INC_EMEA_AUTH_ENDPOINT = "INT_INC_EMEA_AUTH_ENDPOINT";
     public static final String INT_INC_APAC_AUTH_ENDPOINT = "INT_INC_APAC_AUTH_ENDPOINT";
-    public static final String INT_INC_TEST_TIMEOUT = "INT_INC_TEST_TIMEOUT";
     private static final Logger LOG = LogManager.getLogger(StorageIntegrationTest.class);
     private static final String COUNTRY = CredentialsHelper.getMidPopCountry(true);
     private static final String TEMP = "-javasdk-" +
@@ -141,8 +139,6 @@ public class StorageIntegrationTest {
 
     private static final byte[] ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab".getBytes(StandardCharsets.UTF_8);
 
-    private static final int TEST_TIMEOUT = Integer.parseInt(loadFromEnv(INT_INC_TEST_TIMEOUT, "0"));
-
     private static final String EMEA_AUTH_ENDPOINT = loadFromEnv(INT_INC_EMEA_AUTH_ENDPOINT);
     private static final String APAC_AUTH_ENDPOINT = loadFromEnv(INT_INC_APAC_AUTH_ENDPOINT);
 
@@ -154,12 +150,6 @@ public class StorageIntegrationTest {
     private static final String FILE_NAME = UUID.randomUUID() + ".txt";
     private String fileId;
     private static Map<String, String> attachmentFiles = new HashMap<>();
-
-    @BeforeEach
-    void timeOutForConnectionLimits() throws InterruptedException {
-        //adding a timeout to prevent NGINX connection limit exceeding
-        Thread.sleep(TEST_TIMEOUT * 1000L);
-    }
 
     @BeforeAll
     public void initializeStorages() throws StorageException {
