@@ -16,7 +16,6 @@ import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.crypto.SecretsData;
@@ -186,7 +185,7 @@ public class StorageIntegrationTest {
                 .setCryptoProvider(new CryptoProvider(new FernetCipher("Fernet")));
     }
 
-    private static Stream<Arguments> storageProvider() throws StorageCryptoException, StorageClientException {
+    private static Stream<Arguments> storageProvider() {
         return Stream.of(
                 generateArguments(nonHashingConfig),
                 generateArguments(ordinaryConfig),
@@ -196,16 +195,17 @@ public class StorageIntegrationTest {
         );
     }
 
-    private static Arguments generateArguments(StorageConfig config) throws StorageCryptoException, StorageClientException {
-        Storage storage = StorageImpl.getInstance(config);
-        int hash = storage.hashCode();
-        return Arguments.of(storage, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
+    private static Arguments generateArguments(StorageConfig config) {
+        int hash = config.hashCode();
+        return Arguments.of(config, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
     }
 
     @ParameterizedTest(name = "commonTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(100)
-    public void commonTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException, InterruptedException, IOException {
+    public void commonTest(StorageConfig config, String recordKey, String batchRecordKey, String key2) throws StorageException, InterruptedException, IOException {
+        Storage storage = StorageImpl.getInstance(config);
+
         batchWriteTest(storage, batchRecordKey, key2);
         writeTest(storage, recordKey, key2);
         readTest(storage, recordKey, key2);
