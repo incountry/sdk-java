@@ -10,6 +10,9 @@ import com.macasaet.fernet.StringValidator;
 import com.macasaet.fernet.Token;
 import com.macasaet.fernet.Validator;
 
+import java.time.Duration;
+import java.time.temporal.TemporalAmount;
+
 /**
  * Example of custom implementation of {@link AbstractCipher} using Fernet algorithm
  */
@@ -21,6 +24,9 @@ public class FernetCipher extends AbstractCipher {
     public FernetCipher(String name) throws StorageClientException {
         super(name);
         this.validator = new StringValidator() {
+            public TemporalAmount getTimeToLive() {
+                return Duration.ofHours(4);
+            }
         };
     }
 
