@@ -158,7 +158,7 @@ public class StorageIntegrationTest {
     @BeforeEach
     void timeOutForConnectionLimits() throws InterruptedException {
         //adding a timeout to prevent NGINX connection limit exceeding
-        Thread.sleep(TEST_TIMEOUT);
+        Thread.sleep(TEST_TIMEOUT * 1000L);
     }
 
     @BeforeAll
