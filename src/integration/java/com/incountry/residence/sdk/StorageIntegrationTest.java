@@ -16,6 +16,7 @@ import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
 import com.incountry.residence.sdk.crypto.SecretsData;
@@ -198,6 +199,20 @@ public class StorageIntegrationTest {
     private static Arguments generateArguments(StorageConfig config) {
         int hash = config.hashCode();
         return Arguments.of(config, RECORD_KEY + hash, BATCH_RECORD_KEY + hash, KEY_2 + hash);
+    }
+
+    @Test
+    @Order(1)
+    void testAverage() throws StorageCryptoException, StorageClientException, StorageServerException, IOException {
+        Storage storage = StorageImpl.getInstance(ordinaryConfig);
+        for (int i = 0; i < 100; i++) {
+            LOG.debug("iteration: %d", i);
+            Record newRecord = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            storage.write(COUNTRY, newRecord);
+            storage.read(COUNTRY, newRecord.getRecordKey());
+            storage.delete(COUNTRY, newRecord.getRecordKey());
+        }
+        storage.close();
     }
 
     @ParameterizedTest(name = "commonTest [{index}] {arguments}")
