@@ -80,7 +80,7 @@ class CustomCipherTest {
         Secret key = new CustomEncryptionKey(CUSTOM_PASSWORD_1, 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         assertDoesNotThrow(() -> provider.validateCustomCiphers(secretsData));
-        Secret key2 = new EncryptionSecret(2, CUSTOM_PASSWORD_1);
+        Secret key2 = new EncryptionSecret(CUSTOM_PASSWORD_1, 2);
         SecretsData secretsData2 = new SecretsData(Arrays.asList(key, key2), key2);
         assertDoesNotThrow(() -> provider.validateCustomCiphers(secretsData2));
     }
@@ -115,7 +115,7 @@ class CustomCipherTest {
     @Test
     void customCipherWithoutSecretsNegative() throws StorageClientException {
         CryptoProvider provider = new CryptoProvider(new CipherStub());
-        Secret key = new EncryptionSecret(1, CUSTOM_PASSWORD_1);
+        Secret key = new EncryptionSecret(CUSTOM_PASSWORD_1, 1);
         SecretsData secretsData = new SecretsData(Collections.singletonList(key), key);
         StorageClientException ex = assertThrows(StorageClientException.class, () -> provider.validateCustomCiphers(secretsData));
         assertEquals("There is no custom encryption key for the custom ciphers", ex.getMessage());
@@ -220,7 +220,7 @@ class CustomCipherTest {
     @Test
     void invalidSecretNegative() throws StorageClientException {
         FernetCipher cipher = new FernetCipher("fernet");
-        EncryptionSecret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        EncryptionSecret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         String text = "text";
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> cipher.encrypt(text, secret));
         assertEquals("Used key from secrets data is not instance of CustomEncryptionKey", ex.getMessage());

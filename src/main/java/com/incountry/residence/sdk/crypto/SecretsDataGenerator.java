@@ -34,7 +34,7 @@ public class SecretsDataGenerator {
      * @throws StorageClientException when parameter validation fails
      */
     public static SecretsData fromPassword(String password) throws StorageClientException {
-        Secret secret = new EncryptionSecret(DEFAULT_VERSION, password != null ? password.getBytes(StandardCharsets.UTF_8) : null);
+        Secret secret = new EncryptionSecret(password != null ? password.getBytes(StandardCharsets.UTF_8) : null, DEFAULT_VERSION);
         List<Secret> secretKeys = new ArrayList<>();
         secretKeys.add(secret);
         return new SecretsData(secretKeys, secret);
@@ -80,7 +80,7 @@ public class SecretsDataGenerator {
 
         } else {
             byte[] byteKey = keyContainer.secret.getBytes(StandardCharsets.UTF_8);
-            secret = new EncryptionSecret(keyContainer.version, byteKey);
+            secret = new EncryptionSecret(byteKey, keyContainer.version);
         }
         return secret;
     }
