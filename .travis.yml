@@ -40,7 +40,7 @@ before_install:
   - wget -q https://download.java.net/java/GA/jdk16.0.1/7147401fd7354114ac51ef3e1328291f/9/GPL/openjdk-16.0.1_linux-x64_bin.tar.gz
   - tar -xf openjdk-16.0.1_linux-x64_bin.tar.gz
   - ls
-  - export JAVA_HOME=$PWD/jdk-16.0.1/bin
+  - export JAVA_HOME=$PWD/jdk-16.0.1
 
 jobs:
   include:
