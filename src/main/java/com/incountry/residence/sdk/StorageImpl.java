@@ -23,11 +23,8 @@ import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -65,9 +62,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected error";
     private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
-
-    private static final int DEFAULT_HTTP_TIMEOUT = 30;
-    private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
 
     private final Dao dao;
     private final HashUtils hashUtils;
@@ -127,26 +121,7 @@ public class StorageImpl implements Storage {
         return ProxyUtils.createLoggingProxyForPublicMethods(instance, true);
     }
 
-    private static CloseableHttpClient initHttpClient(Integer httpTimeout, Integer poolSize, Integer connectionsPerRoute) {
-        if (httpTimeout == null) {
-            httpTimeout = DEFAULT_HTTP_TIMEOUT;
-        }
-        httpTimeout *= 1000; //expected value in ms
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(httpTimeout)
-                .setSocketTimeout(httpTimeout)
-                .build();
-        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
-        if (poolSize == null) {
-            poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
-        }
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(poolSize);
-        connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
-        builder.setConnectionManager(connectionManager);
-        return builder.build();
-    }
-
+    @SuppressWarnings("java:S2095")
     private static Dao initDao(StorageConfig config, Dao dao) throws StorageClientException {
         if (dao == null) {
             Integer httpTimeout = config.getHttpTimeout();
@@ -156,7 +131,7 @@ public class StorageImpl implements Storage {
             checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
             checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
 
-            CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
+            CloseableHttpClient httpClient = HttpClients.createDefault();
             TokenClient tokenClient;
             if (config.getClientId() != null) {
                 HELPER.check(StorageClientException.class, isNullOrEmpty(config.getClientId()), MSG_ERR_PASS_CLIENT_ID);
