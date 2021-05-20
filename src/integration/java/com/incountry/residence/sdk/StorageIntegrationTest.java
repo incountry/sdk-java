@@ -206,7 +206,7 @@ public class StorageIntegrationTest {
     void testAverage() throws StorageCryptoException, StorageClientException, StorageServerException, IOException {
         Storage storage = StorageImpl.getInstance(ordinaryConfig);
         for (int i = 0; i < 100; i++) {
-            LOG.debug("iteration: %d", i);
+            LOG.debug("iteration: {}", i);
             Record newRecord = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
             storage.write(COUNTRY, newRecord);
             storage.read(COUNTRY, newRecord.getRecordKey());

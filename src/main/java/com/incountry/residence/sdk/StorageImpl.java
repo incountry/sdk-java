@@ -27,6 +27,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -151,6 +152,7 @@ public class StorageImpl implements Storage {
         connectionManager.setMaxTotal(httpPoolSize);
         connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : httpPoolSize);
         builder.setConnectionManager(connectionManager);
+        builder.setRetryHandler(new StandardHttpRequestRetryHandler());
         return builder.build();
     }
 
