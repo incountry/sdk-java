@@ -7,6 +7,7 @@ import java.util.Objects;
 
 public class Record {
     private String recordKey;
+    private String parentKey;
     private String key1;
     private String key2;
     private String key3;
@@ -17,6 +18,16 @@ public class Record {
     private String key8;
     private String key9;
     private String key10;
+    private String key11;
+    private String key12;
+    private String key13;
+    private String key14;
+    private String key15;
+    private String key16;
+    private String key17;
+    private String key18;
+    private String key19;
+    private String key20;
     private String profileKey;
     private Long rangeKey1;
     private Long rangeKey2;
@@ -32,8 +43,13 @@ public class Record {
     private String precommitBody;
     private String serviceKey1;
     private String serviceKey2;
+    private String serviceKey3;
+    private String serviceKey4;
+    private String serviceKey5;
     protected Date createdAt;
     protected Date updatedAt;
+    private Date expiresAt;
+    protected Integer version;
     private List<AttachmentMeta> attachments = new ArrayList<>();
 
     /**
@@ -62,6 +78,15 @@ public class Record {
 
     public Record setRecordKey(String recordKey) {
         this.recordKey = recordKey;
+        return this;
+    }
+
+    public String getParentKey() {
+        return parentKey;
+    }
+
+    public Record setParentKey(String parentKey) {
+        this.parentKey = parentKey;
         return this;
     }
 
@@ -152,6 +177,96 @@ public class Record {
 
     public Record setKey10(String key10) {
         this.key10 = key10;
+        return this;
+    }
+
+    public String getKey11() {
+        return key11;
+    }
+
+    public Record setKey11(String key11) {
+        this.key11 = key11;
+        return this;
+    }
+
+    public String getKey12() {
+        return key12;
+    }
+
+    public Record setKey12(String key12) {
+        this.key12 = key12;
+        return this;
+    }
+
+    public String getKey13() {
+        return key13;
+    }
+
+    public Record setKey13(String key13) {
+        this.key13 = key13;
+        return this;
+    }
+
+    public String getKey14() {
+        return key14;
+    }
+
+    public Record setKey14(String key14) {
+        this.key14 = key14;
+        return this;
+    }
+
+    public String getKey15() {
+        return key15;
+    }
+
+    public Record setKey15(String key15) {
+        this.key15 = key15;
+        return this;
+    }
+
+    public String getKey16() {
+        return key16;
+    }
+
+    public Record setKey16(String key16) {
+        this.key16 = key16;
+        return this;
+    }
+
+    public String getKey17() {
+        return key17;
+    }
+
+    public Record setKey17(String key17) {
+        this.key17 = key17;
+        return this;
+    }
+
+    public String getKey18() {
+        return key18;
+    }
+
+    public Record setKey18(String key18) {
+        this.key18 = key18;
+        return this;
+    }
+
+    public String getKey19() {
+        return key19;
+    }
+
+    public Record setKey19(String key19) {
+        this.key19 = key19;
+        return this;
+    }
+
+    public String getKey20() {
+        return key20;
+    }
+
+    public Record setKey20(String key20) {
+        this.key20 = key20;
         return this;
     }
 
@@ -290,6 +405,37 @@ public class Record {
         return this;
     }
 
+    public String getServiceKey3() {
+        return serviceKey3;
+    }
+
+    public Record setServiceKey3(String serviceKey3) {
+        this.serviceKey3 = serviceKey3;
+        return this;
+    }
+
+    public String getServiceKey4() {
+        return serviceKey4;
+    }
+
+    public Record setServiceKey4(String serviceKey4) {
+        this.serviceKey4 = serviceKey4;
+        return this;
+    }
+
+    public String getServiceKey5() {
+        return serviceKey5;
+    }
+
+    public Record setServiceKey5(String serviceKey5) {
+        this.serviceKey5 = serviceKey5;
+        return this;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
     public Date getCreatedAt() {
         return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
@@ -298,8 +444,22 @@ public class Record {
         return updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 
+    public Date getExpiresAt() {
+        return expiresAt != null ? new Date(expiresAt.getTime()) : null;
+    }
+
+    public Record setExpiresAt(Date expiresAt) {
+        this.expiresAt = expiresAt != null ? new Date(expiresAt.getTime()) : null;
+        return this;
+    }
+
     public List<AttachmentMeta> getAttachments() {
         return attachments;
+    }
+
+    protected Record setAttachments(List<AttachmentMeta> attachments) {
+        this.attachments = attachments;
+        return this;
     }
 
     @Override
@@ -310,44 +470,58 @@ public class Record {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        Record record = (Record) obj;
-        return Objects.equals(recordKey, record.recordKey) &&
-                Objects.equals(key1, record.key1) &&
-                Objects.equals(key2, record.key2) &&
-                Objects.equals(key3, record.key3) &&
-                Objects.equals(key4, record.key4) &&
-                Objects.equals(key5, record.key5) &&
-                Objects.equals(key6, record.key6) &&
-                Objects.equals(key7, record.key7) &&
-                Objects.equals(key8, record.key8) &&
-                Objects.equals(key9, record.key9) &&
-                Objects.equals(key10, record.key10) &&
-                Objects.equals(profileKey, record.profileKey) &&
-                Objects.equals(rangeKey1, record.rangeKey1) &&
-                Objects.equals(rangeKey2, record.rangeKey2) &&
-                Objects.equals(rangeKey3, record.rangeKey3) &&
-                Objects.equals(rangeKey4, record.rangeKey4) &&
-                Objects.equals(rangeKey5, record.rangeKey5) &&
-                Objects.equals(rangeKey6, record.rangeKey6) &&
-                Objects.equals(rangeKey7, record.rangeKey7) &&
-                Objects.equals(rangeKey8, record.rangeKey8) &&
-                Objects.equals(rangeKey9, record.rangeKey9) &&
-                Objects.equals(rangeKey10, record.rangeKey10) &&
-                Objects.equals(body, record.body) &&
-                Objects.equals(precommitBody, record.precommitBody) &&
-                Objects.equals(serviceKey1, record.serviceKey1) &&
-                Objects.equals(serviceKey2, record.serviceKey2) &&
-                Objects.equals(createdAt, record.createdAt) &&
-                Objects.equals(updatedAt, record.updatedAt) &&
-                Objects.equals(attachments, record.attachments);
+        Record otherRecord = (Record) obj;
+        return Objects.equals(recordKey, otherRecord.recordKey) &&
+                Objects.equals(parentKey, otherRecord.parentKey) &&
+                Objects.equals(key1, otherRecord.key1) &&
+                Objects.equals(key2, otherRecord.key2) &&
+                Objects.equals(key3, otherRecord.key3) &&
+                Objects.equals(key4, otherRecord.key4) &&
+                Objects.equals(key5, otherRecord.key5) &&
+                Objects.equals(key6, otherRecord.key6) &&
+                Objects.equals(key7, otherRecord.key7) &&
+                Objects.equals(key8, otherRecord.key8) &&
+                Objects.equals(key9, otherRecord.key9) &&
+                Objects.equals(key10, otherRecord.key10) &&
+                Objects.equals(key11, otherRecord.key11) &&
+                Objects.equals(key12, otherRecord.key12) &&
+                Objects.equals(key13, otherRecord.key13) &&
+                Objects.equals(key14, otherRecord.key14) &&
+                Objects.equals(key15, otherRecord.key15) &&
+                Objects.equals(key16, otherRecord.key16) &&
+                Objects.equals(key17, otherRecord.key17) &&
+                Objects.equals(key18, otherRecord.key18) &&
+                Objects.equals(key19, otherRecord.key19) &&
+                Objects.equals(key20, otherRecord.key20) &&
+                Objects.equals(profileKey, otherRecord.profileKey) &&
+                Objects.equals(rangeKey1, otherRecord.rangeKey1) &&
+                Objects.equals(rangeKey2, otherRecord.rangeKey2) &&
+                Objects.equals(rangeKey3, otherRecord.rangeKey3) &&
+                Objects.equals(rangeKey4, otherRecord.rangeKey4) &&
+                Objects.equals(rangeKey5, otherRecord.rangeKey5) &&
+                Objects.equals(rangeKey6, otherRecord.rangeKey6) &&
+                Objects.equals(rangeKey7, otherRecord.rangeKey7) &&
+                Objects.equals(rangeKey8, otherRecord.rangeKey8) &&
+                Objects.equals(rangeKey9, otherRecord.rangeKey9) &&
+                Objects.equals(rangeKey10, otherRecord.rangeKey10) &&
+                Objects.equals(body, otherRecord.body) &&
+                Objects.equals(precommitBody, otherRecord.precommitBody) &&
+                Objects.equals(serviceKey1, otherRecord.serviceKey1) &&
+                Objects.equals(serviceKey2, otherRecord.serviceKey2) &&
+                Objects.equals(serviceKey3, otherRecord.serviceKey3) &&
+                Objects.equals(serviceKey4, otherRecord.serviceKey4) &&
+                Objects.equals(serviceKey5, otherRecord.serviceKey5) &&
+                Objects.equals(expiresAt, otherRecord.expiresAt) &&
+                Objects.equals(attachments, otherRecord.attachments);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(recordKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+        return Objects.hash(recordKey, parentKey, key1, key2, key3, key4, key5, key6, key7, key8, key9, key10,
+                key11, key12, key13, key14, key15, key16, key17, key18, key19, key20,
                 rangeKey1, rangeKey2, rangeKey3, rangeKey4, rangeKey5, rangeKey6, rangeKey7, rangeKey8, rangeKey9, rangeKey10,
-                body, profileKey, precommitBody, serviceKey1, serviceKey2,
-                createdAt, updatedAt, attachments);
+                body, profileKey, precommitBody, serviceKey1, serviceKey2, serviceKey3, serviceKey4, serviceKey5,
+                expiresAt, attachments, version);
     }
 
     /**
@@ -355,8 +529,9 @@ public class Record {
      *
      * @return return copy
      */
-    protected Record copy() {
+    public Record copy() {
         Record newRecord = new Record(recordKey);
+        newRecord.parentKey = parentKey;
         newRecord.key1 = key1;
         newRecord.key2 = key2;
         newRecord.key3 = key3;
@@ -367,6 +542,16 @@ public class Record {
         newRecord.key8 = key8;
         newRecord.key9 = key9;
         newRecord.key10 = key10;
+        newRecord.key11 = key11;
+        newRecord.key12 = key12;
+        newRecord.key13 = key13;
+        newRecord.key14 = key14;
+        newRecord.key15 = key15;
+        newRecord.key16 = key16;
+        newRecord.key17 = key17;
+        newRecord.key18 = key18;
+        newRecord.key19 = key19;
+        newRecord.key20 = key20;
         newRecord.rangeKey1 = rangeKey1;
         newRecord.rangeKey2 = rangeKey2;
         newRecord.rangeKey3 = rangeKey3;
@@ -382,8 +567,13 @@ public class Record {
         newRecord.precommitBody = precommitBody;
         newRecord.serviceKey1 = serviceKey1;
         newRecord.serviceKey2 = serviceKey2;
+        newRecord.serviceKey3 = serviceKey3;
+        newRecord.serviceKey4 = serviceKey4;
+        newRecord.serviceKey5 = serviceKey5;
         newRecord.createdAt = getCreatedAt();
         newRecord.updatedAt = getUpdatedAt();
+        newRecord.expiresAt = getExpiresAt();
+        newRecord.version = version;
         newRecord.attachments = attachments == null ? new ArrayList<>() : new ArrayList<>(attachments);
         return newRecord;
     }

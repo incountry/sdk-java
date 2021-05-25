@@ -1,13 +1,12 @@
 package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
+import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static com.incountry.residence.sdk.StorageConfig.PARAM_API_KEY;
 import static com.incountry.residence.sdk.StorageConfig.PARAM_CLIENT_ID;
 import static com.incountry.residence.sdk.StorageConfig.PARAM_CLIENT_SECRET;
 import static com.incountry.residence.sdk.StorageConfig.PARAM_ENDPOINT;
@@ -21,8 +20,6 @@ class ParamsFromEnvTest {
     void loadFromEnv() {
         String envId = "<env>";
         setEnv(PARAM_ENV_ID, envId);
-        String apiKey = "<apikey>";
-        setEnv(PARAM_API_KEY, apiKey);
         String endPoint = "<endPoint>";
         setEnv(PARAM_ENDPOINT, endPoint);
         String clientId = "<clientId>";
@@ -30,36 +27,37 @@ class ParamsFromEnvTest {
         String clientSecret = "<clientSecret>";
         setEnv(PARAM_CLIENT_SECRET, clientSecret);
         StorageConfig config = new StorageConfig()
-                .useEnvIdFromEnv()
-                .useApiKeyFromEnv()
+                .useEnvironmentIdFromEnv()
                 .useEndPointFromEnv()
                 .useClientIdFromEnv()
                 .useClientSecretFromEnv();
-        assertEquals(envId, config.getEnvId());
-        assertEquals(apiKey, config.getApiKey());
+        assertEquals(envId, config.getEnvironmentId());
         assertEquals(endPoint, config.getEndPoint());
         assertEquals(clientId, config.getClientId());
         assertEquals(clientSecret, config.getClientSecret());
         unsetEnv(PARAM_ENV_ID);
-        unsetEnv(PARAM_API_KEY);
         unsetEnv(PARAM_ENDPOINT);
         unsetEnv(PARAM_CLIENT_ID);
         unsetEnv(PARAM_CLIENT_SECRET);
     }
 
     @Test
-    void getStorageWithParamsFromEnv() throws StorageClientException, StorageServerException {
-        String envId = "<env>";
-        setEnv(PARAM_ENV_ID, envId);
-        String apiKey = "<apikey>";
-        setEnv(PARAM_API_KEY, apiKey);
-        String endPoint = "<endPoint>";
-        setEnv(PARAM_ENDPOINT, endPoint);
-        Storage storage = StorageImpl.getInstance();
+    void getStorageWithParamsFromEnv() throws StorageClientException, StorageCryptoException {
+        setEnv(PARAM_ENV_ID, "<env>");
+        setEnv(PARAM_ENDPOINT, "<endPoint>");
+        setEnv(PARAM_CLIENT_ID, "<clientId>");
+        setEnv(PARAM_CLIENT_SECRET, "<clientSecret>");
+        StorageConfig config = new StorageConfig()
+                .useEnvironmentIdFromEnv()
+                .useEndPointFromEnv()
+                .useClientIdFromEnv()
+                .useClientSecretFromEnv();
+        Storage storage = StorageImpl.getInstance(config);
         assertNotNull(storage);
         unsetEnv(PARAM_ENV_ID);
-        unsetEnv(PARAM_API_KEY);
         unsetEnv(PARAM_ENDPOINT);
+        unsetEnv(PARAM_CLIENT_ID);
+        unsetEnv(PARAM_CLIENT_SECRET);
     }
 
     private static void setEnv(String key, String value) {

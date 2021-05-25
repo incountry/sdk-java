@@ -1,22 +1,22 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.crypto.testimpl.CryptoStub;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.crypto.testimpl.FernetCipher;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
-
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class StorageConfigTest {
-
     @Test
-    void testGetAuthEndPoints() {
+    void getAuthEndPointsPositive() {
         Map<String, String> authEndpoints = new HashMap<>();
         String key = "<key>";
         String value = "<value>";
@@ -28,12 +28,27 @@ class StorageConfigTest {
     }
 
     @Test
-    void testGetCustomEncryptionConfigsList() {
-        List<Crypto> cryptoList = new ArrayList<>();
-        cryptoList.add(new CryptoStub(true));
+    void getCustomEncryptionConfigsListPositive() throws StorageClientException {
+        CryptoProvider provider = new CryptoProvider(new FernetCipher("fernet"));
         StorageConfig config = new StorageConfig()
-                .setCustomEncryptionConfigsList(cryptoList);
-        assertNotSame(cryptoList, config.getCustomEncryptionConfigsList());
-        assertEquals(cryptoList, config.getCustomEncryptionConfigsList());
+                .setCryptoProvider(provider);
+        assertEquals(provider, config.getCryptoProvider());
+        assertNull(new StorageConfig().getCryptoProvider());
+    }
+
+    @Test
+    void getOauthTokenAccessor() throws StorageClientException {
+        String token = "token_" + UUID.randomUUID().toString();
+        StorageConfig config = new StorageConfig()
+                .setOauthToken(token);
+        assertEquals(token, config.getOauthTokenAccessor().getToken());
+
+        String token2 = "token_" + UUID.randomUUID().toString();
+        config = new StorageConfig()
+                .setOauthTokenAccessor(() -> token2);
+        assertEquals(token2, config.getOauthTokenAccessor().getToken());
+
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new StorageConfig().setOauthToken(null));
+        assertEquals("OAuth2 token is null or empty", ex.getMessage());
     }
 }

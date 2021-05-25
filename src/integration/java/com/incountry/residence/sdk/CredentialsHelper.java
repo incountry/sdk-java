@@ -1,9 +1,12 @@
 package com.incountry.residence.sdk;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 /**
  * Gets credentials for integration tests from environment
  */
 public class CredentialsHelper {
+    private static final String STAND_NAME = "INT_INC_STAND";
     private static final String MID_POP_COUNTRY = "INT_INC_COUNTRY";
     private static final String MID_POP_COUNTRY_2 = "INT_INC_COUNTRY_2";
     private static final String MINIPOP_COUNTRY = "INT_MINIPOP_COUNTRY";
@@ -22,7 +25,7 @@ public class CredentialsHelper {
 
     public static StorageConfig getConfigWithOauth() {
         return new StorageConfig()
-                .setEnvId(loadFromEnv(ENVIRONMENT_ID))
+                .setEnvironmentId(loadFromEnv(ENVIRONMENT_ID))
                 .setClientId(loadFromEnv(CLIENT_ID))
                 .setClientSecret(loadFromEnv(CLIENT_SECRET))
                 .setDefaultAuthEndpoint(loadFromEnv(AUTH_ENDPOINT))
@@ -41,7 +44,11 @@ public class CredentialsHelper {
     }
 
     public static String loadFromEnv(String key) {
-        return System.getenv(key);
+        String standName = System.getenv(STAND_NAME);
+        if (isNullOrEmpty(standName)) {
+            return System.getenv(key);
+        }
+        return System.getenv(standName + '_' + key);
     }
 
     public static String loadFromEnv(String key, String defaultValue) {

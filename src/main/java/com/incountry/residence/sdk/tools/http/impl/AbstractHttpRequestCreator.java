@@ -28,7 +28,7 @@ public abstract class AbstractHttpRequestCreator {
     private static final Logger LOG = LogManager.getLogger(AbstractHttpRequestCreator.class);
 
     private static final String MSG_ERR_URL = "URL error";
-    private static final String MSG_ERR_NULL_BODY = "Body can't be null";
+    private static final String MSG_ERR_NULL_BODY = "HTTP request body can't be null";
 
     private static final String POST = "POST";
     private static final String GET = "GET";

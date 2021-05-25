@@ -3,9 +3,11 @@
     <Match>
         <Or>
             <Class name="com.incountry.residence.sdk.tools.transfer.TransferPop"/>
+            <Class name="com.incountry.residence.sdk.tools.transfer.TransferFilterContainer"/>
+            <Class name="com.incountry.residence.sdk.tools.transfer.TransferRecordList"/>
             <Class name="com.incountry.residence.sdk.StorageImpl"/>
-            <Class name="com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator"/>
-            <Class name="com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator$SecretKeyContainer"/>
+            <Class name="com.incountry.residence.sdk.crypto.SecretsDataGenerator"/>
+            <Class name="com.incountry.residence.sdk.crypto.SecretsDataGenerator$SecretKeyContainer"/>
         </Or>
         <Bug code="NP,SIC,SS,ST,UrF,UuF,UwF"/>
     </Match>
@@ -35,6 +37,31 @@
             <Class name="com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl"/>
         </Or>
         <Bug code="JLM"/>
+    </Match>
+
+    <Match>
+        <Or>
+            <Class name="com.incountry.residence.sdk.StorageIntegrationTest"/>
+        </Or>
+        <Bug code="SECPR"/>
+    </Match>
+
+    <Match>
+        <Or>
+            <Class name="com.incountry.residence.sdk.crypto.Secret"/>
+            <Class name="com.incountry.residence.sdk.dto.search.internal.DateFilter"/>
+        </Or>
+        <Bug code="EI,EI2,MS"/>
+    </Match>
+
+    <Match>
+        <Or>
+            <Class name="com.incountry.residence.sdk.crypto.AbstractCipher"/>
+            <Class name="com.incountry.residence.sdk.crypto.SecretsData"/>
+            <Class name="com.incountry.residence.sdk.tools.crypto.CryptoProvider"/>
+            <Class name="com.incountry.residence.sdk.tools.crypto.cipher.AesGcmPbkdfCipher"/>
+        </Or>
+        <Bug code="NP,RCN"/>
     </Match>
 
 </FindBugsFilter>

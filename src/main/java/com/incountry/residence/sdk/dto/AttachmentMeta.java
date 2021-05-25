@@ -12,7 +12,7 @@ public class AttachmentMeta {
     private String filename;
     private String hash;
     private String mimeType;
-    private int size;
+    private Integer size;
 
     public Date getCreatedAt() {
         return createdAt != null ? new Date(createdAt.getTime()) : null;
@@ -34,6 +34,10 @@ public class AttachmentMeta {
         return filename;
     }
 
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
     public String getHash() {
         return hash;
     }
@@ -42,7 +46,11 @@ public class AttachmentMeta {
         return mimeType;
     }
 
-    public int getSize() {
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public Integer getSize() {
         return size;
     }
 

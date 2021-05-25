@@ -1,31 +1,39 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.tools.crypto.Crypto;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
+import com.incountry.residence.sdk.oauth.OauthTokenAccessor;
+import com.incountry.residence.sdk.tools.ValidationHelper;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
 
 /**
  * container with Storage configuration, using pattern 'builder'
  */
 public class StorageConfig {
 
+    private static final Logger LOG = LogManager.getLogger(StorageConfig.class);
+    private static final ValidationHelper HELPER = new ValidationHelper(LOG);
+
+
+    public static final String MSG_ERR_NULL_TOKEN = "OAuth2 token is null or empty";
     public static final String MSG_SECURE = "[SECURE[%s]]";
     //params from OS env
     public static final String PARAM_ENV_ID = "INC_ENVIRONMENT_ID";
-    public static final String PARAM_API_KEY = "INC_API_KEY";
     public static final String PARAM_ENDPOINT = "INC_ENDPOINT";
     public static final String PARAM_CLIENT_ID = "INC_CLIENT_ID";
     public static final String PARAM_CLIENT_SECRET = "INC_CLIENT_SECRET";
 
-    private String envId;
-    private String apiKey;
+    private String environmentId;
     private String endPoint;
     private SecretKeyAccessor secretKeyAccessor;
-    private List<Crypto> customEncryptionConfigsList;
+    private CryptoProvider cryptoProvider;
     private String clientId;
     private String clientSecret;
     private boolean normalizeKeys;
@@ -37,55 +45,30 @@ public class StorageConfig {
     private Integer maxHttpPoolSize;
     private Integer maxHttpConnectionsPerRoute;
     private boolean hashSearchKeys = true;
+    private OauthTokenAccessor oauthTokenAccessor;
 
-    public String getEnvId() {
-        return envId;
+    public String getEnvironmentId() {
+        return environmentId;
     }
 
     /**
      * sets environment ID
      *
-     * @param envId environment ID
+     * @param environmentId environment ID
      * @return StorageConfig
      */
-    public StorageConfig setEnvId(String envId) {
-        this.envId = envId;
+    public StorageConfig setEnvironmentId(String environmentId) {
+        this.environmentId = environmentId;
         return this;
     }
 
     /**
-     * load envId from env variable 'INC_ENVIRONMENT_ID'
+     * load environmentId from env variable 'INC_ENVIRONMENT_ID'
      *
      * @return StorageConfig
      */
-    public StorageConfig useEnvIdFromEnv() {
-        this.envId = loadFromEnv(PARAM_ENV_ID);
-        return this;
-    }
-
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    /**
-     * sets API key
-     *
-     * @param apiKey API key
-     * @return StorageConfig
-     */
-    public StorageConfig setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-        return this;
-    }
-
-    /**
-     * load apiKey from env variable 'INC_API_KEY'
-     *
-     * @return StorageConfig
-     */
-    public StorageConfig useApiKeyFromEnv() {
-        this.apiKey = loadFromEnv(PARAM_API_KEY);
+    public StorageConfig useEnvironmentIdFromEnv() {
+        this.environmentId = loadFromEnv(PARAM_ENV_ID);
         return this;
     }
 
@@ -129,18 +112,19 @@ public class StorageConfig {
         return this;
     }
 
-    public List<Crypto> getCustomEncryptionConfigsList() {
-        return customEncryptionConfigsList == null ? null : new ArrayList<>(customEncryptionConfigsList);
+    public CryptoProvider getCryptoProvider() {
+        return cryptoProvider;
     }
 
     /**
-     * Optional. For custom encryption
+     * Optional. Provider of encryption ciphers. Allows to register custom ciphers for encrypting stored data.
+     * If null - default AES GCM cipher will be used
      *
-     * @param customEncryptionConfigsList List with custom encryption functions
+     * @param cryptoProvider provider
      * @return StorageConfig
      */
-    public StorageConfig setCustomEncryptionConfigsList(List<Crypto> customEncryptionConfigsList) {
-        this.customEncryptionConfigsList = customEncryptionConfigsList;
+    public StorageConfig setCryptoProvider(CryptoProvider cryptoProvider) {
+        this.cryptoProvider = cryptoProvider;
         return this;
     }
 
@@ -165,7 +149,6 @@ public class StorageConfig {
 
     /**
      * Set login for oAuth authorization, can be also set via environment variable INC_CLIENT_ID.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param clientId login
      * @return StorageConfig
@@ -191,7 +174,6 @@ public class StorageConfig {
 
     /**
      * Set user secret for oAuth authorization, can be also set via environment variable INC_CLIENT_SECRET.
-     * Alternative way for authorisation - to use {@link #setApiKey(String)}
      *
      * @param clientSecret password
      * @return StorageConfig
@@ -236,7 +218,7 @@ public class StorageConfig {
      * Optional. Set custom oAuth authorization server URL, will be used as default one.
      * Can't be null when {@link #setAuthEndpoints(Map)} is used
      *
-     * @param defaultAuthEndpoint custom authorisation endpoint
+     * @param defaultAuthEndpoint custom authorization endpoint
      * @return StorageConfig
      */
     public StorageConfig setDefaultAuthEndpoint(String defaultAuthEndpoint) {
@@ -326,7 +308,7 @@ public class StorageConfig {
     }
 
     /**
-     * Optional. If false - key1-key10 will be not hashed. Default is true
+     * Optional. If false - key1-key20 will be not hashed. Default is true
      *
      * @param hashSearchKeys value
      * @return StorageConfig
@@ -336,13 +318,40 @@ public class StorageConfig {
         return this;
     }
 
+    public OauthTokenAccessor getOauthTokenAccessor() {
+        return oauthTokenAccessor;
+    }
+
+    /**
+     * Optional. For using of a previously acquired oAuth token for OAuth2 authorization
+     *
+     * @param oauthToken non-empty token
+     * @return StorageConfig config
+     * @throws StorageClientException when a token is null or empty
+     */
+    public StorageConfig setOauthToken(String oauthToken) throws StorageClientException {
+        HELPER.check(StorageClientException.class, isNullOrEmpty(oauthToken), MSG_ERR_NULL_TOKEN);
+        this.oauthTokenAccessor = () -> oauthToken;
+        return this;
+    }
+
+    /**
+     * Optional. For an external acquiring of oAuth2 tokens for OAuth2 authorization
+     *
+     * @param oauthTokenAccessor token access function
+     * @return StorageConfig config
+     */
+    public StorageConfig setOauthTokenAccessor(OauthTokenAccessor oauthTokenAccessor) {
+        this.oauthTokenAccessor = oauthTokenAccessor;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
-        newInstance.setEnvId(getEnvId());
-        newInstance.setApiKey(getApiKey());
+        newInstance.setEnvironmentId(getEnvironmentId());
         newInstance.setEndPoint(getEndPoint());
         newInstance.setSecretKeyAccessor(getSecretKeyAccessor());
-        newInstance.setCustomEncryptionConfigsList(getCustomEncryptionConfigsList());
+        newInstance.setCryptoProvider(getCryptoProvider());
         newInstance.setNormalizeKeys(isNormalizeKeys());
         newInstance.setClientId(getClientId());
         newInstance.setClientSecret(getClientSecret());
@@ -353,17 +362,17 @@ public class StorageConfig {
         newInstance.setDefaultAuthEndpoint(getDefaultAuthEndpoint());
         newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
         newInstance.setHashSearchKeys(isHashSearchKeys());
+        newInstance.setOauthTokenAccessor(getOauthTokenAccessor());
         return newInstance;
     }
 
     @Override
     public String toString() {
         return "StorageConfig{" +
-                "envId='" + hideParam(envId) + '\'' +
-                ", apiKey='" + hideParam(apiKey) + '\'' +
+                "environmentId='" + hideParam(environmentId) + '\'' +
                 ", endPoint='" + endPoint + '\'' +
                 ", secretKeyAccessor=" + secretKeyAccessor +
-                ", customEncryptionConfigsList=" + customEncryptionConfigsList +
+                ", cryptoProvider=" + cryptoProvider +
                 ", ignoreKeyCase=" + normalizeKeys +
                 ", clientId='" + hideParam(clientId) + '\'' +
                 ", clientSecret='" + hideParam(clientSecret) + '\'' +
@@ -374,6 +383,7 @@ public class StorageConfig {
                 ", httpTimeout='" + httpTimeout + '\'' +
                 ", httpPoolSize='" + maxHttpPoolSize + '\'' +
                 ", ignoreKeysHashing='" + hashSearchKeys + '\'' +
+                ", oauthTokenAccessor=" + oauthTokenAccessor +
                 '}';
     }
 

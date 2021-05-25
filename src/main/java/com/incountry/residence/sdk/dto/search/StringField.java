@@ -1,8 +1,8 @@
 package com.incountry.residence.sdk.dto.search;
 
 public enum StringField {
-    VERSION,
     RECORD_KEY,
+    PARENT_KEY,
     KEY1,
     KEY2,
     KEY3,
@@ -13,8 +13,20 @@ public enum StringField {
     KEY8,
     KEY9,
     KEY10,
+    KEY11,
+    KEY12,
+    KEY13,
+    KEY14,
+    KEY15,
+    KEY16,
+    KEY17,
+    KEY18,
+    KEY19,
+    KEY20,
     PROFILE_KEY,
     SERVICE_KEY1,
     SERVICE_KEY2,
-    SEARCH_KEYS
+    SERVICE_KEY3,
+    SERVICE_KEY4,
+    SERVICE_KEY5
 }

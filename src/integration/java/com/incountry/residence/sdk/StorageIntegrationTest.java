@@ -1,18 +1,24 @@
 package com.incountry.residence.sdk;
 
-import com.incountry.residence.sdk.crypto.testimpl.FernetCrypto;
+import com.incountry.residence.sdk.crypto.CustomEncryptionKey;
+import com.incountry.residence.sdk.crypto.EncryptionSecret;
+import com.incountry.residence.sdk.crypto.Secret;
+import com.incountry.residence.sdk.crypto.testimpl.FernetCipher;
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.DateField;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.SortField;
+import com.incountry.residence.sdk.dto.search.SortOrder;
 import com.incountry.residence.sdk.dto.search.StringField;
-import com.incountry.residence.sdk.tools.crypto.Crypto;
+import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
+import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretKey;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
+import com.incountry.residence.sdk.crypto.SecretKeyAccessor;
+import com.incountry.residence.sdk.crypto.SecretsData;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -49,8 +56,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static com.incountry.residence.sdk.CredentialsHelper.loadFromEnv;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY1;
 import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY2;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY3;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY4;
+import static com.incountry.residence.sdk.dto.search.StringField.SERVICE_KEY5;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -71,6 +82,7 @@ public class StorageIntegrationTest {
             "-" +
             UUID.randomUUID().toString().replace("-", "");
 
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
     private Storage storageIgnoreCase;
     private Storage storageWithoutEncryption;
     private Storage storageOrdinary;
@@ -81,10 +93,11 @@ public class StorageIntegrationTest {
     private static final String APAC = "apac";
 
     private static final String RECORD_KEY = "RecordKey_" + TEMP;
+    private static final String PARENT_KEY = "ParentKey_" + TEMP;
     private static final String BATCH_RECORD_KEY = "Batch" + RECORD_KEY;
     private static final String ATTACHMENT_RECORD_KEY = "AttachmentRecordKey_" + TEMP;
     private static final String RECORD_KEY_IGNORE_CASE = "_IgnorE_CasE_" + RECORD_KEY;
-    private static final String PROFILE_KEY = "ProfileKey_" + TEMP;
+    private static final String PROFILE_KEY = "ProfileKey" + TEMP;
     private static final String KEY_1 = "Key1_" + TEMP;
     private static final String KEY_2 = "Key2_" + TEMP;
     private static final String KEY_3 = "Key3_" + TEMP;
@@ -95,9 +108,23 @@ public class StorageIntegrationTest {
     private static final String KEY_8 = "Key8_" + TEMP;
     private static final String KEY_9 = "Key9_" + TEMP;
     private static final String KEY_10 = "Key10_" + TEMP;
-    private static final String SERVICE_KEY_1 = "ServiceKey1_" + TEMP;
-    private static final String SERVICE_KEY_2 = "ServiceKey2_" + TEMP;
-    private static final String PRECOMMIT_BODY = "PreсommitBody_" + TEMP;
+    private static final String KEY_11 = "Key11_" + TEMP;
+    private static final String KEY_12 = "Key12_" + TEMP;
+    private static final String KEY_13 = "Key13_" + TEMP;
+    private static final String KEY_14 = "Key14_" + TEMP;
+    private static final String KEY_15 = "Key15_" + TEMP;
+    private static final String KEY_16 = "Key16_" + TEMP;
+    private static final String KEY_17 = "Key17_" + TEMP;
+    private static final String KEY_18 = "Key18_" + TEMP;
+    private static final String KEY_19 = "Key19_" + TEMP;
+    private static final String KEY_20 = "Key20_" + TEMP;
+    private static final String SERVICE_KEY_1 = "ServiceKey1" + TEMP;
+    private static final String SERVICE_KEY_2 = "ServiceKey2" + TEMP;
+    private static final String SERVICE_KEY_3 = "ServiceKey3_" + TEMP;
+    private static final String SERVICE_KEY_4 = "ServiceKey4_" + TEMP;
+    private static final String SERVICE_KEY_5 = "ServiceKey5_" + TEMP;
+    private static final String PRECOMMIT_BODY = "PreсommitBody" + TEMP;
+    private static final Date EXPIRES_AT = new Date(System.currentTimeMillis() + 300_000);
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
     private static final Long RANGE_KEY_2 = 2L;
@@ -108,7 +135,6 @@ public class StorageIntegrationTest {
     private static final Long RANGE_KEY_7 = 7L;
     private static final Long RANGE_KEY_8 = 8L;
     private static final Long RANGE_KEY_9 = 9L;
-    private static final Long RANGE_KEY_10 = 10L;
     private static final String RECORD_BODY = "test";
 
     private static final byte[] ENCRYPTION_SECRET = "123456789_123456789_1234567890Ab".getBytes(StandardCharsets.UTF_8);
@@ -119,27 +145,18 @@ public class StorageIntegrationTest {
     private static final int VERSION = 0;
     private static final String FILE_CONTENT = UUID.randomUUID().toString();
     private static final String DEFAULT_MIME_TYPE = "multipart/form-data";
-    private static final String NEW_FILE_NAME = UUID.randomUUID().toString() + ".txt";
+    private static final String NEW_FILE_NAME = UUID.randomUUID() + ".txt";
     private static final String MIME_TYPE = "text/plain";
-    private static final String FILE_NAME = UUID.randomUUID().toString() + ".txt";
+    private static final String FILE_NAME = UUID.randomUUID() + ".txt";
     private String fileId;
     private static Map<String, String> attachmentFiles = new HashMap<>();
 
-    public static String loadFromEnv(String key) {
-        return System.getenv(key);
-    }
-
-    public static String loadFromEnv(String key, String defaultValue) {
-        String value = loadFromEnv(key);
-        return value == null ? defaultValue : value;
-    }
-
     @BeforeAll
     public void initializeStorages() throws StorageException {
-        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
-        List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(secretKey);
-        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
+        Secret secret = new EncryptionSecret(ENCRYPTION_SECRET, VERSION);
+        List<Secret> secretList = new ArrayList<>();
+        secretList.add(secret);
+        SecretsData secretsData = new SecretsData(secretList, secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretsData;
 
         StorageConfig config = CredentialsHelper.getConfigWithOauth()
@@ -163,20 +180,17 @@ public class StorageIntegrationTest {
                 .setNormalizeKeys(true);
         storageIgnoreCase = StorageImpl.getInstance(config);
 
-        SecretKey customSecretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false, true);
-        List<SecretKey> secretKeyList2 = new ArrayList<>();
-        secretKeyList2.add(customSecretKey);
-        SecretsData anotherSecretsData = new SecretsData(secretKeyList2, customSecretKey.getVersion());
+        Secret customSecretKey = new CustomEncryptionKey(ENCRYPTION_SECRET, VERSION);
+        List<Secret> secretList2 = new ArrayList<>();
+        secretList2.add(customSecretKey);
+        SecretsData anotherSecretsData = new SecretsData(secretList2, customSecretKey);
         SecretKeyAccessor anotherAccessor = () -> anotherSecretsData;
-
-        List<Crypto> cryptoList = new ArrayList<>();
-        cryptoList.add(new FernetCrypto(true));
 
         config = config
                 .copy()
                 .setNormalizeKeys(false)
                 .setSecretKeyAccessor(anotherAccessor)
-                .setCustomEncryptionConfigsList(cryptoList);
+                .setCryptoProvider(new CryptoProvider(new FernetCipher("Fernet")));
         storageWithCustomCipher = StorageImpl.getInstance(config);
     }
 
@@ -200,47 +214,71 @@ public class StorageIntegrationTest {
     @Order(100)
     public void batchWriteTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         List<Record> records = new ArrayList<>();
-        Record record = new Record(batchRecordKey)
+        Record myRecord = new Record(batchRecordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(BATCH_WRITE_RANGE_KEY_1)
                 .setKey2(key2)
-                .setKey3(KEY_3);
-        records.add(record);
-        storage.batchWrite(COUNTRY, records);
+                .setKey3(KEY_3)
+                .setRangeKey10(RANDOM.nextLong());
+
+        records.add(myRecord);
+        List<Record> recordedList = storage.batchWrite(COUNTRY, records);
+        assertEquals(1, recordedList.size());
+        Record recordedRecord = recordedList.get(0);
+        assertEquals(batchRecordKey, recordedRecord.getRecordKey());
+        assertEquals(RECORD_BODY, recordedRecord.getBody());
+        assertEquals(PROFILE_KEY, recordedRecord.getProfileKey());
+        assertEquals(BATCH_WRITE_RANGE_KEY_1, recordedRecord.getRangeKey1());
+        assertEquals(key2, recordedRecord.getKey2());
+        assertEquals(myRecord.getRangeKey10(), recordedRecord.getRangeKey10());
     }
 
     @ParameterizedTest(name = "writeTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(200)
     public void writeTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        Record record = new Record(recordKey)
-                .setBody(RECORD_BODY)
-                .setProfileKey(PROFILE_KEY)
-                .setRangeKey1(WRITE_RANGE_KEY_1)
-                .setRangeKey2(RANGE_KEY_2)
-                .setRangeKey3(RANGE_KEY_3)
-                .setRangeKey4(RANGE_KEY_4)
-                .setRangeKey5(RANGE_KEY_5)
-                .setRangeKey6(RANGE_KEY_6)
-                .setRangeKey7(RANGE_KEY_7)
-                .setRangeKey8(RANGE_KEY_8)
-                .setRangeKey9(RANGE_KEY_9)
-                .setRangeKey10(RANGE_KEY_10)
-                .setKey1(KEY_1)
-                .setKey2(key2)
-                .setKey3(KEY_3)
-                .setKey4(KEY_4)
-                .setKey5(KEY_5)
-                .setKey6(KEY_6)
-                .setKey7(KEY_7)
-                .setKey8(KEY_8)
-                .setKey9(KEY_9)
-                .setKey10(KEY_10)
+        Record newRecord = new Record(recordKey)
+                .setBody(RECORD_BODY).setProfileKey(PROFILE_KEY).setRangeKey1(WRITE_RANGE_KEY_1)
+                .setRangeKey2(RANGE_KEY_2).setRangeKey3(RANGE_KEY_3).setRangeKey4(RANGE_KEY_4)
+                .setRangeKey5(RANGE_KEY_5).setRangeKey6(RANGE_KEY_6).setRangeKey7(RANGE_KEY_7)
+                .setRangeKey8(RANGE_KEY_8).setRangeKey9(RANGE_KEY_9).setRangeKey10(RANDOM.nextLong())
+                .setKey1(KEY_1).setKey2(key2).setKey3(KEY_3)
+                .setKey4(KEY_4).setKey5(KEY_5).setKey6(KEY_6)
+                .setKey7(KEY_7).setKey8(KEY_8).setKey9(KEY_9)
+                .setKey10(KEY_10).setKey11(KEY_11).setKey12(KEY_12)
+                .setKey13(KEY_13).setKey14(KEY_14).setKey15(KEY_15)
+                .setKey16(KEY_16).setKey17(KEY_17).setKey18(KEY_18)
+                .setKey19(KEY_19).setKey20(KEY_20).setParentKey(PARENT_KEY)
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
-                .setServiceKey2(SERVICE_KEY_2);
-        storage.write(COUNTRY, record);
+                .setServiceKey2(SERVICE_KEY_2)
+                .setServiceKey3(SERVICE_KEY_3)
+                .setServiceKey4(SERVICE_KEY_4)
+                .setServiceKey5(SERVICE_KEY_5)
+                .setExpiresAt(EXPIRES_AT);
+        Record recordedRecord = storage.write(COUNTRY, newRecord);
+        checkAllFields(recordedRecord, recordKey, key2);
+    }
+
+    @Test
+    @Order(210)
+    public void expiredRecordTest() throws StorageException, InterruptedException {
+        Record newRecord = new Record(UUID.randomUUID().toString())
+                .setBody(UUID.randomUUID().toString())
+                //record will be expired in 5 seconds
+                .setExpiresAt(new Date(System.currentTimeMillis() + 5_000L));
+        Record recordedRecord = storageOrdinary.write(COUNTRY, newRecord);
+        assertEquals(recordedRecord.getRecordKey(), recordedRecord.getRecordKey());
+        assertEquals(recordedRecord.getBody(), recordedRecord.getBody());
+
+        Record readRecord = storageOrdinary.read(COUNTRY, newRecord.getRecordKey());
+        assertEquals(recordedRecord.getRecordKey(), readRecord.getRecordKey());
+        assertEquals(recordedRecord.getBody(), readRecord.getBody());
+        //wait 5 seconds
+        Thread.sleep(5_000L);
+        readRecord = storageOrdinary.read(COUNTRY, newRecord.getRecordKey());
+        assertNull(readRecord);
     }
 
     @ParameterizedTest(name = "readTest [{index}] {arguments}")
@@ -248,6 +286,10 @@ public class StorageIntegrationTest {
     @Order(300)
     public void readTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
         Record incomingRecord = storage.read(COUNTRY, recordKey);
+        checkAllFields(incomingRecord, recordKey, key2);
+    }
+
+    private void checkAllFields(Record incomingRecord, String recordKey, String key2) {
         assertEquals(recordKey, incomingRecord.getRecordKey());
         assertEquals(RECORD_BODY, incomingRecord.getBody());
         assertEquals(PROFILE_KEY, incomingRecord.getProfileKey());
@@ -261,9 +303,23 @@ public class StorageIntegrationTest {
         assertEquals(KEY_8, incomingRecord.getKey8());
         assertEquals(KEY_9, incomingRecord.getKey9());
         assertEquals(KEY_10, incomingRecord.getKey10());
+        assertEquals(KEY_11, incomingRecord.getKey11());
+        assertEquals(KEY_12, incomingRecord.getKey12());
+        assertEquals(KEY_13, incomingRecord.getKey13());
+        assertEquals(KEY_14, incomingRecord.getKey14());
+        assertEquals(KEY_15, incomingRecord.getKey15());
+        assertEquals(KEY_16, incomingRecord.getKey16());
+        assertEquals(KEY_17, incomingRecord.getKey17());
+        assertEquals(KEY_18, incomingRecord.getKey18());
+        assertEquals(KEY_19, incomingRecord.getKey19());
+        assertEquals(KEY_20, incomingRecord.getKey20());
+        assertEquals(PARENT_KEY, incomingRecord.getParentKey());
         assertEquals(PRECOMMIT_BODY, incomingRecord.getPrecommitBody());
         assertEquals(SERVICE_KEY_1, incomingRecord.getServiceKey1());
         assertEquals(SERVICE_KEY_2, incomingRecord.getServiceKey2());
+        assertEquals(SERVICE_KEY_3, incomingRecord.getServiceKey3());
+        assertEquals(SERVICE_KEY_4, incomingRecord.getServiceKey4());
+        assertEquals(SERVICE_KEY_5, incomingRecord.getServiceKey5());
         assertEquals(WRITE_RANGE_KEY_1, incomingRecord.getRangeKey1());
         assertEquals(RANGE_KEY_2, incomingRecord.getRangeKey2());
         assertEquals(RANGE_KEY_3, incomingRecord.getRangeKey3());
@@ -273,111 +329,152 @@ public class StorageIntegrationTest {
         assertEquals(RANGE_KEY_7, incomingRecord.getRangeKey7());
         assertEquals(RANGE_KEY_8, incomingRecord.getRangeKey8());
         assertEquals(RANGE_KEY_9, incomingRecord.getRangeKey9());
-        assertEquals(RANGE_KEY_10, incomingRecord.getRangeKey10());
-        assertNotNull(incomingRecord.getCreatedAt());
-        assertNotNull(incomingRecord.getUpdatedAt());
+        assertNotNull(incomingRecord.getRangeKey10());
+        assertEquals(EXPIRES_AT, incomingRecord.getExpiresAt());
     }
 
     @ParameterizedTest(name = "findTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(400)
     public void findTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
+                .keyEq(StringField.KEY20, KEY_20)
+                .keyEq(StringField.PARENT_KEY, PARENT_KEY)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
-                .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertNotNull(batchRecord.getRecords().get(0).getCreatedAt());
-        assertNotNull(batchRecord.getRecords().get(0).getUpdatedAt());
+                .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1)
+                .keyEq(DateField.EXPIRES_AT, EXPIRES_AT);
+        FindResult findResult = storage.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNotNull(findResult.getRecords().get(0).getCreatedAt());
+        assertNotNull(findResult.getRecords().get(0).getUpdatedAt());
+        assertEquals(EXPIRES_AT, findResult.getRecords().get(0).getExpiresAt());
 
-        builder.clear()
+        filter.clear()
                 .keyEq(StringField.RECORD_KEY, batchRecordKey)
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, BATCH_WRITE_RANGE_KEY_1);
-        batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storage.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
 
-        builder.clear()
+        filter.clear()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
-        batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        assertTrue(batchRecord.getRecords().stream().anyMatch(record
-                -> record.getRecordKey().equals(batchRecordKey)));
-        assertTrue(batchRecord.getRecords().stream().anyMatch(record
-                -> record.getRecordKey().equals(recordKey)));
+        findResult = storage.find(COUNTRY, filter);
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        assertTrue(findResult.getRecords().stream().anyMatch(currentRecord
+                -> currentRecord.getRecordKey().equals(batchRecordKey)));
+        assertTrue(findResult.getRecords().stream().anyMatch(currentRecord
+                -> currentRecord.getRecordKey().equals(recordKey)));
 
-        builder.clear()
+        filter.clear()
                 .keyNotEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY);
-        batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(batchRecordKey, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storage.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
     }
 
     @ParameterizedTest(name = "findAdvancedTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(401)
     public void findAdvancedTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1, BATCH_WRITE_RANGE_KEY_1, WRITE_RANGE_KEY_1 + BATCH_WRITE_RANGE_KEY_1 + 1);
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(2, batchRecord.getCount());
-        assertEquals(2, batchRecord.getRecords().size());
-        List<String> resultIdList = new ArrayList<>();
-        resultIdList.add(batchRecord.getRecords().get(0).getRecordKey());
-        resultIdList.add(batchRecord.getRecords().get(1).getRecordKey());
-        assertTrue(resultIdList.contains(recordKey));
-        assertTrue(resultIdList.contains(batchRecordKey));
+
+        FindResult findResult = storage.find(COUNTRY, filter.copy().sortBy(SortField.RANGE_KEY10, SortOrder.ASC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        Long record1Value = findResult.getRecords().get(0).getRangeKey10();
+        Long record2Value = findResult.getRecords().get(1).getRangeKey10();
+        assertTrue(record1Value <= record2Value);
+
+
+        findResult = storage.find(COUNTRY, filter.copy().sortBy(SortField.RANGE_KEY10, SortOrder.DESC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        record1Value = findResult.getRecords().get(0).getRangeKey10();
+        record2Value = findResult.getRecords().get(1).getRangeKey10();
+        assertTrue(record1Value >= record2Value);
+
+        findResult = storage.find(COUNTRY, filter.copy().sortBy(SortField.CREATED_AT, SortOrder.ASC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        Date record1date = findResult.getRecords().get(0).getCreatedAt();
+        Date record2date = findResult.getRecords().get(1).getCreatedAt();
+        assertTrue(record1date.before(record2date) || record1date.equals(record2date));
+
+        findResult = storage.find(COUNTRY, filter.copy().sortBy(SortField.CREATED_AT, SortOrder.DESC));
+        assertEquals(2, findResult.getCount());
+        assertEquals(2, findResult.getRecords().size());
+        record1date = findResult.getRecords().get(0).getCreatedAt();
+        record2date = findResult.getRecords().get(1).getCreatedAt();
+        assertTrue(record1date.after(record2date) || record1date.equals(record2date));
+
+        filter = new FindFilter().keyEq(StringField.KEY2, key2);
+        findResult = storage.find(COUNTRY, filter
+                .copy()
+                .keyIsNotNull(StringField.KEY20)
+                .keyIsNotNull(DateField.EXPIRES_AT));
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNotNull(findResult.getRecords().get(0).getExpiresAt());
+
+        findResult = storage.find(COUNTRY, filter
+                .copy()
+                .keyIsNull(StringField.KEY20)
+                .keyIsNull(DateField.EXPIRES_AT));
+        assertEquals(1, findResult.getCount());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNull(findResult.getRecords().get(0).getExpiresAt());
     }
 
     @ParameterizedTest(name = "findByVersionTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(402)
     public void findByVersionTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY2, key2)
-                .keyEq(StringField.VERSION, String.valueOf(VERSION));
-        BatchRecord batchRecord1 = storage.find(COUNTRY, builder);
-        assertEquals(2, batchRecord1.getCount());
-        assertEquals(2, batchRecord1.getRecords().size());
+                .keyEq(NumberField.VERSION, Long.valueOf(VERSION));
+        FindResult findResult1 = storage.find(COUNTRY, filter);
+        assertEquals(2, findResult1.getCount());
+        assertEquals(2, findResult1.getRecords().size());
 
-        builder.keyEq(StringField.VERSION, String.valueOf(VERSION + 10));
-        BatchRecord batchRecord2 = storage.find(COUNTRY, builder);
-        assertEquals(0, batchRecord2.getCount());
-        assertEquals(0, batchRecord2.getRecords().size());
+        filter.keyEq(NumberField.VERSION, 10L + VERSION);
+        FindResult findResult2 = storage.find(COUNTRY, filter);
+        assertEquals(0, findResult2.getCount());
+        assertEquals(0, findResult2.getRecords().size());
 
-        builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION));
-        BatchRecord batchRecord3 = storage.find(COUNTRY, builder);
-        assertEquals(0, batchRecord3.getCount());
-        assertEquals(0, batchRecord3.getRecords().size());
+        filter.keyNotEq(NumberField.VERSION, Long.valueOf(VERSION));
+        FindResult findResult3 = storage.find(COUNTRY, filter);
+        assertEquals(0, findResult3.getCount());
+        assertEquals(0, findResult3.getRecords().size());
 
-        builder.keyNotEq(StringField.VERSION, String.valueOf(VERSION + 10));
-        BatchRecord batchRecord4 = storage.find(COUNTRY, builder);
-        assertEquals(2, batchRecord4.getCount());
-        assertEquals(2, batchRecord4.getRecords().size());
+        filter.keyNotEq(NumberField.VERSION, 10L + VERSION);
+        FindResult findResult4 = storage.find(COUNTRY, filter);
+        assertEquals(2, findResult4.getCount());
+        assertEquals(2, findResult4.getRecords().size());
     }
 
     @ParameterizedTest(name = "findByAllFieldsTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(403)
     public void findByAllFieldsTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.RECORD_KEY, recordKey)
                 .keyEq(StringField.KEY1, KEY_1)
                 .keyEq(StringField.KEY2, key2)
@@ -390,7 +487,7 @@ public class StorageIntegrationTest {
                 .keyEq(StringField.KEY9, KEY_9)
                 .keyEq(StringField.KEY10, KEY_10)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1)
-                .keyEq(NumberField.RANGE_KEY2, RANGE_KEY_2)
+                .keyGreater(NumberField.RANGE_KEY2, RANGE_KEY_2, true)
                 .keyEq(NumberField.RANGE_KEY3, RANGE_KEY_3)
                 .keyEq(NumberField.RANGE_KEY4, RANGE_KEY_4)
                 .keyEq(NumberField.RANGE_KEY5, RANGE_KEY_5)
@@ -398,51 +495,55 @@ public class StorageIntegrationTest {
                 .keyEq(NumberField.RANGE_KEY7, RANGE_KEY_7)
                 .keyEq(NumberField.RANGE_KEY8, RANGE_KEY_8)
                 .keyEq(NumberField.RANGE_KEY9, RANGE_KEY_9)
-                .keyEq(NumberField.RANGE_KEY10, RANGE_KEY_10)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(SERVICE_KEY1, SERVICE_KEY_1)
-                .keyEq(SERVICE_KEY2, SERVICE_KEY_2);
+                .keyEq(SERVICE_KEY2, SERVICE_KEY_2)
+                .keyEq(SERVICE_KEY3, SERVICE_KEY_3)
+                .keyEq(SERVICE_KEY4, SERVICE_KEY_4)
+                .keyEq(SERVICE_KEY5, SERVICE_KEY_5);
 
-        BatchRecord batchRecord = storage.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        Record record = batchRecord.getRecords().get(0);
-        assertEquals(recordKey, record.getRecordKey());
-        assertEquals(KEY_1, record.getKey1());
-        assertEquals(key2, record.getKey2());
-        assertEquals(KEY_3, record.getKey3());
-        assertEquals(KEY_4, record.getKey4());
-        assertEquals(KEY_5, record.getKey5());
-        assertEquals(KEY_6, record.getKey6());
-        assertEquals(KEY_7, record.getKey7());
-        assertEquals(KEY_8, record.getKey8());
-        assertEquals(KEY_9, record.getKey9());
-        assertEquals(KEY_10, record.getKey10());
-        assertEquals(WRITE_RANGE_KEY_1, record.getRangeKey1());
-        assertEquals(RANGE_KEY_2, record.getRangeKey2());
-        assertEquals(RANGE_KEY_3, record.getRangeKey3());
-        assertEquals(RANGE_KEY_4, record.getRangeKey4());
-        assertEquals(RANGE_KEY_5, record.getRangeKey5());
-        assertEquals(RANGE_KEY_6, record.getRangeKey6());
-        assertEquals(RANGE_KEY_7, record.getRangeKey7());
-        assertEquals(RANGE_KEY_8, record.getRangeKey8());
-        assertEquals(RANGE_KEY_9, record.getRangeKey9());
-        assertEquals(RANGE_KEY_10, record.getRangeKey10());
-        assertEquals(PROFILE_KEY, record.getProfileKey());
-        assertEquals(SERVICE_KEY_1, record.getServiceKey1());
-        assertEquals(SERVICE_KEY_2, record.getServiceKey2());
+        FindResult findResult = storage.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        Record resultRecord = findResult.getRecords().get(0);
+        assertEquals(recordKey, resultRecord.getRecordKey());
+        assertEquals(KEY_1, resultRecord.getKey1());
+        assertEquals(key2, resultRecord.getKey2());
+        assertEquals(KEY_3, resultRecord.getKey3());
+        assertEquals(KEY_4, resultRecord.getKey4());
+        assertEquals(KEY_5, resultRecord.getKey5());
+        assertEquals(KEY_6, resultRecord.getKey6());
+        assertEquals(KEY_7, resultRecord.getKey7());
+        assertEquals(KEY_8, resultRecord.getKey8());
+        assertEquals(KEY_9, resultRecord.getKey9());
+        assertEquals(KEY_10, resultRecord.getKey10());
+        assertEquals(WRITE_RANGE_KEY_1, resultRecord.getRangeKey1());
+        assertEquals(RANGE_KEY_2, resultRecord.getRangeKey2());
+        assertEquals(RANGE_KEY_3, resultRecord.getRangeKey3());
+        assertEquals(RANGE_KEY_4, resultRecord.getRangeKey4());
+        assertEquals(RANGE_KEY_5, resultRecord.getRangeKey5());
+        assertEquals(RANGE_KEY_6, resultRecord.getRangeKey6());
+        assertEquals(RANGE_KEY_7, resultRecord.getRangeKey7());
+        assertEquals(RANGE_KEY_8, resultRecord.getRangeKey8());
+        assertEquals(RANGE_KEY_9, resultRecord.getRangeKey9());
+        assertEquals(PROFILE_KEY, resultRecord.getProfileKey());
+        assertEquals(SERVICE_KEY_1, resultRecord.getServiceKey1());
+        assertEquals(SERVICE_KEY_2, resultRecord.getServiceKey2());
+        assertEquals(SERVICE_KEY_3, resultRecord.getServiceKey3());
+        assertEquals(SERVICE_KEY_4, resultRecord.getServiceKey4());
+        assertEquals(SERVICE_KEY_5, resultRecord.getServiceKey5());
     }
 
     @ParameterizedTest(name = "findOneTest [{index}] {arguments}")
     @MethodSource("storageProvider")
     @Order(404)
     public void findOneTest(Storage storage, String recordKey, String batchRecordKey, String key2) throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY2, key2)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        Record record = storage.findOne(COUNTRY, builder);
-        assertEquals(recordKey, record.getRecordKey());
-        assertEquals(RECORD_BODY, record.getBody());
+        Record resultRecord = storage.findOne(COUNTRY, filter);
+        assertEquals(recordKey, resultRecord.getRecordKey());
+        assertEquals(RECORD_BODY, resultRecord.getBody());
     }
 
     @ParameterizedTest(name = "deleteTest [{index}] {arguments}")
@@ -461,13 +562,13 @@ public class StorageIntegrationTest {
     @Test
     @Order(700)
     public void readIgnoreCaseTest() throws StorageException {
-        Record record = new Record(RECORD_KEY_IGNORE_CASE)
+        Record newRecord = new Record(RECORD_KEY_IGNORE_CASE)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
                 .setKey2(KEY_2)
                 .setKey3(KEY_3);
-        storageIgnoreCase.write(COUNTRY, record);
+        storageIgnoreCase.write(COUNTRY, newRecord);
 
         Record incomingRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
         assertEquals(RECORD_KEY_IGNORE_CASE, incomingRecord.getRecordKey());
@@ -487,38 +588,38 @@ public class StorageIntegrationTest {
     @Test
     @Order(702)
     public void findIgnoreCaseTest() throws StorageException {
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE)
                 .keyEq(StringField.KEY2, KEY_2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY)
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        BatchRecord batchRecord = storageIgnoreCase.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+        FindResult findResult = storageIgnoreCase.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
 
-        builder = builder.clear()
+        filter = filter.clear()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toLowerCase())
                 .keyEq(StringField.KEY2, KEY_2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toLowerCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        batchRecord = storageIgnoreCase.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storageIgnoreCase.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
 
-        builder = builder.clear()
+        filter = filter.clear()
                 .keyEq(StringField.RECORD_KEY, RECORD_KEY_IGNORE_CASE.toUpperCase())
                 .keyEq(StringField.KEY2, KEY_2)
                 .keyEq(StringField.KEY3, KEY_3)
                 .keyEq(StringField.PROFILE_KEY, PROFILE_KEY.toUpperCase())
                 .keyEq(NumberField.RANGE_KEY1, WRITE_RANGE_KEY_1);
-        batchRecord = storageIgnoreCase.find(COUNTRY, builder);
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(1, batchRecord.getRecords().size());
-        assertEquals(RECORD_KEY_IGNORE_CASE, batchRecord.getRecords().get(0).getRecordKey());
+        findResult = storageIgnoreCase.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(1, findResult.getRecords().size());
+        assertEquals(RECORD_KEY_IGNORE_CASE, findResult.getRecords().get(0).getRecordKey());
     }
 
     @Test
@@ -526,22 +627,22 @@ public class StorageIntegrationTest {
     public void deleteIgnoreCaseTest() throws StorageException {
         storageIgnoreCase.delete(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
         // Cannot read deleted record
-        Record record = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE);
-        assertNull(record);
-        record = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
-        assertNull(record);
-        record = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
-        assertNull(record);
+        Record readRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE);
+        assertNull(readRecord);
+        readRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toUpperCase());
+        assertNull(readRecord);
+        readRecord = storageIgnoreCase.read(COUNTRY, RECORD_KEY_IGNORE_CASE.toLowerCase());
+        assertNull(readRecord);
     }
 
     @Test
     @Order(800)
     public void addAttachmentTest() throws StorageException, IOException {
-        Record record = new Record(ATTACHMENT_RECORD_KEY)
+        Record newRecord = new Record(ATTACHMENT_RECORD_KEY)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1);
-        storageOrdinary.write(COUNTRY, record);
+        storageOrdinary.write(COUNTRY, newRecord);
         Path tempFile = Files.createTempFile(FILE_NAME.split("\\.")[0], FILE_NAME.split("\\.")[1]);
         Files.write(tempFile, FILE_CONTENT.getBytes(StandardCharsets.UTF_8));
         InputStream fileInputStream = Files.newInputStream(tempFile);
@@ -583,7 +684,7 @@ public class StorageIntegrationTest {
     void deleteAttachmentTest() throws StorageException {
         storageOrdinary.deleteAttachment(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, fileId);
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
@@ -622,14 +723,14 @@ public class StorageIntegrationTest {
     @Order(807)
     public void getAttachmentFileFromNonExistentRecordTest() throws StorageException {
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, UUID.randomUUID().toString(), fileId);
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
     @Order(808)
     public void getNonExistentAttachmentFileTest() throws StorageException {
         AttachedFile file = storageOrdinary.getAttachmentFile(COUNTRY, ATTACHMENT_RECORD_KEY, UUID.randomUUID().toString());
-        assertNull(file.getFileContent());
+        assertNull(file);
     }
 
     @Test
@@ -686,6 +787,7 @@ public class StorageIntegrationTest {
     @Test
     @Order(900)
     public void findWithSearchKeys() throws StorageException {
+        //to prevent exceeding the connection limit
         String recordKey = "Non hashing " + RECORD_KEY;
         Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
@@ -699,7 +801,7 @@ public class StorageIntegrationTest {
                 .setRangeKey7(RANGE_KEY_7)
                 .setRangeKey8(RANGE_KEY_8)
                 .setRangeKey9(RANGE_KEY_9)
-                .setRangeKey10(RANGE_KEY_10)
+                .setRangeKey10(RANDOM.nextLong())
                 .setKey1(KEY_1)
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
@@ -707,13 +809,13 @@ public class StorageIntegrationTest {
         String country = CredentialsHelper.getMidPopCountry(false);
         storageNonHashing.write(country, newRecord);
 
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        BatchRecord batchRecord = storageNonHashing.find(country, builder);
+        FindResult findResult = storageNonHashing.find(country, filter);
 
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
 
         storageNonHashing.delete(country, recordKey);
     }
@@ -723,33 +825,40 @@ public class StorageIntegrationTest {
     public void utf8EncodingTest() throws StorageException {
         String recordKey = "utf8" + RECORD_KEY;
         String key1 = "Louis César de La Baume Le Blanc" + TEMP;
-        Record record = new Record(recordKey)
+        Record newRecord = new Record(recordKey)
                 .setBody(RECORD_BODY)
                 .setProfileKey(PROFILE_KEY)
                 .setRangeKey1(WRITE_RANGE_KEY_1)
                 .setKey1(key1)
                 .setPrecommitBody(PRECOMMIT_BODY);
-        storageNonHashing.write(COUNTRY, record);
+        storageNonHashing.write(COUNTRY, newRecord);
 
-        FindFilterBuilder builder = FindFilterBuilder.create()
+        FindFilter filter = new FindFilter()
                 .keyEq(StringField.KEY1, key1);
-        BatchRecord batchRecord = storageNonHashing.find(COUNTRY, builder);
+        FindResult findResult = storageNonHashing.find(COUNTRY, filter);
 
-        assertEquals(1, batchRecord.getCount());
-        assertEquals(recordKey, batchRecord.getRecords().get(0).getRecordKey());
-        assertEquals(RECORD_BODY, batchRecord.getRecords().get(0).getBody());
-        assertEquals(key1, batchRecord.getRecords().get(0).getKey1());
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
+        assertEquals(key1, findResult.getRecords().get(0).getKey1());
 
         storageNonHashing.delete(COUNTRY, recordKey);
     }
 
     @Test
     @Order(1000)
+    public void healthCheckTest() throws StorageServerException, StorageClientException {
+        assertTrue(storageOrdinary.healthCheck(COUNTRY));
+        assertTrue(storageOrdinary.healthCheck(CredentialsHelper.getMiniPopCountry()));
+    }
+
+    @Test
+    @Order(1100)
     public void connectionPoolTest() throws StorageException, InterruptedException, ExecutionException {
-        SecretKey secretKey = new SecretKey(ENCRYPTION_SECRET, VERSION, false);
-        List<SecretKey> secretKeyList = new ArrayList<>();
-        secretKeyList.add(secretKey);
-        SecretsData secretsData = new SecretsData(secretKeyList, VERSION);
+        Secret secret = new EncryptionSecret(ENCRYPTION_SECRET, VERSION);
+        List<Secret> secretList = new ArrayList<>();
+        secretList.add(secret);
+        SecretsData secretsData = new SecretsData(secretList, secret);
         SecretKeyAccessor mySecretKeyAccessor = () -> secretsData;
 
         Map<String, String> authMap = new HashMap<>();
@@ -790,17 +899,17 @@ public class StorageIntegrationTest {
     private Callable<StorageException> createCallableTask(final Storage storage, final int numb) {
         return () -> {
             try {
-                String randomKey = "RecordKey" + TEMP + UUID.randomUUID().toString();
+                String randomKey = "RecordKey" + TEMP + UUID.randomUUID();
                 Thread currentThread = Thread.currentThread();
                 currentThread.setName("connectionPoolTest #" + numb);
-                Record record = new Record(randomKey)
+                Record newRecord = new Record(randomKey)
                         .setBody(RECORD_BODY)
                         .setProfileKey(PROFILE_KEY)
                         .setRangeKey1(WRITE_RANGE_KEY_1)
                         .setKey2(KEY_2)
                         .setKey3(KEY_3);
                 String country = (numb % 2 == 0 ? COUNTRY : CredentialsHelper.getMidPopCountry(false));
-                storage.write(country, record);
+                storage.write(country, newRecord);
                 Record incomingRecord = storage.read(country, randomKey);
                 assertEquals(randomKey, incomingRecord.getRecordKey());
                 assertEquals(RECORD_BODY, incomingRecord.getBody());

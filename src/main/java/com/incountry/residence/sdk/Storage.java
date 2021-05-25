@@ -2,10 +2,10 @@ package com.incountry.residence.sdk;
 
 import com.incountry.residence.sdk.dto.AttachedFile;
 import com.incountry.residence.sdk.dto.AttachmentMeta;
-import com.incountry.residence.sdk.dto.BatchRecord;
+import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
-import com.incountry.residence.sdk.dto.search.FindFilterBuilder;
+import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
@@ -21,26 +21,26 @@ public interface Storage {
     /**
      * Write data to remote storage
      *
-     * @param country country identifier
-     * @param record  object which encapsulate data which must be written in storage
+     * @param country   country identifier
+     * @param newRecord object which encapsulate data which must be written in storage
      * @return recorded record
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if encryption failed
      */
-    Record write(String country, Record record) throws StorageClientException, StorageServerException, StorageCryptoException;
+    Record write(String country, Record newRecord) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Write multiple records at once in remote storage
      *
      * @param country country identifier
      * @param records record list
-     * @return BatchRecord object which contains list of recorded records
+     * @return list of recorded records
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if record encryption failed
      */
-    BatchRecord batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException;
+    List<Record> batchWrite(String country, List<Record> records) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Read data from remote storage
@@ -69,25 +69,25 @@ public interface Storage {
      * Find records in remote storage according to filters
      *
      * @param country country identifier
-     * @param builder object representing find filters and search options
+     * @param filter  object representing find filters and search options
      * @return BatchRecord object which contains required records
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    BatchRecord find(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    FindResult find(String country, FindFilter filter) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Find only one first record in remote storage according to filters
      *
      * @param country country identifier
-     * @param builder object representing find filters
+     * @param filter  object representing find filters
      * @return founded record or null
      * @throws StorageClientException if validation finished with errors
      * @throws StorageServerException if server connection failed or server response error
      * @throws StorageCryptoException if decryption failed
      */
-    Record findOne(String country, FindFilterBuilder builder) throws StorageClientException, StorageServerException, StorageCryptoException;
+    Record findOne(String country, FindFilter filter) throws StorageClientException, StorageServerException, StorageCryptoException;
 
     /**
      * Make batched key-rotation-migration of records
@@ -206,4 +206,14 @@ public interface Storage {
      * @throws StorageServerException if server connection failed or server response error
      */
     AttachmentMeta getAttachmentMeta(String country, String recordKey, String fileId) throws StorageClientException, StorageServerException;
+
+    /**
+     * health check of storage service endpoint for specified country identifier
+     *
+     * @param country country identifier
+     * @return true if country endpoint is available, otherwise - false
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed or server response error
+     */
+    boolean healthCheck(String country) throws StorageClientException, StorageServerException;
 }

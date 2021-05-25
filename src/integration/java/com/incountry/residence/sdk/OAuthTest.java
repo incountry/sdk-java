@@ -6,9 +6,6 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
-import com.incountry.residence.sdk.tools.keyaccessor.SecretKeyAccessor;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsData;
-import com.incountry.residence.sdk.tools.keyaccessor.key.SecretsDataGenerator;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.HttpClients;
@@ -24,47 +21,17 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OAuthTest {
     private static final String COUNTRY = CredentialsHelper.getMidPopCountry(true);
-    private static final String MINIPOP_COUNTRY = CredentialsHelper.getMiniPopCountry();
-
-    private final SecretKeyAccessor accessor;
-
-    public OAuthTest() throws StorageClientException {
-        SecretsData secretsData = SecretsDataGenerator.fromPassword("password");
-        accessor = () -> secretsData;
-    }
-
-    private Storage initStorage() throws StorageClientException {
-        StorageConfig config = CredentialsHelper.getConfigWithOauth()
-                .setSecretKeyAccessor(accessor);
-        return StorageImpl.getInstance(config);
-    }
-
-
-    @Test
-    public void testStorageWithAuthClient() throws StorageServerException, StorageClientException, StorageCryptoException {
-        Storage storage = initStorage();
-        String key = UUID.randomUUID().toString();
-        String body = "body " + key;
-        Record record = new Record(key, body);
-        storage.write(COUNTRY, record);
-        assertEquals(key, storage.read(COUNTRY, key).getRecordKey());
-
-        String key2 = UUID.randomUUID().toString();
-        String body2 = "body " + key2;
-        Record record2 = new Record(key2, body2);
-        storage.write(MINIPOP_COUNTRY, record2);
-        assertEquals(key2, storage.read(MINIPOP_COUNTRY, key2).getRecordKey());
-    }
 
     @Test
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
         StorageConfig config = CredentialsHelper.getConfigWithOauth();
-        TokenClient client = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvId(),
+        TokenClient client = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
                 config.getClientId(), config.getClientSecret(), HttpClients.createDefault());
         TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(client, true);
         String endPoint = "https://" + CredentialsHelper.getMidPopCountry(true).toLowerCase() + config.getEndpointMask();
@@ -75,12 +42,12 @@ public class OAuthTest {
     }
 
     @Test
-    public void authRegionTest() throws StorageClientException {
+    public void authRegionTest() throws StorageClientException, StorageCryptoException {
         Map<String, String> authEndpoints = new HashMap<>();
         authEndpoints.put("emea", "https://emea.localhost");
         authEndpoints.put("apac", "https://apac.localhost");
         StorageConfig config = new StorageConfig()
-                .setEnvId("envId")
+                .setEnvironmentId("envId")
                 .setClientId("clientId")
                 .setClientSecret("clientSecret")
                 .setEndpointMask("-localhost.localhost:8765")
@@ -89,10 +56,10 @@ public class OAuthTest {
 
         Storage prodStorage = StorageImpl.getInstance(config);
         String errorMessage = "Unexpected exception during authorization, params [OAuth URL=";
-        Record record = new Record("someKey", "someBody");
+        Record myRecord = new Record("someKey", "someBody");
 
         //IN mid APAC -> APAC auth
-        StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", record));
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> prodStorage.write("IN", myRecord));
         assertEquals(errorMessage + "https://apac.localhost, audience=https://in-localhost.localhost:8765]", ex.getMessage());
         List<Class> expectedClasses = Arrays.asList(HttpHostConnectException.class, UnknownHostException.class);
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
@@ -100,21 +67,38 @@ public class OAuthTest {
 
         String errorEmea = "emea.localhost";
         //AE mid EMEA -> EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", record));
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("AE", myRecord));
         assertEquals(errorMessage + "https://emea.localhost, audience=https://ae-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
 
         //US mid AMER -> EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", record));
+        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("US", myRecord));
         assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765]", ex.getMessage());
         Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
         assertTrue(ex.getCause().getMessage().contains(errorEmea));
+    }
 
-        //Minipop - > EMEA auth
-        ex = assertThrows(StorageServerException.class, () -> prodStorage.write("SOME_MINIPOP_COUNTRY", record));
-        assertEquals(errorMessage + "https://emea.localhost, audience=https://us-localhost.localhost:8765 https://some_minipop_country-localhost.localhost:8765]", ex.getMessage());
-        Assertions.assertTrue(expectedClasses.contains(ex.getCause().getClass()));
-        assertTrue(ex.getCause().getMessage().contains(errorEmea));
+    @Test
+    void tokenAccessorTest() throws StorageClientException, StorageServerException, StorageCryptoException {
+        StorageConfig config = CredentialsHelper.getConfigWithOauth();
+        TokenClient tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault());
+        String audience = "https://" + COUNTRY.toLowerCase() + config.getEndpointMask();
+        String oauthToken = tokenClient.refreshToken(false, audience, "emea");
+
+        config = CredentialsHelper.getConfigWithOauth()
+                .setClientId(null)
+                .setClientSecret(null)
+                .setOauthToken(oauthToken);
+        Storage storage = StorageImpl.getInstance(config);
+        Record myRecord = new Record(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        storage.write(COUNTRY, myRecord);
+        Record readRecord = storage.read(COUNTRY, myRecord.getRecordKey());
+        assertEquals(myRecord.getRecordKey(), readRecord.getRecordKey());
+        assertEquals(myRecord.getBody(), readRecord.getBody());
+        storage.delete(COUNTRY, myRecord.getRecordKey());
+        readRecord = storage.read(COUNTRY, myRecord.getRecordKey());
+        assertNull(readRecord);
     }
 }
