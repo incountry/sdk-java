@@ -49,13 +49,13 @@ For Maven users please add this section to your dependencies list
 <dependency>
   <groupId>com.incountry</groupId>
   <artifactId>incountry-java-client</artifactId>
-  <version>4.0.0</version>
+  <version>4.1.0</version>
 </dependency>
 ```
 
 For Gradle users please add this line to your dependencies list
 ```groovy
-compile "com.incountry:incountry-java-client:4.0.0"
+compile "com.incountry:incountry-java-client:4.1.0"
 ```
 
 ## Countries list
@@ -444,8 +444,8 @@ public interface Storage {
  Below is the example of how you may use `batchWrite` method
 ```java
 List<Record> list = new ArrayList<>();
-list.add(new Record("some_record_key","some PII data"));
-list.add(new Record("another_record_key","another PII data"));
+list.add(new Record("some_record_key", "some PII data"));
+list.add(new Record("another_record_key", "another PII data"));
 storage.batchWrite("us", list);
 ```
 
@@ -1096,26 +1096,26 @@ The following is a list of compile dependencies for this project. These dependen
 | commons-codec             | commons-codec        | 1.15        | jar      |
 | commons-logging           | commons-logging      | 1.2         | jar      |
 | commons-io                | commons-io           | 2.8.0       | jar      |
-| org.apache.logging.log4j  | log4j-api            | 2.14.0      | jar      |
-| org.apache.logging.log4j  | log4j-core           | 2.14.0      | jar      |
-| org.apache.logging.log4j  | log4j-core-jcl       | 2.14.0      | jar      |
+| org.apache.logging.log4j  | log4j-api            | 2.14.1      | jar      |
+| org.apache.logging.log4j  | log4j-core           | 2.14.1      | jar      |
+| org.apache.logging.log4j  | log4j-core-jcl       | 2.14.1      | jar      |
 | org.apache.httpcomponents | httpclient           | 4.5.13      | jar      |
 | org.apache.httpcomponents | httpcore             | 4.4.13      | jar      |
 | com.google.code.gson      | gson                 | 2.8.6       | jar      |
 
 ### Dependency tree
 ```
-compileClasspath
+compileClasspath - Compile classpath for source set 'main'.
 +--- javax.xml.bind:jaxb-api:2.3.1
 |    \--- javax.activation:javax.activation-api:1.2.0
 +--- commons-codec:commons-codec:1.15
 +--- com.google.code.gson:gson:2.8.6
-+--- org.apache.logging.log4j:log4j-api:2.14.0
-+--- org.apache.logging.log4j:log4j-core:2.14.0
-|    \--- org.apache.logging.log4j:log4j-api:2.14.0
-+--- org.apache.logging.log4j:log4j-jcl:2.14.0
++--- org.apache.logging.log4j:log4j-api:2.14.1
++--- org.apache.logging.log4j:log4j-core:2.14.1
+|    \--- org.apache.logging.log4j:log4j-api:2.14.1
++--- org.apache.logging.log4j:log4j-jcl:2.14.1
 |    +--- commons-logging:commons-logging:1.2
-|    \--- org.apache.logging.log4j:log4j-api:2.14.0
+|    \--- org.apache.logging.log4j:log4j-api:2.14.1
 +--- org.apache.httpcomponents:httpclient:4.5.13
 |    +--- org.apache.httpcomponents:httpcore:4.4.13
 |    +--- commons-logging:commons-logging:1.2

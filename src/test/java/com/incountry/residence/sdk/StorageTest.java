@@ -79,7 +79,7 @@ class StorageTest {
     @BeforeEach
     public void initializeAccessorAndCrypto() throws StorageClientException {
         int version = 0;
-        Secret secret = new EncryptionSecret(version, SECRET);
+        Secret secret = new EncryptionSecret(SECRET, version);
         SecretsData secretsData = new SecretsData(Collections.singletonList(secret), secret);
         secretKeyAccessor = () -> secretsData;
         CryptoProvider cryptoProvider = new CryptoProvider(null);
@@ -668,7 +668,7 @@ class StorageTest {
 
     @Test
     void testPositiveWithConstructor2() throws StorageClientException, StorageCryptoException {
-        Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -682,7 +682,7 @@ class StorageTest {
 
     @Test
     void authorizationParamsNegative() throws StorageClientException {
-        Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -705,7 +705,7 @@ class StorageTest {
 
     @Test
     void positiveTestWithClientId() throws StorageClientException, StorageCryptoException {
-        Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -719,7 +719,7 @@ class StorageTest {
 
     @Test
     void negativeTestNullClientSecret() throws StorageClientException {
-        Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -733,7 +733,7 @@ class StorageTest {
 
     @Test
     void negativeTestEmptySecret() throws StorageClientException {
-        Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()
@@ -748,7 +748,7 @@ class StorageTest {
 
     @Test
     void allAuthParamsNegative() throws StorageClientException {
-        Secret secret = new EncryptionSecret(1, "secret".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("secret".getBytes(StandardCharsets.UTF_8), 1);
         SecretsData secretData = new SecretsData(Collections.singletonList(secret), secret);
         SecretKeyAccessor secretKeyAccessor = () -> secretData;
         StorageConfig config = new StorageConfig()

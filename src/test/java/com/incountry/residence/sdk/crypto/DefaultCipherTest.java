@@ -15,7 +15,7 @@ class DefaultCipherTest {
     @Test
     void aesGcmPbkdf10kHexCipherNegative() throws StorageClientException {
         AesGcmPbkdf10kHexCipher cipher = new AesGcmPbkdf10kHexCipher(null);
-        Secret secret = new EncryptionSecret(1, "password".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("password".getBytes(StandardCharsets.UTF_8), 1);
         String shortEncryptedText = "123456789012345678901234567890AB";
         String encryptedText = "123456789012345678901234567890AB123456789012345678901234567890AB123456789012345678901" +
                 "123456789012345678901234567890AB123456789012345678901234567890AB123456789012345678901";
@@ -33,7 +33,7 @@ class DefaultCipherTest {
     @Test
     void aesGcmPbkdf10kBase64CipherNegative() throws StorageClientException {
         AesGcmPbkdf10kBase64Cipher cipher = new AesGcmPbkdf10kBase64Cipher(StandardCharsets.UTF_8);
-        Secret secret = new EncryptionSecret(1, "password".getBytes(StandardCharsets.UTF_8));
+        Secret secret = new EncryptionSecret("password".getBytes(StandardCharsets.UTF_8), 1);
         StorageCryptoException ex = assertThrows(StorageCryptoException.class, () -> cipher.decrypt(null, secret));
         assertEquals("Encrypted text is incorrect", ex.getMessage());
         ex = assertThrows(StorageCryptoException.class, () -> cipher.decrypt("", secret));

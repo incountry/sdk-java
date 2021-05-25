@@ -144,9 +144,9 @@ class SecretsTest {
 
     @Test
     void testValidationOfSecretsData() throws StorageClientException {
-        Secret secretKey1 = new EncryptionSecret(0, "password1".getBytes(StandardCharsets.UTF_8));
-        Secret secretKey2 = new EncryptionSecret(1, "password2".getBytes(StandardCharsets.UTF_8));
-        Secret secretKey3 = new EncryptionSecret(0, "password3".getBytes(StandardCharsets.UTF_8));
+        Secret secretKey1 = new EncryptionSecret("password1".getBytes(StandardCharsets.UTF_8), 0);
+        Secret secretKey2 = new EncryptionSecret("password2".getBytes(StandardCharsets.UTF_8), 1);
+        Secret secretKey3 = new EncryptionSecret("password3".getBytes(StandardCharsets.UTF_8), 0);
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2, secretKey3), secretKey1));
         assertEquals("Secret versions must be unique. Got duplicates for: [0]", ex1.getMessage());
         StorageClientException ex2 = assertThrows(StorageClientException.class, () -> new SecretsData(Arrays.asList(secretKey1, secretKey2), secretKey3));
@@ -166,7 +166,7 @@ class SecretsTest {
     @Test
     void secretsDataNegativeVersionTest() {
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
-                new EncryptionSecret(-1, "password".getBytes(StandardCharsets.UTF_8)));
+                new EncryptionSecret("password".getBytes(StandardCharsets.UTF_8), -1));
         assertEquals("Version must be >= 0", ex.getMessage());
     }
 
@@ -203,7 +203,7 @@ class SecretsTest {
 
     @Test
     void toStringPositive() throws StorageClientException {
-        Secret secret1 = new EncryptionSecret(1, "123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8));
+        Secret secret1 = new EncryptionSecret("123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8), 1);
         assertEquals("EncryptionSecret{version=1, secretBytes=HASH[-847010189]}", secret1.toString());
         Secret secret2 = new EncryptionKey("123456789012345678901234567890AB".getBytes(StandardCharsets.UTF_8), 1);
         assertEquals("EncryptionKey{version=1, secretBytes=HASH[-847010189]}", secret2.toString());
@@ -213,9 +213,9 @@ class SecretsTest {
 
     @Test
     void createSecretInvalid() {
-        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(1, null));
+        StorageClientException ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(null, 1));
         assertEquals("Secret can't be null or empty", ex.getMessage());
-        ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret(1, "".getBytes(StandardCharsets.UTF_8)));
+        ex = assertThrows(StorageClientException.class, () -> new EncryptionSecret("".getBytes(StandardCharsets.UTF_8), 1));
         assertEquals("Secret can't be null or empty", ex.getMessage());
     }
 
