@@ -14,20 +14,20 @@
 
     <Match>
         <Or>
-            <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl"/>
+            <Class name="com.incountry.residence.sdk.tools.http.impl.HttpExecutorImpl"/>
             <Class name="com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient"/>
         </Or>
         <Bug pattern="URLCONNECTION_SSRF_FD"/>
     </Match>
 
     <Match>
-        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpExecutorImpl" />
         <Method name="request" />
         <Bug pattern="NP_NULL_ON_SOME_PATH" />
     </Match>
 
     <Match>
-        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl" />
+        <Class name="com.incountry.residence.sdk.tools.http.impl.HttpExecutorImpl" />
         <Method name="request" />
         <Bug code="RCN" />
     </Match>
@@ -60,6 +60,7 @@
             <Class name="com.incountry.residence.sdk.crypto.SecretsData"/>
             <Class name="com.incountry.residence.sdk.tools.crypto.CryptoProvider"/>
             <Class name="com.incountry.residence.sdk.tools.crypto.cipher.AesGcmPbkdfCipher"/>
+            <Class name="com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient"/>
         </Or>
         <Bug code="NP,RCN"/>
     </Match>

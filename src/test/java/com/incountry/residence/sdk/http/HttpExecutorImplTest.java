@@ -9,9 +9,9 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.http.HttpExecutor;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.tools.http.impl.HttpAgentImpl;
+import com.incountry.residence.sdk.tools.http.impl.HttpExecutorImpl;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
@@ -42,9 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class HttpAgentImplTest {
+class HttpExecutorImplTest {
 
-    private static final Logger LOG = LogManager.getLogger(HttpAgentImplTest.class);
+    private static final Logger LOG = LogManager.getLogger(HttpExecutorImplTest.class);
 
     private static final int PORT = 8769;
     private static final String ENDPOINT = "http://localhost:" + PORT;
@@ -53,7 +53,7 @@ class HttpAgentImplTest {
 
     @Test
     void testWithIllegalUrl() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         RequestParameters params = new RequestParameters("GET", APPLICATION_JSON, null, null);
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 agent.request(null, "someBody", null, null, 0, params));
@@ -62,7 +62,7 @@ class HttpAgentImplTest {
 
     @Test
     void testFakeEndpointException() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         String url = "https://" + UUID.randomUUID() + ".localhost";
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(url,
                 "someBody", null, null, 0, new RequestParameters("GET")));
@@ -71,15 +71,15 @@ class HttpAgentImplTest {
 
     @RepeatedTest(3)
     void testWithFakeHttpServer(RepetitionInfo repeatInfo) throws IOException, StorageException {
-        iterateLogLevel(repeatInfo, HttpAgentImpl.class);
+        iterateLogLevel(repeatInfo, HttpExecutorImpl.class);
         int respCode = 200;
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
-        HttpAgent agent;
+        HttpExecutor agent;
         if (repeatInfo.getCurrentRepetition() == 2) {
-            agent = new HttpAgentImpl(TOKEN_CLIENT, null, HttpClients.createDefault());
+            agent = new HttpExecutorImpl(TOKEN_CLIENT, null, HttpClients.createDefault(), 1, 32);
         } else {
-            agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+            agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         }
         RequestParameters params = new RequestParameters("POST");
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, params).getContent());
@@ -96,7 +96,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
 
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         RequestParameters params = new RequestParameters("PATCH");
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, params).getContent());
         server.stop(0);
@@ -109,7 +109,7 @@ class HttpAgentImplTest {
         server.start();
 
         String postMethod = "POST";
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         RequestParameters params = new RequestParameters(postMethod, APPLICATION_JSON, genStream(), "file.txt");
         assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params).getContent());
 
@@ -134,7 +134,7 @@ class HttpAgentImplTest {
 
     @Test
     void negativeTestWithNullRequestParameters() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 agent.request(ENDPOINT, "<body>", null, null, 0, null));
         assertEquals("Request parameters can't be null", ex.getMessage());
@@ -146,7 +146,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT, "/attachments/file_id");
         server.start();
 
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         String url = "http://localhost:8769/attachments/file_id";
         RequestParameters params = new RequestParameters("GET");
         ApiResponse response = agent.request(url, "<body>", null, null, 0, params);
@@ -170,15 +170,15 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT, "/attachments/file_id/meta");
         server.start();
 
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         assertNotNull(agent.request("http://localhost:8769/attachments/file_id/meta", "<body>", null, null, 0, new RequestParameters("GET")).getContent());
-        agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         assertNotNull(agent.request("http://localhost:8769/attachments/file_id/meta", "<body>", null, null, 0, new RequestParameters("POST")).getContent());
         server.stop(0);
 
         server = new FakeHttpServer("{}", 405, PORT, "/attachments/file_id");
         server.start();
-        HttpAgent agent1 = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent1 = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         ApiResponse response = agent1.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("POST"));
         assertEquals(405, response.getResponseCode());
         server.stop(0);
@@ -190,7 +190,7 @@ class HttpAgentImplTest {
         FakeHttpServer server = new FakeHttpServer("", respCode, PORT, "/attachments/file_id");
         server.start();
 
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         ApiResponse response = agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("DELETE"));
         assertNotNull(response);
         assertNull(response.getInputStream());
@@ -203,7 +203,7 @@ class HttpAgentImplTest {
         int respCode = 404;
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         assertTrue(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST")).getContent().isEmpty());
         server.stop(0);
     }
@@ -212,7 +212,7 @@ class HttpAgentImplTest {
     void testRetry() throws IOException, StorageServerException, StorageClientException {
         FakeHttpServer server = new FakeHttpServer("{}", Arrays.asList(401, 200, 401), PORT);
         server.start();
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         assertEquals(200, agent.request(ENDPOINT, "<body>", null, null, 1, new RequestParameters("POST")).getResponseCode());
         assertEquals(401, agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST")).getResponseCode());
         server.stop(0);
@@ -220,7 +220,7 @@ class HttpAgentImplTest {
 
     @Test
     void negativeTestWithIllegalUrl() {
-        HttpAgent agent = new HttpAgentImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault());
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
         String url = " ";
         StorageClientException ex = assertThrows(StorageClientException.class, ()
                 -> agent.request(url, "someBody", null, null, 0, new RequestParameters("GET")));

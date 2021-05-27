@@ -16,7 +16,9 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
+import com.incountry.residence.sdk.tools.http.HttpExecutor;
 import com.incountry.residence.sdk.tools.http.TokenClient;
+import com.incountry.residence.sdk.tools.http.impl.HttpExecutorImpl;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
@@ -65,9 +67,13 @@ public class StorageImpl implements Storage {
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected error";
     private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
+    private static final String MSG_ERR_BASE_DELAY = "Retry base delay can't be < 1";
+    private static final String MSG_ERR_MAX_DELAY = "Retry max delay can't be less then retry base delay";
 
     private static final int DEFAULT_HTTP_TIMEOUT = 30;
     private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
+    private static final int DEFAULT_RETRY_BASE_DELAY = 1;
+    private static final int DEFAULT_RETRY_MAX_DELAY = 32;
 
     private final Dao dao;
     private final HashUtils hashUtils;
@@ -156,6 +162,13 @@ public class StorageImpl implements Storage {
             checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
             checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
 
+            Integer retryBaseDelay = config.getRetryBaseDelay();
+            retryBaseDelay = retryBaseDelay != null ? retryBaseDelay : DEFAULT_RETRY_BASE_DELAY;
+            HELPER.check(StorageClientException.class, retryBaseDelay < 1, MSG_ERR_BASE_DELAY);
+            Integer retryMaxDelay = config.getRetryMaxDelay();
+            retryMaxDelay = retryMaxDelay != null ? retryMaxDelay : DEFAULT_RETRY_MAX_DELAY;
+            HELPER.check(StorageClientException.class, retryMaxDelay < retryBaseDelay, MSG_ERR_MAX_DELAY);
+
             CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null) {
@@ -166,8 +179,8 @@ public class StorageImpl implements Storage {
                         config.getEnvironmentId(),
                         config.getClientId(),
                         config.getClientSecret(),
-                        httpClient
-                );
+                        httpClient,
+                        retryBaseDelay, retryMaxDelay);
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
             } else {
                 OauthTokenAccessor accessor = config.getOauthTokenAccessor();
@@ -180,12 +193,18 @@ public class StorageImpl implements Storage {
                     }
                 };
             }
-            return new HttpDaoImpl(config.getEnvironmentId(),
+
+            HttpExecutor httpExecutor = ProxyUtils.createLoggingProxyForPublicMethods(
+                    new HttpExecutorImpl(
+                            ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true),
+                            config.getEnvironmentId(),
+                            httpClient, retryBaseDelay, retryMaxDelay), false);
+
+            return new HttpDaoImpl(
                     config.getEndPoint(),
                     config.getEndpointMask(),
                     config.getCountriesEndpoint(),
-                    tokenClient,
-                    httpClient);
+                    httpExecutor);
         } else {
             return dao;
         }

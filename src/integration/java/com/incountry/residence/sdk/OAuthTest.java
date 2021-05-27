@@ -32,7 +32,7 @@ public class OAuthTest {
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
         StorageConfig config = CredentialsHelper.getConfigWithOauth();
         TokenClient client = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
-                config.getClientId(), config.getClientSecret(), HttpClients.createDefault());
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault(), 1, 32);
         TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(client, true);
         String endPoint = "https://" + CredentialsHelper.getMidPopCountry(true).toLowerCase() + config.getEndpointMask();
         assertNotNull(tokenClient.refreshToken(false, endPoint, null));
@@ -83,7 +83,7 @@ public class OAuthTest {
     void tokenAccessorTest() throws StorageClientException, StorageServerException, StorageCryptoException {
         StorageConfig config = CredentialsHelper.getConfigWithOauth();
         TokenClient tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
-                config.getClientId(), config.getClientSecret(), HttpClients.createDefault());
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault(), 1, 32);
         String audience = "https://" + COUNTRY.toLowerCase() + config.getEndpointMask();
         String oauthToken = tokenClient.refreshToken(false, audience, "emea");
 
