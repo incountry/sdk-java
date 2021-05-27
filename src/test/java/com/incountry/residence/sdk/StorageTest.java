@@ -1336,4 +1336,31 @@ class StorageTest {
         assertEquals("Country can't be null", ex.getMessage());
         server.stop(0);
     }
+
+    @Test
+    void retryDelayTest() throws IOException, StorageClientException, StorageServerException, StorageCryptoException {
+        FakeHttpServer server = new FakeHttpServer("{}", Arrays.asList(429, 429, 200, 429, 429, 429), PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setOauthToken("oauthToken")
+                .setEndPoint("http://localhost:" + PORT)
+                .setEnvironmentId("environmentId")
+                .setRetryBaseDelay(1)
+                .setRetryMaxDelay(2);
+        Storage storage = StorageImpl.getInstance(config);
+        storage.delete("US", "<record_id>");
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.delete("US", "<record_id>"));
+        assertEquals("Code=429, url=[http://localhost:8767/v2/storage/records/us/263c5009cbbef73207bcda267e6e479ad4379a95564af938502e5bfd24feb90e], content=[{}]",
+                ex.getMessage());
+        server.stop(0);
+
+        config.setRetryBaseDelay(-1);
+        StorageClientException clientEx = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Retry base delay can't be < 1", clientEx.getMessage());
+
+        config.setRetryBaseDelay(10)
+                .setRetryMaxDelay(5);
+        clientEx = assertThrows(StorageClientException.class, () -> StorageImpl.getInstance(config));
+        assertEquals("Retry max delay can't be less then retry base delay", clientEx.getMessage());
+    }
 }
