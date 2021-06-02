@@ -546,7 +546,7 @@ IS_NULL             (FindFilter::keyIsNull)
 IS_NOT_NULL         (FindFilter::keyIsNotNull)
 ```
 
-You can use the following builder methods for filtering by numerical fields:
+You can use the following methods for filtering by numerical fields:
 ```java
 EQUALS              (FindFilter::keyEq)
 NOT_EQUALS          (FindFilter::keyNotEq)
@@ -557,7 +557,7 @@ LESS                (FindFilter::keyLess)
 BETWEEN             (FindFilter::keyBetween)
 ```
 
-You can use the following builder methods for filtering by date fields:
+You can use the following methods for filtering by date fields:
 ```java
 EQUALS              (FindFilter::keyEq)
 IS_NULL             (FindFilter::keyIsNull)
@@ -619,7 +619,7 @@ Sorting find results is currently available for InCountry dedicated instances on
 
 By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilter` .
 ```java
-FindFilter builder = new FindFilter()
+FindFilter filter = new FindFilter()
                   //...
                   .sortBy(SortField.CREATED_AT, SortOrder.ASC)
                   .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
