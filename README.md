@@ -23,8 +23,9 @@ Table of contents
     * [Batches](#batches)
     * [Reading stored data](#reading-stored-data)
     * [Find records](#find-records)
-        * [Fields that records can be sorted by](#fields-that-records-can-be-sorted-by)
+        * [Exact match search](#exact-match-search)
         * [Partial text match search](#partial-text-match-search)
+        * [Sorting](#sorting)
     * [Find one record](#find-one-record)
     * [Delete records](#delete-records)
 * [Attaching files to a record](#attaching-files-to-a-record)
@@ -484,8 +485,9 @@ String decryptedBody = record.getBody();
  ```
 
 ### Find records
+You can look up for data records either by using exact match search operators or partial text match operator in almost
+any combinations. It is possible to search by random keys using `find` method.
 
-It is possible to search by random keys using `find` method.
 ```java
 public interface Storage {
    /**
@@ -506,6 +508,7 @@ public interface Storage {
 
 Use `FindFilter` class to refine your find request.
 
+##### Exact match search
 Below is the example how to use `find` method along with `FindFilter`:
 ```java
 FindFilter filter = new FindFilter()
@@ -535,66 +538,7 @@ FindFilter filter = new FindFilter()
 FindResult findResult = storage.find("us", filter);
 ```
 
----
-**NOTE**
-
-Sorting find results is currently available for InCountry dedicated instances only. Please check your subscription plan for details. This may require specifying your dedicated instance endpoint when configuring Java SDK Storage.
-
----
-
-By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilterBuilder` .
-```java
-FindFilter builder = new FindFilter()
-                  //...
-                  .sortBy(SortField.CREATED_AT, SortOrder.ASC)
-                  .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
-FindResult findResult = storage.find("us", filter);
-```
-The request will return records, sorted according to the following pseudo-sql
-```sql
-SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
-```
-
-#### Fields that records can be sorted by
-```java
-public enum SortField {
-   KEY1,
-   KEY2,
-   KEY3,
-   KEY4,
-   KEY5,
-   KEY6,
-   KEY7,
-   KEY8,
-   KEY9,
-   KEY10,
-   KEY11,
-   KEY12,
-   KEY13,
-   KEY14,
-   KEY15,
-   KEY16,
-   KEY17,
-   KEY18,
-   KEY19,
-   KEY20,
-   RANGE_KEY1,
-   RANGE_KEY2,
-   RANGE_KEY3,
-   RANGE_KEY4,
-   RANGE_KEY5,
-   RANGE_KEY6,
-   RANGE_KEY7,
-   RANGE_KEY8,
-   RANGE_KEY9,
-   RANGE_KEY10,
-   CREATED_AT,
-   UPDATED_AT,
-   EXPIRES_AT
-}
-```
-
-Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
+Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilter`:
 ```java
 EQUALS              (FindFilter::keyEq)
 NOT_EQUALS          (FindFilter::keyNotEq)
@@ -641,7 +585,6 @@ int total = findResult.getTotal();
 `FindResult.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
 
 #### Partial text match search
-
 You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., key20`.
 ```java
 // Matches all records where 
@@ -663,6 +606,67 @@ FindFilter filter = new FindFilter()
 FindFilter filter = new FindFilter()
     .searchKeysLike("abc")
     .keyEq(StringField.KEY1, "def");
+```
+
+#### Sorting
+
+---
+**NOTE**
+
+Sorting find results is currently available for InCountry dedicated instances only. Please check your subscription plan for details. This may require specifying your dedicated instance endpoint when configuring Java SDK Storage.
+
+---
+
+By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilter` .
+```java
+FindFilter builder = new FindFilter()
+                  //...
+                  .sortBy(SortField.CREATED_AT, SortOrder.ASC)
+                  .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
+FindResult findResult = storage.find("us", filter);
+```
+The request will return records, sorted according to the following pseudo-sql
+```sql
+SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
+```
+
+Fields that records can be sorted by:
+```java
+public enum SortField {
+   KEY1,
+   KEY2,
+   KEY3,
+   KEY4,
+   KEY5,
+   KEY6,
+   KEY7,
+   KEY8,
+   KEY9,
+   KEY10,
+   KEY11,
+   KEY12,
+   KEY13,
+   KEY14,
+   KEY15,
+   KEY16,
+   KEY17,
+   KEY18,
+   KEY19,
+   KEY20,
+   RANGE_KEY1,
+   RANGE_KEY2,
+   RANGE_KEY3,
+   RANGE_KEY4,
+   RANGE_KEY5,
+   RANGE_KEY6,
+   RANGE_KEY7,
+   RANGE_KEY8,
+   RANGE_KEY9,
+   RANGE_KEY10,
+   CREATED_AT,
+   UPDATED_AT,
+   EXPIRES_AT
+}
 ```
 
 ### Find one record
