@@ -29,6 +29,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -270,7 +271,32 @@ class StorageTest {
         //response with recorded record
         assertEquals(record, storage.write(COUNTRY, record));
         server.stop(0);
+    }
 
+    @Test
+    void batchWriteWithAndWithoutResponses() throws StorageException, IOException {
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encryptedJsonBatch = gson.toJson(
+                new TransferRecordList(dtoTransformer.getTransferRecordList(Collections.singletonList(record))));
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonBatch), 201, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setEndPoint("http://localhost:" + PORT)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config);
+        //empty response
+        assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        //not JSON response
+        assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        //response with recorded batch
+        assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        server.stop(0);
     }
 
     @Test
