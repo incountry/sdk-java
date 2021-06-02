@@ -248,6 +248,32 @@ class StorageTest {
     }
 
     @Test
+    void writeWithAndWithoutResponses() throws StorageException, IOException {
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encryptedJsonRecord = gson.toJson(dtoTransformer.getTransferRecord(record));
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonRecord), 201, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setEndPoint("http://localhost:" + PORT)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config);
+        //empty response
+        assertEquals(record, storage.write(COUNTRY, record));
+        //not JSON response
+        assertEquals(record, storage.write(COUNTRY, record));
+        //response with recorded record
+        assertEquals(record, storage.write(COUNTRY, record));
+        server.stop(0);
+
+    }
+
+    @Test
     void batchWriteBadResponseCodeNegative() throws StorageException {
         String endpoint = "https://custom.endpoint.io";
         FakeHttpExecutor agent = new FakeHttpExecutor("not found", 404);
