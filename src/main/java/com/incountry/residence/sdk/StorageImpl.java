@@ -235,7 +235,7 @@ public class StorageImpl implements Storage {
         HELPER.check(StorageClientException.class, newRecord == null, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, newRecord.getRecordKey());
         TransferRecord recordedRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
-        return transformer.getRecord(recordedRecord);
+        return recordedRecord == null ? newRecord : transformer.getRecord(recordedRecord);
     }
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
@@ -269,7 +269,7 @@ public class StorageImpl implements Storage {
             checkCountryAndRecordKey(country, currentRecord.getRecordKey());
         }
         TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
-        return transformer.getRecordList(transferRecordList);
+        return transferRecordList == null ? records : transformer.getRecordList(transferRecordList);
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
