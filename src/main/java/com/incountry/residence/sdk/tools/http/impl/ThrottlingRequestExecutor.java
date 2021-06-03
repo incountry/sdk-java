@@ -33,7 +33,7 @@ public abstract class ThrottlingRequestExecutor {
 
     private static final String MSG_ERR_URL = "URL error";
     private static final String MSG_ERR_NULL_BODY = "HTTP request body can't be null";
-    private static final String MSG_WARN_TOO_MANY_REQUESTS = "Server response too many requests status, request will be retried in {} ms";
+    private static final String MSG_WARN_TOO_MANY_REQUESTS = "Storage server error: too many requests. Will retry in {} ms";
 
     private static final String USER_AGENT = "User-Agent";
     private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;

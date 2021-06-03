@@ -37,6 +37,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_HTTP_TIMEOUT;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_MAX_HTTP_CONNECTIONS;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_BASE_DELAY;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_MAX_DELAY;
 import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
 
 /**
@@ -69,11 +73,6 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
     private static final String MSG_ERR_BASE_DELAY = "Retry base delay can't be < 1";
     private static final String MSG_ERR_MAX_DELAY = "Retry max delay can't be less then retry base delay";
-
-    private static final int DEFAULT_HTTP_TIMEOUT = 30;
-    private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
-    private static final int DEFAULT_RETRY_BASE_DELAY = 1;
-    private static final int DEFAULT_RETRY_MAX_DELAY = 32;
 
     private final Dao dao;
     private final HashUtils hashUtils;

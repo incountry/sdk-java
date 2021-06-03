@@ -141,10 +141,10 @@ public class StorageConfig {
    /** Optional. For using of a previously acquired oAuth token for OAuth2 authorization or
     * for an external acquiring of oAuth2 tokens for OAuth2 authorization */
    private OauthTokenAccessor oauthTokenAccessor;
-   /** Optional. Set custom initial retry delay according to defensive multitenant limits policy
+   /** Optional. Set custom initial retry delay in seconds
     * If null - default 1 second delay will be used */
    private Integer retryBaseDelay;
-   /** Optional. Set custom maximum retry delay according to defensive multitenant limits policy
+   /** Optional. Set custom maximum retry delay in seconds
     * If null - default 32 seconds delay will be used */
    private Integer retryMaxDelay;
    //...
