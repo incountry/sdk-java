@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_BASE_DELAY;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_MAX_DELAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -32,7 +34,7 @@ public class OAuthTest {
     public void positiveAuthTest() throws StorageServerException, StorageClientException {
         StorageConfig config = CredentialsHelper.getConfigWithOauth();
         TokenClient client = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
-                config.getClientId(), config.getClientSecret(), HttpClients.createDefault(), 1, 32);
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         TokenClient tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(client, true);
         String endPoint = "https://" + CredentialsHelper.getMidPopCountry(true).toLowerCase() + config.getEndpointMask();
         assertNotNull(tokenClient.refreshToken(false, endPoint, null));
@@ -83,7 +85,7 @@ public class OAuthTest {
     void tokenAccessorTest() throws StorageClientException, StorageServerException, StorageCryptoException {
         StorageConfig config = CredentialsHelper.getConfigWithOauth();
         TokenClient tokenClient = new OAuthTokenClient(config.getDefaultAuthEndpoint(), null, config.getEnvironmentId(),
-                config.getClientId(), config.getClientSecret(), HttpClients.createDefault(), 1, 32);
+                config.getClientId(), config.getClientSecret(), HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         String audience = "https://" + COUNTRY.toLowerCase() + config.getEndpointMask();
         String oauthToken = tokenClient.refreshToken(false, audience, "emea");
 

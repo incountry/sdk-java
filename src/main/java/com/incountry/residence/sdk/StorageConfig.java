@@ -21,6 +21,10 @@ public class StorageConfig {
     private static final Logger LOG = LogManager.getLogger(StorageConfig.class);
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
 
+    public static final int DEFAULT_HTTP_TIMEOUT = 30;
+    public static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
+    public static final int DEFAULT_RETRY_BASE_DELAY = 1;
+    public static final int DEFAULT_RETRY_MAX_DELAY = 32;
 
     public static final String MSG_ERR_NULL_TOKEN = "OAuth2 token is null or empty";
     public static final String MSG_SECURE = "[SECURE[%s]]";
@@ -354,7 +358,7 @@ public class StorageConfig {
     }
 
     /**
-     * Optional. Set custom initial retry delay according to defensive multitenant limits policy
+     * Optional. Set custom initial retry delay in seconds
      * If null - default 1 second delay will be used
      *
      * @param retryBaseDelay initial delay in seconds
@@ -370,7 +374,7 @@ public class StorageConfig {
     }
 
     /**
-     * Optional. Set custom maximum retry delay according to defensive multitenant limits policy
+     * Optional. Set custom maximum retry delay in seconds
      * If null - default 32 seconds delay will be used
      *
      * @param retryMaxDelay maximum delay in seconds

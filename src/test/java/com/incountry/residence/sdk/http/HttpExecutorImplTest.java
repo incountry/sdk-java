@@ -36,6 +36,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.incountry.residence.sdk.LogLevelUtils.iterateLogLevel;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_BASE_DELAY;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_MAX_DELAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -53,7 +55,7 @@ class HttpExecutorImplTest {
 
     @Test
     void testWithIllegalUrl() {
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         RequestParameters params = new RequestParameters("GET", APPLICATION_JSON, null, null);
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 agent.request(null, "someBody", null, null, 0, params));
@@ -62,7 +64,7 @@ class HttpExecutorImplTest {
 
     @Test
     void testFakeEndpointException() {
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         String url = "https://" + UUID.randomUUID() + ".localhost";
         StorageServerException ex = assertThrows(StorageServerException.class, () -> agent.request(url,
                 "someBody", null, null, 0, new RequestParameters("GET")));
@@ -77,9 +79,9 @@ class HttpExecutorImplTest {
         server.start();
         HttpExecutor agent;
         if (repeatInfo.getCurrentRepetition() == 2) {
-            agent = new HttpExecutorImpl(TOKEN_CLIENT, null, HttpClients.createDefault(), 1, 32);
+            agent = new HttpExecutorImpl(TOKEN_CLIENT, null, HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         } else {
-            agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+            agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         }
         RequestParameters params = new RequestParameters("POST");
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, params).getContent());
@@ -96,7 +98,7 @@ class HttpExecutorImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT);
         server.start();
 
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         RequestParameters params = new RequestParameters("PATCH");
         assertNotNull(agent.request(ENDPOINT, "<body>", null, null, 0, params).getContent());
         server.stop(0);
@@ -109,7 +111,7 @@ class HttpExecutorImplTest {
         server.start();
 
         String postMethod = "POST";
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         RequestParameters params = new RequestParameters(postMethod, APPLICATION_JSON, genStream(), "file.txt");
         assertNotNull(agent.request(ENDPOINT, null, null, null, 0, params).getContent());
 
@@ -134,7 +136,7 @@ class HttpExecutorImplTest {
 
     @Test
     void negativeTestWithNullRequestParameters() {
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 agent.request(ENDPOINT, "<body>", null, null, 0, null));
         assertEquals("Request parameters can't be null", ex.getMessage());
@@ -146,7 +148,7 @@ class HttpExecutorImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT, "/attachments/file_id");
         server.start();
 
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         String url = "http://localhost:8769/attachments/file_id";
         RequestParameters params = new RequestParameters("GET");
         ApiResponse response = agent.request(url, "<body>", null, null, 0, params);
@@ -170,15 +172,15 @@ class HttpExecutorImplTest {
         FakeHttpServer server = new FakeHttpServer("{}", respCode, PORT, "/attachments/file_id/meta");
         server.start();
 
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         assertNotNull(agent.request("http://localhost:8769/attachments/file_id/meta", "<body>", null, null, 0, new RequestParameters("GET")).getContent());
-        agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         assertNotNull(agent.request("http://localhost:8769/attachments/file_id/meta", "<body>", null, null, 0, new RequestParameters("POST")).getContent());
         server.stop(0);
 
         server = new FakeHttpServer("{}", 405, PORT, "/attachments/file_id");
         server.start();
-        HttpExecutor agent1 = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent1 = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         ApiResponse response = agent1.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("POST"));
         assertEquals(405, response.getResponseCode());
         server.stop(0);
@@ -190,7 +192,7 @@ class HttpExecutorImplTest {
         FakeHttpServer server = new FakeHttpServer("", respCode, PORT, "/attachments/file_id");
         server.start();
 
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         ApiResponse response = agent.request("http://localhost:8769/attachments/file_id", "<body>", null, null, 0, new RequestParameters("DELETE"));
         assertNotNull(response);
         assertNull(response.getInputStream());
@@ -203,7 +205,7 @@ class HttpExecutorImplTest {
         int respCode = 404;
         FakeHttpServer server = new FakeHttpServer((String) null, respCode, PORT);
         server.start();
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         assertTrue(agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST")).getContent().isEmpty());
         server.stop(0);
     }
@@ -212,7 +214,7 @@ class HttpExecutorImplTest {
     void testRetry() throws IOException, StorageServerException, StorageClientException {
         FakeHttpServer server = new FakeHttpServer("{}", Arrays.asList(401, 200, 401), PORT);
         server.start();
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         assertEquals(200, agent.request(ENDPOINT, "<body>", null, null, 1, new RequestParameters("POST")).getResponseCode());
         assertEquals(401, agent.request(ENDPOINT, "<body>", null, null, 0, new RequestParameters("POST")).getResponseCode());
         server.stop(0);
@@ -220,7 +222,7 @@ class HttpExecutorImplTest {
 
     @Test
     void negativeTestWithIllegalUrl() {
-        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), 1, 32);
+        HttpExecutor agent = new HttpExecutorImpl(TOKEN_CLIENT, "envId", HttpClients.createDefault(), DEFAULT_RETRY_BASE_DELAY, DEFAULT_RETRY_MAX_DELAY);
         String url = " ";
         StorageClientException ex = assertThrows(StorageClientException.class, ()
                 -> agent.request(url, "someBody", null, null, 0, new RequestParameters("GET")));
