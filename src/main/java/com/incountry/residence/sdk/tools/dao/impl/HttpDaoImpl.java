@@ -191,10 +191,7 @@ public class HttpDaoImpl implements Dao {
         String body = gson.toJson(transferRecord);
         ApiResponse response = httpExecutor.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 201) {
-            if (containsWrittenResponse(response.getContent())) {
-                return gson.fromJson(response.getContent(), TransferRecord.class);
-            }
-            return null;
+            return containsWrittenResponse(response.getContent()) ? gson.fromJson(response.getContent(), TransferRecord.class) : null;
         }
         throw generateServerException(response, url, true);
     }
@@ -221,10 +218,7 @@ public class HttpDaoImpl implements Dao {
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
         ApiResponse response = httpExecutor.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 201) {
-            if (containsWrittenResponse(response.getContent())) {
-                return gson.fromJson(response.getContent(), TransferRecordList.class);
-            }
-            return null;
+            return containsWrittenResponse(response.getContent()) ? gson.fromJson(response.getContent(), TransferRecordList.class) : null;
         }
         throw generateServerException(response, url, true);
     }
