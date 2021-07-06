@@ -281,7 +281,15 @@ public class StorageImpl implements Storage {
             checkCountryAndRecordKey(country, currentRecord.getRecordKey());
         }
         TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
-        return transferRecordList == null ? records : transformer.getRecordList(transferRecordList);
+        if (transferRecordList == null) {
+            return records;
+        }
+        List<Record> recordedList = transformer.getRecordList(transferRecordList);
+        for (Record oneRecord : recordedList) {
+            boolean valid = oneRecord.equals(recordedList.stream().filter(two -> oneRecord.getRecordKey().equals(two.getRecordKey())).findFirst().orElse(null));
+            HELPER.check(StorageServerException.class, !valid, MSG_ERR_RESPONSE);
+        }
+        return recordedList;
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
