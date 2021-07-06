@@ -2,7 +2,6 @@ package com.incountry.residence.sdk.tools.http.impl;
 
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
-import com.incountry.residence.sdk.version.Version;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -35,9 +34,6 @@ public abstract class ThrottlingRequestExecutor {
     private static final String MSG_ERR_NULL_BODY = "HTTP request body can't be null";
     private static final String MSG_WARN_TOO_MANY_REQUESTS = "Storage server error: too many requests. Will retry in {} ms";
 
-    private static final String USER_AGENT = "User-Agent";
-    private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
-
     private static final String POST = "POST";
     private static final String GET = "GET";
     private static final String PATCH = "PATCH";
@@ -63,7 +59,6 @@ public abstract class ThrottlingRequestExecutor {
         } else {
             request = createSimpleRequest(url, method, body);
         }
-        request.addHeader(USER_AGENT, USER_AGENT_VALUE);
         return request;
     }
 

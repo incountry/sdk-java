@@ -25,16 +25,19 @@ import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
+import com.incountry.residence.sdk.version.Version;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeader;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 
 import static com.incountry.residence.sdk.StorageConfig.DEFAULT_HTTP_TIMEOUT;
@@ -73,6 +76,8 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
     private static final String MSG_ERR_BASE_DELAY = "Retry base delay can't be < 1";
     private static final String MSG_ERR_MAX_DELAY = "Retry max delay can't be less then retry base delay";
+    private static final String USER_AGENT_HEADER_NAME = "User-Agent";
+    private static final String USER_AGENT_HEADER_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
 
     private final Dao dao;
     private final HashUtils hashUtils;
@@ -141,14 +146,16 @@ public class StorageImpl implements Storage {
                 .setConnectTimeout(httpTimeout)
                 .setSocketTimeout(httpTimeout)
                 .build();
-        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
         if (poolSize == null) {
             poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
         }
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(poolSize);
         connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
-        builder.setConnectionManager(connectionManager);
+        HttpClientBuilder builder = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setConnectionManager(connectionManager)
+                .setDefaultHeaders(Collections.singleton(new BasicHeader(USER_AGENT_HEADER_NAME, USER_AGENT_HEADER_VALUE)));
         return builder.build();
     }
 
