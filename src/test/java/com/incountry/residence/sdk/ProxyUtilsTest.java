@@ -3,7 +3,7 @@ package com.incountry.residence.sdk;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
-import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.http.HttpExecutor;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ProxyUtilsTest {
 
-    static class FakeHttpAgent implements HttpAgent {
+    static class FakeHttpExecutor implements HttpExecutor {
         @Override
         public ApiResponse request(String url, String body, String audience, String region, int retryCount, RequestParameters requestParameters) {
             doNothing();
@@ -24,7 +24,7 @@ class ProxyUtilsTest {
 
     @Test
     void testProxyException() {
-        HttpAgent agent = ProxyUtils.createLoggingProxyForPublicMethods(new FakeHttpAgent(), false);
+        HttpExecutor agent = ProxyUtils.createLoggingProxyForPublicMethods(new FakeHttpExecutor(), false);
         assertThrows(StorageClientException.class, () -> agent.request(null, null, null, null, 0, null));
     }
 }

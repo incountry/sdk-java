@@ -6,7 +6,6 @@ import com.google.gson.JsonSyntaxException;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.version.Version;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -14,7 +13,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
@@ -22,8 +20,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuthTokenClient extends AbstractHttpRequestCreator implements TokenClient {
-
+public class OAuthTokenClient extends ThrottlingRequestExecutor implements TokenClient {
     private static final Logger LOG = LogManager.getLogger(OAuthTokenClient.class);
     private static final String MSG_REFRESH_TOKEN = "refreshToken force={}, audience={}";
     private static final String MSG_AUTH_URL = "auth URL={}";
@@ -43,8 +40,6 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
     private static final String MSG_ERR_PARAMS = "Can't use param 'authEndpoints' without setting 'defaultAuthEndpoint'";
     private static final String MSG_ERR_ILLEGAL_AUTH_ENDPOINTS = "Parameter 'authEndpoints' contains null keys/values";
 
-    private static final String USER_AGENT = "User-Agent";
-    private static final String USER_AGENT_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
     private static final String BODY = "grant_type=client_credentials&audience=%s&scope=%s";
     private static final String BEARER_TOKEN_TYPE = "bearer";
     private static final String BASIC = "Basic ";
@@ -59,10 +54,11 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
     private final Map<String, Map.Entry<String, Long>> tokenMap = new HashMap<>();
     private final Map<String, String> regionMap = new HashMap<>();
     private final String defaultAuthEndpoint;
-    private final CloseableHttpClient httpClient;
 
+    @SuppressWarnings("java:S107")
     public OAuthTokenClient(String defaultAuthEndpoint, Map<String, String> authEndpointMap, String scope, String clientId,
-                            String secret, CloseableHttpClient httpClient) throws StorageClientException {
+                            String secret, CloseableHttpClient httpClient, int retryBaseDelay, int retryMaxDelay) throws StorageClientException {
+        super(httpClient, retryBaseDelay, retryMaxDelay);
         if (authEndpointMap != null && !authEndpointMap.isEmpty()) {
             if (isEmpty(defaultAuthEndpoint)) {
                 throw new StorageClientException(MSG_ERR_PARAMS);
@@ -73,7 +69,6 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
         }
         this.scope = scope;
         this.basicAuthToken = BASIC + getCredentialsBase64(clientId, secret);
-        this.httpClient = httpClient;
         this.defaultAuthEndpoint = defaultAuthEndpoint != null ? defaultAuthEndpoint : DEFAULT_EMEA_AUTH_URL;
 
         if (authEndpointMap == null || authEndpointMap.isEmpty()) {
@@ -105,14 +100,12 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
     private HttpRequestBase addHeaders(HttpRequestBase request) {
         request.addHeader(AUTHORIZATION, basicAuthToken);
         request.addHeader(CONTENT_TYPE, APPLICATION_URLENCODED);
-        request.addHeader(USER_AGENT, USER_AGENT_VALUE);
         return request;
     }
 
+    @SuppressWarnings("java:S2142")
     private Map.Entry<String, Long> newToken(String audience, String region) throws StorageServerException {
-        String body = String.format(BODY, audience, scope);
         String authUrl = null;
-        CloseableHttpResponse response = null;
         try {
             authUrl = regionMap.get(region);
             if (authUrl == null) {
@@ -122,33 +115,25 @@ public class OAuthTokenClient extends AbstractHttpRequestCreator implements Toke
             if (LOG.isTraceEnabled()) {
                 LOG.trace(MSG_AUTH_URL, authUrl);
             }
-
+            String body = String.format(BODY, audience, scope);
             HttpRequestBase request = createRequest(authUrl, POST, body, null);
             addHeaders(request);
-            response = httpClient.execute(request);
+            try (CloseableHttpResponse response = executeWithDelay(request)) {
+                int status = response.getStatusLine().getStatusCode();
+                String responseContent = EntityUtils.toString(response.getEntity());
+                boolean isSuccess = status == 200;
 
-            int status = response.getStatusLine().getStatusCode();
-            String responseContent = EntityUtils.toString(response.getEntity());
-            boolean isSuccess = status == 200;
-
-            if (!isSuccess) {
-                throw createAndLogException(String.format(MSG_RESPONSE_ERR, responseContent));
+                if (!isSuccess) {
+                    throw createAndLogException(String.format(MSG_RESPONSE_ERR, responseContent));
+                }
+                return validateAndGet(responseContent);
             }
-            return validateAndGet(responseContent);
         } catch (StorageServerException ex) {
             throw ex;
         } catch (Exception ex) {
             String errorMessage = String.format(MSG_ERR_AUTH, authUrl, audience);
             LOG.error(errorMessage);
             throw new StorageServerException(errorMessage, ex);
-        } finally {
-            if (response != null) {
-                try {
-                    response.close();
-                } catch (IOException e) {
-                    LOG.warn(e);
-                }
-            }
         }
     }
 

@@ -5,9 +5,8 @@ import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
 import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
-import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.http.HttpExecutor;
 import com.incountry.residence.sdk.tools.http.TokenClient;
-import com.incountry.residence.sdk.version.Version;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -27,19 +25,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAgent {
+public class HttpExecutorImpl extends ThrottlingRequestExecutor implements HttpExecutor {
 
-    private static final Logger LOG = LogManager.getLogger(HttpAgentImpl.class);
+    private static final Logger LOG = LogManager.getLogger(HttpExecutorImpl.class);
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
 
     private static final String MSG_SERVER_ERROR = "Server request error: [URL=%s, method=%s]";
     private static final String MSG_URL_NULL_ERR = "URL can't be null";
     private static final String MSG_REQ_PARAMS_NULL_ERR = "Request parameters can't be null";
+
     private static final String BEARER = "Bearer ";
     private static final String AUTHORIZATION = "Authorization";
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String ENV_ID = "x-env-id";
-    private static final String USER_AGENT = "User-Agent";
     private static final String ATTACHMENTS = "attachments";
     private static final String META = "meta";
     private static final String METHOD_GET = "GET";
@@ -47,22 +45,22 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
 
     private final TokenClient tokenClient;
     private final String environmentId;
-    private final String userAgent;
-    private final CloseableHttpClient httpClient;
 
 
-    public HttpAgentImpl(TokenClient tokenClient, String environmentId, CloseableHttpClient httpClient) {
+    public HttpExecutorImpl(TokenClient tokenClient, String environmentId, CloseableHttpClient httpClient, int retryBaseDelay, int retryMaxDelay) {
+        super(httpClient, retryBaseDelay, retryMaxDelay);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HttpAgentImpl constructor params (tokenClient={} , environmentId={})",
+            LOG.debug("HttpAgentImpl constructor params (tokenClient={}, environmentId={}, retryBaseDelay={}, retryMaxDelay={})",
                     tokenClient,
-                    environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null);
+                    environmentId != null ? "[SECURE[" + environmentId.hashCode() + "]]" : null,
+                    retryBaseDelay,
+                    retryMaxDelay);
         }
         this.tokenClient = tokenClient;
         this.environmentId = environmentId;
-        this.userAgent = "SDK-Java/" + Version.BUILD_VERSION;
-        this.httpClient = httpClient;
     }
 
+    @SuppressWarnings("java:S2142")
     @Override
     public ApiResponse request(String url, String body, String audience, String region, int retryCount,
                                RequestParameters requestParameters) throws StorageServerException, StorageClientException {
@@ -72,7 +70,7 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
         try {
             HttpRequestBase request = createRequest(url, method, body, requestParameters);
             addHeaders(request, audience, region, requestParameters.getContentType(), requestParameters.getDataStream() != null);
-            try (CloseableHttpResponse response = httpClient.execute(request)) {
+            try (CloseableHttpResponse response = executeWithDelay(request)) {
                 int statusCode = response.getStatusLine().getStatusCode();
                 HttpEntity responseEntity = response.getEntity();
                 String fileName = null;
@@ -92,7 +90,9 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
                 }
                 return new ApiResponse(stringContent, statusCode, fileName, inputStream);
             }
-        } catch (IOException ex) {
+        } catch (StorageServerException | StorageClientException ex) {
+            throw ex;
+        } catch (Exception ex) {
             String errorMessage = String.format(MSG_SERVER_ERROR, url, method);
             LOG.error(errorMessage, ex);
             throw new StorageServerException(errorMessage, ex);
@@ -123,7 +123,6 @@ public class HttpAgentImpl extends AbstractHttpRequestCreator implements HttpAge
             request.addHeader(CONTENT_TYPE, contentType);
         }
         request.addHeader(ENV_ID, environmentId);
-        request.addHeader(USER_AGENT, userAgent);
     }
 
     private boolean canRetry(int statusCode, int retryCount) {
