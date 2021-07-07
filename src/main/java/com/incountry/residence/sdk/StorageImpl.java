@@ -241,13 +241,13 @@ public class StorageImpl implements Storage {
     public Record write(String country, Record newRecord) throws StorageClientException, StorageServerException, StorageCryptoException {
         HELPER.check(StorageClientException.class, newRecord == null, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, newRecord.getRecordKey());
-        TransferRecord recordedTransferRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
-        if (recordedTransferRecord == null) {
+        TransferRecord receivedTransferRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
+        if (receivedTransferRecord == null) {
             return newRecord;
         }
-        Record recorderRecord = transformer.getRecord(recordedTransferRecord);
-        HELPER.check(StorageServerException.class, !newRecord.equals(recorderRecord), MSG_ERR_RESPONSE);
-        return recorderRecord;
+        Record receivedRecord = transformer.getRecord(receivedTransferRecord);
+        HELPER.check(StorageServerException.class, !newRecord.equals(receivedRecord), MSG_ERR_RESPONSE);
+        return receivedRecord;
     }
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
@@ -280,16 +280,16 @@ public class StorageImpl implements Storage {
             HELPER.check(StorageClientException.class, currentRecord == null, MSG_ERR_NULL_RECORD);
             checkCountryAndRecordKey(country, currentRecord.getRecordKey());
         }
-        TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
-        if (transferRecordList == null) {
+        TransferRecordList receivedTransferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
+        if (receivedTransferRecordList == null) {
             return records;
         }
-        List<Record> recordedList = transformer.getRecordList(transferRecordList);
+        List<Record> receivedList = transformer.getRecordList(receivedTransferRecordList);
         for (Record oneRecord : records) {
-            boolean valid = oneRecord.equals(recordedList.stream().filter(two -> oneRecord.getRecordKey().equals(two.getRecordKey())).findFirst().orElse(null));
+            boolean valid = oneRecord.equals(receivedList.stream().filter(two -> oneRecord.getRecordKey().equals(two.getRecordKey())).findFirst().orElse(null));
             HELPER.check(StorageServerException.class, !valid, MSG_ERR_RESPONSE);
         }
-        return recordedList;
+        return receivedList;
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
