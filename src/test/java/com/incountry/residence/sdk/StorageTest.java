@@ -111,7 +111,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setOauthToken("token");
-        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), dtoTransformer) + "]}";
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(record, dtoTransformer) + "]}";
         Storage storage = StorageImpl.getInstance(config,
                 new HttpDaoImpl(FAKE_ENDPOINT, null, null,
                         new FakeHttpExecutor(Arrays.asList(
@@ -256,7 +256,7 @@ class StorageTest {
                 .setKey2(KEY_2)
                 .setKey3(KEY_3);
         String encryptedJsonRecord = gson.toJson(dtoTransformer.getTransferRecord(record));
-        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonRecord), 201, PORT);
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonRecord, encryptedJsonRecord), 201, PORT);
         server.start();
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
@@ -270,6 +270,10 @@ class StorageTest {
         assertEquals(record, storage.write(COUNTRY, record));
         //response with recorded record
         assertEquals(record, storage.write(COUNTRY, record));
+        //response mismatch
+        record.setRecordKey(UUID.randomUUID().toString());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record));
+        assertEquals("Response validation failed. Return data doesn't match the one sent", ex.getMessage());
         server.stop(0);
     }
 
@@ -282,7 +286,7 @@ class StorageTest {
                 .setKey3(KEY_3);
         String encryptedJsonBatch = gson.toJson(
                 new TransferRecordList(dtoTransformer.getTransferRecordList(Collections.singletonList(record))));
-        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonBatch), 201, PORT);
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonBatch, encryptedJsonBatch), 201, PORT);
         server.start();
         StorageConfig config = new StorageConfig()
                 .setEnvironmentId(ENVIRONMENT_ID)
@@ -296,6 +300,10 @@ class StorageTest {
         assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
         //response with recorded batch
         assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        //response mismatch
+        record.setRecordKey(UUID.randomUUID().toString());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.batchWrite(COUNTRY, Collections.singletonList(record)));
+        assertEquals("Response validation failed. Return data doesn't match the one sent", ex.getMessage());
         server.stop(0);
     }
 

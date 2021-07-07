@@ -236,7 +236,7 @@ class HttpDaoImplTests {
                 .setKey2(key2)
                 .setKey3(key3);
         records.add(record);
-        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), transformer) + "]}";
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(record, transformer) + "]}";
         agent.setResponse(batchRecordResponse);
         storage.batchWrite(country, records);
 

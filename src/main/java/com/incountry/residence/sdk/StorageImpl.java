@@ -285,7 +285,7 @@ public class StorageImpl implements Storage {
             return records;
         }
         List<Record> recordedList = transformer.getRecordList(transferRecordList);
-        for (Record oneRecord : recordedList) {
+        for (Record oneRecord : records) {
             boolean valid = oneRecord.equals(recordedList.stream().filter(two -> oneRecord.getRecordKey().equals(two.getRecordKey())).findFirst().orElse(null));
             HELPER.check(StorageServerException.class, !valid, MSG_ERR_RESPONSE);
         }
