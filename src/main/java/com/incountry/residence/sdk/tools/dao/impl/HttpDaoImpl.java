@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 
 public class HttpDaoImpl implements Dao {
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
@@ -197,7 +199,7 @@ public class HttpDaoImpl implements Dao {
     }
 
     private boolean containsWrittenResponse(String content) {
-        return content != null && content.contains("record_key");
+        return !isNullOrEmpty(content) && content.contains("record_key");
     }
 
     private StorageServerException generateServerException(ApiResponse response, String url, boolean logError) {
