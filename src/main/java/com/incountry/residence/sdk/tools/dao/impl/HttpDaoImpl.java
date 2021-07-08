@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
+
 
 public class HttpDaoImpl implements Dao {
     private static final Logger LOG = LogManager.getLogger(HttpDaoImpl.class);
@@ -191,9 +193,13 @@ public class HttpDaoImpl implements Dao {
         String body = gson.toJson(transferRecord);
         ApiResponse response = httpExecutor.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 201) {
-            return gson.fromJson(body, TransferRecord.class);
+            return containsWrittenResponse(response.getContent()) ? gson.fromJson(response.getContent(), TransferRecord.class) : null;
         }
         throw generateServerException(response, url, true);
+    }
+
+    private boolean containsWrittenResponse(String content) {
+        return !isNullOrEmpty(content) && content.contains("record_key");
     }
 
     private StorageServerException generateServerException(ApiResponse response, String url, boolean logError) {
@@ -214,7 +220,7 @@ public class HttpDaoImpl implements Dao {
         String url = getRecordActionUrl(endPoint.mainUrl, lowerCountry, URI_BATCH_WRITE);
         ApiResponse response = httpExecutor.request(url, body, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 201) {
-            return gson.fromJson(body, TransferRecordList.class);
+            return containsWrittenResponse(response.getContent()) ? gson.fromJson(response.getContent(), TransferRecordList.class) : null;
         }
         throw generateServerException(response, url, true);
     }

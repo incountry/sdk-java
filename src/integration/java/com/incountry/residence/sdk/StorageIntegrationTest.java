@@ -806,18 +806,17 @@ public class StorageIntegrationTest {
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
-        String country = CredentialsHelper.getMidPopCountry(false);
-        storageNonHashing.write(country, newRecord);
+        storageNonHashing.write(COUNTRY, newRecord);
 
         FindFilter filter = new FindFilter()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        FindResult findResult = storageNonHashing.find(country, filter);
+        FindResult findResult = storageNonHashing.find(COUNTRY, filter);
 
         assertEquals(1, findResult.getCount());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
 
-        storageNonHashing.delete(country, recordKey);
+        storageNonHashing.delete(COUNTRY, recordKey);
     }
 
     @Test

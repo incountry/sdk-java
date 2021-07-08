@@ -76,6 +76,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
     private static final String MSG_ERR_BASE_DELAY = "Retry base delay can't be < 1";
     private static final String MSG_ERR_MAX_DELAY = "Retry max delay can't be less then retry base delay";
+    private static final String MSG_ERR_RESPONSE = "Response validation failed. Return data doesn't match the one sent";
     private static final String USER_AGENT_HEADER_NAME = "User-Agent";
     private static final String USER_AGENT_HEADER_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
 
@@ -240,8 +241,13 @@ public class StorageImpl implements Storage {
     public Record write(String country, Record newRecord) throws StorageClientException, StorageServerException, StorageCryptoException {
         HELPER.check(StorageClientException.class, newRecord == null, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, newRecord.getRecordKey());
-        TransferRecord recordedRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
-        return transformer.getRecord(recordedRecord);
+        TransferRecord receivedTransferRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
+        if (receivedTransferRecord == null) {
+            return newRecord;
+        }
+        Record receivedRecord = transformer.getRecord(receivedTransferRecord);
+        HELPER.check(StorageServerException.class, !newRecord.equals(receivedRecord), MSG_ERR_RESPONSE);
+        return receivedRecord;
     }
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
@@ -274,8 +280,16 @@ public class StorageImpl implements Storage {
             HELPER.check(StorageClientException.class, currentRecord == null, MSG_ERR_NULL_RECORD);
             checkCountryAndRecordKey(country, currentRecord.getRecordKey());
         }
-        TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
-        return transformer.getRecordList(transferRecordList);
+        TransferRecordList receivedTransferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
+        if (receivedTransferRecordList == null) {
+            return records;
+        }
+        List<Record> receivedList = transformer.getRecordList(receivedTransferRecordList);
+        for (Record oneRecord : records) {
+            boolean valid = oneRecord.equals(receivedList.stream().filter(two -> oneRecord.getRecordKey().equals(two.getRecordKey())).findFirst().orElse(null));
+            HELPER.check(StorageServerException.class, !valid, MSG_ERR_RESPONSE);
+        }
+        return receivedList;
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {

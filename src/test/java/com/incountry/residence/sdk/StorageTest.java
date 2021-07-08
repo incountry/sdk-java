@@ -29,6 +29,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
+import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
@@ -110,7 +111,7 @@ class StorageTest {
                 .setEnvironmentId(ENVIRONMENT_ID)
                 .setSecretKeyAccessor(secretKeyAccessor)
                 .setOauthToken("token");
-        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), dtoTransformer) + "]}";
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(record, dtoTransformer) + "]}";
         Storage storage = StorageImpl.getInstance(config,
                 new HttpDaoImpl(FAKE_ENDPOINT, null, null,
                         new FakeHttpExecutor(Arrays.asList(
@@ -245,6 +246,65 @@ class StorageTest {
                 .setKey3(KEY_3);
         StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record));
         assertEquals("Code=404, url=[https://custom.endpoint.io/v2/storage/records/us], content=[not found]", ex.getMessage());
+    }
+
+    @Test
+    void writeWithAndWithoutResponses() throws StorageException, IOException {
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encryptedJsonRecord = gson.toJson(dtoTransformer.getTransferRecord(record));
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonRecord, encryptedJsonRecord), 201, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setEndPoint("http://localhost:" + PORT)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config);
+        //empty response
+        assertEquals(record, storage.write(COUNTRY, record));
+        //not JSON response
+        assertEquals(record, storage.write(COUNTRY, record));
+        //response with recorded record
+        assertEquals(record, storage.write(COUNTRY, record));
+        //response mismatch
+        record.setRecordKey(UUID.randomUUID().toString());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.write(COUNTRY, record));
+        assertEquals("Response validation failed. Return data doesn't match the one sent", ex.getMessage());
+        server.stop(0);
+    }
+
+    @Test
+    void batchWriteWithAndWithoutResponses() throws StorageException, IOException {
+        Record record = new Record(RECORD_KEY, BODY)
+                .setProfileKey(PROFILE_KEY)
+                .setRangeKey1(RANGE_KEY_1)
+                .setKey2(KEY_2)
+                .setKey3(KEY_3);
+        String encryptedJsonBatch = gson.toJson(
+                new TransferRecordList(dtoTransformer.getTransferRecordList(Collections.singletonList(record))));
+        FakeHttpServer server = new FakeHttpServer(Arrays.asList(null, "OK", encryptedJsonBatch, encryptedJsonBatch), 201, PORT);
+        server.start();
+        StorageConfig config = new StorageConfig()
+                .setEnvironmentId(ENVIRONMENT_ID)
+                .setSecretKeyAccessor(secretKeyAccessor)
+                .setEndPoint("http://localhost:" + PORT)
+                .setOauthToken("token");
+        Storage storage = StorageImpl.getInstance(config);
+        //empty response
+        assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        //not JSON response
+        assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        //response with recorded batch
+        assertEquals(record, storage.batchWrite(COUNTRY, Collections.singletonList(record)).get(0));
+        //response mismatch
+        record.setRecordKey(UUID.randomUUID().toString());
+        StorageServerException ex = assertThrows(StorageServerException.class, () -> storage.batchWrite(COUNTRY, Collections.singletonList(record)));
+        assertEquals("Response validation failed. Return data doesn't match the one sent", ex.getMessage());
+        server.stop(0);
     }
 
     @Test

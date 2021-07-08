@@ -23,8 +23,9 @@ Table of contents
     * [Batches](#batches)
     * [Reading stored data](#reading-stored-data)
     * [Find records](#find-records)
-        * [Fields that records can be sorted by](#fields-that-records-can-be-sorted-by)
+        * [Exact match search](#exact-match-search)
         * [Partial text match search](#partial-text-match-search)
+        * [Sorting](#sorting)
     * [Find one record](#find-one-record)
     * [Delete records](#delete-records)
 * [Attaching files to a record](#attaching-files-to-a-record)
@@ -484,8 +485,9 @@ String decryptedBody = record.getBody();
  ```
 
 ### Find records
+You can look up for data records either by using exact match search operators or partial text match operator in almost
+any combinations. It is possible to search by random keys using `find` method.
 
-It is possible to search by random keys using `find` method.
 ```java
 public interface Storage {
    /**
@@ -506,6 +508,7 @@ public interface Storage {
 
 Use `FindFilter` class to refine your find request.
 
+##### Exact match search
 Below is the example how to use `find` method along with `FindFilter`:
 ```java
 FindFilter filter = new FindFilter()
@@ -535,6 +538,78 @@ FindFilter filter = new FindFilter()
 FindResult findResult = storage.find("us", filter);
 ```
 
+Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilter`:
+```java
+EQUALS              (FindFilter::keyEq)
+NOT_EQUALS          (FindFilter::keyNotEq)
+IS_NULL             (FindFilter::keyIsNull)
+IS_NOT_NULL         (FindFilter::keyIsNotNull)
+```
+
+You can use the following methods for filtering by numerical fields:
+```java
+EQUALS              (FindFilter::keyEq)
+NOT_EQUALS          (FindFilter::keyNotEq)
+IS_NULL             (FindFilter::keyIsNull)
+IS_NOT_NULL         (FindFilter::keyIsNotNull)
+GREATER             (FindFilter::keyGreater)
+LESS                (FindFilter::keyLess)
+BETWEEN             (FindFilter::keyBetween)
+```
+
+You can use the following methods for filtering by date fields:
+```java
+EQUALS              (FindFilter::keyEq)
+IS_NULL             (FindFilter::keyIsNull)
+IS_NOT_NULL         (FindFilter::keyIsNotNull)
+```
+
+Method `find` returns `FindResult` object which contains a list of `Record` and some metadata:
+```java
+class FindResult {
+    private int count;
+    private int limit;
+    private int offset;
+    private int total;
+    private List<Record> records;
+    //...
+}
+```
+
+These fields can be accessed using getters, for example:
+
+```java
+int total = findResult.getTotal();
+```
+
+`FindResult.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
+
+#### Partial text match search
+You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., key20`.
+```java
+// Matches all records where 
+// Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc");
+```
+
+**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
+```java
+// Matches all records where 
+// (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc') 
+// AND (Record.rangeKey1 = 1 OR Record.rangeKey1 = 2)
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc")
+    .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
+
+// Causes validation error (StorageClientException)
+FindFilter filter = new FindFilter()
+    .searchKeysLike("abc")
+    .keyEq(StringField.KEY1, "def");
+```
+
+#### Sorting
+
 ---
 **NOTE**
 
@@ -542,9 +617,9 @@ Sorting find results is currently available for InCountry dedicated instances on
 
 ---
 
-By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilterBuilder` .
+By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilter`.
 ```java
-FindFilter builder = new FindFilter()
+FindFilter filter = new FindFilter()
                   //...
                   .sortBy(SortField.CREATED_AT, SortOrder.ASC)
                   .sortBy(SortField.RANGE_KEY1, SortOrder.DESC)
@@ -555,7 +630,7 @@ The request will return records, sorted according to the following pseudo-sql
 SELECT * FROM record WHERE ...  ORDER BY created_at asc, range_key1 desc
 ```
 
-#### Fields that records can be sorted by
+Fields that records can be sorted by:
 ```java
 public enum SortField {
    KEY1,
@@ -592,77 +667,6 @@ public enum SortField {
    UPDATED_AT,
    EXPIRES_AT
 }
-```
-
-Next predicate types are available for each string key field of class `Record` via individual methods of `FindFilterBuilder`:
-```java
-EQUALS              (FindFilter::keyEq)
-NOT_EQUALS          (FindFilter::keyNotEq)
-IS_NULL             (FindFilter::keyIsNull)
-IS_NOT_NULL         (FindFilter::keyIsNotNull)
-```
-
-You can use the following builder methods for filtering by numerical fields:
-```java
-EQUALS              (FindFilter::keyEq)
-NOT_EQUALS          (FindFilter::keyNotEq)
-IS_NULL             (FindFilter::keyIsNull)
-IS_NOT_NULL         (FindFilter::keyIsNotNull)
-GREATER             (FindFilter::keyGreater)
-LESS                (FindFilter::keyLess)
-BETWEEN             (FindFilter::keyBetween)
-```
-
-You can use the following builder methods for filtering by date fields:
-```java
-EQUALS              (FindFilter::keyEq)
-IS_NULL             (FindFilter::keyIsNull)
-IS_NOT_NULL         (FindFilter::keyIsNotNull)
-```
-
-Method `find` returns `FindResult` object which contains a list of `Record` and some metadata:
-```java
-class FindResult {
-    private int count;
-    private int limit;
-    private int offset;
-    private int total;
-    private List<Record> records;
-    //...
-}
-```
-
-These fields can be accessed using getters, for example:
-
-```java
-int total = findResult.getTotal();
-```
-
-`FindResult.getErrors()` allows you to get a List of `RecordException` objects which contains detailed information about records that failed to be processed correctly during `find` request.
-
-#### Partial text match search
-
-You can also look up for data records by partial match using the `searchKeysLike` method of `FindFilter` which performs partial match search (similar to the `LIKE` SQL operator, without special characters) within records text fields `key1, key2, ..., key20`.
-```java
-// Matches all records where 
-// Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc'
-FindFilter filter = new FindFilter()
-    .searchKeysLike("abc");
-```
-
-**Please note:** The `searchKeys` filter cannot be used in combination with any of `key1, key2, ..., key20` filters and works only in combination with the non-hashing Storage mode (`hashSearchKeys` param at `StorageConfig`).
-```java
-// Matches all records where 
-// (Record.key1 LIKE 'abc' OR Record.key2 LIKE 'abc' OR ... OR Record.key20 LIKE 'abc') 
-// AND (Record.rangeKey1 = 1 OR Record.rangeKey1 = 2)
-FindFilter filter = new FindFilter()
-    .searchKeysLike("abc")
-    .keyEq(NumberField.RANGE_KEY1, 1L, 2L);
-
-// Causes validation error (StorageClientException)
-FindFilter filter = new FindFilter()
-    .searchKeysLike("abc")
-    .keyEq(StringField.KEY1, "def");
 ```
 
 ### Find one record
