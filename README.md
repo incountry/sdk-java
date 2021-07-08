@@ -617,7 +617,7 @@ Sorting find results is currently available for InCountry dedicated instances on
 
 ---
 
-By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilter` .
+By default, data at a find result is not sorted. To sort the returned records by one or multiple keys use method `sortBy` of `FindFilter`.
 ```java
 FindFilter filter = new FindFilter()
                   //...
