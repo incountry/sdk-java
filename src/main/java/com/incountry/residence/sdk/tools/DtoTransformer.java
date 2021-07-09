@@ -10,7 +10,7 @@ import com.incountry.residence.sdk.dto.search.DateField;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
 import com.incountry.residence.sdk.dto.search.StringField;
-import com.incountry.residence.sdk.dto.search.internal.Filter;
+import com.incountry.residence.sdk.dto.search.internal.AbstractFilter;
 import com.incountry.residence.sdk.dto.search.internal.SortingParam;
 import com.incountry.residence.sdk.dto.search.internal.StringFilter;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
@@ -304,12 +304,12 @@ public class DtoTransformer {
             return new TransferFilterContainer(new HashMap<>(), FindFilter.MAX_LIMIT, FindFilter.DEFAULT_OFFSET, new ArrayList<>());
         }
         Map<String, Object> transformedFilters = new HashMap<>();
-        for (Map.Entry<NumberField, Filter> entry : filter.getNumberFilters().entrySet()) {
+        for (Map.Entry<NumberField, AbstractFilter> entry : filter.getNumberFilters().entrySet()) {
             transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
         }
 
-        for (Map.Entry<StringField, Filter> entry : filter.getStringFilters().entrySet()) {
-            Filter oneFilter = entry.getValue();
+        for (Map.Entry<StringField, AbstractFilter> entry : filter.getStringFilters().entrySet()) {
+            AbstractFilter oneFilter = entry.getValue();
             if (oneFilter instanceof StringFilter) {
                 StringFilter stringFilter = (StringFilter) oneFilter;
                 boolean needHash = hashSearchKeys || !FindFilter.nonHashedKeysListContains(entry.getKey());
@@ -323,7 +323,7 @@ public class DtoTransformer {
                 transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
             }
         }
-        for (Map.Entry<DateField, Filter> entry : filter.getDateFilters().entrySet()) {
+        for (Map.Entry<DateField, AbstractFilter> entry : filter.getDateFilters().entrySet()) {
             transformedFilters.put(entry.getKey().toString().toLowerCase(), entry.getValue().toTransferObject());
         }
         if (filter.getSearchKeys() != null) {
