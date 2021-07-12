@@ -17,6 +17,7 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -77,7 +78,8 @@ class FindFilterTest {
     void dateFiltersPositive() throws StorageClientException {
         Calendar calendar = Calendar.getInstance();
         calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
-        FindFilter filter = new FindFilter().keyEq(DateField.EXPIRES_AT, calendar.getTime());
+        Date date = calendar.getTime();
+        FindFilter filter = new FindFilter().keyEq(DateField.EXPIRES_AT, date);
         DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"expires_at\":\"1970-01-01T00:00:00\"},\"options\":{\"offset\":0,\"limit\":100}}",
@@ -86,9 +88,46 @@ class FindFilterTest {
         filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"expires_at\":null},\"options\":{\"offset\":0,\"limit\":100}}",
                 filterJson);
+
+        filter.clear().keyNotEq(DateField.EXPIRES_AT, date);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"expires_at\":{\"$not\":\"1970-01-01T00:00:00\"}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+
         filter.clear().keyIsNotNull(DateField.EXPIRES_AT);
         filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"expires_at\":{\"$not\":null}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+
+        filter = filter.clear().keyLess(DateField.CREATED_AT, date)
+                .keyLess(DateField.UPDATED_AT, date, true);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"updated_at\":{\"$lte\":\"1970-01-01T00:00:00\"}," +
+                        "\"created_at\":{\"$lt\":\"1970-01-01T00:00:00\"}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+
+        filter = filter.clear().keyGreater(DateField.CREATED_AT, date)
+                .keyGreater(DateField.UPDATED_AT, date, true);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"updated_at\":{\"$gte\":\"1970-01-01T00:00:00\"}," +
+                        "\"created_at\":{\"$gt\":\"1970-01-01T00:00:00\"}},\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+        calendar.set(2020, Calendar.JANUARY, 1, 0, 0, 0);
+        Date date2 = calendar.getTime();
+        filter = filter.clear().keyBetween(DateField.CREATED_AT, date, date2)
+                .keyBetween(DateField.UPDATED_AT, date, false, date2, false);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"updated_at\":{\"$gt\":\"1970-01-01T00:00:00\",\"$lt\":\"2020-01-01T00:00:00\"}," +
+                        "\"created_at\":{\"$gte\":\"1970-01-01T00:00:00\",\"$lte\":\"2020-01-01T00:00:00\"}}," +
+                        "\"options\":{\"offset\":0,\"limit\":100}}",
+                filterJson);
+
+        filter = filter.clear().keyBetween(DateField.CREATED_AT, date, true, date2, false)
+                .keyBetween(DateField.UPDATED_AT, date, false, date2, true);
+        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        assertEquals("{\"filter\":{\"updated_at\":{\"$gt\":\"1970-01-01T00:00:00\",\"$lte\":\"2020-01-01T00:00:00\"}," +
+                        "\"created_at\":{\"$gte\":\"1970-01-01T00:00:00\",\"$lt\":\"2020-01-01T00:00:00\"}}," +
+                        "\"options\":{\"offset\":0,\"limit\":100}}",
                 filterJson);
     }
 
@@ -98,6 +137,12 @@ class FindFilterTest {
         StorageClientException ex = assertThrows(StorageClientException.class, () ->
                 filter.keyEq(DateField.EXPIRES_AT, null));
         assertEquals("Date filter can't be null", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () ->
+                filter.keyIsNull(DateField.CREATED_AT));
+        assertEquals("This operation is available only for field 'ExpiresAt'", ex.getMessage());
+        ex = assertThrows(StorageClientException.class, () ->
+                filter.keyIsNotNull(DateField.UPDATED_AT));
+        assertEquals("This operation is available only for field 'ExpiresAt'", ex.getMessage());
     }
 
     @Test
@@ -110,6 +155,7 @@ class FindFilterTest {
                 .keyEq(StringField.KEY3, "one", "two")
                 .keyEq(NumberField.RANGE_KEY3, 1L, 2L)
                 .keyNotEq(StringField.KEY4, "three", "four")
+                .keyNotEq(StringField.KEY5, "5ive")
                 .keyNotEq(NumberField.RANGE_KEY5, 3L, 4L)
                 .keyGreater(NumberField.RANGE_KEY6, 5L)
                 .keyGreater(NumberField.RANGE_KEY7, 6L, true)
@@ -123,13 +169,13 @@ class FindFilterTest {
 
         DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
         String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
-        assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null," +
+        assertEquals("{\"filter\":{\"key1\":{\"$not\":null},\"key2\":null,\"key5\":{\"$not\":\"f098f46da8052bfd032c4fe462503ca996cbeaa2ca6644b866166ab6c13fd73b\"}," +
                         "\"key3\":[\"2850267d7ddfe1cd8116d22607200eb386817af3fa2114acef1483376353ac17\",\"7f28b8ad3e4a2924f08b030d95e320653441b6e91425c678291ba87c9adfbbd7\"]," +
                         "\"key4\":{\"$not\":[\"95b47bb565136599af99e6510d2676d0d8d9f211818df1dd6944a232021eec30\",\"75904d1bc23a6caa24d6f4c2c092de2465a9cf6af95e06d230d59dd4bd1e846b\"]}," +
                         "\"range_key10\":{\"$gte\":1,\"$lte\":2},\"version\":{\"$gt\":3,\"$lt\":5},\"range_key8\":{\"$lt\":7}," +
-                        "\"range_key7\":{\"$gte\":6},\"range_key6\":{\"$gt\":5},\"range_key5\":{\"$not\":[3,4]}," +
-                        "\"expires_at\":\"1970-01-01T00:00:00\",\"range_key9\":{\"$lte\":8},\"range_key3\":[1,2]," +
-                        "\"range_key2\":null,\"range_key1\":{\"$not\":null}},\"options\":{\"offset\":0,\"limit\":100}}",
+                        "\"range_key7\":{\"$gte\":6},\"range_key6\":{\"$gt\":5},\"range_key5\":{\"$not\":[3,4]},\"expires_at\":\"1970-01-01T00:00:00\"," +
+                        "\"range_key9\":{\"$lte\":8},\"range_key3\":[1,2],\"range_key2\":null,\"range_key1\":{\"$not\":null}}," +
+                        "\"options\":{\"offset\":0,\"limit\":100}}",
                 filterJson);
     }
 
