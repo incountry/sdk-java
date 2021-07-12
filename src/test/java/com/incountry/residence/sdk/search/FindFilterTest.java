@@ -75,7 +75,7 @@ class FindFilterTest {
     }
 
     @Test
-    void dateFiltersPositive() throws StorageClientException {
+    void dateEqualsPositive() throws StorageClientException {
         Calendar calendar = Calendar.getInstance();
         calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
         Date date = calendar.getTime();
@@ -98,10 +98,17 @@ class FindFilterTest {
         filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"expires_at\":{\"$not\":null}},\"options\":{\"offset\":0,\"limit\":100}}",
                 filterJson);
+    }
 
-        filter = filter.clear().keyLess(DateField.CREATED_AT, date)
+    @Test
+    void dateComparingPositive() throws StorageClientException {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1970, Calendar.JANUARY, 1, 0, 0, 0);
+        Date date = calendar.getTime();
+        FindFilter filter = new FindFilter().keyLess(DateField.CREATED_AT, date)
                 .keyLess(DateField.UPDATED_AT, date, true);
-        filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
+        DtoTransformer transformer = new DtoTransformer(new CryptoProvider(null), new HashUtils(ENV_ID, false), true, null);
+        String filterJson = GSON.toJson(transformer.getTransferFilterContainer(filter));
         assertEquals("{\"filter\":{\"updated_at\":{\"$lte\":\"1970-01-01T00:00:00\"}," +
                         "\"created_at\":{\"$lt\":\"1970-01-01T00:00:00\"}},\"options\":{\"offset\":0,\"limit\":100}}",
                 filterJson);
