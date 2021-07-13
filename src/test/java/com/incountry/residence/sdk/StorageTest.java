@@ -381,7 +381,7 @@ class StorageTest {
         Storage storage = StorageImpl.getInstance(config, new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         FindResult findResult = storage.find(COUNTRY, filter);
         String callBody = agent.getCallBody();
-        String expected = "{\"filter\":{\"profile_key\":[\"" + hashUtils.getSha256Hash(PROFILE_KEY) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
+        String expected = "{\"filter\":{\"profile_key\":\"" + hashUtils.getSha256Hash(PROFILE_KEY) + "\"},\"options\":{\"offset\":0,\"limit\":1}}";
         assertEquals(expected, callBody);
 
         assertEquals(1, findResult.getCount());
@@ -418,7 +418,7 @@ class StorageTest {
         Record foundRecord = storage.findOne(COUNTRY, filter);
 
         String callBody = agent.getCallBody();
-        String expected = "{\"filter\":{\"profile_key\":[\"" + hashUtils.getSha256Hash(PROFILE_KEY) + "\"]},\"options\":{\"offset\":0,\"limit\":1}}";
+        String expected = "{\"filter\":{\"profile_key\":\"" + hashUtils.getSha256Hash(PROFILE_KEY) + "\"},\"options\":{\"offset\":0,\"limit\":1}}";
         assertEquals(expected, callBody);
 
         assertEquals(RECORD_KEY, foundRecord.getRecordKey());

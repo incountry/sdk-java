@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class StringFilter extends Filter {
+public class StringFilter extends AbstractFilter {
 
     private static final Logger LOG = LogManager.getLogger(StringFilter.class);
     private static final String MSG_NULL_FILTERS = "StringFilter values can't be null";
@@ -52,10 +52,15 @@ public class StringFilter extends Filter {
     @Override
     public Object toTransferObject() {
         if (notCondition) {
-            Map<String, Object[]> result = new HashMap<>();
-            result.put(OPERATOR_NOT, values.toArray());
+            Map<String, Object> result = new HashMap<>();
+            result.put(OPERATOR_NOT, values.size() == 1
+                    ? values.get(0)
+                    : values.toArray());
             return result;
         }
-        return values.toArray();
+        return values.size() == 1
+                ? values.get(0)
+                : values.toArray();
+
     }
 }

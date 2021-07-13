@@ -559,9 +559,13 @@ BETWEEN             (FindFilter::keyBetween)
 
 You can use the following methods for filtering by date fields:
 ```java
-EQUALS              (FindFilter::keyEq)
-IS_NULL             (FindFilter::keyIsNull)
-IS_NOT_NULL         (FindFilter::keyIsNotNull)
+EQUALS                      (FindFilter::keyEq)
+NOT_EQUALS                  (FindFilter::keyNotEq)
+IS_NULL                     (FindFilter::keyIsNull) //for 'ExpiresAt' field only
+IS_NOT_NULL                 (FindFilter::keyIsNotNull) //for 'ExpiresAt' field only
+GREATER(OR EQUALS)          (FindFilter::keyGreater)
+LESS(OR EQUALS)             (FindFilter::keyLess)
+BETWEEN                     (FindFilter::keyBetween)
 ```
 
 Method `find` returns `FindResult` object which contains a list of `Record` and some metadata:

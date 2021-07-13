@@ -1,13 +1,6 @@
-Pull Request Checklist
-======================
-
-Please read this for our PR Culture:
-------------------------------------
-https://incountry.atlassian.net/wiki/spaces/ED/pages/46858869/Pull+requests+culture+Draft
-
 Work relates to:
 ----------------
-Link(s) to Jira Task/User Story/Bug/Epic:
+Link(s) to Jira Task/User Story/Bug/Epic (if any):
 - [SDK-XX](https://incountry.atlassian.net/browse/SDK-XX)
 
 Code Quality (Before submitting PR)
