@@ -300,6 +300,10 @@ public class DtoTransformer {
     }
 
     public TransferFilterContainer getTransferFilterContainer(FindFilter filter) throws StorageClientException {
+        return getTransferFilterContainer(filter, false);
+    }
+
+    public TransferFilterContainer getTransferFilterContainer(FindFilter filter, boolean withoutOptions) throws StorageClientException {
         if (filter == null) {
             return new TransferFilterContainer(new HashMap<>(), FindFilter.MAX_LIMIT, FindFilter.DEFAULT_OFFSET, new ArrayList<>());
         }
@@ -329,17 +333,25 @@ public class DtoTransformer {
         if (filter.getSearchKeys() != null) {
             transformedFilters.put(SEARCH_KEYS, filter.getSearchKeys());
         }
-        List<Map<String, Object>> transferSortList = new ArrayList<>();
-        List<SortingParam> sorting = filter.getSortingList();
-        if (!sorting.isEmpty()) {
-            for (SortingParam oneSortParam : sorting) {
-                Map<String, Object> transferSortParam = new HashMap<>();
-                transferSortParam.put(oneSortParam.getField().toString().toLowerCase(),
-                        oneSortParam.getOrder().toString().toLowerCase());
-                transferSortList.add(transferSortParam);
+        return transformFilterOptions(transformedFilters, filter, withoutOptions);
+    }
+
+    private TransferFilterContainer transformFilterOptions(Map<String, Object> transformedFilters, FindFilter filter, boolean withoutOptions) {
+        if (withoutOptions) {
+            return new TransferFilterContainer(transformedFilters);
+        } else {
+            List<Map<String, Object>> transferSortList = new ArrayList<>();
+            List<SortingParam> sorting = filter.getSortingList();
+            if (!sorting.isEmpty()) {
+                for (SortingParam oneSortParam : sorting) {
+                    Map<String, Object> transferSortParam = new HashMap<>();
+                    transferSortParam.put(oneSortParam.getField().toString().toLowerCase(),
+                            oneSortParam.getOrder().toString().toLowerCase());
+                    transferSortList.add(transferSortParam);
+                }
             }
+            return new TransferFilterContainer(transformedFilters, filter.getLimit(), filter.getOffset(), transferSortList);
         }
-        return new TransferFilterContainer(transformedFilters, filter.getLimit(), filter.getOffset(), transferSortList);
     }
 
     public List<Record> getRecordList(TransferRecordList transferRecordList) throws StorageServerException, StorageClientException, StorageCryptoException {
@@ -351,6 +363,7 @@ public class DtoTransformer {
         }
         return resultRecordList;
     }
+
 
     static class ComplexBody {
         TransferRecord meta;

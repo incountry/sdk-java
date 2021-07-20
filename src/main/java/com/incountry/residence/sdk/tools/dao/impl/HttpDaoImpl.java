@@ -48,6 +48,7 @@ public class HttpDaoImpl implements Dao {
     private static final String URI_HTTPS = "https://";
     private static final String URI_FIND = "/find";
     private static final String URI_BATCH_WRITE = "/batchWrite";
+    private static final String URI_BATCH_DELETE = "/batchDelete";
     private static final String URI_HEALTH_CHECK = "/healthcheck";
     private static final String URI_META = "meta";
     private static final String URI_DELIMITER = "/";
@@ -245,6 +246,19 @@ public class HttpDaoImpl implements Dao {
         EndPoint endPoint = getEndpoint(lowerCountry);
         String url = getRecordUrl(endPoint.mainUrl, lowerCountry, recordKey);
         ApiResponse response = httpExecutor.request(url, null, endPoint.audience, endPoint.region, RETRY_CNT, new RequestParameters(METHOD_DELETE));
+        if (response.getResponseCode() == 200) {
+            return;
+        }
+        throw generateServerException(response, url, true);
+    }
+
+    @Override
+    public void batchDelete(String country, TransferFilterContainer filterContainer) throws StorageServerException, StorageClientException {
+        String lowerCountry = country.toLowerCase();
+        EndPoint endpoint = getEndpoint(lowerCountry);
+        String url = getRecordActionUrl(endpoint.mainUrl, lowerCountry, URI_BATCH_DELETE);
+        String postData = gson.toJson(filterContainer);
+        ApiResponse response = httpExecutor.request(url, postData, endpoint.audience, endpoint.region, RETRY_CNT, new RequestParameters(METHOD_POST));
         if (response.getResponseCode() == 200) {
             return;
         }

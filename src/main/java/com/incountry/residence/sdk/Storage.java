@@ -66,6 +66,17 @@ public interface Storage {
     boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException;
 
     /**
+     * Delete a record batch from a remote storage
+     *
+     * @param country country code of the records
+     * @param filter the record's recordKey
+     * @return true when records was added to delete queue
+     * @throws StorageClientException if validation finished with errors
+     * @throws StorageServerException if server connection failed
+     */
+    boolean batchDelete(String country, FindFilter filter) throws StorageClientException, StorageServerException;
+
+    /**
      * Find records in remote storage according to filters
      *
      * @param country country identifier

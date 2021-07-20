@@ -7,6 +7,9 @@ import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.StringField;
+import com.incountry.residence.sdk.dto.search.internal.AbstractFilter;
+import com.incountry.residence.sdk.dto.search.internal.Filter;
 import com.incountry.residence.sdk.oauth.OauthTokenAccessor;
 import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.ValidationHelper;
@@ -77,6 +80,7 @@ public class StorageImpl implements Storage {
     private static final String MSG_ERR_BASE_DELAY = "Retry base delay can't be < 1";
     private static final String MSG_ERR_MAX_DELAY = "Retry max delay can't be less then retry base delay";
     private static final String MSG_ERR_RESPONSE = "Response validation failed. Return data doesn't match the one sent";
+    private static final String MSG_ERR_BATCH_DELETE_FILTER = "Batch delete supports only non-null filters with record key values";
     private static final String USER_AGENT_HEADER_NAME = "User-Agent";
     private static final String USER_AGENT_HEADER_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
 
@@ -295,6 +299,24 @@ public class StorageImpl implements Storage {
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
         checkCountryAndRecordKey(country, recordKey);
         dao.delete(country, hashUtils.getSha256Hash(recordKey));
+        return true;
+    }
+
+    @SuppressWarnings("java:S2259")
+    @Override
+    public boolean batchDelete(String country, FindFilter filter) throws StorageClientException, StorageServerException {
+        HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
+        boolean validFilter = filter != null
+                && filter.getStringFilters().keySet().size() == 1
+                && filter.getStringFilters().get(StringField.RECORD_KEY) != null
+                && filter.getDateFilters().isEmpty()
+                && filter.getNumberFilters().isEmpty();
+        AbstractFilter stringFilter = filter.getStringFilters().get(StringField.RECORD_KEY);
+        validFilter = validFilter
+                && stringFilter instanceof Filter
+                && ((Filter) stringFilter).operator == null;
+        HELPER.check(StorageClientException.class, !validFilter, MSG_ERR_BATCH_DELETE_FILTER);
+        dao.batchDelete(country, transformer.getTransferFilterContainer(filter, true));
         return true;
     }
 
