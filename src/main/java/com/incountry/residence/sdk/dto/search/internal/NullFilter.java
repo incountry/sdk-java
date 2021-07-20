@@ -3,7 +3,7 @@ package com.incountry.residence.sdk.dto.search.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NullFilter extends Filter {
+public class NullFilter extends AbstractFilter {
 
     private final boolean nullable;
 

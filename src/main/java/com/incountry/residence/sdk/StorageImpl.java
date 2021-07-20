@@ -7,6 +7,9 @@ import com.incountry.residence.sdk.dto.MigrateResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.NumberField;
+import com.incountry.residence.sdk.dto.search.StringField;
+import com.incountry.residence.sdk.dto.search.internal.AbstractFilter;
+import com.incountry.residence.sdk.dto.search.internal.Filter;
 import com.incountry.residence.sdk.oauth.OauthTokenAccessor;
 import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.ValidationHelper;
@@ -16,25 +19,34 @@ import com.incountry.residence.sdk.tools.exceptions.StorageClientException;
 import com.incountry.residence.sdk.tools.exceptions.StorageCryptoException;
 import com.incountry.residence.sdk.tools.exceptions.StorageServerException;
 import com.incountry.residence.sdk.tools.dao.Dao;
+import com.incountry.residence.sdk.tools.http.HttpExecutor;
 import com.incountry.residence.sdk.tools.http.TokenClient;
+import com.incountry.residence.sdk.tools.http.impl.HttpExecutorImpl;
 import com.incountry.residence.sdk.tools.http.impl.OAuthTokenClient;
 import com.incountry.residence.sdk.tools.dao.impl.HttpDaoImpl;
 import com.incountry.residence.sdk.tools.proxy.ProxyUtils;
 import com.incountry.residence.sdk.tools.transfer.TransferFindResult;
 import com.incountry.residence.sdk.tools.transfer.TransferRecord;
 import com.incountry.residence.sdk.tools.transfer.TransferRecordList;
+import com.incountry.residence.sdk.version.Version;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeader;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_HTTP_TIMEOUT;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_MAX_HTTP_CONNECTIONS;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_BASE_DELAY;
+import static com.incountry.residence.sdk.StorageConfig.DEFAULT_RETRY_MAX_DELAY;
 import static com.incountry.residence.sdk.tools.ValidationHelper.isNullOrEmpty;
 
 /**
@@ -65,9 +77,12 @@ public class StorageImpl implements Storage {
     private static final String MSG_FOUND_NOTHING = "Nothing was found";
     private static final String MSG_ERR_UNEXPECTED = "Unexpected error";
     private static final String MSG_ERR_NULL_SECRETS = "SecretKeyAccessor returns null secret";
-
-    private static final int DEFAULT_HTTP_TIMEOUT = 30;
-    private static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
+    private static final String MSG_ERR_BASE_DELAY = "Retry base delay can't be < 1";
+    private static final String MSG_ERR_MAX_DELAY = "Retry max delay can't be less then retry base delay";
+    private static final String MSG_ERR_RESPONSE = "Response validation failed. Return data doesn't match the one sent";
+    private static final String MSG_ERR_BATCH_DELETE_FILTER = "Batch delete supports only non-null filters with record key values";
+    private static final String USER_AGENT_HEADER_NAME = "User-Agent";
+    private static final String USER_AGENT_HEADER_VALUE = "SDK-Java/" + Version.BUILD_VERSION;
 
     private final Dao dao;
     private final HashUtils hashUtils;
@@ -136,14 +151,16 @@ public class StorageImpl implements Storage {
                 .setConnectTimeout(httpTimeout)
                 .setSocketTimeout(httpTimeout)
                 .build();
-        HttpClientBuilder builder = HttpClients.custom().setDefaultRequestConfig(requestConfig);
         if (poolSize == null) {
             poolSize = DEFAULT_MAX_HTTP_CONNECTIONS;
         }
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(poolSize);
         connectionManager.setDefaultMaxPerRoute(connectionsPerRoute != null ? connectionsPerRoute : poolSize);
-        builder.setConnectionManager(connectionManager);
+        HttpClientBuilder builder = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setConnectionManager(connectionManager)
+                .setDefaultHeaders(Collections.singleton(new BasicHeader(USER_AGENT_HEADER_NAME, USER_AGENT_HEADER_VALUE)));
         return builder.build();
     }
 
@@ -156,6 +173,13 @@ public class StorageImpl implements Storage {
             checkPositiveOrNull(httpPoolSize, MSG_ERR_CONNECTION_POOL);
             checkPositiveOrNull(connectionsPerRoute, MSG_ERR_MAX_CONNECTIONS_PER_ROUTE);
 
+            Integer retryBaseDelay = config.getRetryBaseDelay();
+            retryBaseDelay = retryBaseDelay != null ? retryBaseDelay : DEFAULT_RETRY_BASE_DELAY;
+            HELPER.check(StorageClientException.class, retryBaseDelay < 1, MSG_ERR_BASE_DELAY);
+            Integer retryMaxDelay = config.getRetryMaxDelay();
+            retryMaxDelay = retryMaxDelay != null ? retryMaxDelay : DEFAULT_RETRY_MAX_DELAY;
+            HELPER.check(StorageClientException.class, retryMaxDelay < retryBaseDelay, MSG_ERR_MAX_DELAY);
+
             CloseableHttpClient httpClient = initHttpClient(httpTimeout, httpPoolSize, connectionsPerRoute);
             TokenClient tokenClient;
             if (config.getClientId() != null) {
@@ -166,8 +190,8 @@ public class StorageImpl implements Storage {
                         config.getEnvironmentId(),
                         config.getClientId(),
                         config.getClientSecret(),
-                        httpClient
-                );
+                        httpClient,
+                        retryBaseDelay, retryMaxDelay);
                 tokenClient = ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true);
             } else {
                 OauthTokenAccessor accessor = config.getOauthTokenAccessor();
@@ -180,12 +204,18 @@ public class StorageImpl implements Storage {
                     }
                 };
             }
-            return new HttpDaoImpl(config.getEnvironmentId(),
+
+            HttpExecutor httpExecutor = ProxyUtils.createLoggingProxyForPublicMethods(
+                    new HttpExecutorImpl(
+                            ProxyUtils.createLoggingProxyForPublicMethods(tokenClient, true),
+                            config.getEnvironmentId(),
+                            httpClient, retryBaseDelay, retryMaxDelay), false);
+
+            return new HttpDaoImpl(
                     config.getEndPoint(),
                     config.getEndpointMask(),
                     config.getCountriesEndpoint(),
-                    tokenClient,
-                    httpClient);
+                    httpExecutor);
         } else {
             return dao;
         }
@@ -215,8 +245,13 @@ public class StorageImpl implements Storage {
     public Record write(String country, Record newRecord) throws StorageClientException, StorageServerException, StorageCryptoException {
         HELPER.check(StorageClientException.class, newRecord == null, MSG_ERR_NULL_RECORD);
         checkCountryAndRecordKey(country, newRecord.getRecordKey());
-        TransferRecord recordedRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
-        return transformer.getRecord(recordedRecord);
+        TransferRecord receivedTransferRecord = dao.createRecord(country, transformer.getTransferRecord(newRecord));
+        if (receivedTransferRecord == null) {
+            return newRecord;
+        }
+        Record receivedRecord = transformer.getRecord(receivedTransferRecord);
+        HELPER.check(StorageServerException.class, !newRecord.equals(receivedRecord), MSG_ERR_RESPONSE);
+        return receivedRecord;
     }
 
     public Record read(String country, String recordKey) throws StorageClientException, StorageServerException, StorageCryptoException {
@@ -249,13 +284,39 @@ public class StorageImpl implements Storage {
             HELPER.check(StorageClientException.class, currentRecord == null, MSG_ERR_NULL_RECORD);
             checkCountryAndRecordKey(country, currentRecord.getRecordKey());
         }
-        TransferRecordList transferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
-        return transformer.getRecordList(transferRecordList);
+        TransferRecordList receivedTransferRecordList = dao.createBatch(country, transformer.getTransferRecordList(records));
+        if (receivedTransferRecordList == null) {
+            return records;
+        }
+        List<Record> receivedList = transformer.getRecordList(receivedTransferRecordList);
+        for (Record oneRecord : records) {
+            boolean valid = oneRecord.equals(receivedList.stream().filter(two -> oneRecord.getRecordKey().equals(two.getRecordKey())).findFirst().orElse(null));
+            HELPER.check(StorageServerException.class, !valid, MSG_ERR_RESPONSE);
+        }
+        return receivedList;
     }
 
     public boolean delete(String country, String recordKey) throws StorageClientException, StorageServerException {
         checkCountryAndRecordKey(country, recordKey);
         dao.delete(country, hashUtils.getSha256Hash(recordKey));
+        return true;
+    }
+
+    @SuppressWarnings("java:S2259")
+    @Override
+    public boolean batchDelete(String country, FindFilter filter) throws StorageClientException, StorageServerException {
+        HELPER.check(StorageClientException.class, isNullOrEmpty(country), MSG_ERR_NULL_COUNTRY);
+        boolean validFilter = filter != null
+                && filter.getStringFilters().keySet().size() == 1
+                && filter.getStringFilters().get(StringField.RECORD_KEY) != null
+                && filter.getDateFilters().isEmpty()
+                && filter.getNumberFilters().isEmpty();
+        AbstractFilter stringFilter = filter.getStringFilters().get(StringField.RECORD_KEY);
+        validFilter = validFilter
+                && stringFilter instanceof Filter
+                && ((Filter) stringFilter).operator == null;
+        HELPER.check(StorageClientException.class, !validFilter, MSG_ERR_BATCH_DELETE_FILTER);
+        dao.batchDelete(country, transformer.getTransferFilterContainer(filter, true));
         return true;
     }
 

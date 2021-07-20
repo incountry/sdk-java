@@ -21,6 +21,8 @@ public interface Dao {
 
     void delete(String country, String recordKey) throws StorageServerException, StorageClientException;
 
+    void batchDelete(String country, TransferFilterContainer filters) throws StorageServerException, StorageClientException;
+
     TransferFindResult find(String country, TransferFilterContainer filters) throws StorageClientException, StorageServerException;
 
     AttachmentMeta addAttachment(String country, String recordKey, InputStream fileInputStream, String fileName, boolean upsert, String mimeType) throws StorageClientException, StorageServerException;

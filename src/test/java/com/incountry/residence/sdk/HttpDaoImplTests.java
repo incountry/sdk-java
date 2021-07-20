@@ -15,7 +15,7 @@ import com.incountry.residence.sdk.dto.FindResult;
 import com.incountry.residence.sdk.dto.Record;
 import com.incountry.residence.sdk.dto.search.FindFilter;
 import com.incountry.residence.sdk.dto.search.StringField;
-import com.incountry.residence.sdk.http.mocks.FakeHttpAgent;
+import com.incountry.residence.sdk.http.mocks.FakeHttpExecutor;
 import com.incountry.residence.sdk.tools.DtoTransformer;
 import com.incountry.residence.sdk.tools.crypto.CryptoProvider;
 import com.incountry.residence.sdk.tools.crypto.HashUtils;
@@ -118,7 +118,7 @@ class HttpDaoImplTests {
                    String key3,
                    String profileKey,
                    Long rangeKey1) throws StorageException, MalformedURLException {
-        FakeHttpAgent agent = new FakeHttpAgent("OK", 201);
+        FakeHttpExecutor agent = new FakeHttpExecutor("OK", 201);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String expectedPath = "/v2/storage/records/" + country;
 
@@ -174,7 +174,7 @@ class HttpDaoImplTests {
         String keyHash = hashUtils.getSha256Hash(recordKey);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash;
 
-        FakeHttpAgent agent = new FakeHttpAgent(GSON.toJson(transformer.getTransferRecord(record)), 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor(GSON.toJson(transformer.getTransferRecord(record)), 200);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         Record fetched = storage.read(country, recordKey);
@@ -197,7 +197,7 @@ class HttpDaoImplTests {
                     String profileKey,
                     Long rangeKey1) throws StorageException, IOException {
 
-        FakeHttpAgent agent = new FakeHttpAgent("{}", 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor("{}", 200);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.delete(country, recordKey);
         String keyHash = hashUtils.getSha256Hash(recordKey);
@@ -208,7 +208,7 @@ class HttpDaoImplTests {
 
     @Test
     void batchWriteNullTest() throws StorageClientException, StorageCryptoException {
-        FakeHttpAgent agent = new FakeHttpAgent("", 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor("", 200);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         StorageClientException ex1 = assertThrows(StorageClientException.class, () -> storage.batchWrite("US", null));
         assertEquals("Can't write empty batch", ex1.getMessage());
@@ -226,7 +226,7 @@ class HttpDaoImplTests {
                         String profileKey,
                         Long rangeKey1) throws StorageException {
 
-        FakeHttpAgent agent = new FakeHttpAgent("ok", 201);
+        FakeHttpExecutor agent = new FakeHttpExecutor("ok", 201);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         List<Record> records = new ArrayList<>();
@@ -236,7 +236,7 @@ class HttpDaoImplTests {
                 .setKey2(key2)
                 .setKey3(key3);
         records.add(record);
-        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(new Record("key", "body"), transformer) + "]}";
+        String batchRecordResponse = "{\"records\": [" + getRecordStubResponse(record, transformer) + "]}";
         agent.setResponse(batchRecordResponse);
         storage.batchWrite(country, records);
 
@@ -282,7 +282,7 @@ class HttpDaoImplTests {
                 "}";
         String notJson = "StringNotJson";
         String wrongJson = "{\"FirstName\":\"<first name>\"}";
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(
+        FakeHttpExecutor agent = new FakeHttpExecutor(Arrays.asList(
                 new HashMap.SimpleEntry<>(goodReRespPTE, 200),
                 new HashMap.SimpleEntry<>(goodRespEnc, 200),
                 new HashMap.SimpleEntry<>(null, 200),
@@ -318,7 +318,7 @@ class HttpDaoImplTests {
                 .setProfileKey("profileKey");
         String encrypted = GSON.toJson(transformer.getTransferRecord(record));
         String goodResponse = "{\"data\":[" + encrypted + "],\"meta\":{\"count\":1,\"limit\":10,\"offset\":0,\"total\":1}}";
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(
+        FakeHttpExecutor agent = new FakeHttpExecutor(Arrays.asList(
                 new AbstractMap.SimpleEntry<>(goodResponse, 200),
                 new AbstractMap.SimpleEntry<>("StringNotJson", 200)
         ));
@@ -339,7 +339,7 @@ class HttpDaoImplTests {
         String countryLoadBadResponseNullId = "{ \"countries\": [{\"name\":\"USA\" } ] }";
         String countryLoadBadResponseEmptyId = "{ \"countries\": [{\"name\":\"USA\",\"id\":\"\" } ] }";
         String countryLoadBadResponseEmptyCountries = "{ \"countries\": [ ] }";
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(
+        FakeHttpExecutor agent = new FakeHttpExecutor(Arrays.asList(
                 new HashMap.SimpleEntry<>(COUNTRY_LOAD_RESPONSE, 200),
                 new HashMap.SimpleEntry<>("StringNotJson", 200),
                 new HashMap.SimpleEntry<>(countryLoadBadResponseNullName, 200),
@@ -363,7 +363,7 @@ class HttpDaoImplTests {
     @RepeatedTest(3)
     void testLoadCountriesInDefaultEndPoint(RepetitionInfo repeatInfo) throws StorageServerException, StorageCryptoException, StorageClientException {
         iterateLogLevel(repeatInfo, HttpDaoImpl.class);
-        FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE, 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor(COUNTRY_LOAD_RESPONSE, 200);
         Storage storage = initializeStorage(new HttpDaoImpl(null, null, "https://localhost:8080", agent));
         Record record = new Record("1", "body");
         String recordResponse = getRecordStubResponse(record, transformer);
@@ -390,7 +390,7 @@ class HttpDaoImplTests {
 
     @Test
     void testLoadCountriesInDefaultEndPointWithMask() throws StorageServerException, StorageCryptoException, StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent(COUNTRY_LOAD_RESPONSE, 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor(COUNTRY_LOAD_RESPONSE, 200);
         Storage storage = initializeStorage(new HttpDaoImpl(null, "-test-01.debug.org", null, agent));
         Record record = new Record("1", "body");
         String recordResponse = getRecordStubResponse(record, transformer);
@@ -432,7 +432,7 @@ class HttpDaoImplTests {
 
     @Test
     void testWriteToCustomEndpointWithMinipop() throws StorageServerException, StorageCryptoException, StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent("OK", 201);
+        FakeHttpExecutor agent = new FakeHttpExecutor("OK", 201);
         Storage storage = initializeStorage(new HttpDaoImpl("https://us.test.org", "test.org", null, agent));
         Record record = new Record("1", "body");
         String response = getRecordStubResponse(record, transformer);
@@ -443,7 +443,7 @@ class HttpDaoImplTests {
 
     @Test
     void testWriteToCustomEndpointWithMinipopAndSecondaryUrl() throws StorageServerException, StorageCryptoException, StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent("OK", 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor("OK", 200);
         Storage storage = initializeStorage(new HttpDaoImpl("https://ustest.org", "test.org", null, agent));
         Record record = new Record("1", "body");
         agent.setResponse(getRecordStubResponse(record, transformer));
@@ -467,7 +467,7 @@ class HttpDaoImplTests {
     @Test
     void endPointAndAudiencePositive() throws StorageServerException, StorageCryptoException, StorageClientException {
         //storage has only custom endpoint
-        FakeHttpAgent agent = new FakeHttpAgent("OK", 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor("OK", 200);
         Storage storage = initializeStorage(new HttpDaoImpl("https://custom.io", null, null, agent));
         Record record = new Record("1", "body");
         //AG is minipop
@@ -479,7 +479,7 @@ class HttpDaoImplTests {
         assertEquals("https://custom.io", agent.getAudienceUrl());
 
         //storage has only endpoint mask
-        agent = new FakeHttpAgent(Arrays.asList(
+        agent = new FakeHttpExecutor(Arrays.asList(
                 new HashMap.SimpleEntry(COUNTRY_LOAD_RESPONSE, 200),
                 new HashMap.SimpleEntry(recordResponse, 201)
         ));
@@ -522,7 +522,7 @@ class HttpDaoImplTests {
         String fileId = "file_id_" + recordKey;
         String fileName = "file_name_" + recordKey + ".txt";
 
-        FakeHttpAgent agent = new FakeHttpAgent(String.format("{\"file_id\":\"%s\"}", fileId), 201);
+        FakeHttpExecutor agent = new FakeHttpExecutor(String.format("{\"file_id\":\"%s\"}", fileId), 201);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         String keyHash = hashUtils.getSha256Hash(recordKey);
         String expectedPath = "/v2/storage/records/" + country + "/" + keyHash + "/attachments";
@@ -545,7 +545,7 @@ class HttpDaoImplTests {
                               Long rangeKey1) throws StorageClientException, StorageServerException, IOException, StorageCryptoException {
 
         String fileId = "1";
-        FakeHttpAgent agent = new FakeHttpAgent("{}", 204);
+        FakeHttpExecutor agent = new FakeHttpExecutor("{}", 204);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         storage.deleteAttachment(country, recordKey, fileId);
         String keyHash = hashUtils.getSha256Hash(recordKey);
@@ -576,18 +576,18 @@ class HttpDaoImplTests {
         Files.write(tempFile, fileContent.getBytes(StandardCharsets.UTF_8));
 
         String expectedResponse = IOUtils.toString(Files.newInputStream(tempFile), StandardCharsets.UTF_8.name());
-        FakeHttpAgent agent = new FakeHttpAgent(expectedResponse, "fileName", fileInputStream, 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor(expectedResponse, "fileName", fileInputStream, 200);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         AttachedFile file = storage.getAttachmentFile(country, recordKey, fileId);
         assertEquals(expectedResponse, IOUtils.toString(file.getFileContent(), StandardCharsets.UTF_8.name()));
 
-        agent = new FakeHttpAgent(null, null, null, 200);
+        agent = new FakeHttpExecutor(null, null, null, 200);
         storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         file = storage.getAttachmentFile(country, recordKey, fileId);
         assertNull(file.getFileContent());
 
-        agent = new FakeHttpAgent(null, null, null, 200);
+        agent = new FakeHttpExecutor(null, null, null, 200);
         storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
         file = storage.getAttachmentFile(country, recordKey, fileId);
         assertNull(file.getFileName());
@@ -610,7 +610,7 @@ class HttpDaoImplTests {
         String fileName = "test_file";
         String mimeType = "text/plain";
 
-        FakeHttpAgent agent = new FakeHttpAgent("{}", 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor("{}", 200);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         storage.updateAttachmentMeta(country, recordKey, fileId, fileName, mimeType);
@@ -646,7 +646,7 @@ class HttpDaoImplTests {
         response.addProperty("mime_type", mimeType);
         response.addProperty("size", size);
 
-        FakeHttpAgent agent = new FakeHttpAgent(new Gson().toJson(response), 200);
+        FakeHttpExecutor agent = new FakeHttpExecutor(new Gson().toJson(response), 200);
         Storage storage = initializeStorage(new HttpDaoImpl(FAKE_ENDPOINT, null, null, agent));
 
         AttachmentMeta attachmentMeta = storage.getAttachmentMeta(country, recordKey, fileId);
@@ -662,7 +662,7 @@ class HttpDaoImplTests {
 
     @Test
     void daoHealthCheckTest() throws StorageServerException, StorageClientException {
-        FakeHttpAgent agent = new FakeHttpAgent(Arrays.asList(
+        FakeHttpExecutor agent = new FakeHttpExecutor(Arrays.asList(
                 new HashMap.SimpleEntry(COUNTRY_LOAD_RESPONSE, 200),
                 new HashMap.SimpleEntry("ok", 200),
                 new HashMap.SimpleEntry("ok", 200)

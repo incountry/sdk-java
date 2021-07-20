@@ -124,7 +124,7 @@ public class StorageIntegrationTest {
     private static final String SERVICE_KEY_4 = "ServiceKey4_" + TEMP;
     private static final String SERVICE_KEY_5 = "ServiceKey5_" + TEMP;
     private static final String PRECOMMIT_BODY = "PreсommitBody" + TEMP;
-    private static final Date EXPIRES_AT = new Date(System.currentTimeMillis() + 300_000);
+    private static final Date EXPIRES_AT = new Date(System.currentTimeMillis() + 600_000);
     private static final Long BATCH_WRITE_RANGE_KEY_1 = 2L;
     private static final Long WRITE_RANGE_KEY_1 = 1L;
     private static final Long RANGE_KEY_2 = 2L;
@@ -438,6 +438,36 @@ public class StorageIntegrationTest {
                 .copy()
                 .keyIsNull(StringField.KEY20)
                 .keyIsNull(DateField.EXPIRES_AT));
+        assertEquals(1, findResult.getCount());
+        assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
+        assertNull(findResult.getRecords().get(0).getExpiresAt());
+
+        filter.clear()
+                .keyEq(StringField.RECORD_KEY, recordKey, batchRecordKey)
+                .keyLess(DateField.EXPIRES_AT, EXPIRES_AT, true);
+        findResult = storage.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(findResult.getRecords().get(0).getExpiresAt(), EXPIRES_AT);
+
+        filter.clear()
+                .keyEq(StringField.RECORD_KEY, recordKey, batchRecordKey)
+                .keyGreater(DateField.EXPIRES_AT, EXPIRES_AT);
+        findResult = storage.find(COUNTRY, filter);
+        assertEquals(0, findResult.getCount());
+
+        filter.clear()
+                .keyEq(StringField.RECORD_KEY, recordKey, batchRecordKey)
+                .keyBetween(DateField.EXPIRES_AT, new Date(), EXPIRES_AT);
+        findResult = storage.find(COUNTRY, filter);
+        assertEquals(1, findResult.getCount());
+        assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
+        assertEquals(findResult.getRecords().get(0).getExpiresAt(), EXPIRES_AT);
+
+        filter.clear()
+                .keyEq(StringField.RECORD_KEY, recordKey, batchRecordKey)
+                .keyNotEq(DateField.EXPIRES_AT, EXPIRES_AT);
+        findResult = storage.find(COUNTRY, filter);
         assertEquals(1, findResult.getCount());
         assertEquals(batchRecordKey, findResult.getRecords().get(0).getRecordKey());
         assertNull(findResult.getRecords().get(0).getExpiresAt());
@@ -806,18 +836,17 @@ public class StorageIntegrationTest {
                 .setPrecommitBody(PRECOMMIT_BODY)
                 .setServiceKey1(SERVICE_KEY_1)
                 .setServiceKey2(SERVICE_KEY_2);
-        String country = CredentialsHelper.getMidPopCountry(false);
-        storageNonHashing.write(country, newRecord);
+        storageNonHashing.write(COUNTRY, newRecord);
 
         FindFilter filter = new FindFilter()
                 .searchKeysLike(KEY_1.split("-")[2]);
-        FindResult findResult = storageNonHashing.find(country, filter);
+        FindResult findResult = storageNonHashing.find(COUNTRY, filter);
 
         assertEquals(1, findResult.getCount());
         assertEquals(recordKey, findResult.getRecords().get(0).getRecordKey());
         assertEquals(RECORD_BODY, findResult.getRecords().get(0).getBody());
 
-        storageNonHashing.delete(country, recordKey);
+        storageNonHashing.delete(COUNTRY, recordKey);
     }
 
     @Test

@@ -21,6 +21,10 @@ public class StorageConfig {
     private static final Logger LOG = LogManager.getLogger(StorageConfig.class);
     private static final ValidationHelper HELPER = new ValidationHelper(LOG);
 
+    public static final int DEFAULT_HTTP_TIMEOUT = 30;
+    public static final int DEFAULT_MAX_HTTP_CONNECTIONS = 20;
+    public static final int DEFAULT_RETRY_BASE_DELAY = 1;
+    public static final int DEFAULT_RETRY_MAX_DELAY = 32;
 
     public static final String MSG_ERR_NULL_TOKEN = "OAuth2 token is null or empty";
     public static final String MSG_SECURE = "[SECURE[%s]]";
@@ -46,6 +50,9 @@ public class StorageConfig {
     private Integer maxHttpConnectionsPerRoute;
     private boolean hashSearchKeys = true;
     private OauthTokenAccessor oauthTokenAccessor;
+    private Integer retryBaseDelay;
+    private Integer retryMaxDelay;
+
 
     public String getEnvironmentId() {
         return environmentId;
@@ -346,6 +353,38 @@ public class StorageConfig {
         return this;
     }
 
+    public Integer getRetryBaseDelay() {
+        return retryBaseDelay;
+    }
+
+    /**
+     * Optional. Set custom initial retry delay in seconds
+     * If null - default 1 second delay will be used
+     *
+     * @param retryBaseDelay initial delay in seconds
+     * @return StorageConfig config
+     */
+    public StorageConfig setRetryBaseDelay(Integer retryBaseDelay) {
+        this.retryBaseDelay = retryBaseDelay;
+        return this;
+    }
+
+    public Integer getRetryMaxDelay() {
+        return retryMaxDelay;
+    }
+
+    /**
+     * Optional. Set custom maximum retry delay in seconds
+     * If null - default 32 seconds delay will be used
+     *
+     * @param retryMaxDelay maximum delay in seconds
+     * @return StorageConfig config
+     */
+    public StorageConfig setRetryMaxDelay(Integer retryMaxDelay) {
+        this.retryMaxDelay = retryMaxDelay;
+        return this;
+    }
+
     public StorageConfig copy() {
         StorageConfig newInstance = new StorageConfig();
         newInstance.setEnvironmentId(getEnvironmentId());
@@ -363,6 +402,8 @@ public class StorageConfig {
         newInstance.setMaxHttpPoolSize(getMaxHttpPoolSize());
         newInstance.setHashSearchKeys(isHashSearchKeys());
         newInstance.setOauthTokenAccessor(getOauthTokenAccessor());
+        newInstance.setRetryBaseDelay(retryBaseDelay);
+        newInstance.setRetryMaxDelay(retryMaxDelay);
         return newInstance;
     }
 
@@ -383,7 +424,9 @@ public class StorageConfig {
                 ", httpTimeout='" + httpTimeout + '\'' +
                 ", httpPoolSize='" + maxHttpPoolSize + '\'' +
                 ", ignoreKeysHashing='" + hashSearchKeys + '\'' +
-                ", oauthTokenAccessor=" + oauthTokenAccessor +
+                ", oauthTokenAccessor=" + oauthTokenAccessor + '\'' +
+                ", retryBaseDelay='" + retryBaseDelay + '\'' +
+                ", retryMaxDelay=" + retryMaxDelay +
                 '}';
     }
 

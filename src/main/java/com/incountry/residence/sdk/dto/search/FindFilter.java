@@ -1,9 +1,8 @@
 package com.incountry.residence.sdk.dto.search;
 
-import com.incountry.residence.sdk.dto.search.internal.DateFilter;
-import com.incountry.residence.sdk.dto.search.internal.Filter;
+import com.incountry.residence.sdk.dto.search.internal.AbstractFilter;
 import com.incountry.residence.sdk.dto.search.internal.NullFilter;
-import com.incountry.residence.sdk.dto.search.internal.NumberFilter;
+import com.incountry.residence.sdk.dto.search.internal.Filter;
 import com.incountry.residence.sdk.dto.search.internal.RangeFilter;
 import com.incountry.residence.sdk.dto.search.internal.StringFilter;
 import com.incountry.residence.sdk.dto.search.internal.SortingParam;
@@ -14,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
@@ -41,6 +41,7 @@ public class FindFilter {
     private static final String MSG_ERR_NULL_SORT_FIELD = "Sorting field is null";
     private static final String MSG_ERR_NULL_SORT_ORDER = "Sorting order is null";
     private static final String MSG_ERR_DUPL_SORT_FIELD = "Field %s is already in sorting list";
+    private static final String MSG_ERR_NULL_DATE_OPERATION = "This operation is available only for field 'ExpiresAt'";
 
     private static final List<StringField> NON_HASHED_KEY_LIST = Arrays.asList(
             StringField.KEY1, StringField.KEY2, StringField.KEY3, StringField.KEY4, StringField.KEY5,
@@ -51,9 +52,9 @@ public class FindFilter {
 
     private int limit = MAX_LIMIT;
     private int offset = DEFAULT_OFFSET;
-    private final Map<StringField, Filter> stringFilters = new EnumMap<>(StringField.class);
-    private final Map<NumberField, Filter> numberFilters = new EnumMap<>(NumberField.class);
-    private final Map<DateField, Filter> dateFilters = new EnumMap<>(DateField.class);
+    private final Map<StringField, AbstractFilter> stringFilters = new EnumMap<>(StringField.class);
+    private final Map<NumberField, AbstractFilter> numberFilters = new EnumMap<>(NumberField.class);
+    private final Map<DateField, AbstractFilter> dateFilters = new EnumMap<>(DateField.class);
     private final List<SortingParam> sortingList = new ArrayList<>();
     private String searchKeys;
 
@@ -77,20 +78,20 @@ public class FindFilter {
         return this;
     }
 
-    public FindFilter keyEq(StringField field, String... keys) throws StorageClientException {
+    public FindFilter keyEq(StringField field, String... values) throws StorageClientException {
         validateStringFilters(field, searchKeys);
-        stringFilters.put(field, new StringFilter(keys));
+        stringFilters.put(field, new StringFilter(values));
         return this;
     }
 
-    public FindFilter keyEq(NumberField field, Long... keys) throws StorageClientException {
-        numberFilters.put(field, new NumberFilter(keys, null));
+    public FindFilter keyEq(NumberField field, Long... values) throws StorageClientException {
+        numberFilters.put(field, new Filter<Long>(values, null));
         return this;
     }
 
     public FindFilter keyEq(DateField field, Date date) throws StorageClientException {
         HELPER.check(StorageClientException.class, date == null, MSG_ERR_NULL_DATE);
-        dateFilters.put(field, new DateFilter(date));
+        dateFilters.put(field, new Filter<>(new Date[]{date}, null));
         return this;
     }
 
@@ -105,7 +106,8 @@ public class FindFilter {
         return this;
     }
 
-    public FindFilter keyIsNull(DateField field) {
+    public FindFilter keyIsNull(DateField field) throws StorageClientException {
+        HELPER.check(StorageClientException.class, field != DateField.EXPIRES_AT, MSG_ERR_NULL_DATE_OPERATION);
         dateFilters.put(field, new NullFilter(true));
         return this;
     }
@@ -121,37 +123,61 @@ public class FindFilter {
         return this;
     }
 
-    public FindFilter keyIsNotNull(DateField field) {
+    public FindFilter keyIsNotNull(DateField field) throws StorageClientException {
+        HELPER.check(StorageClientException.class, field != DateField.EXPIRES_AT, MSG_ERR_NULL_DATE_OPERATION);
         dateFilters.put(field, new NullFilter(false));
         return this;
     }
 
-    public FindFilter keyNotEq(StringField field, String... keys) throws StorageClientException {
+    public FindFilter keyNotEq(StringField field, String... values) throws StorageClientException {
         validateStringFilters(field, searchKeys);
-        stringFilters.put(field, new StringFilter(keys, true));
+        stringFilters.put(field, new StringFilter(values, true));
         return this;
     }
 
-    public FindFilter keyNotEq(NumberField field, Long... keys) throws StorageClientException {
-        numberFilters.put(field, new NumberFilter(keys, Filter.OPERATOR_NOT));
+    public FindFilter keyNotEq(NumberField field, Long... values) throws StorageClientException {
+        numberFilters.put(field, new Filter<Long>(values, AbstractFilter.OPERATOR_NOT));
         return this;
     }
 
-    public FindFilter keyGreater(NumberField field, long key) throws StorageClientException {
-        return keyGreater(field, key, false);
-    }
-
-    public FindFilter keyGreater(NumberField field, long key, boolean includingValue) throws StorageClientException {
-        numberFilters.put(field, new NumberFilter(new Long[]{key}, includingValue ? Filter.OPERATOR_GREATER_OR_EQUALS : Filter.OPERATOR_GREATER));
+    public FindFilter keyNotEq(DateField field, Date value) throws StorageClientException {
+        dateFilters.put(field, new Filter<Date>(new Date[]{value}, AbstractFilter.OPERATOR_NOT));
         return this;
     }
 
-    public FindFilter keyLess(NumberField field, long key) throws StorageClientException {
-        return keyLess(field, key, false);
+    public FindFilter keyGreater(NumberField field, long value) throws StorageClientException {
+        return keyGreater(field, value, false);
     }
 
-    public FindFilter keyLess(NumberField field, long key, boolean includingValue) throws StorageClientException {
-        numberFilters.put(field, new NumberFilter(new Long[]{key}, includingValue ? Filter.OPERATOR_LESS_OR_EQUALS : Filter.OPERATOR_LESS));
+    public FindFilter keyGreater(NumberField field, long value, boolean includingValue) throws StorageClientException {
+        numberFilters.put(field, new Filter<Long>(new Long[]{value}, includingValue ? AbstractFilter.OPERATOR_GREATER_OR_EQUALS : AbstractFilter.OPERATOR_GREATER));
+        return this;
+    }
+
+    public FindFilter keyGreater(DateField field, Date value) throws StorageClientException {
+        return keyGreater(field, value, false);
+    }
+
+    public FindFilter keyGreater(DateField field, Date value, boolean includingValue) throws StorageClientException {
+        dateFilters.put(field, new Filter<Date>(new Date[]{value}, includingValue ? AbstractFilter.OPERATOR_GREATER_OR_EQUALS : AbstractFilter.OPERATOR_GREATER));
+        return this;
+    }
+
+    public FindFilter keyLess(NumberField field, long value) throws StorageClientException {
+        return keyLess(field, value, false);
+    }
+
+    public FindFilter keyLess(NumberField field, long value, boolean includingValue) throws StorageClientException {
+        numberFilters.put(field, new Filter<Long>(new Long[]{value}, includingValue ? AbstractFilter.OPERATOR_LESS_OR_EQUALS : AbstractFilter.OPERATOR_LESS));
+        return this;
+    }
+
+    public FindFilter keyLess(DateField field, Date value) throws StorageClientException {
+        return keyLess(field, value, false);
+    }
+
+    public FindFilter keyLess(DateField field, Date value, boolean includingValue) throws StorageClientException {
+        dateFilters.put(field, new Filter<Date>(new Date[]{value}, includingValue ? AbstractFilter.OPERATOR_LESS_OR_EQUALS : AbstractFilter.OPERATOR_LESS));
         return this;
     }
 
@@ -160,10 +186,22 @@ public class FindFilter {
     }
 
     public FindFilter keyBetween(NumberField field, long fromValue, boolean includeFrom, long toValue, boolean includeTo) throws StorageClientException {
-        numberFilters.put(field, new RangeFilter(fromValue,
-                includeFrom ? Filter.OPERATOR_GREATER_OR_EQUALS : Filter.OPERATOR_GREATER,
+        numberFilters.put(field, new RangeFilter<Long>(fromValue,
+                includeFrom ? AbstractFilter.OPERATOR_GREATER_OR_EQUALS : AbstractFilter.OPERATOR_GREATER,
                 toValue,
-                includeTo ? Filter.OPERATOR_LESS_OR_EQUALS : Filter.OPERATOR_LESS));
+                includeTo ? AbstractFilter.OPERATOR_LESS_OR_EQUALS : AbstractFilter.OPERATOR_LESS));
+        return this;
+    }
+
+    public FindFilter keyBetween(DateField field, Date fromValue, Date toValue) throws StorageClientException {
+        return keyBetween(field, fromValue, true, toValue, true);
+    }
+
+    public FindFilter keyBetween(DateField field, Date fromValue, boolean includeFrom, Date toValue, boolean includeTo) throws StorageClientException {
+        dateFilters.put(field, new RangeFilter<Date>(fromValue,
+                includeFrom ? AbstractFilter.OPERATOR_GREATER_OR_EQUALS : AbstractFilter.OPERATOR_GREATER,
+                toValue,
+                includeTo ? AbstractFilter.OPERATOR_LESS_OR_EQUALS : AbstractFilter.OPERATOR_LESS));
         return this;
     }
 
@@ -213,15 +251,15 @@ public class FindFilter {
         return sortingList;
     }
 
-    public Map<StringField, Filter> getStringFilters() {
+    public Map<StringField, AbstractFilter> getStringFilters() {
         return stringFilters;
     }
 
-    public Map<NumberField, Filter> getNumberFilters() {
+    public Map<NumberField, AbstractFilter> getNumberFilters() {
         return numberFilters;
     }
 
-    public Map<DateField, Filter> getDateFilters() {
+    public Map<DateField, AbstractFilter> getDateFilters() {
         return dateFilters;
     }
 

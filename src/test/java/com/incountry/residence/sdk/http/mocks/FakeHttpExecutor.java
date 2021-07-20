@@ -2,13 +2,13 @@ package com.incountry.residence.sdk.http.mocks;
 
 import com.incountry.residence.sdk.tools.containers.RequestParameters;
 import com.incountry.residence.sdk.tools.containers.ApiResponse;
-import com.incountry.residence.sdk.tools.http.HttpAgent;
+import com.incountry.residence.sdk.tools.http.HttpExecutor;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-public class FakeHttpAgent implements HttpAgent {
+public class FakeHttpExecutor implements HttpExecutor {
 
     private String callUrl;
     private String callMethod;
@@ -23,16 +23,16 @@ public class FakeHttpAgent implements HttpAgent {
     private int responseCode;
     private InputStream inputStream;
 
-    public FakeHttpAgent(String response, int responseCode) {
+    public FakeHttpExecutor(String response, int responseCode) {
         this.response = response;
         this.responseCode = responseCode;
     }
 
-    public FakeHttpAgent(List<Map.Entry<String, Integer>> responseList) {
+    public FakeHttpExecutor(List<Map.Entry<String, Integer>> responseList) {
         this.responseList = responseList;
     }
 
-    public FakeHttpAgent(String response, String fileName, InputStream inputStream, int responseCode) {
+    public FakeHttpExecutor(String response, String fileName, InputStream inputStream, int responseCode) {
         this.response = response;
         this.fileName = fileName;
         this.inputStream = inputStream;
